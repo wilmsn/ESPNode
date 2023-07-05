@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<link rel='stylesheet' type='text/css' href='style.css' />
+<script src="jquery.js"></script>
+<script type="text/javascript">
+var title="Hauptmenü";
+var htmlversion = "0.991 (07/2023)";
+var ledmatrix_active = 0;
+var display = 0;
+var ledmatrix_x = 8;
+var ledmatrix_y = 8;
+var gateway = `ws://${window.location.hostname}/ws`;
+var websocket;
+var slider1val;
+var slider1name;
+var slider1label;
+var slider2val;
+var slider2name;
+var slider3val;
+var slider3name;
+var temp;
+const logs = [];
+
+window.addEventListener('load', onLoad);
+function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage; // <-- add this line
+}
+function onOpen(event) {
+    console.log('Connection opened');
+    const json = JSON.parse(event.data, function (key, val) {
+      prozessJS( key, val );
+    });
+}
+function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+function onMessage(event) {
+   const json = JSON.parse(event.data, function (key, val) {
+      prozessJS( key, val );
+    });
+}
+
+function onLoad(event) {
+    initWebSocket();
+}
+
+function do_cmd(cmd, attr) {
+  var mycmd = cmd + ":" + attr;
+  websocket.send(mycmd);
+}
+
+$(document).ready(function(){
+  switch_main();
+  $("#titel2").hide();
+  $("#rf24div").hide();
+  $("#rf24log_div").hide();
+  $("#sens1div").hide();
+  $("#sens2div").hide();
+  $("#sens3div").hide();
+  $("#sens4div").hide();
+  $("#sw1_div").hide();
+  $("#sw2_div").hide();
+  $("#sw3_div").hide();
+  $("#sw4_div").hide();
+  $("#ledmatrix").hide();
+  $("#slider1div").hide();
+  $("#slider2div").hide();
+  $("#slider3div").hide();
+  $('#rf24gw').click(function() {
+    if (!$(this).is(':checked')) {
+      $("#rf24gw_div").hide();
+      $("#rf24log_div").hide();
+    } else {
+      $("#rf24gw_div").show();
+      $("#rf24log_div").show();
+    }
+  });
+
+  $('#nwscan').on('click', function () {
+    $.getJSON( "wifiscan", function( data ) {
+    });
+    $("#wifinw2").html("Scanning ... please wait").show();
+    $("#wifinw1").hide();
+    window.setTimeout(function(){
+      $("#wifinw2").html("");
+      $.getJSON( "wifishow", function( data ) {
+        $.each( data, function( key, val ) {
+          $("#wifinw2").append(" "+val+"<br>");
+        });
+      });
+    }, 20000);
+  });
+
+  $('#uploadmsg').html("Update von<br>Firmware oder Filesystem<br><br>Bitte Datei auswählen.");
+
+  $('#fs_file').on('change', function () {
+    var file = this.files[0];
+    filesize = file.size;
+    if (filesize > 200000 && filesize < 512000) {
+      $('#uploadmsg').html("Firmware Image<br>ausgewählt.");
+      myurl = "update_fw";
+    } else {
+      if ( filesize >= 1024000 ) {
+        $('#uploadmsg').html("Filesystem Image<br>ausgewählt.");
+        myurl = "update_fs";
+      } else {
+        $('#uploadmsg').html("Fehler!<br>Datei: "+file.name+"<br>ist weder Firware noch Filesystem Image!");
+      }
+    }
+  });
+  $('#fs_update').on('click', function () {
+    if ( filesize == 0) {
+      $('#uploadmsg').html("No file selected");
+    } else { 
+      if ( filesize > 0 && filesize < 200000 ) {
+        $('#uploadmsg').html("File to small!<br>Not the right image?");
+      } else {
+        if (filesize > 200000 && filesize < 512000) {
+          $('#uploadmsg').html("Firmware update läuft<br>bitte warten!");
+          fileOK = true;
+        } else {
+          if ( filesize >= 1024000 ) {
+            $('#uploadmsg').html("Filesystem update läuft<br>bitte warten!");
+            fileOK = true;
+          } else {
+            $('#uploadmsg').html("File überprüfen!");
+          }
+        }
+      }
+    }
+    if (fileOK) {
+      $.ajax({
+        url: myurl,
+        type: 'POST',
+        // Form data
+        data: new FormData($('#fs_form')[0]),
+        // Tell jQuery not to process data or worry about content-type
+        // You *must* include these options!
+        cache: false,
+        contentType: false,
+        processData: false,
+        complete: function(){
+          $('#uploadmsg').html("Update durchgeführt!<br><br>Bitte warten bis das System neu gestartet wurde");
+          window.setTimeout(function(){
+            window.location.href='index.html';
+          }, 20000);  
+        },
+        // Custom XMLHttpRequest
+        xhr: function () {
+          var myXhr = $.ajaxSettings.xhr();
+          if (myXhr.upload) {
+            // For handling the progress of the upload
+            myXhr.upload.addEventListener('progress', function (e) {
+              if (e.lengthComputable) {
+                $('#fs_progress').attr({
+                  value: e.loaded,
+                  max: e.total,
+                });
+              }
+            }, false);
+          }
+          return myXhr;
+        }
+      });
+    }
+  });
+});
+
+function prozessJS( key, val ) {
+  switch(key) {
+// Alle Seiten    
+    case "titel1":
+      $("#titel1").html(val);
+      $("#titel").html(val+" - "+title);
+    break;
+    case "titel2":
+      $("#titel2").html(val);
+      $("#titel2").show();
+    break;
+// Hauptseite 
+    case "sens1":
+      $("#sens1").html(val);
+      $("#sens1div").show();
+    break;
+    case "sens2":
+      $("#sens2").html(val);
+      $("#sens2div").show();
+    break;
+    case "sens3":
+      $("#sens3").html(val);
+      $("#sens3div").show();
+    break;
+    case "sens4":
+      $("#sens4").html(val);
+      $("#sens4div").show();
+    break;
+    case "rf24":
+      $("#rf24").html(val);
+      $("#rf24div").show();
+    break;
+    case "sw1":
+      if ( val > 0.5 ) {
+        $("#sw1_but").css("color","black").css("background-color","yellow");
+        $("#sw1_but").html("ein");
+      } else {
+        $("#sw1_but").css("color","white").css("background-color","black");
+        $("#sw1_but").html("aus");
+      }
+    break;
+    case "sw1_format":
+      $("#sw1_div").css("width","100%");
+      $("#sw1_div").show();
+    break;
+    case "sw1_label":
+      $("#sw1_lab").html(val);
+    break;
+    case "sw2":
+      if ( val > 0.5 ) {
+        $("#sw2_but").css("color","black").css("background-color","yellow");
+        $("#sw2_but").html("ein");
+      } else {
+        $("#sw2_but").css("color","white").css("background-color","black");
+        $("#sw2_but").html("aus");
+      }
+    break;
+    case "sw2_format":
+      $("#sw1_div").css("width","50%");
+      $("#sw2_div").css("width","50%");
+      $("#sw2_div").show();
+    break;
+    case "sw2_label":
+      $("#sw2_lab").html(val);
+    break;
+    case "sw3":
+      if ( val > 0.5 ) {
+        $("#sw3_but").css("color","black").css("background-color","yellow");
+        $("#sw3_but").html("ein");
+      } else {
+        $("#sw3_but").css("color","white").css("background-color","black");
+        $("#sw3_but").html("aus");
+      }
+    break;
+    case "sw3_format":
+      $("#sw1_div").css("width","33%");
+      $("#sw2_div").css("width","33%");
+      $("#sw3_div").css("width","33%");
+      $("#sw3_div").show();
+    break;
+    case "sw3_label":
+      $("#sw3_lab").html(val);
+    break;
+    case "sw4":
+      if ( val > 0.5 ) {
+        $("#sw4_but").css("color","black").css("background-color","yellow");
+        $("#sw4_but").html("ein");
+      } else {
+        $("#sw4_but").css("color","white").css("background-color","black");
+        $("#sw4_but").html("aus");
+      }
+    break;
+    case "sw4_format":
+      $("#sw1_div").css("width","25%");
+      $("#sw2_div").css("width","25%");
+      $("#sw3_div").css("width","25%");
+      $("#sw4_div").css("width","25%");
+      $("#sw4_div").show();
+    break;
+    case "sw4_label":
+      $("#sw4_lab").html(val);
+    break;
+    case "slider1":
+      $("#slider1div").show();
+      $("#slider1").change(function() {
+        var mycmd = "/cmd?";
+        mycmd = mycmd + slider1name;
+        mycmd = mycmd + "=S:";
+        mycmd = mycmd + $(this).val();
+        $.get(mycmd, function(data) {
+//          alert(data);
+        });
+      });
+    break;
+    case "slider1name":
+      slider1name = val;
+    break;
+    case "slider1label":
+      slider1label = val;
+      $("#slider1label").html(val);
+    break;
+    case "slider1max":
+      $("#slider1").attr('max', val);
+    break;
+    case "slider1val":
+      slider1val = val;
+      $("#slider1").val(val);
+      $("#slider1label").html(slider1label+": "+slider1val);
+    break;
+    case "slider2":
+      $("#slider2div").show();
+      $("#slider2").change(function() {
+        var mycmd = "/cmd?";
+        mycmd = mycmd + slider2name;
+        mycmd = mycmd + "=S:";
+        mycmd = mycmd + $(this).val();
+        $.get(mycmd, function(data) {
+//          alert(data);
+        });
+      });
+    break;
+    case "slider2name":
+      slider2name = val;
+    break;
+    case "slider2label":
+      $("#slider2label").html(val);
+    break;
+    case "slider3":
+      $("#slider3div").show();
+      $("#slider3").change(function() {
+        var mycmd = "/cmd?";
+        mycmd = mycmd + slider3name;
+        mycmd = mycmd + "=S:";
+        mycmd = mycmd + $(this).val();
+        $.get(mycmd, function(data) {
+//          alert(data);
+        });
+      });
+    break;
+    case "slider3name":
+      slider3name = val;
+    break;
+    case "slider3label":
+      $("#slider3label").html(val);
+    break;
+    case "matrix_x":
+      ledmatrix_x = val;
+    break;
+    case "matrix_y":
+      ledmatrix_y = val;
+    break;
+    case "matrix":
+    // Matrix mit daten füllen
+      for (let i = 0; i < val.length; i++) {
+        if ( val[i] == "1" ) {
+          $("#disp_dot_"+i).css("background","white");
+        } else {
+          $("#disp_dot_"+i).css("background","gray");
+        }
+      }
+    break;
+    case "show_matrix":
+    // Aufbau der LED Matrix
+      for (let y = 0; y < ledmatrix_y; y++) {
+        $("#display").append("<div id='disp_line_"+y+"' class='ledmatrix_line'><div>");
+        for (let x = 0; x < ledmatrix_x; x++) {
+          var z = ledmatrix_x * y + x;
+          $("#disp_line_"+y).append("<div id='disp_dot_"+z+"' class='ledmatrix_dot'><div>");
+        }
+      }
+      $("#ledmatrix").show();
+    break;
+
+    //Ab hier Konsole
+case "log":
+      logs[logs.length]=val;
+      $('#console').html(logs.join("\r\n"));
+    break;
+    case "console":
+      if ( val == 1 ) {
+        $('#console').prop('checked', true);
+      } else {
+        $('#console').prop('checked', false);
+      }
+    break;
+
+// Ab hier für Einstellungen
+    case "set_rf24gw":
+      if ( val == 1 ) { 
+	      $('#rf24gw').prop('checked', true);
+        $("#rf24gw_div").show(); 
+        $("#rf24log_div").show(); 
+      } else { 
+	      $('#rf24gw').prop('checked', false);
+        $("#rf24gw_div").hide(); 
+        $("#rf24log_div").hide(); 
+      }
+    break;
+    case "set_rf24gw_enable":
+      if ( val == 1 ) { 
+        $('#rf24gw_fs').show(); 
+      } else { 
+        $('#rf24gw_fs').hide(); 
+      }
+    break;
+    case "set_RF24HUB-Server":
+      $('#rf24hubname').val(val);
+    break;
+    case "set_RF24HUB-Port":
+      $('#rf24hubport').val(val);
+    break;
+    case "set_RF24GW-Port":
+      $('#rf24gwport').val(val);
+    break;
+    case "set_RF24GW-No":
+      $('#rf24gwno').val(val);
+    break;
+    case "set_mqttserver":
+      $('#mqttserver').val(val);
+    break;
+    case "set_mqttclient":
+      $('#mqttclient').val(val);
+    break;
+    case "log_sensor":
+      if ( val == 1 ) {
+        $('#log_sensor').prop('checked', true);
+      } else {
+        $('#log_sensor').prop('checked', false);
+      }
+    break;
+    case "log_rf24":
+      if ( val == 1 ) {
+        $('#log_rf24').prop('checked', true);
+      } else {
+        $('#log_rf24').prop('checked', false);
+      }
+    break;
+    case "log_mqtt":
+      if ( val == 1 ) {
+        $('#log_mqtt').prop('checked', true);
+      } else {
+        $('#log_mqtt').prop('checked', false);
+      }
+    break;
+    case "log_webcmd":
+      if ( val == 1 ) {
+        $('#log_webcmd').prop('checked', true);
+      } else {
+        $('#log_webcmd').prop('checked', false);
+      }
+    break;
+    case "log_sysinfo":
+      if ( val == 1 ) {
+        $('#log_sysinfo').prop('checked', true);
+      } else {
+        $('#log_sysinfo').prop('checked', false);
+      }
+    break;
+    case "log_fs_sysinfo":
+      if ( val == 1 ) {
+        $('#log_fs_sysinfo').prop('checked', true);
+      } else {
+        $('#log_fs_sysinfo').prop('checked', false);
+      }
+    break;
+    case "logfile":
+      if ( val == 1 ) {
+        $('#logfile').prop('checked', true);
+      } else {
+        $('#logfile').prop('checked', false);
+      }
+    break;
+
+// Ab hier für Sysinfo
+    case "Platform":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Host:</td></tr>"+
+                       "<tr><td class='tab_left'> Platform: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Cores":
+      $("#Tab").append("<tr><td class='tab_left'> Cores: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Hostname":
+      $("#Tab").append("<tr><td class='tab_left'> Hostname: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "CpuFreq":
+      $("#Tab").append("<tr><td class='tab_left'> CPU Speed: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "FlashSize":
+      $("#Tab").append("<tr><td class='tab_left'> Flash Size: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "FlashFreq":
+      $("#Tab").append("<tr><td class='tab_left'> Flash Speed: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Sketchsize":
+      $("#Tab").append("<tr><td class='tab_left'> Sketch Size: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Freespace":
+      $("#Tab").append("<tr><td class='tab_left'> Free Space: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Heap_free":
+      $("#Tab").append("<tr><td class='tab_left'> Heap Free: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Heap_max":
+      $("#Tab").append("<tr><td class='tab_left'> Heap Max: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Heap_frag":
+      $("#Tab").append("<tr><td class='tab_left'> Heap Fragmentation: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "ResetReason":
+      $("#Tab").append("<tr><td class='tab_left'> Reset Reason: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Vcc":
+      $("#Tab").append("<tr><td class='tab_left'> Vcc: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "UpTime":
+      $("#Tab").append("<tr><td class='tab_left'> Uptime: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+
+    case "IP":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Network:</td></tr>"+
+                       "<tr><td class='tab_left'> IP Address: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SubNetMask":
+      $("#Tab").append("<tr><td class='tab_left'> Sub Net Mask: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "GW-IP":
+      $("#Tab").append("<tr><td class='tab_left'> Gateway IP: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "DnsIP":
+      $("#Tab").append("<tr><td class='tab_left'> DNS Server IP: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SSID":
+      $("#Tab").append("<tr><td class='tab_left'> SSID: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Channel":
+      $("#Tab").append("<tr><td class='tab_left'> Channel: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "BSSID":
+      $("#Tab").append("<tr><td class='tab_left'> BSSID: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "MAC":
+      $("#Tab").append("<tr><td class='tab_left'> MAC Address: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+
+    case "IdeVer":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Build System:</td></tr>"+
+                       "<tr><td class='tab_left'> IDE Version: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "CoreVer":
+      $("#Tab").append("<tr><td class='tab_left'> Core Version: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SdkVer":
+      $("#Tab").append("<tr><td class='tab_left'> SDK Version: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SW":
+      $("#Tab").append("<tr><td class='tab_left'> Software Version: </td><td class='tab_right'>"+val+"</td></tr>");
+      $("#Tab").append("<tr><td class='tab_left'> HTML Version: </td><td class='tab_right'>"+htmlversion+"</td></tr>");
+    break;
+    case "mqttserver":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>MQTT:</td></tr>"
+			+"<tr><td class='tab_left'> MQTT Server: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "mqttclient":
+      $("#Tab").append("<tr><td class='tab_left'> MQTT Client: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    break;
+    case "RF24HUB-Server":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>RF24 Gateway:</td></tr>"
+          +"<tr><td class='tab_left'> RF24 Hub Server: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24HUB-Port":
+      $("#Tab").append("<tr><td class='tab_left'> RF24 Hub UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24GW-Port":
+      $("#Tab").append("<tr><td class='tab_left'> RF24 GW UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24GW-No":
+      $("#Tab").append("<tr><td class='tab_left'> RF24 GW Nummer: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "sens-hw":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensor:</td></tr>");
+      $("#Tab").append("<tr><td class='tab_left'> Hardware: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;  
+    case "sens-res":
+      $("#Tab").append("<tr><td class='tab_left'> Resolution: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;  
+  }
+}
+
+function switch_main() {
+  $("#page_main").show();
+  $("#page_console").hide();
+  $("#page_settings").hide();
+  $("#page_update").hide();
+  $("#page_sysinfo").hide();
+  $("#but_main").hide();
+  $("#but_cons").show();
+  $("#but_sett").show();
+  $("#but_stor").hide();
+  $("#but_logd").hide();
+  $("#but_uhtm").hide();
+  $("#but_boot").hide();
+  $("#but_sysi").show();
+}
+
+function switch_console() {
+  $("#page_console").show();
+  $("#page_main").hide();
+  $("#page_settings").hide();
+  $("#page_update").hide();
+  $("#page_sysinfo").hide();
+  $("#but_main").show();
+  $("#but_cons").hide();
+  $("#but_sett").show();
+  $("#but_stor").hide();
+  $("#but_logd").hide();
+  $("#but_uhtm").hide();
+  $("#but_boot").hide();
+  $("#but_sysi").show();
+}
+
+function switch_settings() {
+  $("#page_settings").show();
+  $("#page_main").hide();
+  $("#page_console").hide();
+  $("#page_update").hide();
+  $("#page_sysinfo").hide();
+  $("#but_main").show();
+  $("#but_cons").show();
+  $("#but_sett").hide();
+  $("#but_stor").show();
+  $("#but_logd").show();
+  $("#but_uhtm").show();
+  $("#but_boot").show();
+  $("#but_sysi").show();
+}
+
+function switch_update() {
+  $("#page_settings").hide();
+  $("#page_main").hide();
+  $("#page_console").hide();
+  $("#page_update").show();
+  $("#page_sysinfo").hide();
+  $("#but_main").show();
+  $("#but_cons").hide();
+  $("#but_sett").hide();
+  $("#but_stor").hide();
+  $("#but_logd").hide();
+  $("#but_uhtm").hide();
+  $("#but_boot").hide();
+  $("#but_sysi").show();
+}
+
+function switch_sysinfo() {
+  $("#page_settings").hide();
+  $("#page_main").hide();
+  $("#page_console").hide();
+  $("#page_update").hide();
+  $("#page_sysinfo").show();
+  $("#but_main").show();
+  $("#but_cons").show();
+  $("#but_sett").show();
+  $("#but_stor").hide();
+  $("#but_logd").hide();
+  $("#but_uhtm").hide();
+  $("#but_boot").hide();
+  $("#but_sysi").hide();
+  $("#page_sysinfo").html("<table style='width:100%;'' id='Tab'><tbody>");
+  $.getJSON( "sysinfo1", function( data ) {
+    $.each( data, function( key, val ) {
+      prozessJS( key, val );
+    });
+  });
+  $.getJSON( "sysinfo2", function( data ) {
+    $.each( data, function( key, val ) {
+      prozessJS( key, val );
+    });
+  });
+  $.getJSON( "sysinfo3", function( data ) {
+    $.each( data, function( key, val ) {
+      prozessJS( key, val );
+    });
+  });
+}
+
+function store() {
+  var mycmd = "/cmd?";
+  if ( $("#rf24gw").is(":checked") ) {
+    mycmd = mycmd + "rf24gw=1";
+  } else {
+    mycmd = mycmd + "rf24gw=0";
+  }
+  mycmd = mycmd + "&rf24hubname=";
+  mycmd = mycmd + $("#rf24hubname").val();
+  mycmd = mycmd + "&rf24hubport=";
+  mycmd = mycmd + $("#rf24hubport").val();
+  mycmd = mycmd + "&rf24gwport=";
+  mycmd = mycmd + $("#rf24gwport").val();
+  mycmd = mycmd + "&rf24gwno=";
+  mycmd = mycmd + $("#rf24gwno").val();
+  
+  if ( $("#logfile").is(":checked") ) {
+    mycmd = mycmd + "&logfile=1";
+  } else {
+    mycmd = mycmd + "&logfile=0";
+  }
+  if ( $("#console").is(":checked") ) {
+    mycmd = mycmd + "&logger=1";
+  } else {
+    mycmd = mycmd + "&logger=0";
+  }
+  if ( $("#log_startup").is(":checked") ) {
+    mycmd = mycmd + "&log_startup=1";
+  } else {
+    mycmd = mycmd + "&log_startup=0";
+  }
+  if ( $("#log_rf24").is(":checked") ) {
+    mycmd = mycmd + "&log_rf24=1";
+  } else {
+    mycmd = mycmd + "&log_rf24=0";
+  }
+  if ( $("#log_sensor").is(":checked") ) {
+    mycmd = mycmd + "&log_sensor=1";
+  } else {
+    mycmd = mycmd + "&log_sensor=0";
+  }
+  if ( $("#log_mqtt").is(":checked") ) {
+    mycmd = mycmd + "&log_mqtt=1";
+  } else {
+    mycmd = mycmd + "&log_mqtt=0";
+  }
+  if ( $("#log_webcmd").is(":checked") ) {
+    mycmd = mycmd + "&log_webcmd=1";
+  } else {
+    mycmd = mycmd + "&log_webcmd=0";
+  }
+  if ( $("#log_sysinfo").is(":checked") ) {
+    mycmd = mycmd + "&log_sysinfo=1";
+  } else {
+    mycmd = mycmd + "&log_sysinfo=0";
+  }
+  mycmd = mycmd + "&saveeprom=" + $("input[name='saveeprom']:checked").val();
+  $.get(mycmd, function(data) {
+    alert(data);
+  });
+}
+
+function do_restart() {
+  var r = confirm("Wirklich neustarten?");
+  if (r == true) {
+    $.get("/cmd?restart", function(data) {
+       alert(data);
+    });
+  }
+}
+
+function dellog() {
+  $.get("/cmd?dellogfile", function(data) {
+    alert(data);
+  });
+}
+
+</script>
+
+<title id="titel"></title>
+</head>
+<body>
+<div class="wrapper">
+  <div class="div_header">
+    <h2 id="titel1" class="titel1">Titel1</h2>
+    <h3 id="titel2" class="titel2">Titel2</h3>
+    <hr>
+  </div>
+  <div id="page_main" class="div_content">
+    <div id="rf24div">
+      <div id="rf24" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="sens1div">
+      <div id="sens1" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="sens2div">
+      <div id="sens2" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="sens3div">
+      <div id="sens3" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="sens4div">
+      <div id="sens4" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="sw1_div" class="sw_div">
+      <div id='sw1_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw1_but' class='sw_button' onclick='do_cmd("sw1","2");'>
+          ???
+        </button>
+      </div>
+    </div>
+    <div id="sw2_div" class="sw_div">
+      <div id='sw2_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw2_but' class='sw_button' onclick='do_cmd("sw2","2");'>
+          ???
+        </button>
+      </div>
+    </div>
+    <div id="sw3_div" class="sw_div">
+      <div id='sw3_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw3_but' class='sw_button' onclick='do_cmd("sw3","2");'>
+          ???
+        </button>
+      </div>
+    </div>
+    <div id="sw4_div" class="sw_div">
+      <div id='sw4_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw4_but' class='sw_button' onclick='do_cmd("sw4","2");'>
+          ???
+        </button>
+      </div>
+    </div>
+    <div id="slider1div">
+      <label for='slider1' id='slider1label'></label>
+      <input type='range' name='slider1' id='slider1' min='0' max='255' value='0'>	
+    </div>
+    <div id="slider2div">
+      <label for='slider2' id='slider2label'></label>
+      <input type='range' name='slider2' id='slider2' min='0' max='255' value='0'>	
+    </div>
+    <div id="slider3div">
+      <label for='slider3' id='slider3label'></label>
+      <input type='range' name='slider3' id='slider3' min='0' max='255' value='0'>	
+    </div>
+    <div id="ledmatrix" class="ledmatrix_div">
+	    <div style="width:10px;"></div>
+	    <div id="display" class="display"></div>
+    </div>
+  </div>
+
+  <div id="page_console" class="div_content">
+    <textarea readonly id='console' cols='340' wrap='off'></textarea>
+    <br>
+    <input id='cmd' placeholder='Befehl eingeben' autofocus class="input">
+  </div>
+
+  <div id="page_settings"  class="div_content">
+    <fieldset id="rf24gw_fs"> 
+      <legend>RF24 Gateway:</legend> 
+      <input type="checkbox" name="rf24gw" value="rf24gw" id="rf24gw" class="checkbox">
+      <label for="rf24gw">RF24 Gateway</label>
+      <div id="rf24gw_div">
+        <hr>
+        <input type="text" value="RF24 Hub Server:"  class="input_50a" disabled>
+        <input type="text" name="rf24hubname" value="" id="rf24hubname" class="input_50b">
+        <br>
+        <input type="text" value="RF24 Hub Port:"  class="input_50a" disabled>
+        <input type="text" name="rf24hubport" value="" id="rf24hubport" class="input_50b">
+        <br>
+        <input type="text" value="RF24 GW Port:"  class="input_50a" disabled>
+        <input type="text" name="rf24gwport" value="" id="rf24gwport" class="input_50b">
+        <br>
+        <input type="text" value="RF24 Gateway No:"  class="input_50a" disabled>
+        <input type="text" name="rf24gwno" value="" id="rf24gwno" class="input_50b">
+        <br>
+      </div>
+    </fieldset>
+        
+    <fieldset id="mqtt_fs"> 
+      <legend>MQTT:</legend> 
+      <input type="text" value="MQTT Server:"  class="input_50a" disabled>
+      <input type="text" name="mqttserver" value="" id="mqttserver" class="input_50b">
+      <br>
+      <input type="text" value="MQTT Client:"  class="input_50a" disabled>
+      <input type="text" name="mqttclient" value="" id="mqttclient" class="input_50b">
+      <br>
+    </fieldset>
+      
+    <fieldset> 
+      <legend>Log to /debugfile.txt</legend> 
+      <input type="checkbox" name="logcontent" value="sysinfo" id="log_fs_sysinfo" class="checkbox">
+      <label for="log_sysinfo">System Informationen</label><br>
+    </fieldset>
+    
+    <fieldset> 
+      <legend>Log to Console</legend> 
+      <div id="rf24log_div">
+        <input type="checkbox" name="logcontent" value="rf24" id="log_rf24" class="checkbox">
+        <label for="log_rf24" id="log_rf24l">RF24</label><br>
+      </div>
+      <input type="checkbox" name="logcontent" value="sensor" id="log_sensor" class="checkbox">
+      <label for="log_sensor">Sensor</label><br>
+      <div id="mqtt_div">
+        <input type="checkbox" name="logcontent" value="mqtt" id="log_mqtt" class="checkbox">
+        <label for="log_mqtt">MQTT</label><br>
+      </div>
+      <input type="checkbox" name="logcontent" value="webcmd" id="log_webcmd" class="checkbox">
+      <label for="log_webcmd">Web Kommando</label><br>
+      <input type="checkbox" name="logcontent" value="sysinfo" id="log_sysinfo" class="checkbox">
+      <label for="log_sysinfo">System Informationen</label><br>
+    </fieldset>
+    
+    <fieldset id="xyz"> 
+      <legend>Daten dauerhaft speichern?</legend> 
+      <input type="radio" name="saveeprom" value="1" id="eprom_yes" class="checkbox">
+      <label for="eprom_yes">Dauerhaft speichern</label><br>
+      <input type="radio" name="saveeprom" value="0" id="eprom_no" class="checkbox" checked>
+      <label for="eprom_no">Nur temporär verwenden</label><br>
+    </fieldset>
+  </div>
+
+  <div id="page_update" class="div_content">
+    <div class="info"><button class="i_button">i</button></div>
+    <div class="uploadmsg" id="uploadmsg"></div>
+    <form enctype="multipart/form-data" id="fs_form">
+          <input name="file" type="file" id="fs_file" accept=".bin" style="width: 100%;font-size: medium;"/>
+          <progress style="width: 100%;" id="fs_progress"></progress>
+          <input type="button" value="Upload" id="fs_update" class="button bg_rt"/>
+    </form>
+  </div>
+
+  <div id="page_sysinfo" class="div_content">
+  </div>
+
+<button id="but_stor" class="button bg_gr" onclick="store();">Speichern</button>
+  <button id="but_logd" class="button bg_gr" onclick="dellog();">Logfile löschen</button>
+  <button id="but_uhtm" class="button bg_rt" onclick="switch_update();">Update</button>
+  <button id="but_boot" class="button bg_rt" onclick="do_restart();">Neustart</button>
+  <button id="but_cons" class="button bg_bk" onclick="switch_console();">Konsole</button>
+  <button id="but_sett" class="button bg_bk" onclick="switch_settings();">Einstellungen</button>
+  <button id="but_main" class="button bg_gr" onclick="switch_main();">Hauptseite</button>
+  <button id="but_sysi" class="button bg_gr" onclick="switch_sysinfo();">Systeminfo</button>
+  <div class="div_footer">
+    <hr>
+    ESPNode von Norbert Wilms
+  </div>
+</div>
+</body>
+</html>

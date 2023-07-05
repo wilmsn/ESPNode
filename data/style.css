@@ -1,0 +1,262 @@
+/* Seitenlayout */
+body {
+    font-family:verdana,sans-serif;
+    background:#AAAAAA;
+    color:#111111;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+}
+/* Layout für den Logger */
+textarea {
+  resize:vertical;
+  width:98%;
+  height:318px;
+  padding:5px;
+  overflow:auto;
+  background:#1f1f1f;
+  color:#65c115;
+}
+/* Label */
+label {
+ text-align:left;
+}
+/* CMD Line der Console */
+.input {
+  width:98%;
+  padding:5px;
+  background:#1f1f1f;
+  color:#ffffff;
+}
+/* Eingabefeld Label und Eingabefeld ca. 50:50 aufgeteilt */
+/* Label */
+.input_50a {
+  font-size:13px;
+  width:47%;
+  border:darkgray;
+  background:#aaaaaa;
+  color:#000000;
+}
+/* Eingabefeld */
+.input_50b {
+  font-size:13px;
+  width:47%;
+  padding:1px;
+  background:#ffffff;
+  color:#000000;
+}
+/* Eingabefeld Label und Eingabefeld ca. 70:30 aufgeteilt */
+/* Label */
+.input_70a {
+  font-size:13px;
+  width:70%;
+  border:darkgray;
+  background:#aaaaaa;
+  color:#000000;
+}
+/* Eingabefeld */
+.input_70b {
+  font-size:13px;
+  width:21%;
+  padding:1px;
+  background:#ffffff;
+  color:#000000;
+}
+/* Header */
+.input_header {
+  font-size:15px;
+  width:45%;
+  border:darkgray;
+  background:#aaaaaa;
+  color:#000000;
+}
+/* Wrapper zur Breitenreduktion */
+.wrapper {
+  width: 340px;
+}
+/* Wrapper für den Header mit den Titelzeilen */
+.div_header {
+  width: 100%;
+}
+/* Titelzeile 1 */
+.titel1 {
+  font-size:20px;
+  text-align:center;    
+}
+/* Titelzeile 2 */
+.titel2 {
+  font-size:15px;
+  text-align:center;    
+}
+/* Content Wrapper */
+.div_content {
+  width: 100%;
+}
+/* Footer Wrapper */
+.div_footer {
+  width: 100%;
+  text-align:right;
+  font-size:11px;
+}
+/* Nachrichtenfelder oberhalb der SChalter */
+.msg_div {
+  width: 100%;
+  font-size:18px;
+  text-align: center;
+}
+/*
+.help_button {
+  border:2px solid black;
+  width:300px;
+  height:20px;
+}
+
+.help_label {
+  height: 1.1rem;
+  text-align: center;
+  width: 100%;
+}
+*/
+.ledmatrix_div {
+/*  border:2;*/
+  position: relative;  
+  float: left;
+}
+.ledmatrix_line {
+  height: 10px;
+}
+.ledmatrix_dot {
+  position: relative;  
+  width: 8px;
+  height: 8px;
+  background: grey;
+  display: inline-block;
+  border: 1px;
+  border-style: solid;
+  border-color: black;
+}
+/* Tabelle Feld zentriert */
+.tab_center {
+  text-align: center;
+}
+/* Tabelle linkes Feld */
+.tab_left {
+  text-align: right;
+}
+/* Tabelle rechtes Feld */
+.tab_right {
+  text-align: left;
+}
+/* Tabelle Kopf- bzw. Abschnittsüberschrift */
+.tab_head {
+  font-weight: bold;
+  border-style: double;
+  text-align: center;
+}
+/* Checkbox und Radio Buttons */
+.checkbox {
+  width: 10%;
+}
+/*
+.display {
+  margin: 10px;
+} 
+*/
+/*Navigationsknöpfe mit den verschiedenen Farben */
+.button {
+/*  border:0;*/
+  border-radius:3rem;
+  line-height:2.4rem;
+  font-size:1.2rem;
+  width:100%;
+  margin-top: 1rem;
+  padding: unset;
+}
+.button_small {
+/*  border:0;*/
+  border-radius:3rem;
+  line-height:2.4rem;
+  font-size:1rem;
+  width:50%;
+  margin-top: 1rem;
+  padding: unset;
+}
+.bg_rt {
+  background:#A80329;
+  color:#faffff;
+}
+.bg_gr {
+  background:#444444;
+  color:#faffff;
+}
+.bg_bk {
+  background:#111111;
+  color:#faffff;
+}
+.bg_yl {
+  background:#FFFF08;
+  color:#111111;
+}
+/* Schieberegler */
+input[type="range"]{
+    width: 85%;
+    -webkit-appearance: none;
+    -moz-apperance: none;
+    height: 5px;
+    background-image: -webkit-gradient(
+        linear,
+        left top,
+        right top,
+        color-stop(0, black),
+        color-stop(0, gray)
+    );
+}
+/* Die Schalter */
+.sw_button {
+  border:2px solid black;
+  border-radius:3rem;
+  line-height:2.4rem;
+  font-size:1.2rem;
+  width:60px;
+  height:60px;
+}
+/* Label für die Schalter */
+.sw_label {
+  height: 1.1rem;
+  text-align: center;
+  width: 100%;
+}
+/* Platzhalter für die Schalter */
+.sw_div {
+  padding-top: 2%;
+  padding-bottom: 2%;
+  float: left;
+  text-align: center;
+}
+
+/* Message bei Upload */
+.uploadmsg {
+  text-align: center;
+  color: #A80329;
+  font-size: large;
+  float: left;
+  width: 80%;
+  height: 100px;
+}
+.info {
+  font-size: 3rem;
+  float: left;
+  width: 20%;
+  padding-top: 5%;
+  height: 100px;
+}
+.i_button {
+  border:2px solid black;
+  border-radius:3rem;
+  line-height:2.4rem;
+  font-size:3rem;
+  width:60px;
+  height:60px;
+  color: black; 
+  background-color: yellow;
+}
