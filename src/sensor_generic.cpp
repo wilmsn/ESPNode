@@ -95,6 +95,7 @@ const char* Sensor_Generic::show_mqtt_name() {
   return obj_mqtt_name.c_str();
 }
 
+//tbd überprüfen !!! Wird es benötigt???
 const char* Sensor_Generic::show_value() {
   return obj_values_str.c_str();
 }

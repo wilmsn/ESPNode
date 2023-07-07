@@ -3,7 +3,7 @@
 void Sensor_LDR::begin(const char* html_place, const char* label) {
   Sensor_Generic::begin(html_place, label);
   obj_value = analogRead(A0);
-  obj_sensorinfo = "\"sensors\":1,\"sens-hw\":\"LDR an A0\"";
+  obj_sensorinfo = "\"sensorinfo1\":\"Hardware:#LDR an A0\",\"sensorinfo2\":\"Präzision:#12\",\"sensorinfo3\":\"Empfindlichkeit:#100lx\",\"sensorinfo4\":\"sonst:#test\"";
 }
 
 void Sensor_LDR::start_measure() {

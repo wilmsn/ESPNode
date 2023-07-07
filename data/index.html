@@ -580,6 +580,27 @@ case "log":
     case "sens-res":
       $("#Tab").append("<tr><td class='tab_left'> Resolution: </td><td class='tab_right'>"+val+"</td></tr>");
     break;  
+    case "sensorinfo1":
+      const sensordata1 = val.split("#");
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensoren:</td></tr>");
+      $("#Tab").append("<tr><td class='tab_left'>"+sensordata1[0]+"</td><td class='tab_right'>"+sensordata1[1]+"</td></tr>");
+    break;  
+    case "sensorinfo2":
+      const sensordata2 = val.split("#");
+      $("#Tab").append("<tr><td class='tab_left'>"+sensordata2[0]+"</td><td class='tab_right'>"+sensordata2[1]+"</td></tr>");
+    break;  
+    case "sensorinfo3":
+      const sensordata3 = val.split("#");
+      $("#Tab").append("<tr><td class='tab_left'>"+sensordata3[0]+"</td><td class='tab_right'>"+sensordata3[1]+"</td></tr>");
+    break;  
+    case "sensorinfo4":
+      const sensordata4 = val.split("#");
+      $("#Tab").append("<tr><td class='tab_left'>"+sensordata4[0]+"</td><td class='tab_right'>"+sensordata4[1]+"</td></tr>");
+    break;  
+    case "sensorinfo5":
+      const sensordata5 = val.split("#");
+      $("#Tab").append("<tr><td class='tab_left'>"+sensordata5[0]+"</td><td class='tab_right'>"+sensordata5[1]+"</td></tr>");
+    break;  
   }
 }
 
