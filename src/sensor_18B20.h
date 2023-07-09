@@ -12,19 +12,17 @@
 class Sensor_18B20 : public Sensor_Generic {
 
 public:
-    /// @brief 
-    /// @param html_place 
-    /// @param label 
-    /// @param mqtt_name 
-    /// @param pin 
-    /// @param resolution 
-//    void begin(const char* html_place, const char* label, const char* mqtt_name, uint8_t pin, uint8_t resolution);
+    /// @brief Initialisierung des Sensorobjektes
+    /// @param html_place Der Einbauort der HTML Seite
+    /// @param label Ein Bezeichner für den Messwert
+    /// @param mqtt_name Der MQTT Bezeichner für den Messwert
     void begin(const char* html_place, const char* label, const char* mqtt_name);
 
     /// @brief Startet eine Messung. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
     void start_measure();
 
 private:
+    /// @brief Die Auflösung des Sensors
     uint8_t obj_resolution = 12;
 
 };

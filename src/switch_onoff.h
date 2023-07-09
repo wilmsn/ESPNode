@@ -2,7 +2,7 @@
 #define _SWITCH_ONOFF_H_
 /***************************************************************************************
  ***************************************************************************************/
-#include "sensor_generic.h"
+#include "switch_generic.h"
 
 /// @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.\n 
 ///Der Schalter reagiert nur wenn es in der **set** Funktion mit dem Schlüsselwort aufgerufen 
@@ -14,13 +14,14 @@
 ///Folgende Strings als **value** übergeben schalten **um**:\n 
 ///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n 
 
-class Switch_OnOff : public Sensor_Generic {
+class Switch_OnOff : public Switch_Generic {
 
 public:
     /// @brief Die Initialisierung des Schalters als logischer Schalter ohne HW-Pin
     /// @param html_place Der Einbauort in der Webseite
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param label Ein Bezeichner für diesen Schalter
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
@@ -28,8 +29,9 @@ public:
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin
     /// @param html_place Der Einbauort in der Webseite
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param label Ein Bezeichner für diesen Schalter
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param hw_pin Der Hardware Pin
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
@@ -38,9 +40,11 @@ public:
 
     /// @brief Die Initialisierung des Schalters für zwei HW-Pins
     /// @param html_place Der Einbauort in der Webseite
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param label Ein Bezeichner für diesen Schalter
-    /// @param hw_pin Der Hardware Pin
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
+    /// @param hw_pin1 Der erste Hardware Pin
+    /// @param hw_pin2 Der zweite Hardware Pin
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
@@ -48,21 +52,29 @@ public:
 
     /// @brief Die Initialisierung des Schalters mit Regler ohne HW-Pin
     /// @param html_place Der Einbauort in der Webseite
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param label Ein Bezeichner für diesen Schalter
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param slider_val Der Wert des Schiebereglers zum Programmstart
+    /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
+    /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no,
                const char* slider_mqtt_name);
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin und PWM Steuerung
     /// @param html_place Der Einbauort in der Webseite
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param label Ein Bezeichner für diesen Schalter
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param hw_pin Der Hardware Pin
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param slider_val Der Wert des Schiebereglers zum Programmstart
+    /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
+    /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                uint8_t hw_pin, bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no,
                const char* slider_mqtt_name);
@@ -90,7 +102,7 @@ public:
     /// @return true = Schalter ein; false = Schalter aus
     bool get_switch_val();
 
-private:
+//private:
    /// @brief Schaltet die Hardware auf den in "state" übergebenen Zustand. "true" = Ein, "false" = Aus
    /// @param state Der neue Zustand des Schalters (0...255).
    void do_switch(bool state);

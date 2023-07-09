@@ -17,8 +17,12 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   Serial.print("Temperatur: ");
   Serial.println(sensors.getTempCByIndex(0));
 #endif
-  obj_sensorinfo = "\"sensors\":1,\"sens-hw\":\"18B20\",\"sens-res\":";
-  obj_sensorinfo += String(obj_resolution);
+  obj_sensorinfo_mqtt = "\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":";
+  obj_sensorinfo_mqtt += String(obj_resolution);
+  obj_sensorinfo_html =  "\"sensorinfo1\":\"Hardware:#18B20\"";
+  obj_sensorinfo_html += ",\"sensorinfo2\":\"Resolution:#";
+  obj_sensorinfo_html += String(obj_resolution);
+  obj_sensorinfo_html += "\"";
 }
 
 void Sensor_18B20::start_measure() {

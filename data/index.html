@@ -7,7 +7,7 @@
 <script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.991 (07/2023)";
+var htmlversion = "0.992 (07/2023)";
 var ledmatrix_active = 0;
 var display = 0;
 var ledmatrix_x = 8;
@@ -81,6 +81,15 @@ $(document).ready(function(){
     } else {
       $("#rf24gw_div").show();
       $("#rf24log_div").show();
+    }
+  });
+  $('#mqtt').click(function() {
+    if (!$(this).is(':checked')) {
+      $("#mqtt_div").hide();
+      $("#mqttlog_div").hide();
+    } else {
+      $("#mqtt_div").show();
+      $("#mqttlog_div").show();
     }
   });
 
@@ -411,11 +420,25 @@ case "log":
     case "set_RF24GW-No":
       $('#rf24gwno').val(val);
     break;
+    case "set_mqtt":
+      if (val == 1) {
+	      $('#mqtt').prop('checked', true);
+        $('#mqtt_div').show();
+        $('#mqttlog_div').show();
+      } else {
+	      $('#mqtt').prop('checked', false);
+        $('#mqtt_div').hide();
+        $('#mqttlog_div').hide();
+      }
+    break;
     case "set_mqttserver":
       $('#mqttserver').val(val);
     break;
     case "set_mqttclient":
       $('#mqttclient').val(val);
+    break;
+    case "set_mqtttopicp2":
+      $('#mqtttopicp2').val(val);
     break;
     case "log_sensor":
       if ( val == 1 ) {
@@ -558,6 +581,9 @@ case "log":
     break;
     case "mqttclient":
       $("#Tab").append("<tr><td class='tab_left'> MQTT Client: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "mqtttopicp2":
+      $("#Tab").append("<tr><td class='tab_left'> MQTT Topic Part2: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     break;
     case "RF24HUB-Server":
@@ -704,18 +730,28 @@ function store() {
   var mycmd = "/cmd?";
   if ( $("#rf24gw").is(":checked") ) {
     mycmd = mycmd + "rf24gw=1";
+    mycmd = mycmd + "&rf24hubname=";
+    mycmd = mycmd + $("#rf24hubname").val();
+    mycmd = mycmd + "&rf24hubport=";
+    mycmd = mycmd + $("#rf24hubport").val();
+    mycmd = mycmd + "&rf24gwport=";
+    mycmd = mycmd + $("#rf24gwport").val();
+    mycmd = mycmd + "&rf24gwno=";
+    mycmd = mycmd + $("#rf24gwno").val();
   } else {
     mycmd = mycmd + "rf24gw=0";
   }
-  mycmd = mycmd + "&rf24hubname=";
-  mycmd = mycmd + $("#rf24hubname").val();
-  mycmd = mycmd + "&rf24hubport=";
-  mycmd = mycmd + $("#rf24hubport").val();
-  mycmd = mycmd + "&rf24gwport=";
-  mycmd = mycmd + $("#rf24gwport").val();
-  mycmd = mycmd + "&rf24gwno=";
-  mycmd = mycmd + $("#rf24gwno").val();
-  
+  if ( $("#mqtt").is(":checked") ) {
+    mycmd = mycmd + "mqtt=0";
+    mycmd = mycmd + "&mqttclient=";
+    mycmd = mycmd + $("#mqttclient").val();
+    mycmd = mycmd + "&mqttserver=";  
+    mycmd = mycmd + $("#mqttserver").val();
+    mycmd = mycmd + "&mqtttopicp2=";  
+    mycmd = mycmd + $("#mqtttopicp2").val();
+  } else {
+    mycmd = mycmd + "mqtt=0";
+  }
   if ( $("#logfile").is(":checked") ) {
     mycmd = mycmd + "&logfile=1";
   } else {
@@ -893,12 +929,19 @@ function dellog() {
         
     <fieldset id="mqtt_fs"> 
       <legend>MQTT:</legend> 
-      <input type="text" value="MQTT Server:"  class="input_50a" disabled>
-      <input type="text" name="mqttserver" value="" id="mqttserver" class="input_50b">
-      <br>
-      <input type="text" value="MQTT Client:"  class="input_50a" disabled>
-      <input type="text" name="mqttclient" value="" id="mqttclient" class="input_50b">
-      <br>
+      <input type="checkbox" name="mqtt" value="mqtt" id="mqtt" class="checkbox">
+      <label for="mqtt">MQTT Client</label>
+      <div id="mqtt_div">
+        <input type="text" value="MQTT Server:"  class="input_50a" disabled>
+        <input type="text" name="mqttserver" value="" id="mqttserver" class="input_50b">
+        <br>
+        <input type="text" value="MQTT Client:"  class="input_50a" disabled>
+        <input type="text" name="mqttclient" value="" id="mqttclient" class="input_50b">
+        <br>
+        <input type="text" value="MQTT Topic Part2:"  class="input_50a" disabled>
+        <input type="text" name="mqtttopicp2" value="" id="mqtttopicp2" class="input_50b">
+        <br>
+      </div>
     </fieldset>
       
     <fieldset> 
@@ -915,7 +958,7 @@ function dellog() {
       </div>
       <input type="checkbox" name="logcontent" value="sensor" id="log_sensor" class="checkbox">
       <label for="log_sensor">Sensor</label><br>
-      <div id="mqtt_div">
+      <div id="mqttlog_div">
         <input type="checkbox" name="logcontent" value="mqtt" id="log_mqtt" class="checkbox">
         <label for="log_mqtt">MQTT</label><br>
       </div>

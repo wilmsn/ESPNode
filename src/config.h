@@ -14,15 +14,15 @@
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
-#define WITTYNODE1
-
-//#define NODE_WOHNZIMMER
+//#define WITTYNODE1
+// meine produktiven Nodes
+#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICHPUMPE
 //#define NODE_FLUR
 //---------------------------
 
-#define SWVERSION   "0.991"
+#define SWVERSION   "0.992"
 
 // Hier werden die allgemeinen Parameter für den Einsatz festgelegt
 // Alternativ können diese Einstellungen auch in der Konfiguration des Nodes 
@@ -37,7 +37,7 @@
 #define RF24_CHANNEL                   92
 #define RF24_SPEED                     RF24_250KBPS
 
-#define MAGICNO                        345
+#define MAGICNO                        657
 
 //Settings for mqtt topic
 #define MQTT_STATUS                  "stat"
@@ -46,7 +46,7 @@
 #define TOPIC_PART1_SIZE             5
 #define TOPIC_PART2_SIZE             30
 #define TOPIC_PART3_SIZE             10
-#define TOPIC_BUFFER_SIZE            50
+//#define TOPIC_BUFFER_SIZE            50
 
 /// Statusinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Messungen mit anschliessendem Versand der Daten über MQTT (falls aktiviert).
@@ -63,7 +63,7 @@
 #define TELEINTERVAL                 1200
 
 #define DEBUGFILE                    "/logfile.txt"
-#define SERVERNAMESIZE               25
+#define SERVERNAMESIZE               30
 
 ///Der verwendete RF24 Funkkanal
 #define RF24_CHANNEL        92
@@ -78,6 +78,9 @@
 /// Der Datentyp für die Ordernummer. Auch hier eine zentrale Festlegung des Datentyps, der ggf. die Umstellung vereinfacht.
 #define ONR_DATTYPE         uint8_t
 
+
+/// @brief Die Datenstruktur des payloads in dem RF24 Netzwerk. Sie wird nur benötigt wenn der RF24Gateway genutzt
+/// wird und auch dies nur damit LOginformationen angezeigt werden können.
 typedef struct {
 /// Die Node_ID ist der eindeutige Identifizierer für einen Node.
 /// Aktuell können hier die Nodes 1..255 genutzt werden (8 Bit Begrenzung)
@@ -117,11 +120,10 @@ typedef struct {
     uint32_t        data6;         
 } payload_t;
 
-/**
- * @typedef udpdata_t Die Datenstructur zur Übertragung der Daten zwischen Gateway und Hub
- * Im Prinzig ebtspricht diese Struktur der payload_t Struktur erweitert um ein Feld zur Aufnahme der Gateway_id.
- * 
- */
+
+/// @brief Die Datenstructur zur Übertragung der Daten zwischen Gateway und Hub
+///Im Prinzig ebtspricht diese Struktur der payload_t Struktur erweitert um ein Feld zur Aufnahme der Gateway_id.
+
 typedef struct {
 /// Die eindeutige Gateway ID
   uint16_t          gw_no;         // the number of the sending gateway

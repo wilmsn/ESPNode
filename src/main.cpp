@@ -18,20 +18,15 @@ SENSOR1_DEFINITION
 #if defined(SENSOR2)
 SENSOR2_DEFINITION
 #endif
-#if defined(SENSOR3)
-SENSOR3_DEFINITION
-#endif
-#if defined(SENSOR4)
-SENSOR4_DEFINITION
-#endif
 
-
+// Kommentiert in main.h
 void fill_timeStr() {
   time(&now);                   // read the current time
   localtime_r(&now, &timeinfo); // update the structure tm with the current time
   snprintf(timeStr, 11, "[%02d:%02d:%02d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 }
 
+// Kommentiert in main.h
 void getVcc(String& json) {
 #if defined(ANALOGINPUT)
   json += "n.a.";
@@ -39,13 +34,14 @@ void getVcc(String& json) {
 #ifdef ESP32
   json += "n.a.";
 #else
-  char vcc_str[7];
-  snprintf(vcc_str,6,"%.1f V",(float)ESP.getVcc() / 1000.0);
+  char vcc_str[8];
+  snprintf(vcc_str,7,"%.1f V",(float)ESP.getVcc() / 1000.0);
   json += vcc_str;
 #endif
 #endif
 }
 
+// Kommentiert in main.h
 void write2log(log_t kat, int count, ...) {
   va_list args;
   int n = 0;
@@ -89,7 +85,6 @@ void write2log(log_t kat, int count, ...) {
       n++;
     }
     debug_str += "\"}";
-//    Serial.println(debug_str);
     ws.textAll(debug_str);
   }
 #if defined(DEBUG_SERIAL)
@@ -105,6 +100,7 @@ void write2log(log_t kat, int count, ...) {
   va_end(args);
 }
 
+// Kommentiert in main.h
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
@@ -126,6 +122,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
   }
 }
 
+// Kommentiert in main.h
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                 void *arg, uint8_t *data, size_t len) {
   switch (type) {
@@ -154,14 +151,13 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 #if defined(SENSOR2)
       sensor2.html_create_json_part(html_json);
 #endif
-#if defined(SENSOR3)
-      sensor3.html_create_json_part(html_json);
-#endif
 #if defined(MQTT)
       html_json += ",\"set_mqtt\":1,\"set_mqttserver\":\"";
-      html_json += preference.mqttserver;
+      html_json += preference.mqtt_server;
       html_json += "\",\"set_mqttclient\":\"";
-      html_json += preference.mqttclient;
+      html_json += preference.mqtt_client;
+      html_json += "\",\"set_mqtttopicp2\":\"";
+      html_json += preference.mqtt_topicP2;
       html_json += "\"";
 #else
       html_json += ",\"set_mqtt\":0";
@@ -202,28 +198,24 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       ws.textAll(html_json);
 #endif
 #if defined(SENSOR2)
-      sensor2.html_stat_json(info_str);
-      ws.textAll(info_str);
-#endif
-#if defined(SENSOR3)
-      sensor3.html_stat_json(info_str);
-      ws.textAll(info_str);
+      html_json = sensor2.html_stat_json();
+      ws.textAll(html_json);
 #endif
 #if defined(SWITCH1)
       html_json = switch1.html_stat_json();
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH2)
-//      switch2.html_stat_json(info_str);
-//      ws.textAll(info_str);
+      html_json = switch2.html_stat_json();
+      ws.textAll(html_json);
 #endif
 #if defined(SWITCH3)
-//      switch3.html_stat_json(info_str);
-//      ws.textAll(info_str);
+      html_json = switch3.html_stat_json();
+      ws.textAll(html_json);
 #endif
 #if defined(SWITCH4)
-//      switch4.html_stat_json(info_str);
-//      ws.textAll(info_str);
+      html_json = switch4.html_stat_json();
+      ws.textAll(html_json);
 #endif
 
     break;  //    case WS_EVT_CONNECT
@@ -240,11 +232,13 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
   }
 }
 
+// Kommentiert in main.h
 void initWebSocket() {
   ws.onEvent(ws_onEvent);
   httpServer.addHandler(&ws);
 }
 
+// Kommentiert in main.h
 void serveFile(AsyncWebServerRequest *request) {
   String myurl = request->url();
   String dataType = "text/plain";
@@ -294,11 +288,6 @@ void serveFile(AsyncWebServerRequest *request) {
 //    }
 #else
     Dir dir = LittleFS.openDir("/");
-//    if (dir.isDirectory()) {
-//      Serial.println("/ is a Directory");
-//    } else {
-//      Serial.println("/ is NOT a Directory");
-//    }
     File f;
     while (dir.next()) {
       f = dir.openFile("r");
@@ -331,6 +320,7 @@ void serveFile(AsyncWebServerRequest *request) {
   request->send(LittleFS, myurl, dataType);
 }
 
+// Kommentiert in main.h
 bool getNTPtime(long unsigned int sec) {
   bool retval = true;
   uint32_t start = millis();
@@ -343,6 +333,7 @@ bool getNTPtime(long unsigned int sec) {
   return retval;
 }
 
+// Kommentiert in main.h
 void wifi_con(void) {
   if (WiFi.status() != WL_CONNECTED) {
     write2log(log_sys, 4, "Try to connect to ", ssid1, " with password ", password1);
@@ -408,11 +399,10 @@ void wifi_con(void) {
     } else {
       ESP.restart();
     }
-    lastNTPtime = time(&now);
-    lastEntryTime = millis();
   }
 }
 
+// Kommentiert in main.h
 void read_preferences(void) {
   File myFile = LittleFS.open("/prefs", "r");
   if (myFile) {
@@ -421,6 +411,7 @@ void read_preferences(void) {
   }
 }
 
+// Kommentiert in main.h
 void save_preferences(void) {
   File myFile = LittleFS.open("/prefs", "w");
   myFile.write((byte *)&preference, sizeof(preference));
@@ -429,20 +420,26 @@ void save_preferences(void) {
 
 // Funktionen für den Webserver
 
+// Kommentiert in main.h
 const char *mk_cmd(AsyncWebServerRequest *request) {
 //  bool prefs_change = false;
   int args = request->args();
   html_json = "";
   for (int argNo = 0; argNo < args; argNo++) {
 #if defined(DEBUG_SERIAL_HTML)
-    Serial.print("prozess_cmd: "); Serial.print(request->argName(argNo)); Serial.print(": "); Serial.println(request->arg(argNo));
+    Serial.print("prozess_cmd: ");
+    Serial.print(request->argName(argNo));
+    Serial.print(": ");
+    Serial.println(request->arg(argNo));
 #endif
     prozess_cmd(request->argName(argNo), request->arg(argNo) );
   }
   if (html_json.length() < 2 ) html_json = "ok";
   return html_json.c_str();
 }
-const char *mk_wifiscan(String& info_str) {
+
+// Kommentiert in main.h
+const char *mk_wifiscan() {
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Generiere wifiscan ... ");
 #endif
@@ -450,72 +447,74 @@ const char *mk_wifiscan(String& info_str) {
   WiFi.scanNetworks(true, false);
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print(" ok (");
-  Serial.print(info_str.length());
+  Serial.print(html_json.length());
   Serial.println(" byte)");
 #endif
-  return info_str.c_str();
+  return html_json.c_str();
 }
 
-const char *mk_wifishow(String& info_str) {
+// Kommentiert in main.h
+const char *mk_wifishow() {
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Generiere wifishow ... ");
 #endif
-  info_str = "{";
+  html_json = "{";
   int numberOfNetworks = WiFi.scanComplete();
   if (numberOfNetworks < 0) {
     switch (numberOfNetworks) {
       case -1:
-        info_str += "\"Wifi\": \"Scan not finished\"";
+        html_json += "\"Wifi\": \"Scan not finished\"";
       break;
       case -2:
-        info_str += "\"Wifi\": \"Scan not started\"";
+        html_json += "\"Wifi\": \"Scan not started\"";
       break;
     }
   } else {
     for (int i = 0; i < numberOfNetworks; i++) {
-      if ( i > 0 ) info_str += ",";
-      info_str += "\"Wifi";
-      info_str += String(i);
-      info_str += "\":\"";
-      info_str += WiFi.SSID(i);
-      info_str += ", Ch:";
-      info_str += String(WiFi.channel(i));
-      info_str += " (";
-      info_str += WiFi.RSSI(i);
-      info_str += " dBm ";
+      if ( i > 0 ) html_json += ",";
+      html_json += "\"Wifi";
+      html_json += String(i);
+      html_json += "\":\"";
+      html_json += WiFi.SSID(i);
+      html_json += ", Ch:";
+      html_json += String(WiFi.channel(i));
+      html_json += " (";
+      html_json += WiFi.RSSI(i);
+      html_json += " dBm ";
       switch (WiFi.encryptionType(i)) {
       case ENC_TYPE_WEP:
-          info_str += "WEP";
+          html_json += "WEP";
         break;
       case ENC_TYPE_TKIP:
-          info_str += "TKIP";
+          html_json += "TKIP";
         break;
       case ENC_TYPE_CCMP:
-          info_str += "CCMP";
+          html_json += "CCMP";
         break;
       case ENC_TYPE_AUTO:
-          info_str += "Auto";
+          html_json += "Auto";
         break;
       case ENC_TYPE_NONE:
-          info_str += "None";
+          html_json += "None";
         break;
       default:
-          info_str += "unknown";
+          html_json += "unknown";
         break;
       }
-      info_str += ")\"";
+      html_json += ")\"";
     }
   }
-  info_str += "}";
+  html_json += "}";
   WiFi.scanDelete();
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print(" ok (");
-  Serial.print(info_str.length());
+  Serial.print(html_json.length());
   Serial.println(" byte)");
 #endif
-  return info_str.c_str();
+  return html_json.c_str();
 }
 
+// Kommentiert in main.h
 const char *mk_sysinfo1(String& info_str) {
   uint32_t free;
   uint32_t max;
@@ -589,6 +588,7 @@ const char *mk_sysinfo1(String& info_str) {
   info_str += uptime.uptimestr();
   info_str += "\"";
   info_str += "}";
+  write2log(log_sys,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print(" ok (");
   Serial.print(info_str.length());
@@ -598,6 +598,7 @@ const char *mk_sysinfo1(String& info_str) {
 }
 
 #ifdef ESP32
+// dokumentiert in main.h
 char *getResetReason(char *tmp)
 {
 #if defined(DEBUG_SERIAL_HTML)
@@ -662,6 +663,7 @@ char *getResetReason(char *tmp)
 }
 #endif
 
+// Kommentiert in main.h
 const char *mk_sysinfo2(String& info_str) {
   int rssi = WiFi.RSSI();
   int rssi_quality = 0;
@@ -726,6 +728,7 @@ const char *mk_sysinfo2(String& info_str) {
   info_str += __DATE__;
   info_str += ")\"";
   info_str += "}";
+  write2log(log_sys,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print(" ok (");
   Serial.print(info_str.length());
@@ -734,16 +737,19 @@ const char *mk_sysinfo2(String& info_str) {
   return info_str.c_str();
 }
 
-const char *mk_sysinfo3(String& info_str) {
+// Kommentiert in main.h
+const char *mk_sysinfo3(String& info_str, bool do_mqtt) {
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Generiere sysinfo3 ... ");
 #endif
   info_str = "{";
 #if defined(MQTT)  
   info_str += "\"mqttserver\":\"";
-  info_str += MQTT_SERVER;
+  info_str += preference.mqtt_server;
   info_str += "\",\"mqttclient\":\"";
-  info_str += MQTT_CLIENT;
+  info_str += preference.mqtt_client;
+  info_str += "\",\"mqtttopicp2\":\"";
+  info_str += preference.mqtt_topicP2;
   info_str += "\"";
 #endif
 #if defined(RF24GW)  
@@ -759,17 +765,22 @@ const char *mk_sysinfo3(String& info_str) {
 #endif
 #if defined(SENSOR1)
   if ( info_str.length() > 3 ) info_str += ",";
-  info_str += sensor1.sensorinfo();
+  if (do_mqtt) {
+    info_str += sensor1.sensorinfo_mqtt();
+  } else {
+    info_str += sensor1.sensorinfo_html();
+  }
 #endif
 #if defined(SENSOR2)
   if ( info_str.length() > 3 ) info_str += ",";
-  info_str += sensor2.sensorinfo();
-#endif
-#if defined(SENSOR3)
-  if ( info_str.length() > 3 ) info_str += ",";
-  info_str += sensor3.sensorinfo();
+  if (do_mqtt) {
+    info_str += sensor2.sensorinfo_mqtt();
+  } else {
+    info_str += sensor2.sensorinfo_html();
+  }
 #endif
   info_str += "}";
+  write2log(log_sys,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print(" ok (");
   Serial.print(info_str.length());
@@ -778,9 +789,7 @@ const char *mk_sysinfo3(String& info_str) {
   return info_str.c_str();
 }
 
-/// @brief 
-/// @param name 
-/// @param value 
+// Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
   write2log(log_sys,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
 #if defined(SWITCH1)
@@ -789,7 +798,7 @@ void prozess_cmd(const String cmd, const String value)  {
     write2log(log_sens,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.obj_mqtt_name.c_str()), switch1.obj_values_str.c_str());
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
     do_send_mqtt_stat = true;
 #endif
   }
@@ -800,7 +809,7 @@ void prozess_cmd(const String cmd, const String value)  {
     write2log(log_sens,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.obj_mqtt_name.c_str()), switch2.obj_values_str.c_str());
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
     do_send_mqtt_stat = true;
 #endif
   }
@@ -811,7 +820,7 @@ void prozess_cmd(const String cmd, const String value)  {
     write2log(log_sens,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.obj_mqtt_name.c_str()), switch3.obj_values_str.c_str());
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
     do_send_mqtt_stat = true;
 #endif
   }
@@ -822,7 +831,7 @@ void prozess_cmd(const String cmd, const String value)  {
     write2log(log_sens,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.obj_mqtt_name.c_str()), switch4.obj_values_str.c_str());
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
 #endif
   }
 #endif
@@ -831,6 +840,22 @@ void prozess_cmd(const String cmd, const String value)  {
     if ( (value == "1") != preference.log_mqtt) {
       preference.log_mqtt = (value == "1");
     }
+  }
+  if ( cmd == "mqtt" ) {
+    if ( value == "1" ) {
+      preference.mqtt_enable = true;
+    } else {
+      preference.mqtt_enable = false;
+    }
+  }
+  if ( cmd == "mqttclient" ) {
+    snprintf(preference.mqtt_client, TOPIC_PART2_SIZE, "%s", value.c_str());
+  }
+  if ( cmd == "mqtttopicp2" ) {
+    snprintf(preference.mqtt_topicP2, TOPIC_PART2_SIZE, "%s", value.c_str());
+  }
+  if ( cmd == "mqttserver" ) {
+    snprintf(preference.mqtt_server, SERVERNAMESIZE, "%s", value.c_str());
   }
 #endif
 #if defined(RF24GW)
@@ -884,20 +909,22 @@ void prozess_cmd(const String cmd, const String value)  {
 }
 
 #if defined(MQTT)
+// dokumentiert in main.h
 const char* mk_topic(const char* part1, const char* part3) {
   mqtt_topic = part1;
   mqtt_topic += "/";
-  mqtt_topic += MQTT_CLIENT;
+  mqtt_topic += preference.mqtt_topicP2;
   mqtt_topic += "/";
   mqtt_topic += part3;
   return mqtt_topic.c_str();
 }
 
+// dokumentiert in main.h
 void reconnect_mqtt() {
   // Loop until we're reconnected
   while (!mqttClient.connected()) {
     // Attempt to connect
-    if (mqttClient.connect(MQTT_CLIENT)) {
+    if (mqttClient.connect(preference.mqtt_client)) {
       // Once connected, publish an announcement...
       mqttClient.publish(mk_topic(MQTT_STATUS, "state"), "online");
       // ... and resubscribe
@@ -917,91 +944,89 @@ void reconnect_mqtt() {
   }
 }
 
+// dokumentiert in main.h
 void send_mqtt_stat() {
-  if (!mqttClient.connected()) {
-    reconnect_mqtt();
-  }
-  mqtt_json = "{";
+  if (preference.mqtt_enable) {
+    if (!mqttClient.connected()) {
+      reconnect_mqtt();
+    }
+    mqtt_json = "{";
 #if defined(SENSOR1)  
-  mqtt_json += sensor1.mqtt_json_part();
-  html_json = sensor1.html_stat_json();
-  Serial.println("###");
-  Serial.println(html_json);
-  write2log(log_sens,1,html_json.c_str());
-  ws.textAll(html_json);
+    mqtt_json += sensor1.mqtt_json_part();
 #endif
 #if defined(SENSOR2)
-  if ( info_str.length() > 3 ) info_str += ",";
-  info_str += sensor2.mqtt_json_part();
+    if ( mqtt_json.length() > 3 ) mqtt_json += ",";
+    mqtt_json += sensor2.mqtt_json_part();
 #endif
-#if defined(SENSOR3)  
-  if ( info_str.length() > 3 ) info_str += ",";
-  info_str += sensor3.mqtt_json_part();
-#endif
-  mqtt_json += "}";
-  mqttClient.publish(mk_topic(MQTT_STATUS, "sensordata"), mqtt_json.c_str());
-  write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+    mqtt_json += "}";
+    mqttClient.publish(mk_topic(MQTT_STATUS, "sensordata"), mqtt_json.c_str());
+    write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
 
-  mqtt_json = "{";
-  mqtt_json_length_old = mqtt_json.length();
+    mqtt_json = "{";
+    mqtt_json_length_old = mqtt_json.length();
 #if defined(SWITCH1)  
-  mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
-  write2log(log_mqtt,2, mqtt_topic.c_str(), switch1.show_value());
-  mqtt_json += switch1.mqtt_json_part();
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
+    write2log(log_mqtt,2, mqtt_topic.c_str(), switch1.show_value());
+    mqtt_json += switch1.mqtt_json_part();
 #endif
 #if defined(SWITCH2)  
-  if ( mqtt_json.length() > mqtt_json_length_old ) {
-    mqtt_json += ",";
-    mqtt_json_length_old = mqtt_json.length();
-  }
-  mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
-  write2log(log_mqtt,2, mqtt_topic.c_str(), switch2.show_value());
-  mqtt_json += switch2.mqtt_json_part();
+    if ( mqtt_json.length() > mqtt_json_length_old ) {
+      mqtt_json += ",";
+      mqtt_json_length_old = mqtt_json.length();
+    }
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
+    write2log(log_mqtt,2, mqtt_topic.c_str(), switch2.show_value());
+    mqtt_json += switch2.mqtt_json_part();
 #endif
 #if defined(SWITCH3)  
-  if ( mqtt_json.length() > mqtt_json_length_old ) {
-    mqtt_json += ",";
-    mqtt_json_length_old = mqtt_json.length();
-  }
-  mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
-  write2log(log_mqtt,2, mqtt_topic.c_str(), switch3.show_value());
-  mqtt_json += switch3.mqtt_json_part();
+    if ( mqtt_json.length() > mqtt_json_length_old ) {
+      mqtt_json += ",";
+      mqtt_json_length_old = mqtt_json.length();
+    }
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
+    write2log(log_mqtt,2, mqtt_topic.c_str(), switch3.show_value());
+    mqtt_json += switch3.mqtt_json_part();
 #endif
 #if defined(SWITCH4)  
-  if ( mqtt_json.length() > mqtt_json_length_old ) {
-    mqtt_json += ",";
-    mqtt_json_length_old = mqtt_json.length();
-  }
-  mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
-  write2log(log_mqtt,2, mqtt_topic.c_str(), switch4.show_value());
-  mqtt_json += switch4.mqtt_json_part();
+    if ( mqtt_json.length() > mqtt_json_length_old ) {
+      mqtt_json += ",";
+      mqtt_json_length_old = mqtt_json.length();
+    }
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
+    write2log(log_mqtt,2, mqtt_topic.c_str(), switch4.show_value());
+    mqtt_json += switch4.mqtt_json_part();
 #endif
-  mqtt_json += "}";
-  mqttClient.publish(mk_topic(MQTT_STATUS, "switchdata"), mqtt_json.c_str());
-  write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+    mqtt_json += "}";
+    mqttClient.publish(mk_topic(MQTT_STATUS, "switchdata"), mqtt_json.c_str());
+    write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+  }
 }
 
+// dokumentiert in main.h
 void send_mqtt_tele() {
-  if (!mqttClient.connected()) {
-    reconnect_mqtt();
-  }
-  mk_sysinfo1(mqtt_json); // Hier wird die Variable "info_str" gefüllt!
-  mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info1"), mqtt_json.c_str());
-  if (preference.log_mqtt) {
-    write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-  }
-  mk_sysinfo2(mqtt_json);
-  mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info2"), mqtt_json.c_str());
-  if (preference.log_mqtt) {
-    write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-  }
-  mk_sysinfo3(mqtt_json);
-  mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info3"), mqtt_json.c_str());
-  if (preference.log_mqtt) {
-    write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+  if (preference.mqtt_enable) {
+    if (!mqttClient.connected()) {
+      reconnect_mqtt();
+    }
+    mk_sysinfo1(mqtt_json); // Hier wird die Variable "info_str" gefüllt!
+    mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info1"), mqtt_json.c_str());
+    if (preference.log_mqtt) {
+      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+    }
+    mk_sysinfo2(mqtt_json);
+    mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info2"), mqtt_json.c_str());
+    if (preference.log_mqtt) {
+      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+    }
+    mk_sysinfo3(mqtt_json, true);
+    mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info3"), mqtt_json.c_str());
+    if (preference.log_mqtt) {
+      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+    }
   }
 }
 
+// dokumentiert in main.h
 void callback_mqtt(char* topic, byte* payload, unsigned int length) {
   char delimiter[] = "/";
   char *ptr;
@@ -1009,23 +1034,46 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
   char part2[TOPIC_PART2_SIZE];
   char part3[TOPIC_PART3_SIZE];
   char* cmd = (char*)malloc(length + 2);
-  snprintf(cmd, length + 1, "%s", (char*)payload);
-  write2log(log_mqtt,2, topic, cmd);
-  ptr = strtok(topic, delimiter);
-  if (ptr != NULL) snprintf(part1, TOPIC_PART1_SIZE, "%s", ptr);
-  ptr = strtok(NULL, delimiter);
-  if (ptr != NULL) snprintf(part2, TOPIC_PART2_SIZE, "%s", ptr);
-  ptr = strtok(NULL, delimiter);
-  if (ptr != NULL) snprintf(part3, TOPIC_PART3_SIZE, "%s", ptr);
-  if ( strncmp(part1, MQTT_COMMAND, sizeof MQTT_COMMAND) == 0 ) {
-    if ( strncmp(part2, MQTT_CLIENT, sizeof MQTT_CLIENT) == 0 ) {
-      prozess_cmd(part3, cmd);
+  if (preference.mqtt_enable) {
+    snprintf(cmd, length + 1, "%s", (char*)payload);
+    write2log(log_mqtt,2, topic, cmd);
+    ptr = strtok(topic, delimiter);
+    if (ptr != NULL) snprintf(part1, TOPIC_PART1_SIZE, "%s", ptr);
+    ptr = strtok(NULL, delimiter);
+    if (ptr != NULL) snprintf(part2, TOPIC_PART2_SIZE, "%s", ptr);
+    ptr = strtok(NULL, delimiter);
+    if (ptr != NULL) snprintf(part3, TOPIC_PART3_SIZE, "%s", ptr);
+    if ( strncmp(part1, MQTT_COMMAND, sizeof MQTT_COMMAND) == 0 ) {
+      if ( strncmp(part2, MQTT_CLIENT, sizeof MQTT_CLIENT) == 0 ) {
+        prozess_cmd(part3, cmd);
+      }
     }
+    // Free the memory
+    free(cmd);
   }
-  // Free the memory
-  free(cmd);
 }
-#endif
+#endif //MQTT enabled
+
+// dokumentiert in main.h
+void writeRf242log(const char* senddir, payload_t pl) {
+  if (preference.log_rf24) {
+//    char tmpstr[32];
+//    snprintf(tmpstr,36,"O#%u N:%u M:%u MT:%u HB:%u",pl.orderno,pl.node_id,pl.msg_id,pl.msg_type,pl.heartbeatno);
+//    write2log(log_rf24, 2, senddir, tmpstr);
+      tmp_str = senddir;
+      tmp_str += " O:";
+      tmp_str += String(pl.orderno);
+      tmp_str += " N:";
+      tmp_str += String(pl.node_id);
+      tmp_str += " M:";
+      tmp_str += String(pl.msg_id);
+      tmp_str += " MT:";
+      tmp_str += String(pl.msg_type);
+      tmp_str += " HB:";
+      tmp_str += String(pl.heartbeatno);
+      write2log(log_rf24, 1, tmp_str.c_str());
+   }
+}
 
 /****************************************************
  * Setup
@@ -1061,11 +1109,13 @@ void setup() {
   read_preferences();
   if ( (preference.magicno != MAGICNO) || (MAGICNO == 0) ) {
 #if defined(MQTT)
-    snprintf(preference.mqttclient, SERVERNAMESIZE, MQTT_CLIENT);
-    snprintf(preference.mqttserver, SERVERNAMESIZE, MQTT_SERVER);
+    preference.mqtt_enable = true;
+    snprintf(preference.mqtt_client, TOPIC_PART2_SIZE, "%s", MQTT_CLIENT);
+    snprintf(preference.mqtt_topicP2, TOPIC_PART2_SIZE, "%s", MQTT_TOPICP2);
+    snprintf(preference.mqtt_server, SERVERNAMESIZE, "%s", MQTT_SERVER);
 #endif
 #if defined(RF24GW)
-    snprintf(preference.rf24gw_hub_name, SERVERNAMESIZE, RF24GW_HUB_SERVER);
+    snprintf(preference.rf24gw_hub_name, SERVERNAMESIZE, "%s", RF24GW_HUB_SERVER);
     preference.rf24gw_hub_port = RF24GW_HUB_UDP_PORTNO;
     preference.rf24gw_gw_port = RF24GW_GW_UDP_PORTNO;
     preference.rf24gw_gw_no = RF24GW_NO;
@@ -1077,9 +1127,9 @@ void setup() {
   write2log(log_web,1, "initWebsocket ok");
 
   httpServer.on("/wifiscan", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "application/json", mk_wifiscan(html_json)); });
+                { request->send(200, "application/json", mk_wifiscan()); });
   httpServer.on("/wifishow", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "application/json", mk_wifishow(html_json)); });
+                { request->send(200, "application/json", mk_wifishow()); });
   httpServer.on("/cmd", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_cmd(request)); });
   httpServer.on("/sysinfo1", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -1087,9 +1137,7 @@ void setup() {
   httpServer.on("/sysinfo2", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
   httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo3(html_json)); });
-//  httpServer.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request)
-//                { request->send(200, "text/plain", do_restart()); });
+                { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); });
   httpServer.on("/update_fw", HTTP_POST, [&](AsyncWebServerRequest *request) {},
    [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
       if (!index) {
@@ -1133,7 +1181,7 @@ void setup() {
   httpServer.onNotFound(serveFile);
   // Start server
   httpServer.begin();
-  #if defined(RF24GW)
+#if defined(RF24GW)
   // init rf24
   radio.begin();
   delay(100);
@@ -1149,12 +1197,10 @@ void setup() {
   radio.openReadingPipe(1, rf24_node2hub);
   radio.startListening();
   radio.printDetails();
-#endif
-
-#if defined(RF24GW)
-  udp.begin(RF24GW_GW_UDP_PORTNO);
-  if (preference.log_rf24) {
-    write2log(log_sys,2, "RF24: Opened UDP Port:", RF24GW_GW_UDP_PORTNO );
+  if (udp.begin(preference.rf24gw_gw_port) == 1) {
+    if (preference.log_rf24) {
+      write2log(log_sys,2, "RF24: Opened UDP Port:", String(preference.rf24gw_hub_port).c_str() );
+    }
   }
 #endif
 
@@ -1176,27 +1222,23 @@ void setup() {
 #if defined(SENSOR2)
   SENSOR2_BEGIN_STATEMENT
 #endif
-#if defined(SENSOR3)
-  SENSOR3_BEGIN_STATEMENT
-#endif
 #if defined(SENSOR1)
   sensor1.start_measure();
 #endif
 #if defined(SENSOR2)
   sensor2.start_measure();
 #endif
-#if defined(SENSOR3)
-  sensor3.start_measure();
-#endif
   measure_started = millis();
 #if defined(MQTT)
-  mqttClient.setServer(MQTT_SERVER, 1883);
-  mqttClient.setCallback(callback_mqtt);
-  mqttClient.setBufferSize(512);
-  if (preference.log_mqtt) {
-    write2log(log_mqtt,3, "MQTT: Connected to Server:", MQTT_SERVER, "Port: 1883");
+  if (preference.mqtt_enable) {
+    mqttClient.setServer(preference.mqtt_server, 1883);
+    mqttClient.setCallback(callback_mqtt);
+    mqttClient.setBufferSize(512);
+    if (preference.log_mqtt) {
+      write2log(log_mqtt,3, "MQTT: Connected to Server:", preference.mqtt_server, "Port: 1883");
+    }
+    send_mqtt_tele();
   }
-  send_mqtt_tele();
 #endif
   write2log(log_sys,1, "Setup Ende");
 }
@@ -1209,42 +1251,17 @@ void loop() {
 #if defined(RF24GW)
   if ( radio.available() ) {
     radio.read(&payload, sizeof(payload));
-    if (preference.log_rf24) {
-/*      info_str = "N>G O#:";
-      info_str += payload.orderno;
-      info_str += " N:";
-      info_str += payload.node_id;
-      info_str += " Msg:";
-      info_str += payload.msg_id;
-      info_str += " Mtyp:";
-      info_str += payload.msg_type;
-      info_str += " Hb#:";
-      info_str += payload.heartbeatno; */
-      write2log(log_rf24, 10, "N>G O#:",payload.orderno,"N:",payload.node_id,"Msg:",payload.msg_id,"Mtyp:",payload.msg_type,"Hb#:",payload.heartbeatno);
-    }
-    udpdata.gw_no = RF24GW_NO;
+    udpdata.gw_no = preference.rf24gw_gw_no;
+    writeRf242log("N>G", payload);
     memcpy(&udpdata.payload, &payload, sizeof(payload));
-    udp.beginPacket(RF24GW_HUB_SERVER, RF24GW_HUB_UDP_PORTNO);
+    udp.beginPacket(preference.rf24gw_hub_name, preference.rf24gw_hub_port);
     udp.write((char*)&udpdata, sizeof(udpdata));
     udp.endPacket();
   }
   if (udp.parsePacket() > 0 ) {
     udp.read((char*)&udpdata, sizeof(udpdata));
     memcpy(&payload, &udpdata.payload, sizeof(payload));
-    if (preference.log_rf24) {
-/*      info_str = "G>N O#:";
-      info_str += payload.orderno;
-      info_str += " N:";
-      info_str += payload.node_id;
-      info_str += " Msg:";
-      info_str += payload.msg_id;
-      info_str += " Mtyp:";
-      info_str += payload.msg_type;
-      info_str += " Hb#:";
-      info_str += payload.heartbeatno;
-      write2log(log_rf24, 1, info_str.c_str()); */
-      write2log(log_rf24, 10, "G>N O#:",payload.orderno,"N:",payload.node_id,"Msg:",payload.msg_id,"Mtyp:",payload.msg_type,"Hb#:",payload.heartbeatno);
-    }
+    writeRf242log("G>N", payload);
     radio.stopListening();
     radio.write(&payload, sizeof(payload));
     radio.startListening();
@@ -1259,59 +1276,21 @@ void loop() {
 #endif
 #if defined(SWITCH1)
   switch1.loop();
-//  if (switch1.changed()) {
-//    do_send_mqtt_stat = true;
-//    info_str = switch1.html_stat_json();
-//    ws.textAll(info_str);
-#if defined(MQTT)
-//    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.obj_mqtt_name.c_str()), switch1.obj_values_str.c_str());
-// tbd: Zusätzliche Werte müssen noch übermittelt werden
-#endif
-//  }
 #endif
 #if defined(SWITCH2)
   switch2.loop();
-//  if (switch2.changed()) {
-//    do_send_mqtt_stat = true;
-//    info_str = switch2.html_stat_json();
-//    ws.textAll(info_str);
-#if defined(MQTT)
-//    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.obj_mqtt_name.c_str()), switch2.obj_values_str.c_str());
-// tbd: Zusätzliche Werte müssen noch übermittelt werden
-#endif
-//  }
 #endif
 #if defined(SWITCH3)
   switch3.loop();
-//  if (switch3.changed()) {
-//    do_send_mqtt_stat = true;
-//    info_str = switch3.html_stat_json();
-//    ws.textAll(info_str);
-#if defined(MQTT)
-//    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.obj_mqtt_name.c_str()), switch3.obj_values_str.c_str());
-// tbd: Zusätzliche Werte müssen noch übermittelt werden
-#endif
-//  }
 #endif
 #if defined(SWITCH4)
   switch4.loop();
-//  if (switch4.changed()) {
-//    do_send_mqtt_stat = true;
-//    info_str = switch4.html_stat_json();
-//    ws.textAll(info_str);
-#if defined(MQTT)
-//    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.obj_mqtt_name.c_str()), switch4.obj_values_str.c_str());
-// tbd: Zusätzliche Werte müssen noch übermittelt werden
-#endif
-//  }
 #endif
 #if defined(SENSOR1)
   sensor1.loop();
-//  if (sensor1.changed()) { 
-//    do_send_mqtt_stat = true;
-//    info_str = sensor1.html_stat_json();
-//    ws.textAll(info_str);
-//  }
+#endif
+#if defined(SENSOR2)
+  sensor2.loop();
 #endif
 #if defined(MQTT)
   if ( do_send_mqtt_stat ) {
@@ -1338,9 +1317,6 @@ void loop() {
 #if defined(SENSOR2)
     sensor2.start_measure();
 #endif
-#if defined(SENSOR3)
-    sensor3.start_measure();
-#endif
     measure_starttime = millis();
     measure_started = true;
     last_stat = millis();
@@ -1350,6 +1326,16 @@ void loop() {
     do_send_mqtt_stat = true;
 #endif
     measure_started = false;
+#if defined(SENSOR1)  
+    html_json = sensor1.html_stat_json();
+    write2log(log_sens,1,html_json.c_str());
+    ws.textAll(html_json);
+#endif
+#if defined(SENSOR2)  
+    html_json = sensor2.html_stat_json();
+    write2log(log_sens,1,html_json.c_str());
+    ws.textAll(html_json);
+#endif
   }
 #if defined(MQTT)
   if ( do_send_mqtt_stat ) { 

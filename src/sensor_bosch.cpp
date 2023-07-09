@@ -41,10 +41,19 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
     Serial.println("Sensor unterstützt diese Messung nicht");
   }
 #endif
-  obj_sensorinfo = "\"sensors\":1,\"sens-hw\":";
-  if (bmx_sensor.isBMP180()) obj_sensorinfo += "\"BMP180\"";
-  if (bmx_sensor.isBMP280()) obj_sensorinfo += "\"BMP280\"";
-  if (bmx_sensor.isBME280()) obj_sensorinfo += "\"BME280\"";
+  obj_sensorinfo_mqtt = "\"Sensor-HW\":";
+  if (bmx_sensor.isBMP180()) {
+     obj_sensorinfo_mqtt += "\"BMP180\"";
+     obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BMP180\"";
+  }
+  if (bmx_sensor.isBMP280()) {
+    obj_sensorinfo_mqtt += "\"BMP280\"";
+     obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BMP280\"";
+  }
+  if (bmx_sensor.isBME280()) {
+    obj_sensorinfo_mqtt += "\"BME280\"";
+    obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BME280\"";
+  }
 }
 
 void Sensor_Bosch::start_measure() {

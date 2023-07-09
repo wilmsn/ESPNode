@@ -9,12 +9,13 @@ ESPNode is a firmware for ESP8266 and ESP32 (in future). This firmware is not ge
 - Web Interface (based on J-Query and Websockets) 
 - Written in C++ for Arduino
 
-![alt text](https://wilmsn.github.io/ESPNode/espnode
-.png "Komponenten des ESPNode")
+![ ](http://wilmsn.github.io/ESPNode/espnode.png  "ESPNode Komponenten")
 
 ESPNode as a part of RF24Hub
 
-![alt text](https://wilmsn.github.io/ESPNode/einbindung.png "Einbindung des ESPNode in den RF24Hub")
+![ ](http://wilmsn.github.io/ESPNode/einbindung.png  "Einbindung des ESPNode in den RF24Hub")
+[ Komponenten des ESPNode ](https://wilmsn.github.io/ESPNode/espnode
+.png)
 
 The main documentation of this projekt is in german language.
  
@@ -24,16 +25,47 @@ The main documentation of this projekt is in german language.
 
 ##Hauptprogramm
 
-Example text blah. Example text blah. Example text blah. Example text blah. 
-Example text blah. Example text blah. Example text blah. Example text blah. 
-Example text blah. Example text blah. Example text blah. Example text blah. 
-Example text blah. Example text blah. 
+Details zum Hauptprogramm gibt es in der [Programmdoku](http://wilmsn.github.io/ESPNode/index.html), hier wird nur das zugrundeliegende Konzept beschrieben.
+Im Hauptprogramm sind folgende Komponenten vorgesehen:
 
-Example text blah. Example text blah. Example text blah. Example text blah. 
-Example text blah. Example text blah. Example text blah. Example text blah. 
-Example text blah. Example text blah. Example text blah. Example text blah. 
-Example text blah. Example text blah. 
+* Einbau von bis zu 4 Schaltern
 
+* Einbau von bis zu 2 Sensoren (Hardware) mit bis zu 4 Messwerten in Summe
+
+Sofern die Module/Objektdefinitionen bereits vorhanden sind, kann das Programm einfach durch Konfiguration angepasst werden. Ohne Konfiguration sind alle Elemente deaktiviert. Details über die Konfiguration sind [hier](#konfiguration) zu finden
+
+Initialisierung des Hauptprogrammes:
+Hier werden nacheinander folgende Dinge erledigt:
+
+* Verbindung mit dem WLAN (es werden die 2 konfigurierten Netze getestet)
+
+* Öffnen des internen Filesystems
+
+* Starten des Webservers
+
+* Starten des RF24 Gateways (falls aktiviert)
+
+* Ausführen der BEGIN Staements aller Sensoren und Switches
+
+* Starten des Messvorgangs aller Sensoren
+
+* Start des MQTT Clients
+
+Danach ist das Programm initialisiert und läuft in einer Endlosschleife. Innerhalb der Schleife finden (zum Teil zeitgesteuert) folgende Aktionen statt:
+
+* RF24 Gateway (falls aktiviert): Prüfen ob neue Datenpakete anliegen, wenn ja dann an den Hub weiterleiten
+
+* MQTT auf Pakete prüfen und veraarbeiten
+
+* loop() Funktion aller Sensoren und Switches bedienen
+
+Zeitabhängige Aktionen:
+
+* Telemetriedaten senden (var: TELEINTERVAL)
+
+* Messungen starten (var: STATINTERVAL)
+
+* Statusdaten und Messwerte senden (var: MESSINTERVAL) 
 
 
 
@@ -101,3 +133,4 @@ c) Jede andere Kombination die nach Änderung der HTML Seite benötigt wird
 
 Beispiele dazu in der Datei switch_onoff.h/cpp
 
+##Konfiguration

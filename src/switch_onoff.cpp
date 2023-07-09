@@ -34,19 +34,15 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
 // Startet als Schalter der einen HW-Pin steuert
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
                          uint8_t hw_pin1, bool start_value, bool on_value) {
-  Sensor_Generic::begin(html_place, label, mqtt_name, keyword);
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value);
   set_hw_pin(hw_pin1);                    
   pinMode(hw_pin1, OUTPUT);
-  obj_on_value = on_value;
-  obj_value = start_value;
-  do_switch(start_value);
-  obj_changed = false;
 }
 
 // Startet als Schalter ohne HW-Pin
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                          bool start_value, bool on_value) {
-  Sensor_Generic::begin(html_place, label, mqtt_name, keyword);
+  Base_Generic::begin(html_place, label, mqtt_name, keyword);
   obj_on_value = on_value;
   obj_value = start_value;
   do_switch(start_value);

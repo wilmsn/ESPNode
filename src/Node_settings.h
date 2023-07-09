@@ -17,53 +17,6 @@ RF24 Gateway:
 
 RF24 Node:
 
-++++++++Actors:+++++++++++
-
-++++++++Sensors:+++++++++++
-A Dummy Sensor
-(m) #define SENSOR_DUMMY
-
-Bosch BMP180/280 BME280
-(m) #define SENSOR_BOSCH
-
-18B20 Dallas Temperature Sensor
-(m) #define SENSOR_18B20
- 
-Analog Input
-(m) #define ANALOGINPUT_LABEL      "LDR"
-
-
-
-
-
-
-optional:
-- This node has a buildin rf24-gateway
-// #define RF24GW
-- Select a sensor
--- A Dummy for test purposes
-// #define SENSOR_DUMMY
--- a Bosch sensor like BMP185/BMP280/BME280
-// #define SENSOR_BOSCH
--- A Dallas 18B20 temperature sensor
-// #define SENSOR_18B20
--- A Switch / Relais
--- define a pin
-// #define RELAIS_1 3
-// #define RELAIS_2 3
--- Use Neopixel
-// #define NEOPIXEL <Number of Pixel>
--- Use LEDMATRIX
-// #define LEDMATRIX <Number of 8x8 Displays>
-- the status LED
--- define a pin (default is 3)
-// #define STATUSLED       <LED PIN>
--- a pin level for on (default is HIGH)
-// #define STATUSLED_ON    <LEVEL>
--- a pin level for off (default is LOW)
-// #define STATUSLED_OFF   <LEVEL>
-- version of the EEPROM (only a different version stores new values!!)
-// #define EEPROM_VERSION  5
 
 ******************************************************/
 //****************************************************
@@ -83,6 +36,7 @@ optional:
 
 #define MQTT
 #define MQTT_CLIENT              "flurnode"
+#define MQTT_TOPICP2             "flurnode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                103
@@ -106,6 +60,7 @@ optional:
 
 #define MQTT
 #define MQTT_CLIENT              "terassennode"
+#define MQTT_TOPICP2             "terassennode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                104
@@ -130,6 +85,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define MQTT
 #define MQTT_CLIENT              "TeichNode"
+#define MQTT_TOPICP2             "TeichNode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                101
@@ -154,6 +110,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define MQTT
 #define MQTT_CLIENT              "wohnzimmernode"
+#define MQTT_TOPICP2             "wohnzimmernode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                102
@@ -190,6 +147,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOST_DISCRIPTION       "A Witty Node"
 
 #define MQTT_CLIENT            "wittynode"
+#define MQTT_TOPICP2           "wittynode"
 
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
