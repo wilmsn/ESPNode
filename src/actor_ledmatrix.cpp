@@ -10,13 +10,12 @@ void Actor_LEDMatrix::begin(const char* html_place, const char* label, const cha
   obj_mqtt_line = mqtt_line;
   obj_mqtt_graph = mqtt_graph;
   matrix.begin();
-  matrix.setIntensity(1);
   for (unsigned int address=0; address < LEDMATRIX_DEVICES_X * LEDMATRIX_DEVICES_Y ; address++) {
     matrix.displayTest(address, true);
     delay(200);
     matrix.displayTest(address, false);
   }
-  matrix.setIntensity(1);
+  matrix.setIntensity(slider_val);
   matrix.clear();
   matrix.setCursor(8,8);
   matrix.print("init");
@@ -24,7 +23,11 @@ void Actor_LEDMatrix::begin(const char* html_place, const char* label, const cha
   delay(1000);
   matrix.clear();
   matrix.display();
-
+  if (get_switch_val()) {
+    matrix.on();
+  } else {
+    matrix.off();
+  }
 }
 
 bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
@@ -67,6 +70,7 @@ void Actor_LEDMatrix::print_line(const char* rohtext ) {
   unsigned char changemode = rohtext[4]-'0';
   uint8_t textallign = rohtext[5];
   uint8_t textlen = strlen(rohtext)-6;
+  if (textlen > LINE_SIZE -1) textlen = LINE_SIZE -1;
   if (textlen > 0) {
     memcpy( linetext, &rohtext[6], textlen );
     linetext[textlen]='\0';

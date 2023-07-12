@@ -1,6 +1,7 @@
 #include "switch_onoff.h"
 
 // Startet als Schalter mit Regler der einen HW-Pin steuert
+// Fall 5
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
                          uint8_t hw_pin1, bool start_value, bool on_value, uint8_t intensity, uint8_t slider_no,
                          const char* slider_mqtt_name) {
@@ -8,10 +9,12 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_val = intensity;
   obj_slider_no = slider_no;
   obj_slider_mqtt_name = slider_mqtt_name;
+  // Imitialisierung üer  Fall 2
   begin(html_place, label, mqtt_name, keyword, hw_pin1, start_value, on_value);
 }
 
 // Startet als Schalter mit Regler ohne HW Bezug
+// Fall 4
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
                          bool start_value, bool on_value, uint8_t intensity, uint8_t slider_no,
                          const char* slider_mqtt_name) {
@@ -19,27 +22,33 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_val = intensity;
   obj_slider_no = slider_no;
   obj_slider_mqtt_name = slider_mqtt_name;
+  // Initialisierung über Fall 1
   begin(html_place, label, mqtt_name, keyword, start_value, on_value);
 }
 
 // Startet als Schalter der zwei HW-Pins steuert
+// Fall 3
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
                          uint8_t hw_pin1, uint8_t hw_pin2, bool start_value, bool on_value) {
   set_hw_pin(hw_pin1,hw_pin2);
+  // Initialisierung über Fall 2
   begin(html_place, label, mqtt_name, keyword, hw_pin1, start_value, on_value);
   obj_hw_pin2_used = true;
   pinMode(hw_pin2, OUTPUT);
 }
 
 // Startet als Schalter der einen HW-Pin steuert
+// Fall 2
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
                          uint8_t hw_pin1, bool start_value, bool on_value) {
-  begin(html_place, label, mqtt_name, keyword, start_value, on_value);
   set_hw_pin(hw_pin1);                    
   pinMode(hw_pin1, OUTPUT);
+  // Initialisierung über Fall 1
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value);
 }
 
 // Startet als Schalter ohne HW-Pin
+// Fall 1
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                          bool start_value, bool on_value) {
   Base_Generic::begin(html_place, label, mqtt_name, keyword);
@@ -81,13 +90,16 @@ void Switch_OnOff::do_switch(bool state) {
     obj_html_stat_json += String(obj_slider_no);
     obj_html_stat_json += "val\":";
     obj_html_stat_json += String(obj_slider_val);
+  }
 
+  obj_html_stat_json += "}";
+
+  if (obj_slider_used) {
     obj_mqtt_json = "\"";
     obj_mqtt_json += obj_slider_mqtt_name;
     obj_mqtt_json += "\":";
     obj_mqtt_json += String(obj_slider_val);
   }
-  obj_html_stat_json += "}";
 
   obj_values_str = state? "1":"0";
 }

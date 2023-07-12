@@ -18,7 +18,8 @@
 /// Nummer der Displayblöcke (8*8 LED) in Y Richtung
 #define LEDMATRIX_DEVICES_Y  3
 
-#define LINE_SIZE            15
+/// Länge des Chararrays zur Aufnahme einer Textzeile auf der LED Matrix
+#define LINE_SIZE            8
 
 /// @brief Ein abgeleitetes Objekt für eine eine LED Matrix.\n 
 /// Benötigt: https://github.com/wilmsn/LED_Matrix als Gerätetreiber.\n 
