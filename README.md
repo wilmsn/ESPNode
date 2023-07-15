@@ -2,28 +2,24 @@
 ## brief description
 ESPNode is a firmware for ESP8266 and ESP32 (in future). This firmware is not generic, it has to be configured and compiled for each individual node.
 
-####Features:
+#### Features:
 
 - Implemented RF24 Gateway for my RF24Hub (https://github.com/wilmsn/RF24Hub)
 - Implemented MQTT Client
 - Web Interface (based on J-Query and Websockets) 
 - Written in C++ for Arduino
 
-![ ](http://wilmsn.github.io/ESPNode/espnode.png  "ESPNode Komponenten")
+!["ESPNode Komponenten"](https://wilmsn.github.io/ESPNode/espnode.png)
 
 ESPNode as a part of RF24Hub
 
-![ ](http://wilmsn.github.io/ESPNode/einbindung.png  "Einbindung des ESPNode in den RF24Hub")
-[ Komponenten des ESPNode ](https://wilmsn.github.io/ESPNode/espnode
-.png)
+!["Einbindung des ESPNode in den RF24Hub"](https://wilmsn.github.io/ESPNode/einbindung.png)
 
 The main documentation of this projekt is in german language.
  
-[Infos zu Sensormodulen](#sensormodule)
+[Programmdoku auf wilmsn.github.io/ESPNode](http://wilmsn.github.io/ESPNode/index.html) 
 
-[Programmdoku](http://wilmsn.github.io/ESPNode/index.html) 
-
-##Hauptprogramm
+## Hauptprogramm
 
 Details zum Hauptprogramm gibt es in der [Programmdoku](http://wilmsn.github.io/ESPNode/index.html), hier wird nur das zugrundeliegende Konzept beschrieben.
 Im Hauptprogramm sind folgende Komponenten vorgesehen:
@@ -69,10 +65,10 @@ Zeitabhängige Aktionen:
 
 
 
-##Sensormodule
+## Sensormodule
 Sensormodule beschreiben bzw erzeugen eigene Objekte. Die Einbindung erfolgt über die Datei **"Node_settings.h"**. Dort müssen die nachfolgenden Funktionen vorhanden und mit Inhalt gefüllt sein. Zur Kompatibilität sind die Funktionen als Leerfunktion im Grundobjekt **"Sensor_Generic"** bereits vorhanden. Alle neuen Objekte für Sensoren und Aktoren werden von **"Sensor_Generic"** abgeleitet. 
 
-###Funktion "begin()"
+### Funktion "begin()"
 Dies Funktion kann je nach Einsatz und Aufgabe unterschiedliche Parameter erfordern. Damit die Funktion universell eingebaut werden kann, erfolgt ihr "Einbau" in der Datei  **"Node_settings.h"** über eine Precompiler Direktive. Beispiel:
 
 	#include "sensor_18B20.h"
@@ -82,7 +78,7 @@ Dies Funktion kann je nach Einsatz und Aufgabe unterschiedliche Parameter erford
 In der ersten Zeile wird die Headerdatei für die Objektdefinition eingebunden. In der zweiten Zeile das Objekt definiert. Die Direktive **"SENSOR1_DEFINITION"** MUSS für den ersten Sensor verwendet werden. Gibt es weitere Sensoren, gibt es im Programm eine Vorbereitung für 3 Sensoren (SENSOR1 bis SENSOR3) und 4 Aktoren (SWITCH1 bis SWITCH4).
 Liefert eine Hardware mehrere Messwerte, wird diese als ein Sensor implementiert (siehe "sensor_bosch.h/cpp". Die Objektdefinition ist hier "Sensor_18B20". Dieser Ausdruck ist variabel und  entspricht dem der Definition. Das erzeugte Objekt heist "sensor1".
 
-In die Variable **obj_sensorinfo** wird ein Teil-JSON mit allenunter Sysinfo anzuzeigenden Sensorinfos angelegt.
+In die Variable **obj_sensorinfo** wird ein Teil-JSON mit allen unter Sysinfo anzuzeigenden Sensorinfos angelegt.
 
 Syntax: **"sensorinfo1 : Sensordetails linke Spalte # Sensordetails rechte Spalte"**
 
@@ -93,7 +89,7 @@ Innerhalb des Programmes wird in diesem Schritt alles nötige getan um das Objek
 Die Implementierung erfolgt wiederum über eine Precompilerdirektive (Zeile3):
 Der erste Teil "SENSOR1_BEGIN_STATEMENT" ist statisch. Der zweite Teil wird entsprechend der benötigten Objektinitialisierung angepasst.
 
-###Funktion "start_measure()"
+### Funktion "start_measure()"
 Innerhalb dieser Funktion  muss bei einem Sensor zwingend folgendes Programmiert werden:
 
 1) Alles nötige zum Auslesen des oder der Messwerte.
@@ -115,10 +111,10 @@ Syntax: **{"Messwertlabel"  : "Wert"}**
 Beispiel: **{"Temperatur" : 21.2 }**
 
 
-###Funktion set( keyword, value)
+### Funktion set( keyword, value)
 Diese Funktion muss für jeden Aktor/Switch gefüllt werden. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion der eingebauten Objekte geschleust. Die Objekte prüfen ob das Item für sie ein keyword ist und sie handeln müssen. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. Nach Beendigung der Funktion müssen auch hier die Variablen **"obj_html_stat_json"** und  **"obj_mqtt_json"** gefüllt sein.
 
-###Funktion "html_create_json_part(json)"
+### Funktion "html_create_json_part(json)"
 Ein Sensor aktiviert seine Anzeige selbst indem der anzuzeigende Wert in das passende HTML Feld geschrieben wird. Bei einem Aktor/Switch muss dazu die Funktion "html_create_json_part" gefüllt werden. Durch das hier erzeugte JSON wird festgelgt was wie auf der HTML Seite angezeigt wird. Dabei gibt es folgende Möglichkeit:
 
 a) Reiner Ein-Aus Schalter
@@ -133,4 +129,4 @@ c) Jede andere Kombination die nach Änderung der HTML Seite benötigt wird
 
 Beispiele dazu in der Datei switch_onoff.h/cpp
 
-##Konfiguration
+## Konfiguration
