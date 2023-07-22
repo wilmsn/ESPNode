@@ -9,11 +9,11 @@ ESPNode is a firmware for ESP8266 and ESP32 (in future). This firmware is not ge
 - Web Interface (based on J-Query and Websockets) 
 - Written in C++ for Arduino
 
-!["ESPNode Komponenten"](https://wilmsn.github.io/ESPNode/espnode.png)
+![ESPNode Komponenten](https://wilmsn.github.io/ESPNode/espnode.png)
 
 ESPNode as a part of RF24Hub
 
-!["Einbindung des ESPNode in den RF24Hub"](https://wilmsn.github.io/ESPNode/einbindung.png)
+![Einbindung des ESPNode in den RF24Hub](https://wilmsn.github.io/ESPNode/einbindung.png)
 
 The main documentation of this projekt is in german language.
  

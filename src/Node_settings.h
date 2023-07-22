@@ -102,7 +102,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
 
 #define SWITCH1_DEFINITION       Actor_LEDMatrix switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Display", "display", "display",true, true, 3, 1, "mx_line", "mx_graph", "intensity");
+// html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_no, mqtt_line, mqtt_graph, slider_mqtt_name
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Display", "display", "display", false, true, 3, 1, "mx_line", "mx_graph", "intensity");
 
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;

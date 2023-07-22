@@ -924,9 +924,10 @@ void reconnect_mqtt() {
   // Loop until we're reconnected
   while (!mqttClient.connected()) {
     // Attempt to connect
-    if (mqttClient.connect(preference.mqtt_client)) {
+    // boolean PubSubClient::connect(const char *id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage)
+    if (mqttClient.connect(preference.mqtt_client, mk_topic(MQTT_TELEMETRIE, "LWT"),MQTT_QOS,MQTT_WILLRETAIN,"offline")) {
       // Once connected, publish an announcement...
-      mqttClient.publish(mk_topic(MQTT_STATUS, "state"), "online");
+      mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "LWT"), "online");
       // ... and resubscribe
       mqttClient.subscribe(mk_topic(MQTT_COMMAND, "#"));
       if (preference.log_mqtt) {

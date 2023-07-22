@@ -16,10 +16,10 @@
 //#define NODEMATRIX
 //#define WITTYNODE1
 // meine produktiven Nodes
-#define NODE_WOHNZIMMER
+//#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICHPUMPE
-//#define NODE_FLUR
+#define NODE_FLUR
 //---------------------------
 
 #define SWVERSION   "0.992"
@@ -47,6 +47,9 @@
 #define TOPIC_PART2_SIZE             30
 #define TOPIC_PART3_SIZE             10
 //#define TOPIC_BUFFER_SIZE            50
+//Settings for QoS
+#define MQTT_QOS                     0
+#define MQTT_WILLRETAIN              true
 
 /// Statusinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Messungen mit anschliessendem Versand der Daten über MQTT (falls aktiviert).
