@@ -336,7 +336,7 @@ bool getNTPtime(long unsigned int sec) {
 // Kommentiert in main.h
 void wifi_con(void) {
   if (WiFi.status() != WL_CONNECTED) {
-    write2log(log_sys, 4, "Try to connect to ", ssid1, " with password ", password1);
+    write2log(log_sys, 4, "Try to connect to ", ssid, " with password ", password);
     WiFi.mode(WIFI_STA);
 #ifdef ESP32
     WiFi.setHostname(HOSTNAME);
@@ -344,8 +344,8 @@ void wifi_con(void) {
     //    WiFi.persistent(false);
     WiFi.hostname(HOSTNAME);
 #endif
-    WiFi.begin(ssid1, password1);
-    write2log(log_sys, 2, "WIFI try to connect to ", ssid1);
+    WiFi.begin(ssid, password);
+    write2log(log_sys, 2, "WIFI try to connect to ", ssid);
 
     // ... Give ESP 10 seconds to connect to station.
     unsigned int i = 0;
@@ -354,9 +354,9 @@ void wifi_con(void) {
       i++;
     }
     if (WiFi.status() == WL_CONNECTED) {
-      write2log(log_sys,2, "WIFI connected to ", ssid1);
+      write2log(log_sys,2, "WIFI connected to ", ssid);
       write2log(log_sys,1, WiFi.localIP().toString().c_str());
-    } else {
+/*    } else {
       write2log(log_sys,4, "Try to connect to ", ssid2, " with password ", password2);
       //      WiFi.mode(WIFI_STA);
       WiFi.begin(ssid2, password2);
@@ -369,8 +369,8 @@ void wifi_con(void) {
       if (WiFi.status() == WL_CONNECTED) {
         write2log(log_sys,2, "WIFI (re)connect to ", ssid2);
         write2log(log_sys,1, WiFi.localIP().toString().c_str());
-      }
-    }
+      } */
+    } 
     if (WiFi.status() != WL_CONNECTED) {
       WiFi.scanNetworks(true, false);
       while ( WiFi.scanComplete() < 0 ) { 

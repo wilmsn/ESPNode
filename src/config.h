@@ -14,12 +14,12 @@
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
-//#define WITTYNODE1
+#define WITTYNODE1
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICHPUMPE
-#define NODE_FLUR
+//#define NODE_FLUR
 //---------------------------
 
 #define SWVERSION   "0.992"
