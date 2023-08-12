@@ -26,6 +26,16 @@ void fill_timeStr() {
   snprintf(timeStr, 11, "[%02d:%02d:%02d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 }
 
+void setupTime() {                              
+  // deinen NTP Server einstellen (von 0 - 5 aus obiger Liste) alternativ lassen sich durch Komma getrennt bis zu 3 Server angeben
+#ifdef ESP32
+  configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", NTP_SERVER);
+#else
+  configTime("CET-1CEST,M3.5.0,M10.5.0/3", NTP_SERVER);  
+#endif
+  // Zeitzone einstellen https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+}
+
 // Kommentiert in main.h
 void getVcc(String& json) {
 #if defined(ANALOGINPUT)
@@ -53,50 +63,69 @@ void write2log(log_t kat, int count, ...) {
     c[n] = (char *)va_arg(args, char *);
     n++;
   }
-  fill_timeStr();
-  if (preference.log_fs_sysinfo && kat == log_critical) {
-    File f = LittleFS.open(DEBUGFILE, "a");
-    if (f) {
-      f.print(timeStr);
+  // Im AP-Mode wird nichts gelogged !!!
+  if ( ! ap_mode ) {
+    fill_timeStr();
+    if ( do_log_critical && kat == log_daybreak ) {
+      File f = LittleFS.open( DEBUGFILE, "a" );
+      if (f) {
+        f.printf("----%d.%d.%d----\n",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year);
+        f.close();
+      }
+    }
+    if (do_log_critical && kat == log_critical) {
+      File f = LittleFS.open( DEBUGFILE, "a" );
+      if (f) {
+        f.print(timeStr);
+        n = 0;
+        while (n < count) {
+          f.print(c[n]);
+          n++;
+        }
+        f.printf("\n");
+        f.close();
+      }
+    }
+    if ((do_log_sensor && (kat == log_sensor)    ) ||
+        (do_log_web && (kat == log_web)     ) ||
+#if defined(MQTT)
+        (do_log_mqtt && (kat == log_mqtt)   ) ||
+#endif
+#if defined(RF24GW)
+        (do_log_rf24 && (kat == log_rf24)   ) ||
+#endif
+        (do_log_sys && (kat == log_sys) ) || 
+        (do_log_critical && (kat == log_critical) )) {
+      debug_str = "{\"log\":\"";
+      debug_str += timeStr;
       n = 0;
       while (n < count) {
-        f.print(c[n]);
+        debug_str += " ";
+        // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
+        // Deshalb wird " gegen ' ersetzt!
+        for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
+          if ( c[n][i] == '"' ) {
+            debug_str += "'";  
+          } else {
+            debug_str += c[n][i];
+          }
+        }
         n++;
       }
+      debug_str += "\"}";
+      ws.textAll(debug_str);
     }
-  }
-  if ((preference.log_rf24 && (kat == log_rf24)   ) || (preference.log_sensor && (kat == log_sens)    ) ||
-      (preference.log_mqtt && (kat == log_mqtt)   ) || (preference.log_webcmd && (kat == log_web)     ) ||
-      (preference.log_sysinfo && (kat == log_sys) ) || (preference.log_sysinfo && (kat == log_critical) )) {
-    debug_str = "{\"log\":\"";
-    debug_str += timeStr;
+#if defined(DEBUG_SERIAL)
+    Serial.print(timeStr);
     n = 0;
     while (n < count) {
-      debug_str += " ";
-      // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
-      // Deshalb wird " gegen ' ersetzt!
-      for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
-        if ( c[n][i] == '"' ) {
-          debug_str += "'";  
-        } else {
-          debug_str += c[n][i];
-        }
-      }
+      Serial.print(c[n]);
+      Serial.print(" ");
       n++;
     }
-    debug_str += "\"}";
-    ws.textAll(debug_str);
-  }
-#if defined(DEBUG_SERIAL)
-  Serial.print(timeStr);
-  n = 0;
-  while (n < count) {
-    Serial.print(c[n]);
-    Serial.print(" ");
-    n++;
-  }
-  Serial.println();
+    Serial.println();
 #endif
+  }
   va_end(args);
 }
 
@@ -128,6 +157,11 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
   switch (type) {
     case WS_EVT_CONNECT:
       html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
+      html_json += ",\"wifi_ssid\":\"";
+      html_json += wifi_ssid;
+      html_json += "\",\"wifi_pass\":\"";
+      html_json += wifi_pass;
+      html_json += "\"";
 #if defined(HOST_DISCRIPTION)
       html_json += ",\"titel2\":\"";
       html_json += HOST_DISCRIPTION;
@@ -152,40 +186,49 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       sensor2.html_create_json_part(html_json);
 #endif
 #if defined(MQTT)
-      html_json += ",\"set_mqtt\":1,\"set_mqttserver\":\"";
-      html_json += preference.mqtt_server;
+      html_json += ",\"set_mqtt_enable\":1";
+      html_json += ",\"set_mqtt\":";
+      html_json += do_mqtt_set?"1":"0";
+      html_json += ",\"set_mqttserver\":\"";
+      html_json += mqtt_server;
       html_json += "\",\"set_mqttclient\":\"";
-      html_json += preference.mqtt_client;
+      html_json += mqtt_client;
       html_json += "\",\"set_mqtttopicp2\":\"";
-      html_json += preference.mqtt_topicP2;
+      html_json += mqtt_topicP2;
       html_json += "\"";
 #else
-      html_json += ",\"set_mqtt\":0";
+      html_json += ",\"set_mqtt_enable\":0";
 #endif
 // Setzen der Logging Flags 
+#if defined(RF24GW)
       html_json += ",\"log_rf24\":";
-      html_json += preference.log_rf24? "1": "0";
+      html_json += do_log_rf24? "1": "0";
+#endif
+#if defined(MQTT)
       html_json += ",\"log_mqtt\":";
-      html_json += preference.log_mqtt? "1": "0";
+      html_json += do_log_mqtt? "1": "0";
+#endif
       html_json += ",\"log_sensor\":";
-      html_json += preference.log_sensor? "1": "0";
-      html_json += ",\"log_sysinfo\":";
-      html_json += preference.log_sysinfo? "1": "0";
-      html_json += ",\"log_webcmd\":";
-      html_json += preference.log_webcmd? "1": "0";
+      html_json += do_log_sensor? "1": "0";
+      html_json += ",\"log_sys\":";
+      html_json += do_log_sys? "1": "0";
+      html_json += ",\"log_critical\":";
+      html_json += do_log_critical? "1": "0";
+      html_json += ",\"log_web\":";
+      html_json += do_log_web? "1": "0";
 // RF24 Gateway
 #if defined(RF24GW)
       html_json += ",\"set_rf24gw_enable\":1";
       html_json += ",\"set_rf24gw\":";
-      html_json += preference.rf24gw_enable? "1":"0";
+      html_json += do_rf24gw? "1":"0";
       html_json += ",\"set_RF24HUB-Server\":\"";
-      html_json += preference.rf24gw_hub_name;
+      html_json += rf24gw_hub_server;
       html_json += "\",\"set_RF24HUB-Port\":\"";
-      html_json += preference.rf24gw_hub_port;
+      html_json += rf24gw_hub_port;
       html_json += "\",\"set_RF24GW-Port\":\"";
-      html_json += preference.rf24gw_gw_port;
+      html_json += rf24gw_gw_port;
       html_json += "\",\"set_RF24GW-No\":";
-      html_json += preference.rf24gw_gw_no;
+      html_json += rf24gw_gw_no;
 #else      
       html_json += ",\"set_rf24gw_enable\":0";
 #endif      
@@ -333,109 +376,41 @@ bool getNTPtime(long unsigned int sec) {
   return retval;
 }
 
-// Kommentiert in main.h
-void wifi_con(void) {
-  if (WiFi.status() != WL_CONNECTED) {
-    write2log(log_sys, 4, "Try to connect to ", ssid, " with password ", password);
-    WiFi.mode(WIFI_STA);
+bool do_wifi_con(void) {
+  bool retval = false;
+  write2log(log_sys, 4, "Try to connect to ", wifi_ssid.c_str(), " with password ", wifi_pass.c_str());
+  WiFi.mode(WIFI_STA);
 #ifdef ESP32
-    WiFi.setHostname(HOSTNAME);
+  WiFi.setHostname(HOSTNAME);
+  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
 #else
     //    WiFi.persistent(false);
-    WiFi.hostname(HOSTNAME);
+  WiFi.hostname(HOSTNAME);
+  WiFi.begin(wifi_ssid, wifi_pass);
 #endif
-    WiFi.begin(ssid, password);
-    write2log(log_sys, 2, "WIFI try to connect to ", ssid);
+  write2log(log_sys, 2, "WIFI try to connect to ", wifi_ssid);
 
-    // ... Give ESP 10 seconds to connect to station.
-    unsigned int i = 0;
-    while (WiFi.status() != WL_CONNECTED && i < 100) {
-      delay(200);
-      i++;
-    }
-    if (WiFi.status() == WL_CONNECTED) {
-      write2log(log_sys,2, "WIFI connected to ", ssid);
-      write2log(log_sys,1, WiFi.localIP().toString().c_str());
-/*    } else {
-      write2log(log_sys,4, "Try to connect to ", ssid2, " with password ", password2);
-      //      WiFi.mode(WIFI_STA);
-      WiFi.begin(ssid2, password2);
-      // ... Give ESP 10 seconds to connect to station.
-      unsigned int i = 0;
-      while (WiFi.status() != WL_CONNECTED && i < 100) {
-        delay(200);
-        i++;
-      }
-      if (WiFi.status() == WL_CONNECTED) {
-        write2log(log_sys,2, "WIFI (re)connect to ", ssid2);
-        write2log(log_sys,1, WiFi.localIP().toString().c_str());
-      } */
-    } 
-    if (WiFi.status() != WL_CONNECTED) {
-      WiFi.scanNetworks(true, false);
-      while ( WiFi.scanComplete() < 0 ) { 
-        delay(200); 
-      }
-      int8_t numberOfNetworks = WiFi.scanComplete();
-      for (int i = 0; i < numberOfNetworks; i++) {
-        write2log(log_sys,1,WiFi.SSID(i).c_str());
-      }
-      WiFi.scanDelete();
-      File f = LittleFS.open( DEBUGFILE, "a");
-      if (f) {
-        fill_timeStr();
-        f.printf("%s Reboot Reason: No Wifi connection\n",timeStr);
-        f.close();
-      }
-      write2log(log_critical,1, "WIFI No connection => reboot");
-      delay(3000);
-      ESP.restart();
-    }
-    configTime(0, 0, NTP_SERVER);
-    // See https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv for Timezone codes for your region
-    setenv("TZ", TZ_INFO, 1);
-    tzset();
-    if (getNTPtime(10)) { // wait up to 10sec to sync
-    } else {
-      ESP.restart();
-    }
-  }
-}
-
-// Kommentiert in main.h
-void read_preferences(void) {
-  File myFile = LittleFS.open("/prefs", "r");
-  if (myFile) {
-    myFile.read((byte *)&preference, sizeof(preference));
-    myFile.close();
-  }
-}
-
-// Kommentiert in main.h
-void save_preferences(void) {
-  File myFile = LittleFS.open("/prefs", "w");
-  myFile.write((byte *)&preference, sizeof(preference));
-  myFile.close();
-}
-
-// Funktionen für den Webserver
-
-// Kommentiert in main.h
-const char *mk_cmd(AsyncWebServerRequest *request) {
-//  bool prefs_change = false;
-  int args = request->args();
-  html_json = "";
-  for (int argNo = 0; argNo < args; argNo++) {
-#if defined(DEBUG_SERIAL_HTML)
-    Serial.print("prozess_cmd: ");
-    Serial.print(request->argName(argNo));
-    Serial.print(": ");
-    Serial.println(request->arg(argNo));
+  // ... Give ESP 10 seconds to connect to station.
+  unsigned int i = 0;
+  while (WiFi.status() != WL_CONNECTED && i < 20) {
+    delay(500);
+    i++;
+#if defined(DEBUG_SERIAL)
+    Serial.print(".");
 #endif
-    prozess_cmd(request->argName(argNo), request->arg(argNo) );
   }
-  if (html_json.length() < 2 ) html_json = "ok";
-  return html_json.c_str();
+#if defined(DEBUG_SERIAL)
+  Serial.println();
+#endif
+  if ( WiFi.status() == WL_CONNECTED ) {
+    retval = true;
+    write2log(log_sys, 2, " OK connected!", wifi_ssid);
+  } else {
+    write2log(log_sys, 2, " ERROR not connected!", wifi_ssid);
+    retval = false;
+  }
+  
+  return retval;
 }
 
 // Kommentiert in main.h
@@ -452,6 +427,7 @@ const char *mk_wifiscan() {
 #endif
   return html_json.c_str();
 }
+
 
 // Kommentiert in main.h
 const char *mk_wifishow() {
@@ -481,6 +457,40 @@ const char *mk_wifishow() {
       html_json += " (";
       html_json += WiFi.RSSI(i);
       html_json += " dBm ";
+#ifdef ESP32
+      switch (WiFi.encryptionType(i)) {
+      case  WIFI_AUTH_OPEN:
+          html_json += "open";
+        break;
+      case WIFI_AUTH_WEP:
+          html_json += "WEP";
+        break;
+      case WIFI_AUTH_WPA_PSK:
+          html_json += "WPA PSK";
+        break;
+      case WIFI_AUTH_WPA2_PSK:
+          html_json += "WPA2 PSK";
+        break;
+      case WIFI_AUTH_WPA_WPA2_PSK:
+          html_json += "WPA WPA2 PSK";
+        break;
+      case WIFI_AUTH_WPA2_ENTERPRISE:
+          html_json += "WPA2 Enterprise";
+        break;
+      case WIFI_AUTH_WPA3_PSK:
+          html_json += "WPA3 PSK";
+        break;
+      case WIFI_AUTH_WPA2_WPA3_PSK:
+          html_json += "WPA2 WPA3 PSK";
+        break;
+      case WIFI_AUTH_WAPI_PSK:
+          html_json += "WAPI PSK";
+        break;
+      case WIFI_AUTH_MAX:
+          html_json += "MAX";
+        break;
+      }
+#else
       switch (WiFi.encryptionType(i)) {
       case ENC_TYPE_WEP:
           html_json += "WEP";
@@ -501,8 +511,10 @@ const char *mk_wifishow() {
           html_json += "unknown";
         break;
       }
+#endif
       html_json += ")\"";
     }
+//#endif
   }
   html_json += "}";
   WiFi.scanDelete();
@@ -521,17 +533,18 @@ const char *mk_sysinfo1(String& info_str) {
   uint8_t frag;
 #ifdef ESP32
   free = ESP.getFreeHeap();
-  frag = 0;
-  max = 0;
+  max = ESP.getMaxAllocHeap();
 #else
   ESP.getHeapStats(&free, &max, &frag);
 #endif
 #if defined(DEBUG_SERIAL_HTML)
-  Serial.print("Generiere sysinfo1 ... ");
+  Serial.println("Generiere sysinfo1 ... ");
 #endif
   info_str = "{";
 #ifdef ESP32
-  snprintf(tmp, 99, "\"Platform\":\"%s\"", ESP.getChipModel());
+  info_str +=  "\"Platform\":\"";
+  info_str +=  ESP.getChipModel();
+  info_str += "\"";
 #else
   info_str += "\"Platform\":\"ESP8266\"";
 #endif
@@ -570,17 +583,20 @@ const char *mk_sysinfo1(String& info_str) {
   info_str += String((float)max / 1024.0);
   info_str += " kB\"";
   info_str += ",\"Heap_frag\":\"";
+#ifdef ESP32
+  info_str += "n.a.\"";
+#else
   info_str += String((float)frag / 1024.0);
   info_str += "%\"";
-#ifdef ESP32
-// TBD
-//  char tmp1[25];
-//  snprintf(tmp, 99, "\"ResetReason\":\"%s\"", getResetReason(tmp1));
-#else
-  info_str += ",\"ResetReason\":\"";
-  info_str += ESP.getResetReason();
-  info_str += "\"";
 #endif
+  info_str += ",\"ResetReason\":\"";
+#ifdef ESP32
+  char tmp1[20];
+  info_str += getResetReason(tmp1);
+#else
+  info_str += ESP.getResetReason();
+#endif
+  info_str += "\"";
   info_str += ",\"Vcc\":\"";
   getVcc(info_str);
   info_str += "\"";
@@ -590,9 +606,9 @@ const char *mk_sysinfo1(String& info_str) {
   info_str += "}";
   write2log(log_sys,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
-  Serial.print(" ok (");
+  Serial.print("Sysinfo1: ");
   Serial.print(info_str.length());
-  Serial.println(" byte)");
+  Serial.println(" byte");
 #endif
   return info_str.c_str();
 }
@@ -677,7 +693,7 @@ const char *mk_sysinfo2(String& info_str) {
     }
   }
 #if defined(DEBUG_SERIAL_HTML)
-  Serial.print("Generiere sysinfo2 ... ");
+  Serial.println("Generiere sysinfo2 ... ");
 #endif
 //  uptime::calculateUptime();
   info_str = "{";
@@ -713,7 +729,7 @@ const char *mk_sysinfo2(String& info_str) {
   info_str += String(ARDUINO);
   info_str += "\"";
 #ifdef ESP32
-  snprintf(tmp, 99, "\"CoreVer\":\"%s\"", "unknown");
+  info_str += ",\"CoreVer\":\"unknown\"";
 #else
   info_str += ",\"CoreVer\":\"";
   info_str += ESP.getCoreVersion();
@@ -730,26 +746,26 @@ const char *mk_sysinfo2(String& info_str) {
   info_str += "}";
   write2log(log_sys,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
-  Serial.print(" ok (");
+  Serial.print("Sysinfo2: ");
   Serial.print(info_str.length());
-  Serial.println(" byte)");
+  Serial.println(" byte");
 #endif
   return info_str.c_str();
 }
 
 // Kommentiert in main.h
-const char *mk_sysinfo3(String& info_str, bool do_mqtt) {
+const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
 #if defined(DEBUG_SERIAL_HTML)
-  Serial.print("Generiere sysinfo3 ... ");
+  Serial.println("Generiere sysinfo3 ... ");
 #endif
   info_str = "{";
 #if defined(MQTT)  
   info_str += "\"mqttserver\":\"";
-  info_str += preference.mqtt_server;
+  info_str += mqtt_server;
   info_str += "\",\"mqttclient\":\"";
-  info_str += preference.mqtt_client;
+  info_str += mqtt_client;
   info_str += "\",\"mqtttopicp2\":\"";
-  info_str += preference.mqtt_topicP2;
+  info_str += mqtt_topicP2;
   info_str += "\"";
 #endif
 #if defined(RF24GW)  
@@ -765,7 +781,7 @@ const char *mk_sysinfo3(String& info_str, bool do_mqtt) {
 #endif
 #if defined(SENSOR1)
   if ( info_str.length() > 3 ) info_str += ",";
-  if (do_mqtt) {
+  if (format_mqtt) {
     info_str += sensor1.sensorinfo_mqtt();
   } else {
     info_str += sensor1.sensorinfo_html();
@@ -773,7 +789,7 @@ const char *mk_sysinfo3(String& info_str, bool do_mqtt) {
 #endif
 #if defined(SENSOR2)
   if ( info_str.length() > 3 ) info_str += ",";
-  if (do_mqtt) {
+  if (format_mqtt) {
     info_str += sensor2.sensorinfo_mqtt();
   } else {
     info_str += sensor2.sensorinfo_html();
@@ -782,11 +798,38 @@ const char *mk_sysinfo3(String& info_str, bool do_mqtt) {
   info_str += "}";
   write2log(log_sys,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
-  Serial.print(" ok (");
+  Serial.print("Sysinfo3: ");
   Serial.print(info_str.length());
-  Serial.println(" byte)");
+  Serial.println(" byte");
 #endif
   return info_str.c_str();
+}
+
+// Kommentiert in main.h
+const char *mk_cmd(AsyncWebServerRequest *request) {
+//  bool prefs_change = false;
+  int args = request->args();
+  html_json = "";
+  cmd_no = 0;
+  for (int argNo = 0; argNo < args; argNo++) {
+#if defined(DEBUG_SERIAL_HTML)
+    Serial.print("prozess_cmd: ");
+    Serial.print(request->argName(argNo));
+    Serial.print(": ");
+    Serial.println(request->arg(argNo));
+#endif
+    prozess_cmd(request->argName(argNo), request->arg(argNo) );
+  }
+  if ( cmd_no > 0 ) {
+    if ( rebootflag ) { 
+      html_json = "Reboot ok"; 
+    } else {
+      html_json = "ok";
+    }
+  } else {
+    html_json = "No change";
+  }
+  return html_json.c_str();
 }
 
 // Kommentiert in main.h
@@ -795,7 +838,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH1)
   if ( switch1.set( cmd, value ) ) {
     html_json = switch1.html_stat_json();
-    write2log(log_sens,1,html_json.c_str());
+    write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
@@ -806,7 +849,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH2)
   if ( switch2.set( cmd, value ) ) {
     html_json = switch2.html_stat_json();
-    write2log(log_sens,1,html_json.c_str());
+    write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
@@ -817,7 +860,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH3)
   if ( switch3.set( cmd, value ) ) {
     html_json = switch3.html_stat_json();
-    write2log(log_sens,1,html_json.c_str());
+    write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
@@ -828,7 +871,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH4)
   if ( switch4.set( cmd, value ) ) {
     html_json = switch4.html_stat_json();
-    write2log(log_sens,1,html_json.c_str());
+    write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
@@ -837,74 +880,132 @@ void prozess_cmd(const String cmd, const String value)  {
 #endif
 #if defined(MQTT)
   if ( cmd == "log_mqtt" ) {
-    if ( (value == "1") != preference.log_mqtt) {
-      preference.log_mqtt = (value == "1");
+    if ( (value == "1") != do_log_mqtt) {
+      do_log_mqtt = (value == "1");
+      cmd_no++;
     }
+    preferences.putBool("log_mqtt", do_log_mqtt);
   }
   if ( cmd == "mqtt" ) {
-    if ( value == "1" ) {
-      preference.mqtt_enable = true;
-    } else {
-      preference.mqtt_enable = false;
+    if ( (value == "1") != do_mqtt_set ) {
+      do_mqtt_set = ( value == "1" );
+      do_mqtt = do_mqtt_set;
+      preferences.putBool("do_mqtt", do_mqtt);
+      rebootflag = true;
+      cmd_no++;
     }
   }
   if ( cmd == "mqttclient" ) {
-    snprintf(preference.mqtt_client, TOPIC_PART2_SIZE, "%s", value.c_str());
+    if ( mqtt_client != value ) {
+      mqtt_client = value;
+      preferences.putString("mqtt_client", mqtt_client);
+      cmd_no++;
+    }
   }
   if ( cmd == "mqtttopicp2" ) {
-    snprintf(preference.mqtt_topicP2, TOPIC_PART2_SIZE, "%s", value.c_str());
+    if ( mqtt_topicP2 != value ) {
+      mqtt_topicP2 = value;
+      preferences.putString("mqtt_topicP2", mqtt_topicP2);
+      cmd_no++;
+    }
   }
   if ( cmd == "mqttserver" ) {
-    snprintf(preference.mqtt_server, SERVERNAMESIZE, "%s", value.c_str());
+    if ( mqtt_server != value ) {
+      mqtt_server = value;
+      preferences.putString("mqtt_server", mqtt_server);
+      cmd_no++;
+    }
   }
 #endif
 #if defined(RF24GW)
   if ( cmd == "rf24gw" ) {
 #if defined(DEBUG_SERIAL)
     Serial.print("RF24GW is ");
-    Serial.println(preference.rf24gw_enable? "1":"0");
+    Serial.println(do_rf24gw? "1":"0");
 #endif
-    if ( (value == "1") != preference.rf24gw_enable) {
-      preference.rf24gw_enable = (value == "1");
+    if ( (value == "1") != do_rf24gw) {
+      do_rf24gw = (value == "1");
+      preferences.putBool("do_rf24gw", do_rf24gw);
     }
   }
   if ( cmd == "log_rf24" ) {
-    if ( (value == "1") != preference.log_rf24) {
-      preference.log_rf24 = (value == "1");
+    if ( (value == "1") != do_log_rf24) {
+      do_log_rf24 = (value == "1");
+      preferences.putBool("do_log_rf24", do_log_rf24);
     }
   }
   if ( cmd == "rf24hubname" ) {
-    snprintf(preference.rf24gw_hub_name, SERVERNAMESIZE, "%s", value.c_str() );
+    rf24gw_hub_server = value;
   }
   if ( cmd == "rf24hubport" ) {
-    preference.rf24gw_hub_port = value.toInt();
+    rf24gw_hub_port = value.toInt();
   }
   if ( cmd == "rf24gwport" ) {
-    preference.rf24gw_gw_port = value.toInt();
+    rf24gw_gw_port = value.toInt();
   }
   if ( cmd == "rf24gwno" ) {
-    preference.rf24gw_gw_no = value.toInt();
+    rf24gw_gw_no = value.toInt();
+  }
+  if ( cmd == "log_rf24" ) {
+    do_log_rf24 = ( value == "1" );
+    preferences.putBool("do_log_rf24", do_log_rf24);
   }
 #endif
+  if ( cmd == "wifi_ssid" ) {
+    if ( wifi_ssid != value ) {
+      preferences.putString("wifi_ssid", value);
+      rebootflag = true;
+      cmd_no++;
+    }
+  }
+  if ( cmd == "wifi_pass" ) {
+    if ( wifi_pass != value ) {
+      preferences.putString("wifi_pass", value);
+      rebootflag = true;
+      cmd_no++;
+    }
+  }
   if ( cmd == "log_sensor" ) {
-    preference.log_sensor = ( value == "1" );
+    if ( do_log_sensor != ( value == "1" ) ) {
+      do_log_sensor = ( value == "1" );
+      preferences.putBool("do_log_sensor", do_log_sensor);
+      cmd_no++;
+    }
   }
-  if ( cmd == "log_webcmd" ) {
-    preference.log_webcmd = ( value == "1" );
+  if ( cmd == "log_web" ) {
+    if ( do_log_web != ( value == "1" ) ) {
+      do_log_web = ( value == "1" );
+      preferences.putBool("do_log_web", do_log_web);
+      cmd_no++;
+    }
   }
-  if ( cmd == "log_sysinfo" ) {
-    preference.log_sysinfo = ( value == "1" );
+  if ( cmd == "log_sys" ) {
+    if ( do_log_sys != ( value == "1" ) ) {
+      do_log_sys = ( value == "1" );
+      preferences.putBool("do_log_sys", do_log_sys);
+      cmd_no++;
+    }
   }
-  if ( (cmd == "saveeprom") && (value == "1") ) {
-    save_preferences();
-    html_json = "dauerhaft gespeichert";
+  if ( cmd == "log_critical" ) {
+    if ( do_log_critical != ( value == "1" ) ) {
+      do_log_critical = ( value == "1" );
+      preferences.putBool("do_log_critical", do_log_critical);
+      cmd_no++;
+    }
   }
   if ( cmd == "dellogfile" ) {
     LittleFS.remove(DEBUGFILE);
+    File f = LittleFS.open( DEBUGFILE, "a");
+    if (f) {
+      f.printf("----%d.%d.%d----\n",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year);
+      f.close();
+    }
+
+    cmd_no++;
   }
-  if ( cmd == "restart" ) {
+  if ( cmd == "restart" || cmd == "reboot" ) {
     rebootflag = true;
-    html_json = "Restart => OK";
+    cmd_no++;
   }
 }
 
@@ -913,7 +1014,7 @@ void prozess_cmd(const String cmd, const String value)  {
 const char* mk_topic(const char* part1, const char* part3) {
   mqtt_topic = part1;
   mqtt_topic += "/";
-  mqtt_topic += preference.mqtt_topicP2;
+  mqtt_topic += mqtt_topicP2;
   mqtt_topic += "/";
   mqtt_topic += part3;
   return mqtt_topic.c_str();
@@ -922,32 +1023,40 @@ const char* mk_topic(const char* part1, const char* part3) {
 // dokumentiert in main.h
 void reconnect_mqtt() {
   // Loop until we're reconnected
-  while (!mqttClient.connected()) {
-    // Attempt to connect
-    // boolean PubSubClient::connect(const char *id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage)
-    if (mqttClient.connect(preference.mqtt_client, mk_topic(MQTT_TELEMETRIE, "LWT"),MQTT_QOS,MQTT_WILLRETAIN,"offline")) {
-      // Once connected, publish an announcement...
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "LWT"), "online");
-      // ... and resubscribe
-      mqttClient.subscribe(mk_topic(MQTT_COMMAND, "#"));
-      if (preference.log_mqtt) {
-        write2log(log_mqtt, 2, mqtt_topic.c_str()," => subcribed");
-      }
-    } else {
-      // Wait 2 seconds before retrying
+  if (do_mqtt) {
+    while (!mqttClient.connected()) {
+      // Attempt to connect
+      // boolean PubSubClient::connect(const char *id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage)
+      if (mqttClient.connect(mqtt_client.c_str(), mk_topic(MQTT_TELEMETRIE, "LWT"), MQTT_QOS, MQTT_WILLRETAIN, "offline")) {
+        // Once connected, publish an announcement...
+        mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "LWT"), "online");
+        // ... and resubscribe
+        mqttClient.subscribe(mk_topic(MQTT_COMMAND, "#"));
+        if (do_log_mqtt) {
+          write2log(log_mqtt, 2, mqtt_topic.c_str()," => subcribed");
+        }
+      } else {
+        // Wait 2 seconds before retrying
 #if defined(DEBUG_SERIAL)
-      Serial.print("failed, rc=");
-      Serial.print(mqttClient.state());
-      Serial.println(" try again in 2 seconds");
+        Serial.print("failed, rc=");
+        Serial.print(mqttClient.state());
+        Serial.println(" try again in 2 seconds");
+        Serial.print("Server: ");
+        Serial.print(mqtt_server);
+        Serial.print("; Client: ");
+        Serial.print(mqtt_client);
+        Serial.print("; TopicP2: ");
+        Serial.println(mqtt_topicP2);
 #endif
-      delay(2000);
+        delay(2000);
+      }
     }
   }
 }
 
 // dokumentiert in main.h
 void send_mqtt_stat() {
-  if (preference.mqtt_enable) {
+  if (do_mqtt) {
     if (!mqttClient.connected()) {
       reconnect_mqtt();
     }
@@ -1005,23 +1114,26 @@ void send_mqtt_stat() {
 
 // dokumentiert in main.h
 void send_mqtt_tele() {
-  if (preference.mqtt_enable) {
+  if (do_mqtt) {
+#if defined(DEBUG_SERIAL)
+    Serial.println("Sending Mqtt Tele");
+#endif
     if (!mqttClient.connected()) {
       reconnect_mqtt();
     }
     mk_sysinfo1(mqtt_json); // Hier wird die Variable "info_str" gefüllt!
     mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info1"), mqtt_json.c_str());
-    if (preference.log_mqtt) {
+    if (do_log_mqtt) {
       write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
     }
     mk_sysinfo2(mqtt_json);
     mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info2"), mqtt_json.c_str());
-    if (preference.log_mqtt) {
+    if (do_log_mqtt) {
       write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
     }
     mk_sysinfo3(mqtt_json, true);
     mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info3"), mqtt_json.c_str());
-    if (preference.log_mqtt) {
+    if (do_log_mqtt) {
       write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
     }
   }
@@ -1035,7 +1147,7 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
   char part2[TOPIC_PART2_SIZE];
   char part3[TOPIC_PART3_SIZE];
   char* cmd = (char*)malloc(length + 2);
-  if (preference.mqtt_enable) {
+  if (do_mqtt) {
     snprintf(cmd, length + 1, "%s", (char*)payload);
     write2log(log_mqtt,2, topic, cmd);
     ptr = strtok(topic, delimiter);
@@ -1055,9 +1167,10 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
 }
 #endif //MQTT enabled
 
+#if defined(RF24GW)
 // dokumentiert in main.h
 void writeRf242log(const char* senddir, payload_t pl) {
-  if (preference.log_rf24) {
+  if (do_log_rf24) {
 //    char tmpstr[32];
 //    snprintf(tmpstr,36,"O#%u N:%u M:%u MT:%u HB:%u",pl.orderno,pl.node_id,pl.msg_id,pl.msg_type,pl.heartbeatno);
 //    write2log(log_rf24, 2, senddir, tmpstr);
@@ -1075,23 +1188,137 @@ void writeRf242log(const char* senddir, payload_t pl) {
       write2log(log_rf24, 1, tmp_str.c_str());
    }
 }
+#endif
 
 /****************************************************
  * Setup
  *****************************************************/
 void setup() {
+
 #if defined(DEBUG_SERIAL)
   // Serial port for debugging purposes
   Serial.begin(115200);
+  Serial.println("Available Networks: ");
   int numberOfNetworks = WiFi.scanNetworks();
   for (int i = 0; i < numberOfNetworks; i++) {
-    Serial.println("Available Networks: ");
+#ifdef ESP32
+    Serial.printf("%d: %s, Ch:%d (%ddBm) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i) == WIFI_AUTH_OPEN ? "open" : "");
+#else
     Serial.printf("%d: %s, Ch:%d (%ddBm) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
+#endif
   }
 #endif
 
-  // Connect to Wi-Fi
-  wifi_con();
+  preferences.begin("credentials");
+  magicno = preferences.getInt("magicno");
+#if defined(DEBUG_SERIAL)
+  Serial.print("MagicNo = ");
+  Serial.println(magicno);
+  Serial.print("MagicNo = ");
+  Serial.println(MAGICNO);
+#if defined(MQTT)
+  Serial.print("MQTT_SERVER = ");
+  Serial.println(MQTT_SERVER);
+#endif
+#endif
+// MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
+  if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
+    wifi_ssid = WIFI_SSID;
+    wifi_pass = WIFI_PASS;
+#if defined(MQTT)
+    do_mqtt = MQTT;
+    do_mqtt_set = MQTT;
+    mqtt_server = MQTT_SERVER;
+    mqtt_client = MQTT_CLIENT;
+    mqtt_topicP2 = MQTT_TOPICP2;
+    do_log_mqtt = LOG_MQTT;
+#endif
+// Save the defaults for the next start!
+    preferences.putInt("magicno", MAGICNO);
+    preferences.putString("wifi_ssid", wifi_ssid); 
+    preferences.putString("wifi_pass", wifi_pass);
+#if defined(MQTT)
+    preferences.putBool("do_mqtt", do_mqtt);
+    preferences.putString("mqtt_server", mqtt_server);
+    preferences.putString("mqtt_client", mqtt_client);
+    preferences.putString("mqtt_topicP2", mqtt_topicP2);
+    preferences.putBool("do_log_mqtt", do_log_mqtt);
+#endif
+#if defined(RF24GW)
+    do_rf24gw = RF24GW;
+    rf24gw_hub_server = RF24GW_HUB_SERVER;
+    rf24gw_hub_port = RF24GW_HUB_UDP_PORTNO;
+    rf24gw_gw_port = RF24GW_GW_UDP_PORTNO;
+    rf24gw_gw_no = RF24GW_NO;
+    do_log_rf24 = LOG_RF24;
+    preferences.putBool("do_rf24gw", do_rf24gw);
+    preferences.putString("rf24gw_hub_server", rf24gw_hub_server);
+    preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
+    preferences.putInt("rf24gw_gw_port", rf24gw_gw_port);
+    preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
+    preferences.putBool("log_rf24", log_rf24);
+#endif
+    do_log_sensor = LOG_SENSOR;
+    do_log_web = LOG_WEB;
+    do_log_sys = LOG_SYS;
+    do_log_critical = LOG_CRITICAL;
+    preferences.putBool("do_log_sensor", do_log_sensor);
+    preferences.putBool("do_log_web", do_log_web);
+    preferences.putBool("do_log_sys", do_log_sys);
+    preferences.putBool("do_log_critical", do_log_critical);
+  } else {
+// Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
+    wifi_ssid = preferences.getString("wifi_ssid"); 
+    wifi_pass = preferences.getString("wifi_pass");
+#if defined(MQTT)
+    do_mqtt = preferences.getBool("do_mqtt");
+    do_mqtt_set = do_mqtt;
+    mqtt_server = preferences.getString("mqtt_server");
+    mqtt_client = preferences.getString("mqtt_client");
+    mqtt_topicP2 = preferences.getString("mqtt_topicP2");
+    do_log_mqtt = preferences.getBool("log_mqtt");
+#endif
+#if defined(RF24GW)
+    do_rf24gw = preferences.getBool("do_rf24gw");
+    rf24gw_hub_server = preferences.getString("rf24gw_hub_server");
+    rf24gw_hub_port = preferences.getInt("rf24gw_hub_port");
+    rf24gw_gw_port = preferences.getInt("rf24gw_gw_port");
+    rf24gw_gw_no = preferences.getInt("rf24gw_gw_no");
+    do_log_rf24 = preferences.getBool("log_rf24");
+#endif
+    do_log_sensor = preferences.getBool("do_log_sensor");
+    do_log_web = preferences.getBool("do_log_web");
+    do_log_sys = preferences.getBool("do_log_sys");
+    do_log_critical = preferences.getBool("do_log_critical");
+  }
+//  preferences.end();
+#if defined(DEBUG_SERIAL)
+#if defined(MQTT)
+  Serial.print("MQTT: ");
+  Serial.println(do_mqtt?"Ein":"Aus");
+#endif
+#if defined(RF24GW)
+  Serial.print("RF24GW: ");
+  Serial.println(do_rf24gw?"Ein":"Aus");
+#endif
+  Serial.println("Status Logging:");
+#if defined(MQTT)
+  Serial.print("Mqtt: ");
+  Serial.println(do_log_mqtt?"ja":"nein");
+#endif
+#if defined(RF24GW)
+  Serial.print("RF24GW: ");
+  Serial.println(do_log_rf24?"ja":"nein");
+#endif
+  Serial.print("Sensor: ");
+  Serial.println(do_log_sensor?"ja":"nein");
+  Serial.print("Web: ");
+  Serial.println(do_log_web?"ja":"nein");
+  Serial.print("Sys: ");
+  Serial.println(do_log_sys?"ja":"nein");
+  Serial.print("Critical: ");
+  Serial.println(do_log_critical?"ja":"nein");
+#endif
 
   if (!LittleFS.begin()) {
     ESP.restart();
@@ -1099,30 +1326,39 @@ void setup() {
   } else {
     write2log(log_sys,1, "++ Begin Startup: LittleFS mounted ++");
   }
-  File f = LittleFS.open( DEBUGFILE, "a");
-  if (f) {
-    fill_timeStr();
-    f.printf("%s %s Reboot Reason:%s\n",timeStr,"Setup executed",ESP.getResetReason().c_str());
-    f.close();
-  }
 
-// Fill preference structure
-  read_preferences();
-  if ( (preference.magicno != MAGICNO) || (MAGICNO == 0) ) {
-#if defined(MQTT)
-    preference.mqtt_enable = true;
-    snprintf(preference.mqtt_client, TOPIC_PART2_SIZE, "%s", MQTT_CLIENT);
-    snprintf(preference.mqtt_topicP2, TOPIC_PART2_SIZE, "%s", MQTT_TOPICP2);
-    snprintf(preference.mqtt_server, SERVERNAMESIZE, "%s", MQTT_SERVER);
+  // Connect to Wi-Fi
+  if ( ! do_wifi_con() ) {
+    ap_mode = true;
+    WiFi.mode(WIFI_AP);
+    delay(500);  
+    WiFi.softAP("ESPNode");
+#if defined(MQTT)    
+    do_mqtt = false;
 #endif
 #if defined(RF24GW)
-    snprintf(preference.rf24gw_hub_name, SERVERNAMESIZE, "%s", RF24GW_HUB_SERVER);
-    preference.rf24gw_hub_port = RF24GW_HUB_UDP_PORTNO;
-    preference.rf24gw_gw_port = RF24GW_GW_UDP_PORTNO;
-    preference.rf24gw_gw_no = RF24GW_NO;
-    preference.rf24gw_enable = true;
+    do_rf24gw = false;
 #endif
-    preference.magicno = MAGICNO;
+#if defined(DEBUG_SERIAL)
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("Http Server started on ");
+    Serial.println(IP);
+#endif
+  } else {
+#if defined(DEBUG_SERIAL)
+    IPAddress IP = WiFi.localIP();
+    Serial.print("Node Address is ");
+    Serial.println(IP);
+#endif
+    setupTime();
+    getNTPtime(10); 
+    lastDay = timeinfo.tm_mday;
+    write2log(log_daybreak, 0);
+#ifdef ESP32
+    //ToDo
+#else
+    write2log(log_critical, 2, "Reboot: ", ESP.getResetReason().c_str());
+#endif
   }
   initWebSocket();
   write2log(log_web,1, "initWebsocket ok");
@@ -1139,6 +1375,9 @@ void setup() {
                 { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
   httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); });
+#ifdef ESP32
+
+#else
   httpServer.on("/update_fw", HTTP_POST, [&](AsyncWebServerRequest *request) {},
    [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
       if (!index) {
@@ -1157,6 +1396,10 @@ void setup() {
         }
       }
   });
+#endif
+#ifdef ESP32
+
+#else
   httpServer.on("/update_fs", HTTP_POST, [&](AsyncWebServerRequest *request) {},
     [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
       // Upload handler chunks in data
@@ -1178,6 +1421,7 @@ void setup() {
         }
       }
   });
+#endif
   // This serves all static web content
   httpServer.onNotFound(serveFile);
   // Start server
@@ -1198,9 +1442,9 @@ void setup() {
   radio.openReadingPipe(1, rf24_node2hub);
   radio.startListening();
   radio.printDetails();
-  if (udp.begin(preference.rf24gw_gw_port) == 1) {
-    if (preference.log_rf24) {
-      write2log(log_sys,2, "RF24: Opened UDP Port:", String(preference.rf24gw_hub_port).c_str() );
+  if (udp.begin(rf24gw_gw_port) == 1) {
+    if (do_log_rf24) {
+      write2log(log_sys,2, "RF24: Opened UDP Port:", String(rf24gw_hub_port).c_str() );
     }
   }
 #endif
@@ -1231,12 +1475,12 @@ void setup() {
 #endif
   measure_started = millis();
 #if defined(MQTT)
-  if (preference.mqtt_enable) {
-    mqttClient.setServer(preference.mqtt_server, 1883);
+  if ( do_mqtt ) {
+    mqttClient.setServer(mqtt_server.c_str(), 1883);
     mqttClient.setCallback(callback_mqtt);
     mqttClient.setBufferSize(512);
-    if (preference.log_mqtt) {
-      write2log(log_mqtt,3, "MQTT: Connected to Server:", preference.mqtt_server, "Port: 1883");
+    if (do_log_mqtt) {
+      write2log(log_mqtt,3, "MQTT: Connected to Server:", mqtt_server.c_str(), "Port: 1883");
     }
     send_mqtt_tele();
   }
@@ -1252,10 +1496,10 @@ void loop() {
 #if defined(RF24GW)
   if ( radio.available() ) {
     radio.read(&payload, sizeof(payload));
-    udpdata.gw_no = preference.rf24gw_gw_no;
+    udpdata.gw_no = rf24gw_gw_no;
     writeRf242log("N>G", payload);
     memcpy(&udpdata.payload, &payload, sizeof(payload));
-    udp.beginPacket(preference.rf24gw_hub_name, preference.rf24gw_hub_port);
+    udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);
     udp.write((char*)&udpdata, sizeof(udpdata));
     udp.endPacket();
   }
@@ -1269,11 +1513,13 @@ void loop() {
   }
 #endif
 #if defined(MQTT)
-  if (!mqttClient.connected()) {
-    reconnect_mqtt();
+  if ( do_mqtt ) {
+    if (!mqttClient.connected()) {
+      reconnect_mqtt();
+    }
+    mqttClient.loop();
+    delay(0);
   }
-  mqttClient.loop();
-  delay(0);
 #endif
 #if defined(SWITCH1)
   switch1.loop();
@@ -1294,20 +1540,18 @@ void loop() {
   sensor2.loop();
 #endif
 #if defined(MQTT)
-  if ( do_send_mqtt_stat ) {
-    send_mqtt_stat();
-    do_send_mqtt_stat = false;
+  if ( do_mqtt ) {
+    if ( do_send_mqtt_stat ) {
+      send_mqtt_stat();
+      do_send_mqtt_stat = false;
+    }
   }
 #endif  
-  if (rebootflag) {
-    File f = LittleFS.open( DEBUGFILE, "a");
-    if (f) {
-      fill_timeStr();
-      f.printf("%s Reboot Flag gesetzt\n",timeStr);
-      f.close();
-    }
+  if ( rebootflag ) {
+    preferences.end();
+    write2log(log_critical,1,"Reboot Flag gesetzt => reboot");
     yield();
-    delay(5000);
+    delay(2000);
     yield();
     ESP.restart();
   }
@@ -1329,7 +1573,7 @@ void loop() {
     measure_started = false;
 #if defined(SENSOR1)  
     html_json = sensor1.html_stat_json();
-    write2log(log_sens,1,html_json.c_str());
+    write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
 #endif
 #if defined(SENSOR2)  
@@ -1347,9 +1591,38 @@ void loop() {
     send_mqtt_tele();
   }
 #endif
-  loopcount++;
-  if ( loopcount > 100000) {
-    uptime.update();
-    loopcount = 0;
-  }
+//  loopcount++;
+//  if ( loopcount > 1000) {
+/*      if (getNTPtime(10)) { // wait up to 10sec to sync
+    } else {
+      write2log(log_critical,1,"Failed to sync NTP -> reboot\n");
+      delay(1000);
+      ESP.restart();
+    } */
+// Dinge die täglich erledigt werden sollen
+    if ( lastDay != timeinfo.tm_mday ) {
+      setupTime();
+      write2log(log_daybreak,0);
+      lastDay = timeinfo.tm_mday;
+    }
+// Dinge die stündlich erledigt werden sollen
+    if ( lastHour != timeinfo.tm_hour ) {
+      uint32_t free;
+      uint32_t max;
+      uint8_t frag;
+#ifdef ESP32
+      free = ESP.getFreeHeap();
+      frag = 0;
+      max = 0;
+#else
+      ESP.getHeapStats(&free, &max, &frag);
+#endif
+      tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
+                String(frag) + ")";
+      write2log(log_critical,1,tmp_str.c_str());
+      uptime.update();
+      lastHour = timeinfo.tm_hour;
+    }
+//    loopcount = 0;
+//  }
 }

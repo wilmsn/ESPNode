@@ -67,7 +67,7 @@ RF24 Node:
 
 #endif
 //*****************************************************
-#if defined(NODE_TEICHPUMPE)
+#if defined(NODE_TEICH)
 #include "switch_onoff.h"
 #define HOSTNAME                 "TeichNode"
 #define HOST_DISCRIPTION         "Der Node zur Steuerung der Teichpumpe"
@@ -89,6 +89,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                101
+
+#define MAGICNO                  478
 
 #endif
 //-----------------------------------------------------
@@ -116,6 +118,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                102
 
+#define MAGICNO                  473
+
 #endif
 //*****************************************************
 //    Individual settings
@@ -134,6 +138,20 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #endif
 //-----------------------------------------------------
+#ifdef ESP32SIMPLE
+#include "switch_onoff.h"
+#define HOSTNAME               "nodesimple"
+#define HOST_DISCRIPTION       "Ein ESP32 Node ohne externe Elemente"
+#define MQTT_CLIENT            "esp32mini"
+#define MQTT_SERVER            "rpi1.fritz.box"
+#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_SENSOR
+#define DEBUG_SERIAL_MQTT
+#define SWITCH1_DEFINITION      Switch_OnOff switch1;
+#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", 2, false, true);
+
+#endif
+//-----------------------------------------------------
 // Hier ein Witty Node, dessen 4 LED (interne + RGB) als einzelne Schalter angesteuert werden.
 // Dabei kann jede LED nur ein- oder ausgeschaltet werden.
 #if defined(WITTYNODE1)
@@ -144,16 +162,18 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #include "switch_onoff.h"
 #include "sensor_ldr.h"
 
+#define MAGICNO                473
+
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
-#define MQTT_CLIENT            "wittynode"
-#define MQTT_TOPICP2           "wittynode"
+//#define MQTT_CLIENT            "wittynode"
+//#define MQTT_TOPICP2           "wittynode"
 
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_MQTT
+//#define DEBUG_SERIAL_MQTT
 
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
 #define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", WITTY_LED_PIN, false, false);
@@ -241,11 +261,14 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //no changes below !!!!!!!!!!!!!!!!
 
 #if defined(RF24GW_NO)
-#define RF24GW
+#define RF24GW                true
 #endif
 
 #if defined(MQTT_CLIENT)
-#define MQTT
+#define MQTT                  true
+#ifndef MQTT_TOPICP2
+#define MQTT_TOPICP2          MQTT_CLIENT
+#endif
 #endif
 
 /// Debug Settings

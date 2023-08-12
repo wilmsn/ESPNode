@@ -9,10 +9,12 @@ On Branch: main@github  !!!!!
 #include <string.h>
 #include <stdint.h>
 #ifdef ESP32
+#include <Preferences.h>
 #include <WiFi.h>
 #include "AsyncTCP.h"
 #include <rom/rtc.h>
 #else
+#include <PreferencesESP8266.h>
 #include <ESP8266WiFi.h>
 #include "ESPAsyncTCP.h"
 #endif
@@ -25,8 +27,12 @@ On Branch: main@github  !!!!!
 #include "Node_settings.h"
 #include "secrets.h"
 
+#ifdef ESP32
+//ToDo
+#else
 #ifndef ANALOGINPUT
 ADC_MODE(ADC_VCC);
+#endif
 #endif
 
 #if defined(MQTT)
@@ -42,48 +48,11 @@ typedef enum {
   log_rf24 = 0,
   log_sys,
   log_mqtt,
-  log_sens,
+  log_sensor,
   log_web,
-  log_critical
+  log_critical,
+  log_daybreak
 } log_t;
-
-/// @brief Eine Struktur um die Voreinstellungen aufzunehmen und im EEPROM abzulegen.
-typedef struct {
-  /// @brief Über die magicno wird bestimmt ob bei einem Softwareupdate die Voreinstellungen überschrieben werden
-  /// (magigno im Programm und Speicher unterschiedlich) oder ob sie erhalten bleiben (magicno gleich)
-  uint16_t magicno;
-  /// @brief Flag ob der MQTT Gateway aktiviert ist (=true) oder nicht (=false)
-  bool mqtt_enable;
-  /// @brief Der Servername des MQTT Servers
-  char mqtt_server[SERVERNAMESIZE];
-  /// @brief Der Clientname dieses Nodes
-  char mqtt_client[TOPIC_PART2_SIZE];
-  /// @brief Der mittlere Teil des Topics, idR. identisch mit mqtt_client
-  char mqtt_topicP2[TOPIC_PART2_SIZE];
-  /// @brief true: Sensor-informationen werden geloged; false kein logging
-  bool log_sensor;
-  /// @brief true: MQTT-informationen werden geloged; false kein logging
-  bool log_mqtt;
-  /// @brief true: WebKomando-informationen werden geloged; false kein logging
-  bool log_webcmd;
-  /// @brief true: System-informationen werden geloged; false kein logging
-  bool log_sysinfo;
-  /// @brief true: Systeminformationen werden in einer Datei im Filesystem geloged; false kein logging
-  bool log_fs_sysinfo;
-  /// @brief true: RF24-informationen werden geloged; false kein logging
-  bool log_rf24;
-  /// @brief Servername des RF24Hub
-  char rf24gw_hub_name[SERVERNAMESIZE];
-  /// @brief Port für eingehende udp Informationen auf dem Hub Server
-  uint16_t rf24gw_hub_port;
-  /// @brief Port für udp Informationen vom Hub Server auf dem lokalen System
-  uint16_t rf24gw_gw_port;
-  /// @brief Die Nummer des Gateways
-  uint16_t rf24gw_gw_no;
-  /// @brief Flag ob der RF24 Gateway aktiviert ist (=true) oder nicht (=false)
-  bool rf24gw_enable;
-} prefs_t;
-
 /// @brief Create AsyncWebServer object on port 80
 AsyncWebServer httpServer(80);
 /// @brief Ein Server für die Websockets
@@ -117,15 +86,52 @@ String mqtt_json;
 unsigned int mqtt_json_length_old;
 #endif
 
+/// @brief  @brief Ein Objekt für die Preferences
+Preferences preferences;
+
 /// @brief Ein Objekt für udp Daten
 WiFiUDP udp;
 /// @brief Eine Variable zur Aufnahme der Preferences Struktur
-prefs_t preference;
+//prefs_t preference;
 /// @brief Das reboot Flag, ist es auf "true" wird im nächsten Loop Durchgang der Node neu gestartet.
 bool rebootflag = false;
 
 /// @brief Variablen zur Nutzung im Umfeld der HTML Seite
 String html_json;
+
+// WiFi
+String wifi_ssid;
+String wifi_pass;
+
+// Mqtt
+#if defined(MQTT)
+bool do_mqtt;
+bool do_mqtt_set;
+String mqtt_server;
+String mqtt_client;
+String mqtt_topicP2;
+bool do_log_mqtt;
+#endif
+
+// RF24GW
+#if defined(RF24GW)
+bool do_rf24gw;
+String rf24gw_hub_server;
+int rf24gw_hub_port;
+int rf24gw_gw_port;
+int rf24gw_gw_no;
+bool do_log_rf24;
+#endif
+
+bool ap_mode = false;
+int cmd_no = 0;
+
+// Logging
+bool do_log_sensor;
+bool do_log_sys;
+bool do_log_web;
+bool do_log_critical;
+int magicno;
 
 /// @brief Ein String zum Einsatz in der Funktion write2log. Darf nicht genutzt werden wenn diese Funktion mit gefülltem String aufgerufen wird!
 String debug_str;
@@ -150,15 +156,11 @@ unsigned int loopcount = 0;
 bool do_send_mqtt_stat = false;
 /// @brief Ein Flag der anzeigt ob die Messdatengenerierung gestartet ist
 bool measure_started = false;
+int lastHour = 0;
+int lastDay  = 0;
 
 /// @brief "true" bei Veränderung der Preferences, sonst "false"
 bool preferencechange = false;
-// Zeitmanagement
-/// @brief Der NTP Server
-const char *NTP_SERVER = "de.pool.ntp.org";
-/// @brief TimeZone Info
-const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
-// enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
 /// @brief Ein Objekt zur Verwaltung der uptime
 Uptime uptime;
@@ -302,4 +304,4 @@ void loop();
 
 /// @brief Ermittlung des Resetgrundes für den ESP32, da der ESP Core keine ResetReason zurückgibt wird diese hier nachgebildet
 /// @return Eine Zeichenfolge mit der Reset Reason
-char *getResetReason();
+char *getResetReason(char*);

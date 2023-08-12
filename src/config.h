@@ -10,19 +10,27 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
+#define ESP32SIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
-#define WITTYNODE1
+//#define WITTYNODE1
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-//#define NODE_TEICHPUMPE
+//#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------
 
-#define SWVERSION   "0.992"
+#define SWVERSION   "0.993"
+
+// Zeitmanagement
+/// @brief Der NTP Server
+const char *NTP_SERVER = "de.pool.ntp.org";
+/// @brief TimeZone Info
+const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
+// enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
 // Hier werden die allgemeinen Parameter für den Einsatz festgelegt
 // Alternativ können diese Einstellungen auch in der Konfiguration des Nodes 
@@ -37,7 +45,15 @@
 #define RF24_CHANNEL                   92
 #define RF24_SPEED                     RF24_250KBPS
 
-#define MAGICNO                        657
+#define MAGICNO                        0
+
+//Settings for Logging
+#define LOG_WEB                      false
+#define LOG_SENSOR                   false
+#define LOG_SYS                      false
+#define LOG_MQTT                     false
+#define LOG_RF24                     false
+#define LOG_CRITICAL                 false
 
 //Settings for mqtt topic
 #define MQTT_STATUS                  "stat"
@@ -65,8 +81,10 @@
 /// Hierzu gehören: Serverdaten, Netzwerkdaten, ...
 #define TELEINTERVAL                 1200
 
-#define DEBUGFILE                    "/logfile.txt"
-#define SERVERNAMESIZE               30
+#define DEBUGFILE                    "/debugfile.txt"
+//#define SERVERNAMESIZE               30
+//#define SSID_SIZE                    20
+//#define PASSWORD_SIZE                30
 
 ///Der verwendete RF24 Funkkanal
 #define RF24_CHANNEL        92
