@@ -10,7 +10,8 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
-#define ESP32SIMPLE
+//#define ESP32SIMPLE
+#define NODERADIO
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER

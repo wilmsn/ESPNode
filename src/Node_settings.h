@@ -255,6 +255,22 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //#define RF24GW_NO                198
 
 #endif
+//-----------------------------------------------------
+#if defined(NODERADIO)
+
+#include "radio.h"
+
+#define DEBUG_SERIAL
+
+#define HOSTNAME                 "RadioNode"
+#define HOST_DISCRIPTION         "Ein Radio Testnode"
+
+#define SWITCH1_DEFINITION       Radio switch1;
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Radio");
+
+//#define MQTT_CLIENT              "MatrixNode"
+
+#endif
 
 
 //define constrains for precompiler 
