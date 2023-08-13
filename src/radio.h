@@ -12,6 +12,7 @@ class Radio : public Switch_OnOff {
 public:
     void begin(const char* html_place, const char* label);
     void loop(void);
+    String info;
 private:
 
 };

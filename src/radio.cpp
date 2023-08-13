@@ -20,9 +20,20 @@ AiEsp32RotaryEncoder gain = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_EN
 
 Audio audio;
 
+String title;
+
 //interrupt handling for rotary encoder
 void IRAM_ATTR readGainISR() {
   gain.readEncoder_ISR();
+}
+
+void audio_showstreamtitle(const char *info){
+    title = info;
+}
+
+void audio_showstation(const char *info){
+    Serial.print("station     ");
+    Serial.println(info);
 }
 
 void Radio::begin(const char* html_place, const char* label) {
@@ -42,6 +53,7 @@ void Radio::loop(void) {
     uint8_t vol = gain.readEncoder();
     Serial.print("Volume: ");
     Serial.println(vol);
+    Serial.println(title);
     audio.setVolume(vol);
   }
 }
