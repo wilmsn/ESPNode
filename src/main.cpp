@@ -1375,15 +1375,16 @@ void setup() {
                 { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
   httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); });
-#ifdef ESP32
-
-#else
   httpServer.on("/update_fw", HTTP_POST, [&](AsyncWebServerRequest *request) {},
    [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
       if (!index) {
+#ifdef ESP32
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) { 
+#else
         Update.runAsync(true);
         uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
         if (!Update.begin(maxSketchSpace, U_FLASH, -1, LOW)) {
+#endif
           write2log(log_sys, 1, "Error Updater begin");
         }
       }
@@ -1396,17 +1397,17 @@ void setup() {
         }
       }
   });
-#endif
-#ifdef ESP32
-
-#else
   httpServer.on("/update_fs", HTTP_POST, [&](AsyncWebServerRequest *request) {},
     [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
       // Upload handler chunks in data
       if (!index) {
+#ifdef ESP32
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) { 
+#else
         Update.runAsync(true);
         size_t fsSize = ((size_t)&_FS_end - (size_t)&_FS_start);
         if (!Update.begin(fsSize, U_FS, -1, LOW)) {
+#endif
           write2log(log_sys, 1, "Error Updater begin");
         }
       }
@@ -1421,7 +1422,6 @@ void setup() {
         }
       }
   });
-#endif
   // This serves all static web content
   httpServer.onNotFound(serveFile);
   // Start server

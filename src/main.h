@@ -8,16 +8,19 @@ On Branch: main@github  !!!!!
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+
 #ifdef ESP32
 #include <Preferences.h>
 #include <WiFi.h>
 #include "AsyncTCP.h"
+#include "Update.h"
 #include <rom/rtc.h>
 #else
 #include <PreferencesESP8266.h>
 #include <ESP8266WiFi.h>
 #include "ESPAsyncTCP.h"
 #endif
+
 #include <LittleFS.h>
 #include <WiFiUdp.h>
 #include <time.h>
