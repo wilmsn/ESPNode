@@ -1492,6 +1492,19 @@ void setup() {
  * Main Loop
 *************************************************/
 void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    write2log(log_critical,1,"WiFi connection lost => reconnect");
+    delay(1000);
+    int i=0;
+    while ( ! do_wifi_con() ) {
+      delay(10000);
+      i++;
+      if ( i>360 ) {
+        write2log(log_critical,1,"Wifi already 1 hour offline");
+      }
+    }
+    write2log(log_critical,1,"WiFi reconnected");
+  }
   ws.cleanupClients();
 #if defined(RF24GW)
   if ( radio.available() ) {
@@ -1500,7 +1513,7 @@ void loop() {
     writeRf242log("N>G", payload);
     memcpy(&udpdata.payload, &payload, sizeof(payload));
     udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);
-    udp.write((char*)&udpdata, sizeof(udpdata));
+    udp.write((const unsigned char*)&udpdata, sizeof(udpdata));
     udp.endPacket();
   }
   if (udp.parsePacket() > 0 ) {

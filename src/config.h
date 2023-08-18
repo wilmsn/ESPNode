@@ -10,7 +10,7 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
-#define ESP32SIMPLE
+//#define ESP32SIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
@@ -19,7 +19,7 @@
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-//#define NODE_TEICH
+#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------
 
@@ -44,8 +44,6 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 #define RF24_RADIO_CSN_PIN             16
 #define RF24_CHANNEL                   92
 #define RF24_SPEED                     RF24_250KBPS
-
-#define MAGICNO                        0
 
 //Settings for Logging
 #define LOG_WEB                      false

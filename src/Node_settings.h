@@ -26,6 +26,7 @@ RF24 Node:
 #include "switch_onoff.h"
 #define HOSTNAME                 "FlurNode"
 #define HOST_DISCRIPTION         "Der Node im Flur: Hintergrundbeleuchtung"
+#define MAGICNO                  479
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
 #define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Flurlicht", "licht", "licht", 0, false, true, 150, 1, "intensity");
@@ -34,7 +35,6 @@ RF24 Node:
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
-#define MQTT
 #define MQTT_CLIENT              "flurnode"
 #define MQTT_TOPICP2             "flurnode"
 
@@ -45,6 +45,8 @@ RF24 Node:
 //****************************************************
 #if defined(NODE_TERASSE)
 #include "switch_onoff.h"
+#define MAGICNO                  479
+
 #define HOSTNAME                 "TerassenNode"
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
 
@@ -57,13 +59,12 @@ RF24 Node:
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp");
+// 14.08. deaktiviert und eingespielt
+//#define MQTT_CLIENT              "terassennode"
+//#define MQTT_TOPICP2             "terassennode"
 
-#define MQTT
-#define MQTT_CLIENT              "terassennode"
-#define MQTT_TOPICP2             "terassennode"
-
-#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO                104
+//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+//#define RF24GW_NO                104
 
 #endif
 //*****************************************************
@@ -83,14 +84,13 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp");
 
-#define MQTT
 #define MQTT_CLIENT              "TeichNode"
 #define MQTT_TOPICP2             "TeichNode"
+//14.08 deaktiviert und eingespielt
+//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+//#define RF24GW_NO                101
 
-#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO                101
-
-#define MAGICNO                  478
+#define MAGICNO                  479
 
 #endif
 //-----------------------------------------------------
@@ -102,6 +102,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define HOSTNAME                 "wohnzimmernode"
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
+#define MAGICNO                  473
+
 
 #define SWITCH1_DEFINITION       Actor_LEDMatrix switch1;
 // html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_no, mqtt_line, mqtt_graph, slider_mqtt_name
@@ -111,14 +113,11 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
-#define MQTT
 #define MQTT_CLIENT              "wohnzimmernode"
 #define MQTT_TOPICP2             "wohnzimmernode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                102
-
-#define MAGICNO                  473
 
 #endif
 //*****************************************************
@@ -259,6 +258,10 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 //define constrains for precompiler 
 //no changes below !!!!!!!!!!!!!!!!
+
+#ifndef MAGICNO
+#define MAGICNO               0
+#endif
 
 #if defined(RF24GW_NO)
 #define RF24GW                true

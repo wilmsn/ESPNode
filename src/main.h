@@ -15,6 +15,7 @@ On Branch: main@github  !!!!!
 #include "AsyncTCP.h"
 #include "Update.h"
 #include <rom/rtc.h>
+typedef unsigned char uint8_t;
 #else
 #include <PreferencesESP8266.h>
 #include <ESP8266WiFi.h>
