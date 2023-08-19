@@ -72,6 +72,7 @@ RF24 Node:
 #include "switch_onoff.h"
 #define HOSTNAME                 "TeichNode"
 #define HOST_DISCRIPTION         "Der Node zur Steuerung der Teichpumpe"
+#define MAGICNO                  479
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
 /*
@@ -86,11 +87,9 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define MQTT_CLIENT              "TeichNode"
 #define MQTT_TOPICP2             "TeichNode"
-//14.08 deaktiviert und eingespielt
-//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-//#define RF24GW_NO                101
 
-#define MAGICNO                  479
+#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+#define RF24GW_NO                101
 
 #endif
 //-----------------------------------------------------

@@ -42,6 +42,7 @@ var wifi_pass_old;
 const logs = [];
 
 window.addEventListener('load', onLoad);
+
 function initWebSocket() {
     console.log('Trying to open a WebSocket connection...');
     websocket = new WebSocket(gateway);
@@ -49,16 +50,20 @@ function initWebSocket() {
     websocket.onclose   = onClose;
     websocket.onmessage = onMessage; // <-- add this line
 }
+
 function onOpen(event) {
     console.log('Connection opened');
     const json = JSON.parse(event.data, function (key, val) {
+      console.log(key+" : "+val);
       prozessJS( key, val );
     });
 }
+
 function onClose(event) {
     console.log('Connection closed');
     setTimeout(initWebSocket, 2000);
 }
+
 function onMessage(event) {
    const json = JSON.parse(event.data, function (key, val) {
       prozessJS( key, val );

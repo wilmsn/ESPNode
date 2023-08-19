@@ -234,30 +234,51 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 #endif      
       html_json += "}";
       write2log(log_web,1,html_json.c_str());
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 
 #if defined(SENSOR1)
       html_json = sensor1.html_stat_json();
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 #endif
 #if defined(SENSOR2)
       html_json = sensor2.html_stat_json();
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH1)
       html_json = switch1.html_stat_json();
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH2)
       html_json = switch2.html_stat_json();
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH3)
       html_json = switch3.html_stat_json();
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH4)
       html_json = switch4.html_stat_json();
+#if defined(DEBUG_SERIAL_HTML)
+      Serial.println(html_json);
+#endif
       ws.textAll(html_json);
 #endif
 
@@ -695,7 +716,6 @@ const char *mk_sysinfo2(String& info_str) {
 #if defined(DEBUG_SERIAL_HTML)
   Serial.println("Generiere sysinfo2 ... ");
 #endif
-//  uptime::calculateUptime();
   info_str = "{";
   info_str += "\"IP\":\"";
   info_str += WiFi.localIP().toString();
@@ -1171,9 +1191,6 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
 // dokumentiert in main.h
 void writeRf242log(const char* senddir, payload_t pl) {
   if (do_log_rf24) {
-//    char tmpstr[32];
-//    snprintf(tmpstr,36,"O#%u N:%u M:%u MT:%u HB:%u",pl.orderno,pl.node_id,pl.msg_id,pl.msg_type,pl.heartbeatno);
-//    write2log(log_rf24, 2, senddir, tmpstr);
       tmp_str = senddir;
       tmp_str += " O:";
       tmp_str += String(pl.orderno);
@@ -1604,38 +1621,29 @@ void loop() {
     send_mqtt_tele();
   }
 #endif
-//  loopcount++;
-//  if ( loopcount > 1000) {
-/*      if (getNTPtime(10)) { // wait up to 10sec to sync
-    } else {
-      write2log(log_critical,1,"Failed to sync NTP -> reboot\n");
-      delay(1000);
-      ESP.restart();
-    } */
 // Dinge die täglich erledigt werden sollen
-    if ( lastDay != timeinfo.tm_mday ) {
-      setupTime();
-      write2log(log_daybreak,0);
-      lastDay = timeinfo.tm_mday;
-    }
+  if ( lastDay != timeinfo.tm_mday ) {
+    setupTime();
+    write2log(log_daybreak,0);
+    lastDay = timeinfo.tm_mday;
+  }
 // Dinge die stündlich erledigt werden sollen
-    if ( lastHour != timeinfo.tm_hour ) {
-      uint32_t free;
-      uint32_t max;
-      uint8_t frag;
+  if ( lastHour != timeinfo.tm_hour ) {
+    getNTPtime(10);
+    uint32_t free;
+    uint32_t max;
+    uint8_t frag;
 #ifdef ESP32
-      free = ESP.getFreeHeap();
-      frag = 0;
-      max = 0;
+    free = ESP.getFreeHeap();
+    frag = 0;
+    max = 0;
 #else
-      ESP.getHeapStats(&free, &max, &frag);
+    ESP.getHeapStats(&free, &max, &frag);
 #endif
-      tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
-                String(frag) + ")";
-      write2log(log_critical,1,tmp_str.c_str());
-      uptime.update();
-      lastHour = timeinfo.tm_hour;
-    }
-//    loopcount = 0;
-//  }
+    tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
+              String(frag) + ")";
+    write2log(log_critical,1,tmp_str.c_str());
+    uptime.update();
+    lastHour = timeinfo.tm_hour;
+  }
 }
