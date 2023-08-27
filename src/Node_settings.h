@@ -266,9 +266,9 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOST_DISCRIPTION         "Ein Radio Testnode"
 
 #define SWITCH1_DEFINITION       Radio switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Radio");
+//#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "interne LED", "led1", "led1", 2, false, false);
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Radio", "radio", "radio", true, true, 1, "Volume");
 
-//#define MQTT_CLIENT              "MatrixNode"
 
 #endif
 

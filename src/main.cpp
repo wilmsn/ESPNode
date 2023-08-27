@@ -1623,6 +1623,7 @@ void loop() {
       uptime.update();
       lastHour = timeinfo.tm_hour;
     }
+    Serial.println("Mainloop");
 //    loopcount = 0;
 //  }
 }

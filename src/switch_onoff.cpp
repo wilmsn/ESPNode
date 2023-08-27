@@ -106,6 +106,9 @@ void Switch_OnOff::do_switch(bool state) {
 
 bool Switch_OnOff::set(const String& keyword, const String& value) {
   bool retval = false;
+  Serial.print(keyword);
+  Serial.print("  ");
+  Serial.println(value);
   if ( keyword_match(keyword) ) {
     if ( (value == "0") || (value == "aus") || (value == "Aus") || (value == "off") | (value == "Off") ) {
       do_switch(false);
@@ -129,6 +132,9 @@ bool Switch_OnOff::set(const String& keyword, const String& value) {
       retval = true;
     }
   }
+  Serial.print(obj_value?"obj_value is true":"obj_value is false");
+  Serial.print("  ");
+  Serial.println(obj_changed?"changed":"not changed");
   return retval;
 }
 
@@ -165,5 +171,6 @@ uint8_t Switch_OnOff::get_slider_val() {
 }
 
 bool Switch_OnOff::get_switch_val() {
+  obj_changed = false;
   return obj_value;
 }
