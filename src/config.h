@@ -15,11 +15,11 @@
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
-//#define WITTYNODE1
+#define WITTYNODE1
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-#define NODE_TEICH
+//#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------
 

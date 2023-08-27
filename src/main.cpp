@@ -303,88 +303,6 @@ void initWebSocket() {
 }
 
 // Kommentiert in main.h
-void serveFile(AsyncWebServerRequest *request) {
-  String myurl = request->url();
-  String dataType = "text/plain";
-#if defined(DEBUG_SERIAL)
-  Serial.print("Requested: ");
-  Serial.println(myurl);
-#endif
-  if (myurl == "/")
-    myurl = "/index.html";
-  if (LittleFS.exists(myurl)) {
-#if defined(DEBUG_SERIAL)
-    Serial.print(myurl);
-    Serial.println("  exists");
-#endif
-  } else {
-#if defined(DEBUG_SERIAL)
-    Serial.print(myurl);
-    Serial.println("  does not exist  Send: /index.html");
-    Serial.println("Fileliste:");
-#endif
-#ifdef ESP32
-    File root = LittleFS.open("/");
-    if (!root) {
-//      Serial.println("- failed to open / directory");
-      return;
-    }
-    if (!root.isDirectory()) {
-//      Serial.println(" - not a directory");
-      return;
-    }
-
-    File file = root.openNextFile();
-//    while (file) {
-//      if (file.isDirectory()) {
-//        Serial.print("  DIR : ");
-//        Serial.println(file.name());
-        /*            if(levels){
-                        listDir(LittleFS, file.path(), levels -1);
-                    } */
-//      } else {
-//        Serial.print("  FILE: ");
-//        Serial.print(file.name());
-//        Serial.print("\tSIZE: ");
-//        Serial.println(file.size());
-//      }
-//      file = root.openNextFile();
-//    }
-#else
-    Dir dir = LittleFS.openDir("/");
-    File f;
-    while (dir.next()) {
-      f = dir.openFile("r");
-      f.close();
-    }
-#endif
-    myurl = "/index.html";
-  }
-  if (myurl.endsWith(".html") || myurl.endsWith(".htm")) {
-    dataType = "text/html";
-  } else if (myurl.endsWith(".css")) {
-    dataType = "text/css";
-  } else if (myurl.endsWith(".js")) {
-    dataType = "application/javascript";
-  } else if (myurl.endsWith(".png")) {
-    dataType = "image/png";
-  } else if (myurl.endsWith(".gif")) {
-    dataType = "image/gif";
-  } else if (myurl.endsWith(".jpg")) {
-    dataType = "image/jpeg";
-  } else if (myurl.endsWith(".ico")) {
-    dataType = "image/x-icon";
-  } else if (myurl.endsWith(".xml")) {
-    dataType = "text/xml";
-  } else if (myurl.endsWith(".pdf")) {
-    dataType = "application/pdf";
-  } else if (myurl.endsWith(".zip")) {
-    dataType = "application/zip";
-  }
-  request->send(LittleFS, myurl, dataType);
-}
-
-// Kommentiert in main.h
 bool getNTPtime(long unsigned int sec) {
   bool retval = true;
   uint32_t start = millis();
@@ -1440,7 +1358,10 @@ void setup() {
       }
   });
   // This serves all static web content
-  httpServer.onNotFound(serveFile);
+  httpServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/index.html", "text/html");
+  });
+  httpServer.serveStatic("/", LittleFS, "/");
   // Start server
   httpServer.begin();
 #if defined(RF24GW)
