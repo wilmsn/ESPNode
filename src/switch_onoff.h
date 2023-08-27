@@ -113,8 +113,6 @@ public:
    bool obj_start_value;
    /// @brief Der aktuelle Wert/Zustand des Schalters: "0" oder "1" 
    bool obj_value;
-   /// @brief "true" wenn der Schalter geschaltet wurde, sonst "false"
-   bool obj_changed;
    /// @brief "true" wenn der Slider genutzt wird, sonst "false"
    bool obj_slider_used = false;
    /// @brief Nimmt den MQTT Namen für den Slider auf 
