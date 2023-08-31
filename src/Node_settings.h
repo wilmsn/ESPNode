@@ -165,12 +165,12 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
-//#define MQTT_CLIENT            "wittynode"
-//#define MQTT_TOPICP2           "wittynode"
+#define MQTT_CLIENT            "wittynode"
+#define MQTT_TOPICP2           "wittynode"
 
-#define DEBUG_SERIAL_HTML
-#define DEBUG_SERIAL_SENSOR
-#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_HTML
+//#define DEBUG_SERIAL_SENSOR
+//#define DEBUG_SERIAL_MODULE
 //#define DEBUG_SERIAL_MQTT
 
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;

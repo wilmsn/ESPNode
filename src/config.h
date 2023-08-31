@@ -15,15 +15,15 @@
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
-#define WITTYNODE1
+//#define WITTYNODE1
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-//#define NODE_TEICH
+#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------
 
-#define SWVERSION   "0.993"
+#define SWVERSION   "0.994"
 
 // Zeitmanagement
 /// @brief Der NTP Server
@@ -40,10 +40,6 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 #define RF24GW_HUB_SERVER              "rpi1.fritz.box"
 #define RF24GW_HUB_UDP_PORTNO          7004
 #define RF24GW_GW_UDP_PORTNO           7003
-#define RF24_RADIO_CE_PIN              15
-#define RF24_RADIO_CSN_PIN             16
-#define RF24_CHANNEL                   92
-#define RF24_SPEED                     RF24_250KBPS
 
 //Settings for Logging
 #define LOG_WEB                      false
@@ -53,11 +49,13 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 #define LOG_RF24                     false
 #define LOG_CRITICAL                 false
 
-//Settings for mqtt topic
+///@brief Settings for mqtt topic
+///Der Part1 des MQTT Topics nimmt nur einen der 3 vordefinierten Werte auf. Deshalb sind hier 5 Zeichen hinreichend.
+#define TOPIC_PART1_SIZE             5
 #define MQTT_STATUS                  "stat"
 #define MQTT_TELEMETRIE              "tele"
 #define MQTT_COMMAND                 "cmnd"
-#define TOPIC_PART1_SIZE             5
+
 #define TOPIC_PART2_SIZE             30
 #define TOPIC_PART3_SIZE             10
 //#define TOPIC_BUFFER_SIZE            50
@@ -80,10 +78,11 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 #define TELEINTERVAL                 1200
 
 #define DEBUGFILE                    "/debugfile.txt"
-//#define SERVERNAMESIZE               30
-//#define SSID_SIZE                    20
-//#define PASSWORD_SIZE                30
 
+///Anschlusspin für den CE Pin des Funkmodules
+#define RF24_RADIO_CE_PIN              15
+///Anschlusspin für den CSN Pin des Funkmodules
+#define RF24_RADIO_CSN_PIN             16
 ///Der verwendete RF24 Funkkanal
 #define RF24_CHANNEL        92
 /// Die Übertragungsgeschwindigkeit
@@ -149,7 +148,6 @@ typedef struct {
 /// Die Payloadstruktur wie unter payload_t definiert.
   payload_t         payload;      // the payload to send forward
 } udpdata_t;
-
 
 
 #endif

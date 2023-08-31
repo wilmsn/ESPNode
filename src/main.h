@@ -154,6 +154,8 @@ unsigned long last_stat = 0;
 unsigned long mqtt_last_tele = 0;
 /// @brief Startzeitpunkt des Messvorgangs
 unsigned long measure_starttime = 0;
+/// @brief
+unsigned long loop_starttime = 0;
 /// @brief Anzahl der Loopschleifendurchgänge werden hier festgehalten
 unsigned int loopcount = 0;
 /// @brief Ein Flag zur Triggerung der MQTT Status Daten
@@ -162,6 +164,9 @@ bool do_send_mqtt_stat = false;
 bool measure_started = false;
 int lastHour = 0;
 int lastDay  = 0;
+
+char loopmsg[30];
+
 
 /// @brief "true" bei Veränderung der Preferences, sonst "false"
 bool preferencechange = false;
@@ -180,9 +185,6 @@ udpdata_t udpdata;
 
 /// @brief Eine Funktion als Dummy die nichts macht
 void noop() {}
-
-/// @brief Füllt den "timeStr" mit der aktuellen Zeit
-void fill_timeStr();
 
 /// @brief Fügt die gemessene Betriebsspannung dem übergebenen String hinzu.
 /// Achtung: ESP32 noch nicht implementiert

@@ -19,13 +19,6 @@ SENSOR1_DEFINITION
 SENSOR2_DEFINITION
 #endif
 
-// Kommentiert in main.h
-void fill_timeStr() {
-  time(&now);                   // read the current time
-  localtime_r(&now, &timeinfo); // update the structure tm with the current time
-  snprintf(timeStr, 11, "[%02d:%02d:%02d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-}
-
 void setupTime() {                              
   // deinen NTP Server einstellen (von 0 - 5 aus obiger Liste) alternativ lassen sich durch Komma getrennt bis zu 3 Server angeben
 #ifdef ESP32
@@ -65,7 +58,7 @@ void write2log(log_t kat, int count, ...) {
   }
   // Im AP-Mode wird nichts gelogged !!!
   if ( ! ap_mode ) {
-    fill_timeStr();
+    snprintf(timeStr, 11, "[%02d:%02d:%02d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     if ( do_log_critical && kat == log_daybreak ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
@@ -1358,10 +1351,7 @@ void setup() {
       }
   });
   // This serves all static web content
-  httpServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/index.html", "text/html");
-  });
-  httpServer.serveStatic("/", LittleFS, "/");
+  httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
   // Start server
   httpServer.begin();
 #if defined(RF24GW)
@@ -1430,8 +1420,9 @@ void setup() {
  * Main Loop
 *************************************************/
 void loop() {
+  loop_starttime = millis();
   if (WiFi.status() != WL_CONNECTED) {
-    write2log(log_critical,1,"WiFi connection lost => reconnect");
+    write2log(log_critical,1,"WiFi connection lost");
     delay(1000);
     int i=0;
     while ( ! do_wifi_con() ) {
@@ -1443,7 +1434,13 @@ void loop() {
     }
     write2log(log_critical,1,"WiFi reconnected");
   }
+  time(&now);                   // read the current time
+  localtime_r(&now, &timeinfo); // update the structure tm with the current time
   ws.cleanupClients();
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M1: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
+  }
 #if defined(RF24GW)
   if ( radio.available() ) {
     radio.read(&payload, sizeof(payload));
@@ -1463,6 +1460,10 @@ void loop() {
     radio.startListening();
   }
 #endif
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M2: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
+  }
 #if defined(MQTT)
   if ( do_mqtt ) {
     if (!mqttClient.connected()) {
@@ -1472,6 +1473,10 @@ void loop() {
     delay(0);
   }
 #endif
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M3: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
+  }
 #if defined(SWITCH1)
   switch1.loop();
 #endif
@@ -1490,6 +1495,10 @@ void loop() {
 #if defined(SENSOR2)
   sensor2.loop();
 #endif
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M4: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
+  }
 #if defined(MQTT)
   if ( do_mqtt ) {
     if ( do_send_mqtt_stat ) {
@@ -1505,6 +1514,10 @@ void loop() {
     delay(2000);
     yield();
     ESP.restart();
+  }
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M5: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
   }
   if ( (millis() - last_stat) > (STATINTERVAL * 1000) ) {
 #if defined(SENSOR1)
@@ -1533,10 +1546,15 @@ void loop() {
     ws.textAll(html_json);
 #endif
   }
-#if defined(MQTT)
-  if ( do_send_mqtt_stat ) { 
-    send_mqtt_stat(); 
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M6: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
   }
+#if defined(MQTT)
+//  Duplette zu Zeile 1502ff ????
+//  if ( do_send_mqtt_stat ) { 
+//    send_mqtt_stat(); 
+//  }
   if ( (millis() - mqtt_last_tele) > (TELEINTERVAL*1000) ) {
     mqtt_last_tele = millis();
     send_mqtt_tele();
@@ -1566,5 +1584,9 @@ void loop() {
     write2log(log_critical,1,tmp_str.c_str());
     uptime.update();
     lastHour = timeinfo.tm_hour;
+  }
+  if ((millis() - loop_starttime) > 1000) {
+    snprintf(loopmsg,29,"Looptime M7: %d",(int)(millis() - loop_starttime));
+    write2log(log_critical,1,loopmsg);
   }
 }
