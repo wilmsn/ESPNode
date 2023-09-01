@@ -77,6 +77,11 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 /// Hierzu gehören: Serverdaten, Netzwerkdaten, ...
 #define TELEINTERVAL                 1200
 
+/// Loop Time Alarm
+/// Definiert das Zeitintervall (in Millisekunden) für einen Loop Durchgang das nicht überschritten werden sollte.
+/// Bei Überschreitung erfolgt ein Eintrag in die Datei Debugfile.txt (falls aktiviert)
+#define LOOP_TIME_ALARM              500
+
 #define DEBUGFILE                    "/debugfile.txt"
 
 ///Anschlusspin für den CE Pin des Funkmodules

@@ -110,7 +110,6 @@ String wifi_pass;
 // Mqtt
 #if defined(MQTT)
 bool do_mqtt;
-bool do_mqtt_set;
 String mqtt_server;
 String mqtt_client;
 String mqtt_topicP2;
@@ -160,6 +159,8 @@ unsigned long loop_starttime = 0;
 unsigned int loopcount = 0;
 /// @brief Ein Flag zur Triggerung der MQTT Status Daten
 bool do_send_mqtt_stat = false;
+/// @brief Ein Flag zur Triggerung der MQTT Telemetrie Daten
+bool do_send_mqtt_tele = false;
 /// @brief Ein Flag der anzeigt ob die Messdatengenerierung gestartet ist
 bool measure_started = false;
 int lastHour = 0;

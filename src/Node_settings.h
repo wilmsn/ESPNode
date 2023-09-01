@@ -45,7 +45,7 @@ RF24 Node:
 //****************************************************
 #if defined(NODE_TERASSE)
 #include "switch_onoff.h"
-#define MAGICNO                  479
+#define MAGICNO                  475
 
 #define HOSTNAME                 "TerassenNode"
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
@@ -59,12 +59,12 @@ RF24 Node:
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp");
-// 14.08. deaktiviert und eingespielt
-//#define MQTT_CLIENT              "terassennode"
-//#define MQTT_TOPICP2             "terassennode"
 
-//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-//#define RF24GW_NO                104
+#define MQTT_CLIENT              "terassennode"
+#define MQTT_TOPICP2             "terassennode"
+
+#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+#define RF24GW_NO                104
 
 #endif
 //*****************************************************
@@ -160,13 +160,16 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #include "switch_onoff.h"
 #include "sensor_ldr.h"
 
-#define MAGICNO                473
+#define MAGICNO                475
 
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
 #define MQTT_CLIENT            "wittynode"
 #define MQTT_TOPICP2           "wittynode"
+
+#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+#define RF24GW_NO                155
 
 //#define DEBUG_SERIAL_HTML
 //#define DEBUG_SERIAL_SENSOR

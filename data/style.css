@@ -62,6 +62,23 @@ label {
   background:#ffffff;
   color:#000000;
 }
+/* Eingabefeld Label und Eingabefeld ca. 30:70 aufgeteilt */
+/* Label */
+.input_30a {
+  font-size:13px;
+  width:30%;
+  border:darkgray;
+  background:#aaaaaa;
+  color:#000000;
+}
+/* Eingabefeld */
+.input_30b {
+  font-size:13px;
+  width:64%;
+  padding:1px;
+  background:#ffffff;
+  color:#000000;
+}
 /* Header */
 .input_header {
   font-size:15px;

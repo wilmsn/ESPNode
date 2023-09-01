@@ -7,8 +7,10 @@
 <script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.993 (08/2023)";
+var htmlversion = "0.994 (09/2023)";
 var ledmatrix_active = 0;
+var mqtt_active = 0;
+var rf24gw_active = 0;
 var display = 0;
 var ledmatrix_x = 8;
 var ledmatrix_y = 8;
@@ -22,7 +24,7 @@ var slider2name;
 var slider3val;
 var slider3name;
 var temp;
-var set_mqtt_old;
+var mqtt_active_old;
 var mqttserver_old;
 var mqttclient_old;
 var mqtttopicp2_old;
@@ -33,7 +35,7 @@ var log_critical_old;
 var log_mqtt_old;
 var rf24hubname_old;
 var rf24hubport_old;
-var rf24gw_old;
+var rf24gw_active_old;
 var rf24gwno_old;
 var rf24gwport_old;
 var log_rf24_old;
@@ -100,18 +102,22 @@ $(document).ready(function(){
     if (!$(this).is(':checked')) {
       $("#rf24gw_div").hide();
       $("#rf24log_div").hide();
+      rf24gw_active = 0;
     } else {
       $("#rf24gw_div").show();
       $("#rf24log_div").show();
+      rf24gw_active = 1;
     }
   });
   $('#mqtt').click(function() {
     if (!$(this).is(':checked')) {
       $("#mqtt_div").hide();
       $("#mqttlog_div").hide();
+      mqtt_active = 0;
     } else {
       $("#mqtt_div").show();
       $("#mqttlog_div").show();
+      mqtt_active = 1;
     }
   });
 
@@ -232,10 +238,6 @@ function prozessJS( key, val ) {
     case "sens4":
       $("#sens4").html(val);
       $("#sens4div").show();
-    break;
-    case "rf24":
-      $("#rf24").html(val);
-      $("#rf24div").show();
     break;
     case "sw1":
       if ( val > 0.5 ) {
@@ -420,24 +422,26 @@ case "wifi_ssid":
       $("#wifi_pass").val(val);
       wifi_pass_old = val;
     break;
-    case "set_rf24gw":
-      if ( val == 1 ) {
-        rf24gw_old = true;
-	      $('#rf24gw').prop('checked', true);
-        $("#rf24gw_div").show(); 
-        $("#rf24log_div").show(); 
-      } else {
-        rf24gw_old = false;
-	      $('#rf24gw').prop('checked', false);
-        $("#rf24gw_div").hide(); 
-        $("#rf24log_div").hide(); 
-      }
-    break;
     case "set_rf24gw_enable":
       if ( val == 1 ) { 
-        $('#rf24gw_fs').show(); 
+        $('#rf24gw_fs').show();
       } else { 
         $('#rf24gw_fs').hide(); 
+      }
+    break;
+    case "set_rf24gw_active":
+      if ( val == 1 ) {
+        rf24gw_active = true;
+        rf24gw_active_old = true;
+        $("#rf24gw_div").show(); 
+        $("#rf24log_div").show();
+	      $('#rf24gw').prop('checked', true);
+      } else {
+        rf24gw_active = false;
+        rf24gw_active_old = false;
+        $("#rf24gw_div").hide();
+        $("#rf24log_div").hide();
+	      $('#rf24gw').prop('checked', false);
       }
     break;
     case "set_RF24HUB-Server":
@@ -463,17 +467,19 @@ case "wifi_ssid":
         $('#mqtt_fs').hide();
       }
     break;
-    case "set_mqtt":
+    case "set_mqtt_active":
       if (val == 1) {
-        set_mqtt_old = true;
-	      $('#mqtt').prop('checked', true);
+        mqtt_active_old = true;
         $('#mqtt_div').show();
         $('#mqttlog_div').show();
+	      $('#mqtt').prop('checked', true);
+        mqtt_active = true;
       } else {
-        set_mqtt_old = false;
-	      $('#mqtt').prop('checked', false);
+        mqtt_active_old = false;
         $('#mqtt_div').hide();
         $('#mqttlog_div').hide();
+	      $('#mqtt').prop('checked', false);
+        mqtt_active = false;
       }
     break;
     case "set_mqttserver":
@@ -532,7 +538,7 @@ case "wifi_ssid":
         log_sys_old = false;
         $('#log_sys').prop('checked', false);
       }
-    break;log_critical
+    break;
     case "log_critical":
       if ( val == 1 ) {
         log_critical_old = true;
@@ -629,28 +635,34 @@ case "wifi_ssid":
       $("#Tab").append("<tr><td class='tab_left'> HTML Version: </td><td class='tab_right'>"+htmlversion+"</td></tr>");
     break;
     case "mqttserver":
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>MQTT:</td></tr>"
-			+"<tr><td class='tab_left'> MQTT Server: </td><td class='tab_right'>"+val+"</td></tr>");
+      if (mqtt_active == 1)
+        $("#Tab").append("<tr><td colspan=2 class='tab_head'>MQTT:</td></tr>"
+			  +"<tr><td class='tab_left'> MQTT Server: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "mqttclient":
-      $("#Tab").append("<tr><td class='tab_left'> MQTT Client: </td><td class='tab_right'>"+val+"</td></tr>");
+      if (mqtt_active == 1)
+        $("#Tab").append("<tr><td class='tab_left'> MQTT Client: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "mqtttopicp2":
-      $("#Tab").append("<tr><td class='tab_left'> MQTT Topic Part2: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
+      if (mqtt_active == 1)
+        $("#Tab").append("<tr><td class='tab_left'> MQTT Topic Part2: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "RF24HUB-Server":
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>RF24 Gateway:</td></tr>"
-          +"<tr><td class='tab_left'> RF24 Hub Server: </td><td class='tab_right'>"+val+"</td></tr>");
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td colspan=2 class='tab_head'>RF24 Gateway:</td></tr>"
+            +"<tr><td class='tab_left'> RF24 Hub Server: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "RF24HUB-Port":
-      $("#Tab").append("<tr><td class='tab_left'> RF24 Hub UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td class='tab_left'> RF24 Hub UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "RF24GW-Port":
-      $("#Tab").append("<tr><td class='tab_left'> RF24 GW UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td class='tab_left'> RF24 GW UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "RF24GW-No":
-      $("#Tab").append("<tr><td class='tab_left'> RF24 GW Nummer: </td><td class='tab_right'>"+val+"</td></tr>");
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td class='tab_left'> RF24 GW Nummer: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
     case "sens-hw":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensor:</td></tr>");
@@ -774,125 +786,155 @@ function switch_logfile() {
 function store() {
   var mycmd = "/cmd?";
   if ( $("#rf24gw").is(":checked") ) {
-    if ( ! rf24gw_old ) {
-      mycmd = mycmd + "rf24gw=1";
-      rf24gw_old = true;
+    if ( ! rf24gw_active_old ) {
+      mycmd = mycmd + "rf24gw_active=1";
+      rf24gw_active_old = true;
     }
     if ( rf24hubname_old != $("#rf24hubname").val() ) {
-      mycmd = mycmd + "&rf24hubname=";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "rf24hubname=";
       mycmd = mycmd + $("#rf24hubname").val();
       rf24hubname_old = $("#rf24hubname").val();
     }
     if ( rf24hubport_old != $("#rf24hubport").val() ) {
-      mycmd = mycmd + "&rf24hubport=";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "rf24hubport=";
       mycmd = mycmd + $("#rf24hubport").val();
       rf24hubport_old = $("#rf24hubport").val();
     }
     if ( rf24gwport_old != $("#rf24gwport").val() ) {
-      mycmd = mycmd + "&rf24gwport=";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "rf24gwport=";
       mycmd = mycmd + $("#rf24gwport").val();
       rf24gwport_old = $("#rf24gwport").val();
     }
     if ( rf24gwno_old != $("#rf24gwno").val() ) {
-      mycmd = mycmd + "&rf24gwno=";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "rf24gwno=";
       mycmd = mycmd + $("#rf24gwno").val();
       rf24gwno_old = $("#rf24gwno").val();
     }
   } else {
-    if (   rf24gw_old ) mycmd = mycmd + "rf24gw=0";
-    rf24gw_old = false;
+    if (   rf24gw_active_old ) {
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "rf24gw_active=0";
+    }
+    rf24gw_active_old = false;
   }
   if ( $("#mqtt").is(":checked") ) {
-    if ( ! set_mqtt_old ) mycmd = mycmd + "mqtt=1";
+    if ( ! mqtt_active_old ) {
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "mqtt_active=1";
+    }
     if ( mqttclient_old != $("#mqttclient").val() ) {
-      mycmd = mycmd + "&mqttclient=";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "mqttclient=";
       mycmd = mycmd + $("#mqttclient").val();
       mqttclient_old = $("#mqttclient").val();
     }
     if ( mqttserver_old != $("#mqttserver").val() ) {
-      mycmd = mycmd + "&mqttserver=";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "mqttserver=";
       mycmd = mycmd + $("#mqttserver").val();
       mqttserver_old = $("#mqttserver").val();
     }
     if ( mqtttopicp2_old != $("#mqtttopicp2").val() ) {
-      mycmd = mycmd + "&mqtttopicp2=";  
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "mqtttopicp2=";  
       mycmd = mycmd + $("#mqtttopicp2").val();
       mqtttopicp2_old = $("#mqtttopicp2").val();
     }
   } else {
-    if ( set_mqtt_old ) mycmd = mycmd + "mqtt=0";
+    if ( mqtt_active_old ) {
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "mqtt_active=0";
+    }
   }
   if ( $("#log_rf24").is(":checked") ) {
     if ( ! log_rf24_old ) {
-      mycmd = mycmd + "&log_rf24=1";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_rf24=1";
       log_rf24_old = true;
     }
   } else {
     if (   log_rf24_old ) {
-      mycmd = mycmd + "&log_rf24=0";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_rf24=0";
       log_rf24_old = false;
     }
   }
   if ( $("#log_sensor").is(":checked") ) {
     if ( ! log_sensor_old ) {
-      mycmd = mycmd + "&log_sensor=1";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_sensor=1";
       log_sensor_old = true;
     }
   } else {
     if (   log_sensor_old ) {
-      mycmd = mycmd + "&log_sensor=0";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_sensor=0";
       log_sensor_old = false;
     }
   }
   if ( $("#log_mqtt").is(":checked") ) {
     if ( ! log_mqtt_old ) {
-      mycmd = mycmd + "&log_mqtt=1";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_mqtt=1";
       log_mqtt_old = true;
     }
   } else {
     if (   log_mqtt_old ) {
-      mycmd = mycmd + "&log_mqtt=0";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_mqtt=0";
       log_mqtt_old = flase;
     }
   }
   if ( $("#log_web").is(":checked") ) {
     if ( ! log_webcmd_old ) {
-      mycmd = mycmd + "&log_web=1";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_web=1";
       log_web_old = true;
     }
   } else {
     if (   log_web_old ) {
-      mycmd = mycmd + "&log_web=0";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_web=0";
       log_web_old = false;
     }
   }
   if ( $("#log_sys").is(":checked") ) {
     if ( ! log_sys_old ) {
-      mycmd = mycmd + "&log_sys=1";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_sys=1";
       log_sys_old = true;
     }
   } else {
     if (   log_sys_old ) {
-      mycmd = mycmd + "&log_sys=0";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_sys=0";
       log_sys_old = false;
     }
   }
   if ( $("#log_critical").is(":checked") ) {
     if ( ! log_critical_old ) {
-      mycmd = mycmd + "&log_critical=1";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_critical=1";
       log_critical_old = true;
     }
   } else {
     if (   log_critical_old ) {
-      mycmd = mycmd + "&log_critical=0";
+      if (mycmd.length > 7) mycmd = mycmd + "&";
+      mycmd = mycmd + "log_critical=0";
       log_critical_old = false;
     }
   }
   if ( $("#wifi_ssid").val() != wifi_ssid_old && $("#wifi_ssid").val().length > 0 ) {
-    mycmd = mycmd + "&wifi_ssid=" + $("#wifi_ssid").val();
+    if (mycmd.length > 7) mycmd = mycmd + "&";
+    mycmd = mycmd + "wifi_ssid=" + $("#wifi_ssid").val();
   }
   if ( $("#wifi_pass").val() != wifi_pass_old && $("#wifi_pass").val().length > 0 ) {
-    mycmd = mycmd + "&wifi_pass=" + $("#wifi_pass").val();
+    if (mycmd.length > 7) mycmd = mycmd + "&";
+    mycmd = mycmd + "wifi_pass=" + $("#wifi_pass").val();
   }
   alert(mycmd);
   $.get(mycmd, function(data) {
@@ -1024,11 +1066,11 @@ function dellog() {
   <div id="page_settings"  class="div_content">
     <fieldset id="wifi"> 
       <legend>WiFi Settings:</legend> 
-      <input type="text" id="wifi_ssid" name="wifi_ssid" value="">
-      <label for="wifi_ssid">WiFi SSID</label>
+      <input type="text" value="WiFi SSID" class="input_30a" disabled>
+      <input type="text" id="wifi_ssid" name="wifi_ssid" value="" class="input_30b">
       <br>
-      <input type="password" id="wifi_pass" name="wifi_pass" value="">
-      <label for="wifi_pass">WiFi Passwort</label>
+      <input type="text" value="WiFi Passwort" class="input_30a" disabled>
+      <input type="password" id="wifi_pass" name="wifi_pass" value="" class="input_30b">
     </fieldset>
     <fieldset id="rf24gw_fs"> 
       <legend>RF24 Gateway:</legend> 
@@ -1056,6 +1098,7 @@ function dellog() {
       <input type="checkbox" name="mqtt" id="mqtt" class="checkbox">
       <label for="mqtt">MQTT Client</label>
       <div id="mqtt_div">
+        <hr>
         <input type="text" value="MQTT Server:"  class="input_50a" disabled>
         <input type="text" name="mqttserver" value="" id="mqttserver" class="input_50b">
         <br>
