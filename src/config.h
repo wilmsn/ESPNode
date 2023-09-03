@@ -15,6 +15,7 @@
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
+//#define NODEGWTEST
 //#define WITTYNODE1
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
@@ -80,7 +81,7 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 /// Loop Time Alarm
 /// Definiert das Zeitintervall (in Millisekunden) für einen Loop Durchgang das nicht überschritten werden sollte.
 /// Bei Überschreitung erfolgt ein Eintrag in die Datei Debugfile.txt (falls aktiviert)
-#define LOOP_TIME_ALARM              500
+#define LOOP_TIME_ALARM              1000
 
 #define DEBUGFILE                    "/debugfile.txt"
 

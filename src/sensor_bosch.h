@@ -1,14 +1,14 @@
 #ifndef _SENSOR_BOSCH_H_
 #define _SENSOR_BOSCH_H_
-//#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_MODULE
 
 #include "BMX_sensor.h"
 #include "sensor_generic.h"
 
 /// @brief Ein abgeleitetes Objekt für einen Bosch Sensor.\n 
 /// Benötigt: https://github.com/wilmsn/BMX_sensor als Gerätetreiber.\n 
-/// Das Objekt kann entweder für 2 Meßwerte (Temperatur und Luftdruck) beim BMP180/BMP280 oder
-/// für 3 Meßwerte (+ Luftfeuchte) beim BME280 initialisiert werden.\n 
+/// Das Objekt kann entweder für 2 Meßwerte (Temperatur und Luftdruck) beim BMP180/BMP280 \n
+/// oder für 3 Meßwerte (+ Luftfeuchte) beim BME280 initialisiert werden.\n 
 
 class Sensor_Bosch : public Sensor_Generic {
 

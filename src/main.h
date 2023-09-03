@@ -128,6 +128,7 @@ bool do_log_rf24;
 
 bool ap_mode = false;
 int cmd_no = 0;
+bool cmd_valid = false;
 
 // Logging
 bool do_log_sensor;
@@ -165,6 +166,7 @@ bool do_send_mqtt_tele = false;
 bool measure_started = false;
 int lastHour = 0;
 int lastDay  = 0;
+unsigned long loop_time_alarm;
 
 char loopmsg[30];
 

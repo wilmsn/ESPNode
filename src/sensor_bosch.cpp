@@ -22,6 +22,17 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
   bmx_sensor.begin();
   start_measure();
 #if defined(DEBUG_SERIAL_MODULE)
+  Serial.print("Chip ID:");
+  Serial.println(bmx_sensor.getChipId());
+  if (bmx_sensor.isBMP180()) {
+    Serial.println("Sensor: BMP180");
+  }
+  if (bmx_sensor.isBMP280()) {
+    Serial.println("Sensor: BMP280");
+  }
+  if (bmx_sensor.isBME280()) {
+    Serial.println("Sensor: BME280");
+  }
   Serial.print("Temperatur: ");
   if (bmx_sensor.hasTemperature()) {
     Serial.println(bmx_sensor.getTemperature());
@@ -48,7 +59,7 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
   }
   if (bmx_sensor.isBMP280()) {
     obj_sensorinfo_mqtt += "\"BMP280\"";
-     obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BMP280\"";
+    obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BMP280\"";
   }
   if (bmx_sensor.isBME280()) {
     obj_sensorinfo_mqtt += "\"BME280\"";

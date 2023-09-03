@@ -41,7 +41,9 @@ var rf24gwport_old;
 var log_rf24_old;
 var wifi_ssid_old;
 var wifi_pass_old;
+var tab_active;
 const logs = [];
+const stats = [];
 
 window.addEventListener('load', onLoad);
 
@@ -136,6 +138,32 @@ $(document).ready(function(){
     }, 20000);
   });
 
+  $('#console_tab1').click(function () {
+    show_tab1();
+    $.get("/debugfile.txt", function(data) {
+      $("#console").html(data);
+    });
+  });
+
+  $('#console_tab2').click(function () {
+    show_tab2();
+    $("#console").html(logs.join("\r\n"));
+  });
+
+  $('#console_tab3').click(function () {
+    show_tab3();
+    $("#console").html(stats.join("\r\n"));
+  });
+
+  $('#console_cmd').keypress(function(e) {
+    // Enter pressed?
+    if(e.which == 10 || e.which == 13) {
+      var mycmd = $('#console_cmd').val();
+      websocket.send(mycmd);
+      $('#console_cmd').val("");
+    }
+  });
+
   $('#uploadmsg').html("Update von<br>Firmware oder Filesystem<br><br>Bitte Datei auswählen.");
 
   $('#fs_file').on('change', function () {
@@ -210,6 +238,27 @@ $(document).ready(function(){
     }
   });
 });
+
+function show_tab1() {
+  $("#console_tab1").removeClass("tab_passive").addClass("tab_active");
+  $("#console_tab2").removeClass("tab_active").addClass("tab_passive");
+  $("#console_tab3").removeClass("tab_active").addClass("tab_passive");
+  tab_active = 1;
+}
+
+function show_tab2() {
+  $("#console_tab2").removeClass("tab_passive").addClass("tab_active");
+  $("#console_tab1").removeClass("tab_active").addClass("tab_passive");
+  $("#console_tab3").removeClass("tab_active").addClass("tab_passive");
+  tab_active = 2;
+}
+
+function show_tab3() {
+  $("#console_tab3").removeClass("tab_passive").addClass("tab_active");
+  $("#console_tab1").removeClass("tab_active").addClass("tab_passive");
+  $("#console_tab2").removeClass("tab_active").addClass("tab_passive");
+  tab_active = 3;
+}
 
 function prozessJS( key, val ) {
   switch(key) {
@@ -401,16 +450,30 @@ function prozessJS( key, val ) {
     break;
 
     //Ab hier Konsole
-case "log":
+    case "log":
       logs[logs.length]=val;
-      $('#console').html(logs.join("\r\n"));
-    break;
-    case "console":
-      if ( val == 1 ) {
-        $('#console').prop('checked', true);
-      } else {
-        $('#console').prop('checked', false);
+      if ( tab_active == 2 ) {
+        $('#console').html(logs.join("\r\n"));
       }
+    break;
+    case "logclear":
+      if ( tab_active == 2 ) {
+        $('#console').html(" ");
+      }
+      logs.length = 0;
+    break;
+    case "stat":
+      show_tab3();
+      stats[stats.length]=val;
+      if ( tab_active == 3 ) {
+        $('#console').html(stats.join("\r\n"));
+      }
+    break;
+    case "statclear":
+      if ( tab_active == 3 ) {
+        $('#console').html(" ");
+      }
+      stats.length = 0;
     break;
 
 // Ab hier für Einstellungen
@@ -723,10 +786,13 @@ function switch_main() {
 
 function switch_console() {
   hide_all();
+  show_logs = 1;
   $("#page_console").show();
   $("#but_main").show();
   $("#but_sett").show();
   $("#but_sysi").show();
+  $('#console').html(logs.join("\r\n"));
+  show_tab2();
 }
 
 function switch_settings() {
@@ -769,17 +835,6 @@ function switch_sysinfo() {
     $.each( data, function( key, val ) {
       prozessJS( key, val );
     });
-  });
-}
-
-function switch_logfile() {
-  hide_all();
-  $("#page_logfile").show();
-  $("#but_logd").show();
-  $("#but_main").show();
-  $("#but_sett").show();
-  $.get("/debugfile.txt", function(data) {
-    $("#logconsole").html(data);
   });
 }
 
@@ -942,12 +997,6 @@ function store() {
   });
 }
 
-function runCmd() {
-  $.get('/cmd?' + $("#console_cmd").val(), function(data) {
-    alert(data);
-  });
-}
-
 function do_restart() {
   var r = confirm("Wirklich neustarten?");
   if (r == true) {
@@ -1056,11 +1105,12 @@ function dellog() {
   </div>
 
   <div id="page_console" class="div_content">
+    <div id="console_tab1">Debugfile</div>
+    <div id="console_tab2">Logs</div>
+    <div id="console_tab3">Meldungen</div>
     <textarea readonly id='console' cols='340' wrap='off'></textarea>
     <br>
-    <form method='get' onsubmit='return runCmd();'>
-      <input id='console_cmd' placeholder='Befehl eingeben' autofocus class="input"><br>
-    </form>
+    <input id='console_cmd' placeholder='Befehl eingeben' autofocus class="input"><br>
   </div>
 
   <div id="page_settings"  class="div_content">
@@ -1150,19 +1200,14 @@ function dellog() {
   <div id="page_sysinfo" class="div_content">
   </div>
 
-  <div id="page_logfile" class="div_content">
-    <textarea readonly id='logconsole' cols='340' wrap='off'></textarea>
-  </div>
-
   <button id="but_stor" class="button bg_gr" onclick="store();">Speichern</button>
-  <button id="but_logs" class="button bg_gr" onclick="switch_logfile();">Logfile anzeigen</button>
   <button id="but_logd" class="button bg_gr" onclick="dellog();">Logfile löschen</button>
   <button id="but_uhtm" class="button bg_rt" onclick="switch_update();">Update</button>
   <button id="but_boot" class="button bg_rt" onclick="do_restart();">Neustart</button>
-  <button id="but_main" class="button bg_gr" onclick="switch_main();">Hauptseite</button>
   <button id="but_cons" class="button bg_bk" onclick="switch_console();">Konsole</button>
   <button id="but_sett" class="button bg_bk" onclick="switch_settings();">Einstellungen</button>
   <button id="but_sysi" class="button bg_gr" onclick="switch_sysinfo();">Systeminfo</button>
+  <button id="but_main" class="button bg_gr" onclick="switch_main();">Hauptseite</button>
   <div class="div_footer">
     <hr>
     ESPNode von Norbert Wilms

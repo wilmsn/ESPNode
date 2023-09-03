@@ -44,6 +44,38 @@ void getVcc(String& json) {
 #endif
 }
 
+void show_settings() {
+  debug_str = "{\"statclear\":1}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"looptimealarm: ";
+  debug_str += loop_time_alarm;
+  debug_str += " ms\"}";
+  ws.textAll(debug_str);
+
+}
+
+void console_help() {
+  debug_str = "{\"statclear\":1}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
+  ws.textAll(debug_str);
+
+  debug_str = "{\"stat\":\"help2\"}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"help3\"}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"help4\"}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"help5\"}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"help6\"}";
+  ws.textAll(debug_str);
+  debug_str = "{\"stat\":\"help7\"}";
+  ws.textAll(debug_str);
+}
+
 // Kommentiert in main.h
 void write2log(log_t kat, int count, ...) {
   va_list args;
@@ -768,11 +800,13 @@ const char *mk_cmd(AsyncWebServerRequest *request) {
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
   write2log(log_sys,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
+  cmd_valid = false;
 #if defined(SWITCH1)
   if ( switch1.set( cmd, value ) ) {
     html_json = switch1.html_stat_json();
     write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
+    cmd_valid = true;
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
     do_send_mqtt_stat = true;
@@ -784,6 +818,7 @@ void prozess_cmd(const String cmd, const String value)  {
     html_json = switch2.html_stat_json();
     write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
+    cmd_valid = true;
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
     do_send_mqtt_stat = true;
@@ -795,6 +830,7 @@ void prozess_cmd(const String cmd, const String value)  {
     html_json = switch3.html_stat_json();
     write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
+    cmd_valid = true;
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
     do_send_mqtt_stat = true;
@@ -806,6 +842,7 @@ void prozess_cmd(const String cmd, const String value)  {
     html_json = switch4.html_stat_json();
     write2log(log_sensor,1,html_json.c_str());
     ws.textAll(html_json);
+    cmd_valid = true;
 #if defined(MQTT)
     mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
 #endif
@@ -813,6 +850,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #endif
 #if defined(MQTT)
   if ( cmd == "log_mqtt" ) {
+    cmd_valid = true;
     if ( (value == "1") != do_log_mqtt) {
       do_log_mqtt = (value == "1");
       cmd_no++;
@@ -820,6 +858,7 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.putBool("log_mqtt", do_log_mqtt);
   }
   if ( cmd == "mqtt_active" ) {
+    cmd_valid = true;
     if ( (value == "1") != do_mqtt ) {
       do_mqtt = ( value == "1" );
       preferences.putBool("do_mqtt", do_mqtt);
@@ -827,6 +866,7 @@ void prozess_cmd(const String cmd, const String value)  {
     }
   }
   if ( cmd == "mqttclient" ) {
+    cmd_valid = true;
     if ( mqtt_client != value ) {
       mqtt_client = value;
       preferences.putString("mqtt_client", mqtt_client);
@@ -834,6 +874,7 @@ void prozess_cmd(const String cmd, const String value)  {
     }
   }
   if ( cmd == "mqtttopicp2" ) {
+    cmd_valid = true;
     if ( mqtt_topicP2 != value ) {
       mqtt_topicP2 = value;
       preferences.putString("mqtt_topicP2", mqtt_topicP2);
@@ -841,6 +882,7 @@ void prozess_cmd(const String cmd, const String value)  {
     }
   }
   if ( cmd == "mqttserver" ) {
+    cmd_valid = true;
     if ( mqtt_server != value ) {
       mqtt_server = value;
       preferences.putString("mqtt_server", mqtt_server);
@@ -858,6 +900,7 @@ void prozess_cmd(const String cmd, const String value)  {
       do_rf24gw = (value == "1");
       preferences.putBool("do_rf24gw", do_rf24gw);
     }
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "log_rf24" ) {
@@ -865,75 +908,108 @@ void prozess_cmd(const String cmd, const String value)  {
       do_log_rf24 = (value == "1");
       preferences.putBool("do_log_rf24", do_log_rf24);
     }
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "rf24hubname" ) {
     rf24gw_hub_server = value;
     preferences.putString("rf24gw_hub_server", rf24gw_hub_server);
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "rf24hubport" ) {
     rf24gw_hub_port = value.toInt();
     preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "rf24gwport" ) {
     rf24gw_gw_port = value.toInt();
     preferences.putInt("rf24gw_gw_port", rf24gw_gw_port);
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "rf24gwno" ) {
     rf24gw_gw_no = value.toInt();
     preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "log_rf24" ) {
     do_log_rf24 = ( value == "1" );
     preferences.putBool("do_log_rf24", do_log_rf24);
+    cmd_valid = true;
     cmd_no++;
   }
 #endif
+  if ( cmd == "?" || cmd == "help" ) {
+    console_help();
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "settings"  ) {
+    show_settings();
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "looptimealarm" ) {
+    loop_time_alarm = value.toInt();
+    preferences.putUInt("loop_time_alarm", loop_time_alarm);
+    ws.textAll("{\"statclear\":1}");
+    tmp_str = "{\"stat\":\"loop time alarm: set to ";
+    tmp_str += loop_time_alarm;
+    tmp_str += "\"}";
+    ws.textAll(tmp_str);
+    cmd_valid = true;
+    cmd_no++;
+  }
   if ( cmd == "wifi_ssid" ) {
     if ( wifi_ssid != value ) {
       preferences.putString("wifi_ssid", value);
       rebootflag = true;
-      cmd_no++;
     }
+    cmd_valid = true;
+    cmd_no++;
   }
   if ( cmd == "wifi_pass" ) {
     if ( wifi_pass != value ) {
       preferences.putString("wifi_pass", value);
       rebootflag = true;
-      cmd_no++;
     }
+    cmd_valid = true;
+    cmd_no++;
   }
   if ( cmd == "log_sensor" ) {
     if ( do_log_sensor != ( value == "1" ) ) {
       do_log_sensor = ( value == "1" );
       preferences.putBool("do_log_sensor", do_log_sensor);
-      cmd_no++;
     }
+    cmd_valid = true;
+    cmd_no++;
   }
   if ( cmd == "log_web" ) {
     if ( do_log_web != ( value == "1" ) ) {
       do_log_web = ( value == "1" );
       preferences.putBool("do_log_web", do_log_web);
-      cmd_no++;
     }
+    cmd_valid = true;
+    cmd_no++;
   }
   if ( cmd == "log_sys" ) {
     if ( do_log_sys != ( value == "1" ) ) {
       do_log_sys = ( value == "1" );
       preferences.putBool("do_log_sys", do_log_sys);
-      cmd_no++;
     }
+    cmd_valid = true;
+    cmd_no++;
   }
   if ( cmd == "log_critical" ) {
     if ( do_log_critical != ( value == "1" ) ) {
       do_log_critical = ( value == "1" );
       preferences.putBool("do_log_critical", do_log_critical);
-      cmd_no++;
     }
+    cmd_valid = true;
+    cmd_no++;
   }
   if ( cmd == "dellogfile" ) {
     LittleFS.remove(DEBUGFILE);
@@ -942,11 +1018,19 @@ void prozess_cmd(const String cmd, const String value)  {
       f.printf("----%d.%d.%d----\n",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year);
       f.close();
     }
+    cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "restart" || cmd == "reboot" ) {
     rebootflag = true;
+    cmd_valid = true;
     cmd_no++;
+  }
+  if ( ! cmd_valid ) {
+    tmp_str  = "{\"stat\":\"Ungültiges Komando:";
+    tmp_str += cmd;
+    tmp_str += "\"}";
+    ws.textAll(tmp_str);
   }
 }
 
@@ -972,6 +1056,10 @@ void reconnect_mqtt() {
     mqttClient.subscribe(mk_topic(MQTT_COMMAND, "#"));
     if (do_log_mqtt) {
       write2log(log_mqtt, 2, mqtt_topic.c_str()," => subcribed");
+    }
+  } else {
+    if (do_log_mqtt) {
+      write2log(log_mqtt, 1, "Mqtt => not connected");
     }
   }
 }
@@ -1094,20 +1182,18 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
 #if defined(RF24GW)
 // dokumentiert in main.h
 void writeRf242log(const char* senddir, payload_t pl) {
-  if (do_log_rf24) {
-      tmp_str = senddir;
-      tmp_str += " O:";
-      tmp_str += String(pl.orderno);
-      tmp_str += " N:";
-      tmp_str += String(pl.node_id);
-      tmp_str += " M:";
-      tmp_str += String(pl.msg_id);
-      tmp_str += " MT:";
-      tmp_str += String(pl.msg_type);
-      tmp_str += " HB:";
-      tmp_str += String(pl.heartbeatno);
-      write2log(log_rf24, 1, tmp_str.c_str());
-   }
+  tmp_str = senddir;
+  tmp_str += " O:";
+  tmp_str += String(pl.orderno);
+  tmp_str += " N:";
+  tmp_str += String(pl.node_id);
+  tmp_str += " M:";
+  tmp_str += String(pl.msg_id);
+  tmp_str += " MT:";
+  tmp_str += String(pl.msg_type);
+  tmp_str += " HB:";
+  tmp_str += String(pl.heartbeatno);
+  write2log(log_rf24, 1, tmp_str.c_str());
 }
 #endif
 
@@ -1146,6 +1232,7 @@ void setup() {
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
     wifi_ssid = WIFI_SSID;
     wifi_pass = WIFI_PASS;
+    loop_time_alarm = LOOP_TIME_ALARM;
 #if defined(MQTT)
     do_mqtt = MQTT;
     mqtt_server = MQTT_SERVER;
@@ -1157,6 +1244,7 @@ void setup() {
     preferences.putInt("magicno", MAGICNO);
     preferences.putString("wifi_ssid", wifi_ssid); 
     preferences.putString("wifi_pass", wifi_pass);
+    preferences.putUInt("loop_time_alarm", loop_time_alarm);
 #if defined(MQTT)
     preferences.putBool("do_mqtt", do_mqtt);
     preferences.putString("mqtt_server", mqtt_server);
@@ -1190,6 +1278,7 @@ void setup() {
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
     wifi_ssid = preferences.getString("wifi_ssid"); 
     wifi_pass = preferences.getString("wifi_pass");
+    preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
     do_mqtt = preferences.getBool("do_mqtt");
     mqtt_server = preferences.getString("mqtt_server");
@@ -1428,7 +1517,7 @@ void loop() {
   time(&now);                   // read the current time
   localtime_r(&now, &timeinfo); // update the structure tm with the current time
   ws.cleanupClients();
-  if ((millis() - loop_starttime) > LOOP_TIME_ALARM) {
+  if ((millis() - loop_starttime) > loop_time_alarm) {
     snprintf(loopmsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
     write2log(log_critical,1,loopmsg);
   }
@@ -1436,7 +1525,7 @@ void loop() {
   if ( radio.available() ) {
     radio.read(&payload, sizeof(payload));
     udpdata.gw_no = rf24gw_gw_no;
-    writeRf242log("N>G", payload);
+    if (do_log_rf24) writeRf242log("N>G", payload);
     memcpy(&udpdata.payload, &payload, sizeof(payload));
     udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);
     udp.write((const unsigned char*)&udpdata, sizeof(udpdata));
@@ -1445,13 +1534,13 @@ void loop() {
   if (udp.parsePacket() > 0 ) {
     udp.read((char*)&udpdata, sizeof(udpdata));
     memcpy(&payload, &udpdata.payload, sizeof(payload));
-    writeRf242log("G>N", payload);
+    if (do_log_rf24) writeRf242log("G>N", payload);
     radio.stopListening();
     radio.write(&payload, sizeof(payload));
     radio.startListening();
   }
 #endif
-  if ((millis() - loop_starttime) > LOOP_TIME_ALARM) {
+  if ((millis() - loop_starttime) > loop_time_alarm) {
     snprintf(loopmsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
     write2log(log_critical,1,loopmsg);
   }
@@ -1472,7 +1561,7 @@ void loop() {
     }
   }
   delay(0);
-  if ((millis() - loop_starttime) > LOOP_TIME_ALARM) {
+  if ((millis() - loop_starttime) > loop_time_alarm) {
     snprintf(loopmsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
     write2log(log_critical,1,loopmsg);
   }
@@ -1495,7 +1584,7 @@ void loop() {
 #if defined(SENSOR2)
   sensor2.loop();
 #endif
-  if ((millis() - loop_starttime) > LOOP_TIME_ALARM) {
+  if ((millis() - loop_starttime) > loop_time_alarm) {
     snprintf(loopmsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
     write2log(log_critical,1,loopmsg);
   }
@@ -1540,7 +1629,7 @@ void loop() {
     do_send_mqtt_tele = true;
   }
 #endif
-  if ((millis() - loop_starttime) > LOOP_TIME_ALARM) {
+  if ((millis() - loop_starttime) > loop_time_alarm) {
     snprintf(loopmsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
     write2log(log_critical,1,loopmsg);
   }
@@ -1569,7 +1658,7 @@ void loop() {
     uptime.update();
     lastHour = timeinfo.tm_hour;
   }
-  if ((millis() - loop_starttime) > LOOP_TIME_ALARM) {
+  if ((millis() - loop_starttime) > loop_time_alarm) {
     snprintf(loopmsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));
     write2log(log_critical,1,loopmsg);
   }

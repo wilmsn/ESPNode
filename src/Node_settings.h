@@ -101,8 +101,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define HOSTNAME                 "wohnzimmernode"
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
-#define MAGICNO                  473
-
+#define MAGICNO                  475
+#define LOG_CRITICAL             true
 
 #define SWITCH1_DEFINITION       Actor_LEDMatrix switch1;
 // html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_no, mqtt_line, mqtt_graph, slider_mqtt_name
@@ -117,6 +117,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                102
+#define LOG_RF24                 true
 
 #endif
 //*****************************************************
@@ -160,7 +161,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #include "switch_onoff.h"
 #include "sensor_ldr.h"
 
-#define MAGICNO                475
+#define MAGICNO                479
 
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
@@ -168,9 +169,10 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define MQTT_CLIENT            "wittynode"
 #define MQTT_TOPICP2           "wittynode"
 
-#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO                155
+//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+//#define RF24GW_NO                155
 
+#define DEBUG_SERIAL
 //#define DEBUG_SERIAL_HTML
 //#define DEBUG_SERIAL_SENSOR
 //#define DEBUG_SERIAL_MODULE
@@ -202,7 +204,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define DEBUG_SERIAL_HTML
 
 #define HOSTNAME                 "BoschNode"
-#define HOST_DISCRIPTION         "Ein Bosch Sensor Testnode"
+#define HOST_DISCRIPTION         "Ein Bosch Sensor Testnode mit RF24 Gatway"
 
 #define SENSOR1_DEFINITION       Sensor_Bosch sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp","sens2","Luftdruck","Pres","sens3","Luftfeuchte","Humi");
@@ -217,6 +219,10 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO               198
+
+#define LOG_CRITICAL            true
+#define LOG_RF24                true
+#define LOG_MQTT                true
 
 #endif
 //-----------------------------------------------------

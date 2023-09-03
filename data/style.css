@@ -17,6 +17,24 @@ textarea {
   background:#1f1f1f;
   color:#65c115;
 }
+/* Layout für die Reiter/Tabs*/
+.tab_active {
+  float: left;
+  width: 25%;
+  background: #dddddd;
+  padding: 5px;
+  display: block;
+  border: 1px solid black;
+}
+.tab_passive {
+  float: left;
+  width: 25%;
+  background: #444444;
+  padding: 5px;
+  display: block;
+  border: 1px solid black;
+  color: #ffffff
+}
 /* Label */
 label {
  text-align:left;
