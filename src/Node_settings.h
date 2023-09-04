@@ -172,11 +172,11 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 //#define RF24GW_NO                155
 
-#define DEBUG_SERIAL
-//#define DEBUG_SERIAL_HTML
-//#define DEBUG_SERIAL_SENSOR
-//#define DEBUG_SERIAL_MODULE
-//#define DEBUG_SERIAL_MQTT
+//#define DEBUG_SERIAL
+#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_SENSOR
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_MQTT
 
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
 #define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", WITTY_LED_PIN, false, false);

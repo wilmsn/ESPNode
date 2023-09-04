@@ -134,6 +134,7 @@ $(document).ready(function(){
         $.each( data, function( key, val ) {
           $("#wifinw2").append(" "+val+"<br>");
         });
+        $("#wifinw1").show();
       });
     }, 20000);
   });
@@ -821,7 +822,6 @@ function switch_sysinfo() {
   $("#but_main").show();
   $("#but_cons").show();
   $("#but_sett").show();
-  $("#page_sysinfo").html("<table style='width:100%;'' id='Tab'><tbody>");
   $.getJSON( "sysinfo1", function( data ) {
     $.each( data, function( key, val ) {
       prozessJS( key, val );
@@ -838,6 +838,9 @@ function switch_sysinfo() {
     });
   });
 }
+
+
+
 
 function store() {
   var mycmd = "/cmd?";
@@ -1199,7 +1202,12 @@ function dellog() {
   </div>
 
   <div id="page_sysinfo" class="div_content">
-  </div>
+    <table style='width:100%;'' id='Tab'>
+      <tr><td colspan=2 class="tab_head">WiFi Networks</td></tr>
+      <tr><td colspan=2><div id="wifinw2"></div></td></tr>
+      <tr><td colspan=2 class="tab_right"><div id="wifinw1"><button id='nwscan' class='button bg_gr'>Scan</button></div></td></tr>
+    </table> 
+</div>
 
   <button id="but_stor" class="button bg_gr" onclick="store();">Speichern</button>
   <button id="but_logd" class="button bg_gr" onclick="dellog();">Logfile löschen</button>

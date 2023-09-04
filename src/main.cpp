@@ -412,9 +412,11 @@ const char *mk_wifishow() {
       break;
     }
   } else {
+    html_json += "\"Wifi\":\"";
+    html_json += numberOfNetworks;
+    html_json += " Networks\"";
     for (int i = 0; i < numberOfNetworks; i++) {
-      if ( i > 0 ) html_json += ",";
-      html_json += "\"Wifi";
+      html_json += ",\"Wifi";
       html_json += String(i);
       html_json += "\":\"";
       html_json += WiFi.SSID(i);
@@ -488,6 +490,7 @@ const char *mk_wifishow() {
   Serial.print(" ok (");
   Serial.print(html_json.length());
   Serial.println(" byte)");
+  Serial.println(html_json);
 #endif
   return html_json.c_str();
 }
@@ -855,7 +858,7 @@ void prozess_cmd(const String cmd, const String value)  {
       do_log_mqtt = (value == "1");
       cmd_no++;
     }
-    preferences.putBool("log_mqtt", do_log_mqtt);
+    preferences.putBool("do_log_mqtt", do_log_mqtt);
   }
   if ( cmd == "mqtt_active" ) {
     cmd_valid = true;
@@ -980,9 +983,15 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( cmd == "log_sensor" ) {
+    Serial.print("do_log_sensor: ");
+    Serial.print(do_log_sensor?"J":"N");
+    Serial.print(" CMD: ");
+    Serial.println(value);
     if ( do_log_sensor != ( value == "1" ) ) {
       do_log_sensor = ( value == "1" );
       preferences.putBool("do_log_sensor", do_log_sensor);
+      Serial.print("do_log_sensor: ");
+      Serial.println(do_log_sensor?"J":"N");
     }
     cmd_valid = true;
     cmd_no++;
@@ -1264,7 +1273,7 @@ void setup() {
     preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
     preferences.putInt("rf24gw_gw_port", rf24gw_gw_port);
     preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
-    preferences.putBool("log_rf24", log_rf24);
+    preferences.putBool("do_log_rf24", do_log_rf24);
 #endif
     do_log_sensor = LOG_SENSOR;
     do_log_web = LOG_WEB;
@@ -1284,7 +1293,7 @@ void setup() {
     mqtt_server = preferences.getString("mqtt_server");
     mqtt_client = preferences.getString("mqtt_client");
     mqtt_topicP2 = preferences.getString("mqtt_topicP2");
-    do_log_mqtt = preferences.getBool("log_mqtt");
+    do_log_mqtt = preferences.getBool("do_log_mqtt");
 #endif
 #if defined(RF24GW)
     do_rf24gw = preferences.getBool("do_rf24gw");
@@ -1292,7 +1301,7 @@ void setup() {
     rf24gw_hub_port = preferences.getInt("rf24gw_hub_port");
     rf24gw_gw_port = preferences.getInt("rf24gw_gw_port");
     rf24gw_gw_no = preferences.getInt("rf24gw_gw_no");
-    do_log_rf24 = preferences.getBool("log_rf24");
+    do_log_rf24 = preferences.getBool("do_log_rf24");
 #endif
     do_log_sensor = preferences.getBool("do_log_sensor");
     do_log_web = preferences.getBool("do_log_web");
