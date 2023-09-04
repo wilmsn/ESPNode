@@ -20,20 +20,25 @@ textarea {
 /* Layout für die Reiter/Tabs*/
 .tab_active {
   float: left;
-  width: 25%;
+  width: 27%;
   background: #dddddd;
   padding: 5px;
   display: block;
-  border: 1px solid black;
+  border: 2px solid black;
+  height: 30px;
 }
 .tab_passive {
   float: left;
-  width: 25%;
+  width: 27%;
   background: #444444;
   padding: 5px;
   display: block;
-  border: 1px solid black;
-  color: #ffffff
+  border: 2px solid whitesmoke;
+  color: whitesmoke;
+  height: 18px;
+  top: 10px;
+  position: relative;
+
 }
 /* Label */
 label {

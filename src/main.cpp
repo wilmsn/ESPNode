@@ -91,7 +91,7 @@ void write2log(log_t kat, int count, ...) {
   }
   // Im AP-Mode wird nichts gelogged !!!
   if ( ! ap_mode ) {
-    snprintf(timeStr, 11, "[%02d:%02d:%02d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    snprintf(timeStr, 15, "[%02d:%02d:%02d.%03d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (int)millis()%1000);
     if ( do_log_critical && kat == log_daybreak ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
@@ -956,7 +956,7 @@ void prozess_cmd(const String cmd, const String value)  {
     loop_time_alarm = value.toInt();
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     ws.textAll("{\"statclear\":1}");
-    tmp_str = "{\"stat\":\"loop time alarm: set to ";
+    tmp_str = "{\"stat\":\"looptimealarm: set to ";
     tmp_str += loop_time_alarm;
     tmp_str += "\"}";
     ws.textAll(tmp_str);
@@ -1278,7 +1278,7 @@ void setup() {
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
     wifi_ssid = preferences.getString("wifi_ssid"); 
     wifi_pass = preferences.getString("wifi_pass");
-    preferences.getUInt("loop_time_alarm");
+    loop_time_alarm = preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
     do_mqtt = preferences.getBool("do_mqtt");
     mqtt_server = preferences.getString("mqtt_server");

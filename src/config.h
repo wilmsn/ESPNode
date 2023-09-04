@@ -12,7 +12,7 @@
 //#define NODESIMPLE
 //#define ESP32SIMPLE
 //#define NODE18B20
-//#define NODEBOSCH
+#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
 //#define NODEGWTEST
@@ -20,11 +20,11 @@
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-#define NODE_TEICH
+//#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------
 
-#define SWVERSION   "0.994"
+#define SWVERSION   "0.995"
 
 // Zeitmanagement
 /// @brief Der NTP Server

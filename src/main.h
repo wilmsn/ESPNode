@@ -144,7 +144,7 @@ String debug_str;
 String tmp_str;
 
 /// @brief Ein fixes Array zur Aufnahme des Zeitstempels
-char timeStr[12];
+char timeStr[16];
 
 // Schleifensteuerung
 

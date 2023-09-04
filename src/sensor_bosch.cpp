@@ -24,6 +24,9 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
 #if defined(DEBUG_SERIAL_MODULE)
   Serial.print("Chip ID:");
   Serial.println(bmx_sensor.getChipId());
+  Serial.print("I2C Adr:");
+  Serial.println(bmx_sensor.getI2Cadr());
+  
   if (bmx_sensor.isBMP180()) {
     Serial.println("Sensor: BMP180");
   }
