@@ -2,7 +2,6 @@
 #define _SENSOR_BOSCH_H_
 #define DEBUG_SERIAL_MODULE
 
-#include "BMX_sensor.h"
 #include "sensor_generic.h"
 
 /// @brief Ein abgeleitetes Objekt für einen Bosch Sensor.\n 

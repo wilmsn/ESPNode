@@ -1,4 +1,5 @@
 #include "sensor_bosch.h"
+#include "BMX_sensor.h"
 
 BMX_SENSOR bmx_sensor;
 
