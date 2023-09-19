@@ -1,4 +1,6 @@
-#include "sensor_18B20.h"
+#include "config.h"
+
+#ifdef _SENSOR_18B20_H_
 
 const int oneWireBus = 4;   
 OneWire oneWire(oneWireBus);
@@ -61,4 +63,4 @@ void Sensor_18B20::start_measure() {
 
 }
 
-
+#endif

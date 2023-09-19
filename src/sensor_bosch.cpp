@@ -1,5 +1,10 @@
-#include "sensor_bosch.h"
+#include "config.h"
+
+#ifdef _SENSOR_BOSCH_H_
 #include "BMX_sensor.h"
+#include <twi.h>
+#include <Wire.h>
+
 
 BMX_SENSOR bmx_sensor;
 
@@ -21,13 +26,11 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
   obj_html_place = html_place;
   obj_mqtt_name = mqtt_name;
   bmx_sensor.begin();
-  start_measure();
 #if defined(DEBUG_SERIAL_MODULE)
   Serial.print("Chip ID:");
   Serial.println(bmx_sensor.getChipId());
   Serial.print("I2C Adr:");
   Serial.println(bmx_sensor.getI2Cadr());
-  
   if (bmx_sensor.isBMP180()) {
     Serial.println("Sensor: BMP180");
   }
@@ -56,6 +59,7 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
     Serial.println("Sensor unterstützt diese Messung nicht");
   }
 #endif
+  start_measure();
   obj_sensorinfo_mqtt = "\"Sensor-HW\":";
   if (bmx_sensor.isBMP180()) {
      obj_sensorinfo_mqtt += "\"BMP180\"";
@@ -142,3 +146,4 @@ void Sensor_Bosch::start_measure() {
 
   obj_changed = true;
 }
+#endif

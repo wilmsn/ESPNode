@@ -22,9 +22,9 @@ SENSOR2_DEFINITION
 void setupTime() {                              
   // deinen NTP Server einstellen (von 0 - 5 aus obiger Liste) alternativ lassen sich durch Komma getrennt bis zu 3 Server angeben
 #ifdef ESP32
-  configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", NTP_SERVER);
+  configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp_server);
 #else
-  configTime("CET-1CEST,M3.5.0,M10.5.0/3", NTP_SERVER);  
+  configTime("CET-1CEST,M3.5.0,M10.5.0/3", ntp_server);  
 #endif
   // Zeitzone einstellen https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 }
@@ -44,37 +44,7 @@ void getVcc(String& json) {
 #endif
 }
 
-void show_settings() {
-  debug_str = "{\"statclear\":1}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"looptimealarm: ";
-  debug_str += loop_time_alarm;
-  debug_str += " ms\"}";
-  ws.textAll(debug_str);
 
-}
-
-void console_help() {
-  debug_str = "{\"statclear\":1}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
-  ws.textAll(debug_str);
-
-  debug_str = "{\"stat\":\"help2\"}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"help3\"}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"help4\"}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"help5\"}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"help6\"}";
-  ws.textAll(debug_str);
-  debug_str = "{\"stat\":\"help7\"}";
-  ws.textAll(debug_str);
-}
 
 // Kommentiert in main.h
 void write2log(log_t kat, int count, ...) {
@@ -89,7 +59,7 @@ void write2log(log_t kat, int count, ...) {
     c[n] = (char *)va_arg(args, char *);
     n++;
   }
-  // Im AP-Mode wird nichts gelogged !!!
+  // Im AP-Mode wird nichts in Filesystem gelogged !!!
   if ( ! ap_mode ) {
     snprintf(timeStr, 15, "[%02d:%02d:%02d.%03d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (int)millis()%1000);
     if ( do_log_critical && kat == log_daybreak ) {
@@ -112,221 +82,50 @@ void write2log(log_t kat, int count, ...) {
         f.close();
       }
     }
-    if ((do_log_sensor && (kat == log_sensor)    ) ||
-        (do_log_web && (kat == log_web)     ) ||
+  }
+  if ((do_log_sensor && (kat == log_sensor)    ) ||
+      (do_log_web && (kat == log_web)     ) ||
 #if defined(MQTT)
-        (do_log_mqtt && (kat == log_mqtt)   ) ||
+      (do_log_mqtt && (kat == log_mqtt)   ) ||
 #endif
 #if defined(RF24GW)
-        (do_log_rf24 && (kat == log_rf24)   ) ||
+      (do_log_rf24 && (kat == log_rf24)   ) ||
 #endif
-        (do_log_sys && (kat == log_sys) ) || 
-        (do_log_critical && (kat == log_critical) )) {
-      debug_str = "{\"log\":\"";
-      debug_str += timeStr;
-      n = 0;
-      while (n < count) {
-        debug_str += " ";
-        // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
-        // Deshalb wird " gegen ' ersetzt!
-        for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
-          if ( c[n][i] == '"' ) {
-            debug_str += "'";  
-          } else {
-            debug_str += c[n][i];
-          }
-        }
-        n++;
-      }
-      debug_str += "\"}";
-      ws.textAll(debug_str);
-    }
-#if defined(DEBUG_SERIAL)
-    Serial.print(timeStr);
+      (do_log_sys && (kat == log_sys) ) || 
+      (do_log_critical && (kat == log_critical) )) {
+    log_str = "{\"log\":\"";
+    log_str += timeStr;
     n = 0;
     while (n < count) {
-      Serial.print(c[n]);
-      Serial.print(" ");
+      log_str += " ";
+      // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
+      // Deshalb wird " gegen ' ersetzt!
+      for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
+        if ( c[n][i] == '"' ) {
+          log_str += "'";  
+        } else {
+          log_str += c[n][i];
+        }
+      }
       n++;
     }
-    Serial.println();
-#endif
+    log_str += "\"}";
+    ws.textAll(log_str);
   }
+#if defined(DEBUG_SERIAL)
+  Serial.print(timeStr);
+  n = 0;
+  while (n < count) {
+    Serial.print(c[n]);
+    Serial.print(" ");
+    n++;
+  }
+  Serial.println();
+#endif
   va_end(args);
 }
 
-// Kommentiert in main.h
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
-  AwsFrameInfo *info = (AwsFrameInfo *)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-    data[len] = 0;
-    String mycmd = (char *)data;
-    int pos1 = mycmd.indexOf(":");
-    int pos2 = mycmd.indexOf("=");
-    int pos = pos1;
-    if (pos2 > 0) pos = pos2;
-    String cmd = mycmd.substring(0, pos);
-    String value = mycmd.substring(pos + 1);
-#if defined(DEBUG_SERIAL_HTML)
-    Serial.print("Websocket cmd: ");
-    Serial.print(cmd);
-    Serial.print("value: ");
-    Serial.println(value); 
-#endif
-    prozess_cmd(cmd,value);
-  }
-}
 
-// Kommentiert in main.h
-void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-                void *arg, uint8_t *data, size_t len) {
-  switch (type) {
-    case WS_EVT_CONNECT:
-      html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
-      html_json += ",\"wifi_ssid\":\"";
-      html_json += wifi_ssid;
-      html_json += "\",\"wifi_pass\":\"";
-      html_json += wifi_pass;
-      html_json += "\"";
-#if defined(HOST_DISCRIPTION)
-      html_json += ",\"titel2\":\"";
-      html_json += HOST_DISCRIPTION;
-      html_json += "\"";
-#endif
-#if defined(SWITCH1)
-      switch1.html_create_json_part(html_json);
-#endif
-#if defined(SWITCH2)
-      switch2.html_create_json_part(html_json);
-#endif
-#if defined(SWITCH3)
-      switch3.html_create_json_part(html_json);
-#endif
-#if defined(SWITCH4)
-      switch4.html_create_json_part(html_json);
-#endif
-#if defined(SENSOR1)
-      sensor1.html_create_json_part(html_json);
-#endif
-#if defined(SENSOR2)
-      sensor2.html_create_json_part(html_json);
-#endif
-#if defined(MQTT)
-      html_json += ",\"set_mqtt_enable\":1";
-      html_json += ",\"set_mqtt_active\":";
-      html_json += do_mqtt?"1":"0";
-      html_json += ",\"set_mqttserver\":\"";
-      html_json += mqtt_server;
-      html_json += "\",\"set_mqttclient\":\"";
-      html_json += mqtt_client;
-      html_json += "\",\"set_mqtttopicp2\":\"";
-      html_json += mqtt_topicP2;
-      html_json += "\"";
-#else
-      html_json += ",\"set_mqtt_enable\":0";
-#endif
-// Setzen der Logging Flags 
-#if defined(RF24GW)
-      html_json += ",\"log_rf24\":";
-      html_json += do_log_rf24? "1": "0";
-#endif
-#if defined(MQTT)
-      html_json += ",\"log_mqtt\":";
-      html_json += do_log_mqtt? "1": "0";
-#endif
-      html_json += ",\"log_sensor\":";
-      html_json += do_log_sensor? "1": "0";
-      html_json += ",\"log_sys\":";
-      html_json += do_log_sys? "1": "0";
-      html_json += ",\"log_critical\":";
-      html_json += do_log_critical? "1": "0";
-      html_json += ",\"log_web\":";
-      html_json += do_log_web? "1": "0";
-// RF24 Gateway
-#if defined(RF24GW)
-      html_json += ",\"set_rf24gw_enable\":1";
-      html_json += ",\"set_rf24gw_active\":";
-      html_json += do_rf24gw? "1":"0";
-      html_json += ",\"set_RF24HUB-Server\":\"";
-      html_json += rf24gw_hub_server;
-      html_json += "\",\"set_RF24HUB-Port\":\"";
-      html_json += rf24gw_hub_port;
-      html_json += "\",\"set_RF24GW-Port\":\"";
-      html_json += rf24gw_gw_port;
-      html_json += "\",\"set_RF24GW-No\":";
-      html_json += rf24gw_gw_no;
-#else      
-      html_json += ",\"set_rf24gw_enable\":0";
-#endif      
-      html_json += "}";
-      write2log(log_web,1,html_json.c_str());
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-
-#if defined(SENSOR1)
-      html_json = sensor1.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-#endif
-#if defined(SENSOR2)
-      html_json = sensor2.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-#endif
-#if defined(SWITCH1)
-      html_json = switch1.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-#endif
-#if defined(SWITCH2)
-      html_json = switch2.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-#endif
-#if defined(SWITCH3)
-      html_json = switch3.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-#endif
-#if defined(SWITCH4)
-      html_json = switch4.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
-      ws.textAll(html_json);
-#endif
-
-    break;  //    case WS_EVT_CONNECT
-
-    case WS_EVT_DISCONNECT:
-//      Serial.printf("WebSocket client #%u disconnected\n", client->id());
-    break;
-    case WS_EVT_DATA:
-      handleWebSocketMessage(arg, data, len);
-    break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
-    break;
-  }
-}
-
-// Kommentiert in main.h
-void initWebSocket() {
-  ws.onEvent(ws_onEvent);
-  httpServer.addHandler(&ws);
-}
 
 // Kommentiert in main.h
 // todo Schleifen maximaldauer könnte kritisch sein
@@ -379,121 +178,8 @@ bool do_wifi_con(void) {
   return retval;
 }
 
-// Kommentiert in main.h
-const char *mk_wifiscan() {
-#if defined(DEBUG_SERIAL_HTML)
-  Serial.print("Generiere wifiscan ... ");
-#endif
-  html_json = "{ \"Wifi\": \"Scan started\" }";
-  WiFi.scanNetworks(true, false);
-#if defined(DEBUG_SERIAL_HTML)
-  Serial.print(" ok (");
-  Serial.print(html_json.length());
-  Serial.println(" byte)");
-#endif
-  return html_json.c_str();
-}
 
 
-// Kommentiert in main.h
-const char *mk_wifishow() {
-#if defined(DEBUG_SERIAL_HTML)
-  Serial.print("Generiere wifishow ... ");
-#endif
-  html_json = "{";
-  int numberOfNetworks = WiFi.scanComplete();
-  if (numberOfNetworks < 0) {
-    switch (numberOfNetworks) {
-      case -1:
-        html_json += "\"Wifi\": \"Scan not finished\"";
-      break;
-      case -2:
-        html_json += "\"Wifi\": \"Scan not started\"";
-      break;
-    }
-  } else {
-    html_json += "\"Wifi\":\"";
-    html_json += numberOfNetworks;
-    html_json += " Networks\"";
-    for (int i = 0; i < numberOfNetworks; i++) {
-      html_json += ",\"Wifi";
-      html_json += String(i);
-      html_json += "\":\"";
-      html_json += WiFi.SSID(i);
-      html_json += ", Ch:";
-      html_json += String(WiFi.channel(i));
-      html_json += " (";
-      html_json += WiFi.RSSI(i);
-      html_json += " dBm ";
-#ifdef ESP32
-      switch (WiFi.encryptionType(i)) {
-      case  WIFI_AUTH_OPEN:
-          html_json += "open";
-        break;
-      case WIFI_AUTH_WEP:
-          html_json += "WEP";
-        break;
-      case WIFI_AUTH_WPA_PSK:
-          html_json += "WPA PSK";
-        break;
-      case WIFI_AUTH_WPA2_PSK:
-          html_json += "WPA2 PSK";
-        break;
-      case WIFI_AUTH_WPA_WPA2_PSK:
-          html_json += "WPA WPA2 PSK";
-        break;
-      case WIFI_AUTH_WPA2_ENTERPRISE:
-          html_json += "WPA2 Enterprise";
-        break;
-      case WIFI_AUTH_WPA3_PSK:
-          html_json += "WPA3 PSK";
-        break;
-      case WIFI_AUTH_WPA2_WPA3_PSK:
-          html_json += "WPA2 WPA3 PSK";
-        break;
-      case WIFI_AUTH_WAPI_PSK:
-          html_json += "WAPI PSK";
-        break;
-      case WIFI_AUTH_MAX:
-          html_json += "MAX";
-        break;
-      }
-#else
-      switch (WiFi.encryptionType(i)) {
-      case ENC_TYPE_WEP:
-          html_json += "WEP";
-        break;
-      case ENC_TYPE_TKIP:
-          html_json += "TKIP";
-        break;
-      case ENC_TYPE_CCMP:
-          html_json += "CCMP";
-        break;
-      case ENC_TYPE_AUTO:
-          html_json += "Auto";
-        break;
-      case ENC_TYPE_NONE:
-          html_json += "None";
-        break;
-      default:
-          html_json += "unknown";
-        break;
-      }
-#endif
-      html_json += ")\"";
-    }
-//#endif
-  }
-  html_json += "}";
-  WiFi.scanDelete();
-#if defined(DEBUG_SERIAL_HTML)
-  Serial.print(" ok (");
-  Serial.print(html_json.length());
-  Serial.println(" byte)");
-  Serial.println(html_json);
-#endif
-  return html_json.c_str();
-}
 
 // Kommentiert in main.h
 const char *mk_sysinfo1(String& info_str) {
@@ -573,7 +259,7 @@ const char *mk_sysinfo1(String& info_str) {
   info_str += uptime.uptimestr();
   info_str += "\"";
   info_str += "}";
-  write2log(log_sys,1,info_str.c_str());
+  write2log(log_web,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Sysinfo1: ");
   Serial.print(info_str.length());
@@ -712,7 +398,7 @@ const char *mk_sysinfo2(String& info_str) {
   info_str += __DATE__;
   info_str += ")\"";
   info_str += "}";
-  write2log(log_sys,1,info_str.c_str());
+  write2log(log_web,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Sysinfo2: ");
   Serial.print(info_str.length());
@@ -764,7 +450,7 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
   }
 #endif
   info_str += "}";
-  write2log(log_sys,1,info_str.c_str());
+  write2log(log_web,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Sysinfo3: ");
   Serial.print(info_str.length());
@@ -773,438 +459,30 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
   return info_str.c_str();
 }
 
-// Kommentiert in main.h
-const char *mk_cmd(AsyncWebServerRequest *request) {
-//  bool prefs_change = false;
-  int args = request->args();
-  html_json = "";
-  cmd_no = 0;
-  for (int argNo = 0; argNo < args; argNo++) {
-#if defined(DEBUG_SERIAL_HTML)
-    Serial.print("prozess_cmd: ");
-    Serial.print(request->argName(argNo));
-    Serial.print(": ");
-    Serial.println(request->arg(argNo));
-#endif
-    prozess_cmd(request->argName(argNo), request->arg(argNo) );
-  }
-  if ( cmd_no > 0 ) {
-    if ( rebootflag ) { 
-      html_json = "Reboot ok"; 
-    } else {
-      html_json = "ok";
-    }
-  } else {
-    html_json = "No change";
-  }
-  return html_json.c_str();
-}
 
-// Kommentiert in main.h
-void prozess_cmd(const String cmd, const String value)  {
-  write2log(log_sys,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
-  cmd_valid = false;
-#if defined(SWITCH1)
-  if ( switch1.set( cmd, value ) ) {
-    html_json = switch1.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
-    cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
-    do_send_mqtt_stat = true;
-#endif
+void start_AP() {
+  write2log(log_sys,1, "Start Accesspoint: ESPNode");
+  ap_mode = true;
+  if (WiFi.mode(WIFI_AP)) {
+    write2log(log_sys,1, "WIFI_AP => OK");
+  } else {
+    write2log(log_sys,1, "WIFI_AP => ERROR");
   }
-#endif
-#if defined(SWITCH2)
-  if ( switch2.set( cmd, value ) ) {
-    html_json = switch2.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
-    cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
-    do_send_mqtt_stat = true;
-#endif
+  delay(500);  
+  if (WiFi.softAP("ESPNode")) {
+    IPAddress IP = WiFi.softAPIP();
+    write2log(log_sys,2, "Http Server started on", IP.toString().c_str());
+  } else {
+    write2log(log_sys,1, "Error starting AP");
   }
-#endif
-#if defined(SWITCH3)
-  if ( switch3.set( cmd, value ) ) {
-    html_json = switch3.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
-    cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
-    do_send_mqtt_stat = true;
-#endif
-  }
-#endif
-#if defined(SWITCH4)
-  if ( switch4.set( cmd, value ) ) {
-    html_json = switch4.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
-    cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
-#endif
-  }
-#endif
-#if defined(MQTT)
-  if ( cmd == "log_mqtt" ) {
-    cmd_valid = true;
-    if ( (value == "1") != do_log_mqtt) {
-      do_log_mqtt = (value == "1");
-      cmd_no++;
-    }
-    preferences.putBool("do_log_mqtt", do_log_mqtt);
-  }
-  if ( cmd == "mqtt_active" ) {
-    cmd_valid = true;
-    if ( (value == "1") != do_mqtt ) {
-      do_mqtt = ( value == "1" );
-      preferences.putBool("do_mqtt", do_mqtt);
-      cmd_no++;
-    }
-  }
-  if ( cmd == "mqttclient" ) {
-    cmd_valid = true;
-    if ( mqtt_client != value ) {
-      mqtt_client = value;
-      preferences.putString("mqtt_client", mqtt_client);
-      cmd_no++;
-    }
-  }
-  if ( cmd == "mqtttopicp2" ) {
-    cmd_valid = true;
-    if ( mqtt_topicP2 != value ) {
-      mqtt_topicP2 = value;
-      preferences.putString("mqtt_topicP2", mqtt_topicP2);
-      cmd_no++;
-    }
-  }
-  if ( cmd == "mqttserver" ) {
-    cmd_valid = true;
-    if ( mqtt_server != value ) {
-      mqtt_server = value;
-      preferences.putString("mqtt_server", mqtt_server);
-      cmd_no++;
-    }
-  }
+  wifi_ap_starttime = millis();
+#if defined(MQTT)    
+  do_mqtt = false;
 #endif
 #if defined(RF24GW)
-  if ( cmd == "rf24gw_active" ) {
-#if defined(DEBUG_SERIAL)
-    Serial.print("RF24GW is ");
-    Serial.println(do_rf24gw? "1":"0");
+  do_rf24gw = false;
 #endif
-    if ( (value == "1") != do_rf24gw) {
-      do_rf24gw = (value == "1");
-      preferences.putBool("do_rf24gw", do_rf24gw);
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "log_rf24" ) {
-    if ( (value == "1") != do_log_rf24) {
-      do_log_rf24 = (value == "1");
-      preferences.putBool("do_log_rf24", do_log_rf24);
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "rf24hubname" ) {
-    rf24gw_hub_server = value;
-    preferences.putString("rf24gw_hub_server", rf24gw_hub_server);
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "rf24hubport" ) {
-    rf24gw_hub_port = value.toInt();
-    preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "rf24gwport" ) {
-    rf24gw_gw_port = value.toInt();
-    preferences.putInt("rf24gw_gw_port", rf24gw_gw_port);
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "rf24gwno" ) {
-    rf24gw_gw_no = value.toInt();
-    preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "log_rf24" ) {
-    do_log_rf24 = ( value == "1" );
-    preferences.putBool("do_log_rf24", do_log_rf24);
-    cmd_valid = true;
-    cmd_no++;
-  }
-#endif
-  if ( cmd == "?" || cmd == "help" ) {
-    console_help();
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "settings"  ) {
-    show_settings();
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "looptimealarm" ) {
-    loop_time_alarm = value.toInt();
-    preferences.putUInt("loop_time_alarm", loop_time_alarm);
-    ws.textAll("{\"statclear\":1}");
-    tmp_str = "{\"stat\":\"looptimealarm: set to ";
-    tmp_str += loop_time_alarm;
-    tmp_str += "\"}";
-    ws.textAll(tmp_str);
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "wifi_ssid" ) {
-    if ( wifi_ssid != value ) {
-      preferences.putString("wifi_ssid", value);
-      rebootflag = true;
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "wifi_pass" ) {
-    if ( wifi_pass != value ) {
-      preferences.putString("wifi_pass", value);
-      rebootflag = true;
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "log_sensor" ) {
-    Serial.print("do_log_sensor: ");
-    Serial.print(do_log_sensor?"J":"N");
-    Serial.print(" CMD: ");
-    Serial.println(value);
-    if ( do_log_sensor != ( value == "1" ) ) {
-      do_log_sensor = ( value == "1" );
-      preferences.putBool("do_log_sensor", do_log_sensor);
-      Serial.print("do_log_sensor: ");
-      Serial.println(do_log_sensor?"J":"N");
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "log_web" ) {
-    if ( do_log_web != ( value == "1" ) ) {
-      do_log_web = ( value == "1" );
-      preferences.putBool("do_log_web", do_log_web);
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "log_sys" ) {
-    if ( do_log_sys != ( value == "1" ) ) {
-      do_log_sys = ( value == "1" );
-      preferences.putBool("do_log_sys", do_log_sys);
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "log_critical" ) {
-    if ( do_log_critical != ( value == "1" ) ) {
-      do_log_critical = ( value == "1" );
-      preferences.putBool("do_log_critical", do_log_critical);
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "dellogfile" ) {
-    LittleFS.remove(DEBUGFILE);
-    File f = LittleFS.open( DEBUGFILE, "a");
-    if (f) {
-      f.printf("----%d.%d.%d----\n",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year);
-      f.close();
-    }
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( cmd == "restart" || cmd == "reboot" ) {
-    rebootflag = true;
-    cmd_valid = true;
-    cmd_no++;
-  }
-  if ( ! cmd_valid ) {
-    tmp_str  = "{\"stat\":\"Ungültiges Komando:";
-    tmp_str += cmd;
-    tmp_str += "\"}";
-    ws.textAll(tmp_str);
-  }
 }
-
-#if defined(MQTT)
-// dokumentiert in main.h
-const char* mk_topic(const char* part1, const char* part3) {
-  mqtt_topic = part1;
-  mqtt_topic += "/";
-  mqtt_topic += mqtt_topicP2;
-  mqtt_topic += "/";
-  mqtt_topic += part3;
-  return mqtt_topic.c_str();
-}
-
-// dokumentiert in main.h
-void reconnect_mqtt() {
-  // Versuche zu verbinden. Die Funktion wird nur angesteuert wenn die mqtt Verbindung getrennt ist!!!
-  // boolean PubSubClient::connect(const char *id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage)
-  if (mqttClient.connect(mqtt_client.c_str(), mk_topic(MQTT_TELEMETRIE, "LWT"), MQTT_QOS, MQTT_WILLRETAIN, "offline")) {
-    // Once connected, publish an announcement...
-    mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "LWT"), "online");
-    // ... and resubscribe
-    mqttClient.subscribe(mk_topic(MQTT_COMMAND, "#"));
-    if (do_log_mqtt) {
-      write2log(log_mqtt, 2, mqtt_topic.c_str()," => subcribed");
-    }
-  } else {
-    if (do_log_mqtt) {
-      write2log(log_mqtt, 1, "Mqtt => not connected");
-    }
-  }
-}
-
-// dokumentiert in main.h
-void send_mqtt_stat() {
-  if (do_mqtt) {
-    if (mqttClient.connected()) {
-      mqtt_json = "{";
-#if defined(SENSOR1)  
-      mqtt_json += sensor1.mqtt_json_part();
-#endif
-#if defined(SENSOR2)
-      if ( mqtt_json.length() > 3 ) mqtt_json += ",";
-      mqtt_json += sensor2.mqtt_json_part();
-#endif
-      mqtt_json += "}";
-      mqttClient.publish(mk_topic(MQTT_STATUS, "sensordata"), mqtt_json.c_str());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-
-      mqtt_json = "{";
-      mqtt_json_length_old = mqtt_json.length();
-#if defined(SWITCH1)  
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch1.show_value());
-      mqtt_json += switch1.mqtt_json_part();
-#endif
-#if defined(SWITCH2)  
-      if ( mqtt_json.length() > mqtt_json_length_old ) {
-        mqtt_json += ",";
-        mqtt_json_length_old = mqtt_json.length();
-      }
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch2.show_value());
-      mqtt_json += switch2.mqtt_json_part();
-#endif
-#if defined(SWITCH3)  
-      if ( mqtt_json.length() > mqtt_json_length_old ) {
-        mqtt_json += ",";
-        mqtt_json_length_old = mqtt_json.length();
-      }
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch3.show_value());
-      mqtt_json += switch3.mqtt_json_part();
-#endif
-#if defined(SWITCH4)  
-      if ( mqtt_json.length() > mqtt_json_length_old ) {
-        mqtt_json += ",";
-        mqtt_json_length_old = mqtt_json.length();
-      }
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch4.show_value());
-      mqtt_json += switch4.mqtt_json_part();
-#endif
-      mqtt_json += "}";
-      mqttClient.publish(mk_topic(MQTT_STATUS, "switchdata"), mqtt_json.c_str());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-    } else {
-      reconnect_mqtt();
-    }
-  }
-}
-
-// dokumentiert in main.h
-void send_mqtt_tele() {
-  if (do_mqtt) {
-#if defined(DEBUG_SERIAL)
-    Serial.println("Sending Mqtt Tele");
-#endif
-    if (mqttClient.connected()) {
-      mk_sysinfo1(mqtt_json); // Hier wird die Variable "info_str" gefüllt!
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info1"), mqtt_json.c_str());
-      if (do_log_mqtt) {
-        write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-      }
-      mk_sysinfo2(mqtt_json);
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info2"), mqtt_json.c_str());
-      if (do_log_mqtt) {
-        write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-      }
-      mk_sysinfo3(mqtt_json, true);
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info3"), mqtt_json.c_str());
-      if (do_log_mqtt) {
-        write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
-      }
-    } else {
-      reconnect_mqtt();
-    }
-  }
-}
-
-// dokumentiert in main.h
-void callback_mqtt(char* topic, byte* payload, unsigned int length) {
-  char delimiter[] = "/";
-  char *ptr;
-  char part1[TOPIC_PART1_SIZE];
-  char part2[TOPIC_PART2_SIZE];
-  char part3[TOPIC_PART3_SIZE];
-  char* cmd = (char*)malloc(length + 2);
-  if (do_mqtt) {
-    snprintf(cmd, length + 1, "%s", (char*)payload);
-    write2log(log_mqtt,2, topic, cmd);
-    ptr = strtok(topic, delimiter);
-    if (ptr != NULL) snprintf(part1, TOPIC_PART1_SIZE, "%s", ptr);
-    ptr = strtok(NULL, delimiter);
-    if (ptr != NULL) snprintf(part2, TOPIC_PART2_SIZE, "%s", ptr);
-    ptr = strtok(NULL, delimiter);
-    if (ptr != NULL) snprintf(part3, TOPIC_PART3_SIZE, "%s", ptr);
-    if ( strncmp(part1, MQTT_COMMAND, sizeof MQTT_COMMAND) == 0 ) {
-      if ( strncmp(part2, MQTT_CLIENT, sizeof MQTT_CLIENT) == 0 ) {
-        prozess_cmd(part3, cmd);
-      }
-    }
-    // Free the memory
-    free(cmd);
-  }
-}
-#endif //MQTT enabled
-
-#if defined(RF24GW)
-// dokumentiert in main.h
-void writeRf242log(const char* senddir, payload_t pl) {
-  tmp_str = senddir;
-  tmp_str += " O:";
-  tmp_str += String(pl.orderno);
-  tmp_str += " N:";
-  tmp_str += String(pl.node_id);
-  tmp_str += " M:";
-  tmp_str += String(pl.msg_id);
-  tmp_str += " MT:";
-  tmp_str += String(pl.msg_type);
-  tmp_str += " HB:";
-  tmp_str += String(pl.heartbeatno);
-  write2log(log_rf24, 1, tmp_str.c_str());
-}
-#endif
 
 /****************************************************
  * Setup
@@ -1346,29 +624,16 @@ void setup() {
 
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
-    ap_mode = true;
-    WiFi.mode(WIFI_AP);
-    delay(500);  
-    WiFi.softAP("ESPNode");
-#if defined(MQTT)    
-    do_mqtt = false;
-#endif
-#if defined(RF24GW)
-    do_rf24gw = false;
-#endif
-#if defined(DEBUG_SERIAL)
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("Http Server started on ");
-    Serial.println(IP);
-#endif
+    start_AP();
   } else {
 #if defined(DEBUG_SERIAL)
     IPAddress IP = WiFi.localIP();
-    Serial.print("Node Address is ");
-    Serial.println(IP);
+    write2log(log_sys,2, "Node Address is ", IP.toString().c_str());
 #endif
     setupTime();
-    getNTPtime(10); 
+    if ( !getNTPtime(10) ) {
+      write2log(log_sys,1, "Error getting NTP Time");
+    }
     lastDay = timeinfo.tm_mday;
     write2log(log_daybreak, 0);
 #ifdef ESP32
@@ -1377,95 +642,7 @@ void setup() {
     write2log(log_critical, 2, "Reboot: ", ESP.getResetReason().c_str());
 #endif
   }
-  initWebSocket();
-  write2log(log_web,1, "initWebsocket ok");
-
-  httpServer.on("/wifiscan", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "application/json", mk_wifiscan()); });
-  httpServer.on("/wifishow", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "application/json", mk_wifishow()); });
-  httpServer.on("/cmd", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_cmd(request)); });
-  httpServer.on("/sysinfo1", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo1(html_json)); });
-  httpServer.on("/sysinfo2", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
-  httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); });
-  httpServer.on("/update_fw", HTTP_POST, [&](AsyncWebServerRequest *request) {},
-   [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-      if (!index) {
-#ifdef ESP32
-        if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) { 
-#else
-        Update.runAsync(true);
-        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-        if (!Update.begin(maxSketchSpace, U_FLASH, -1, LOW)) {
-#endif
-          write2log(log_sys, 1, "Error Updater begin");
-        }
-      }
-      if(len) { Update.write(data, len); }
-      if (final) { 
-        if ( !Update.end(true)) {
-          write2log(log_sys, 1, "Error Updater end"); 
-        } else {
-          rebootflag = true;
-        }
-      }
-  });
-  httpServer.on("/update_fs", HTTP_POST, [&](AsyncWebServerRequest *request) {},
-    [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-      // Upload handler chunks in data
-      if (!index) {
-#ifdef ESP32
-        if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH)) { 
-#else
-        Update.runAsync(true);
-        size_t fsSize = ((size_t)&_FS_end - (size_t)&_FS_start);
-        if (!Update.begin(fsSize, U_FS, -1, LOW)) {
-#endif
-          write2log(log_sys, 1, "Error Updater begin");
-        }
-      }
-      if (len) {
-        Update.write(data, len);
-      }
-      if (final) {
-        if (!Update.end(true)) {
-          write2log(log_sys, 1, "Error Updater end");
-        } else {
-          rebootflag = true;
-        }
-      }
-  });
-  // This serves all static web content
-  httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
-  // Start server
-  httpServer.begin();
-#if defined(RF24GW)
-  // init rf24
-  radio.begin();
-  delay(100);
-  radio.setChannel(RF24_CHANNEL);
-  radio.setDataRate(RF24_SPEED);
-  radio.setPALevel(RF24_PA_MAX);
-  radio.setRetries(0, 0);
-  radio.setAutoAck(false);
-  radio.disableDynamicPayloads();
-  radio.setPayloadSize(32);
-  radio.setCRCLength(RF24_CRC_16);
-  radio.openWritingPipe(rf24_hub2node);
-  radio.openReadingPipe(1, rf24_node2hub);
-  radio.startListening();
-  radio.printDetails();
-  if (udp.begin(rf24gw_gw_port) == 1) {
-    if (do_log_rf24) {
-      write2log(log_sys,2, "RF24: Opened UDP Port:", String(rf24gw_hub_port).c_str() );
-    }
-  }
-#endif
-
+  setup_webserver();
 #if defined(SWITCH1)
   SWITCH1_BEGIN_STATEMENT
 #endif
@@ -1490,17 +667,12 @@ void setup() {
 #if defined(SENSOR2)
   sensor2.start_measure();
 #endif
-  measure_started = millis();
+  measure_starttime = millis();
+#if defined(RF24GW)
+  rf24gw_setup(); 
+#endif
 #if defined(MQTT)
-  if ( do_mqtt ) {
-    mqttClient.setServer(mqtt_server.c_str(), 1883);
-    mqttClient.setCallback(callback_mqtt);
-    mqttClient.setBufferSize(512);
-    if (do_log_mqtt) {
-      write2log(log_mqtt,3, "MQTT: Connected to Server:", mqtt_server.c_str(), "Port: 1883");
-    }
-    send_mqtt_tele();
-  }
+  mqtt_setup();
 #endif
   write2log(log_sys,1, "Setup Ende");
 }
@@ -1509,94 +681,6 @@ void setup() {
  * Main Loop
 *************************************************/
 void loop() {
-  loop_starttime = millis();
-  if (WiFi.status() != WL_CONNECTED) {
-    write2log(log_critical,1,"WiFi connection lost");
-    delay(1000);
-    int i=0;
-    while ( ! do_wifi_con() ) {
-      delay(10000);
-      i++;
-      if ( i>360 ) {
-        write2log(log_critical,1,"Wifi already 1 hour offline");
-      }
-    }
-    write2log(log_critical,1,"WiFi reconnected");
-  }
-  time(&now);                   // read the current time
-  localtime_r(&now, &timeinfo); // update the structure tm with the current time
-  ws.cleanupClients();
-  if ((millis() - loop_starttime) > loop_time_alarm) {
-    snprintf(loopmsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
-    write2log(log_critical,1,loopmsg);
-  }
-#if defined(RF24GW)
-  if ( radio.available() ) {
-    radio.read(&payload, sizeof(payload));
-    udpdata.gw_no = rf24gw_gw_no;
-    if (do_log_rf24) writeRf242log("N>G", payload);
-    memcpy(&udpdata.payload, &payload, sizeof(payload));
-    udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);
-    udp.write((const unsigned char*)&udpdata, sizeof(udpdata));
-    udp.endPacket();
-  }
-  if (udp.parsePacket() > 0 ) {
-    udp.read((char*)&udpdata, sizeof(udpdata));
-    memcpy(&payload, &udpdata.payload, sizeof(payload));
-    if (do_log_rf24) writeRf242log("G>N", payload);
-    radio.stopListening();
-    radio.write(&payload, sizeof(payload));
-    radio.startListening();
-  }
-#endif
-  if ((millis() - loop_starttime) > loop_time_alarm) {
-    snprintf(loopmsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
-    write2log(log_critical,1,loopmsg);
-  }
-#if defined(MQTT)
-  if ( do_mqtt ) {
-    if (mqttClient.connected()) {
-      mqttClient.loop();
-      if ( do_send_mqtt_stat ) {
-        send_mqtt_stat();
-        do_send_mqtt_stat = false;
-      }
-      if ( do_send_mqtt_tele ) {
-        send_mqtt_tele();
-        do_send_mqtt_tele = false;
-      }
-    } else {
-      reconnect_mqtt();
-    }
-  }
-  delay(0);
-  if ((millis() - loop_starttime) > loop_time_alarm) {
-    snprintf(loopmsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
-    write2log(log_critical,1,loopmsg);
-  }
-#endif
-#if defined(SWITCH1)
-  switch1.loop();
-#endif
-#if defined(SWITCH2)
-  switch2.loop();
-#endif
-#if defined(SWITCH3)
-  switch3.loop();
-#endif
-#if defined(SWITCH4)
-  switch4.loop();
-#endif
-#if defined(SENSOR1)
-  sensor1.loop();
-#endif
-#if defined(SENSOR2)
-  sensor2.loop();
-#endif
-  if ((millis() - loop_starttime) > loop_time_alarm) {
-    snprintf(loopmsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
-    write2log(log_critical,1,loopmsg);
-  }
   if ( rebootflag ) {
     preferences.end();
     write2log(log_critical,1,"Reboot Flag gesetzt => reboot");
@@ -1605,70 +689,142 @@ void loop() {
     yield();
     ESP.restart();
   }
-  if ( (millis() - last_stat) > (STATINTERVAL * 1000) ) {
+  if ( ap_mode) {
+    // IF we have an SSID stored we test every 5 Minutes to connect
+    if (millis() - wifi_ap_starttime > 300000 && wifi_ssid.length() > 2) {
+      
+      if ( do_wifi_con() ) {
+        // If connection is posible we restart 
+        delay(1000);
+        ESP.restart();
+      } else {
+        start_AP();
+      }
+    }
+  } else {
+    loop_starttime = millis();
+    if (WiFi.status() != WL_CONNECTED) {
+      write2log(log_critical,1,"WiFi connection lost");
+      delay(1000);
+      int i=0;
+      while ( ! do_wifi_con() ) {
+        delay(10000);
+        i++;
+        if ( i>360 ) {
+          write2log(log_critical,1,"Wifi already 1 hour offline");
+        }
+      }
+      write2log(log_critical,1,"WiFi reconnected");
+    }
+    time(&now);                   // read the current time
+    localtime_r(&now, &timeinfo); // update the structure tm with the current time
+    ws.cleanupClients();
+    if ((millis() - loop_starttime) > loop_time_alarm) {
+      snprintf(loopmsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
+      write2log(log_critical,1,loopmsg);
+    }
+#if defined(RF24GW)
+    rf24gw_loop();
+#endif
+    if ((millis() - loop_starttime) > loop_time_alarm) {
+      snprintf(loopmsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
+      write2log(log_critical,1,loopmsg);
+    }
+#if defined(MQTT)
+    mqtt_loop();
+    delay(0);
+    if ((millis() - loop_starttime) > loop_time_alarm) {
+      snprintf(loopmsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
+      write2log(log_critical,1,loopmsg);
+    }
+#endif
+#if defined(SWITCH1)
+    switch1.loop();
+#endif
+#if defined(SWITCH2)
+    switch2.loop();
+#endif
+#if defined(SWITCH3)
+    switch3.loop();
+#endif
+#if defined(SWITCH4)
+    switch4.loop();
+#endif
 #if defined(SENSOR1)
-    sensor1.start_measure();
+    sensor1.loop();
 #endif
 #if defined(SENSOR2)
-    sensor2.start_measure();
+    sensor2.loop();
 #endif
-    measure_starttime = millis();
-    measure_started = true;
-    last_stat = millis();
-  }
-  if ( ((millis() - measure_starttime) > (MESSINTERVAL * 1000)) && measure_started ) {
+    if ((millis() - loop_starttime) > loop_time_alarm) {
+      snprintf(loopmsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
+      write2log(log_critical,1,loopmsg);
+    }
+    if ( (millis() - mqtt_last_stat) > (STATINTERVAL * 1000) ) {
+#if defined(SENSOR1)
+      sensor1.start_measure();
+#endif
+#if defined(SENSOR2)
+      sensor2.start_measure();
+#endif
+      measure_starttime = millis();
+      measure_started = true;
+      mqtt_last_stat = millis();
+    }
+    if ( ((millis() - measure_starttime) > (MESSINTERVAL * 1000)) && measure_started ) {
 #if defined(MQTT)
-    do_send_mqtt_stat = true;
+      do_send_mqtt_stat = true;
 #endif
-    measure_started = false;
+      measure_started = false;
 #if defined(SENSOR1)  
-    html_json = sensor1.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
+      html_json = sensor1.html_stat_json();
+      write2log(log_sensor,1,html_json.c_str());
+      ws.textAll(html_json);
 #endif
 #if defined(SENSOR2)  
-    html_json = sensor2.html_stat_json();
-    write2log(log_sens,1,html_json.c_str());
-    ws.textAll(html_json);
+      html_json = sensor2.html_stat_json();
+      write2log(log_sens,1,html_json.c_str());
+      ws.textAll(html_json);
 #endif
-  }
+    }
 #if defined(MQTT)
-  if ( (millis() - mqtt_last_tele) > (TELEINTERVAL*1000) ) {
-    mqtt_last_tele = millis();
-    do_send_mqtt_tele = true;
-  }
+    if ( (millis() - mqtt_last_tele) > (TELEINTERVAL*1000) ) {
+      mqtt_last_tele = millis();
+      do_send_mqtt_tele = true;
+    }
 #endif
-  if ((millis() - loop_starttime) > loop_time_alarm) {
-    snprintf(loopmsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
-    write2log(log_critical,1,loopmsg);
-  }
+    if ((millis() - loop_starttime) > loop_time_alarm) {
+      snprintf(loopmsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
+      write2log(log_critical,1,loopmsg);
+    }
 // Dinge die täglich erledigt werden sollen
-  if ( lastDay != timeinfo.tm_mday ) {
-    setupTime();
-    write2log(log_daybreak,0);
-    lastDay = timeinfo.tm_mday;
-  }
+    if ( lastDay != timeinfo.tm_mday ) {
+      setupTime();
+      write2log(log_daybreak,0);
+      lastDay = timeinfo.tm_mday;
+    }
 // Dinge die stündlich erledigt werden sollen
-  if ( lastHour != timeinfo.tm_hour ) {
-    getNTPtime(10);
-    uint32_t free;
-    uint32_t max;
-    uint8_t frag;
+    if ( lastHour != timeinfo.tm_hour ) {
+      getNTPtime(10);
+      uint32_t free;
+      uint32_t max;
+      uint8_t frag;
 #ifdef ESP32
-    free = ESP.getFreeHeap();
-    frag = 0;
-    max = 0;
+      free = ESP.getFreeHeap();
+      frag = 0;
+      max = 0;
 #else
-    ESP.getHeapStats(&free, &max, &frag);
+      ESP.getHeapStats(&free, &max, &frag);
 #endif
-    tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
-              String(frag) + ")";
-    write2log(log_critical,1,tmp_str.c_str());
-    uptime.update();
-    lastHour = timeinfo.tm_hour;
-  }
-  if ((millis() - loop_starttime) > loop_time_alarm) {
-    snprintf(loopmsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));
-    write2log(log_critical,1,loopmsg);
+      tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
+                String(frag) + ")";
+      write2log(log_critical,1,tmp_str.c_str());
+      uptime.update();
+      lastHour = timeinfo.tm_hour;
+    }
+    if ((millis() - loop_starttime) > loop_time_alarm) {
+      snprintf(loopmsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));
+      write2log(log_critical,1,loopmsg);
+    }
   }
 }

@@ -141,13 +141,15 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #include "switch_onoff.h"
 #define HOSTNAME               "nodesimple"
 #define HOST_DISCRIPTION       "Ein ESP32 Node ohne externe Elemente"
-#define MQTT_CLIENT            "esp32mini"
-#define MQTT_SERVER            "rpi1.fritz.box"
+//#define MQTT_CLIENT            "esp32mini"
+//#define MQTT_SERVER            "rpi1.fritz.box"
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
 #define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", 2, false, true);
+#define LOG_SYS                 true
+#define MAGICNO                  471
 
 #endif
 //-----------------------------------------------------
@@ -200,6 +202,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #include "sensor_bosch.h"
 #include "switch_onoff.h"
 
+#define MAGICNO                  471
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_HTML
 

@@ -12,11 +12,11 @@
 //#define NODESIMPLE
 //#define ESP32SIMPLE
 //#define NODE18B20
-//#define NODEBOSCH
+#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
 //#define NODEGWTEST
-#define WITTYNODE1
+//#define WITTYNODE1
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
@@ -24,31 +24,49 @@
 //#define NODE_FLUR
 //---------------------------
 
-#define SWVERSION   "0.995"
+#include "Node_settings.h"
 
-// Zeitmanagement
-/// @brief Der NTP Server
-const char *NTP_SERVER = "de.pool.ntp.org";
-/// @brief TimeZone Info
-const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
+#define SWVERSION   "0.996"
+#define NTP_SERVER  "de.pool.ntp.org"
+#define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
 // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
 // Hier werden die allgemeinen Parameter für den Einsatz festgelegt
 // Alternativ können diese Einstellungen auch in der Konfiguration des Nodes 
 // festgelegt werden.
 // Achtung: Die Festlegung hier kann für jeden Node überschrieben werden!
+#ifndef MQTT_SERVER
 #define MQTT_SERVER                    "rpi1.fritz.box"
+#endif
+#ifndef RF24GW_HUB_SERVER
 #define RF24GW_HUB_SERVER              "rpi1.fritz.box"
+#endif
+#ifndef RF24GW_HUB_UDP_PORTNO
 #define RF24GW_HUB_UDP_PORTNO          7004
+#endif
+#ifndef RF24GW_GW_UDP_PORTNO
 #define RF24GW_GW_UDP_PORTNO           7003
+#endif
 
 //Settings for Logging
+#ifndef LOG_WEB
 #define LOG_WEB                      false
+#endif
+#ifndef LOG_SENSOR
 #define LOG_SENSOR                   false
+#endif
+#ifndef LOG_SYS
 #define LOG_SYS                      false
+#endif
+#ifndef LOG_MQTT
 #define LOG_MQTT                     false
+#endif
+#ifndef LOG_RF24
 #define LOG_RF24                     false
+#endif
+#ifndef LOG_CRITICAL
 #define LOG_CRITICAL                 false
+#endif
 
 ///@brief Settings for mqtt topic
 ///Der Part1 des MQTT Topics nimmt nur einen der 3 vordefinierten Werte auf. Deshalb sind hier 5 Zeichen hinreichend.
@@ -59,7 +77,6 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 
 #define TOPIC_PART2_SIZE             30
 #define TOPIC_PART3_SIZE             10
-//#define TOPIC_BUFFER_SIZE            50
 //Settings for QoS
 #define MQTT_QOS                     0
 #define MQTT_WILLRETAIN              true
@@ -86,21 +103,37 @@ const char *TZ_INFO = "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 #define DEBUGFILE                    "/debugfile.txt"
 
 ///Anschlusspin für den CE Pin des Funkmodules
+#ifndef RF24_RADIO_CE_PIN
 #define RF24_RADIO_CE_PIN              15
+#endif
 ///Anschlusspin für den CSN Pin des Funkmodules
+#ifndef RF24_RADIO_CSN_PIN
 #define RF24_RADIO_CSN_PIN             16
+#endif
 ///Der verwendete RF24 Funkkanal
+#ifndef RF24_CHANNEL
 #define RF24_CHANNEL        92
+#endif
 /// Die Übertragungsgeschwindigkeit
+#ifndef RF24_SPEED
 #define RF24_SPEED          RF24_250KBPS
+#endif
 /// Der Netzwerkschlüssel Hub zum Node
+#ifndef RF24_HUB2NODE
 #define RF24_HUB2NODE       { 0xf0, 0xcc, 0xfc, 0xcc, 0xcc}
+#endif
 /// Der Netzwerkschlüssel Node zum Hub
+#ifndef RF24_NODE2HUB
 #define RF24_NODE2HUB       { 0x33, 0xcc, 0xfc, 0xcc, 0xcc}
+#endif
 /// Der Datentyp für die Node_ID. Ist aktuell auf 1...255 festgelegt. Werden mehr Nodes benötigt, kann der Datentyp hier zentral umgestellt werden.
+#ifndef NODE_DATTYPE
 #define NODE_DATTYPE        uint8_t
+#endif
 /// Der Datentyp für die Ordernummer. Auch hier eine zentrale Festlegung des Datentyps, der ggf. die Umstellung vereinfacht.
+#ifndef ONR_DATTYPE
 #define ONR_DATTYPE         uint8_t
+#endif
 
 
 /// @brief Die Datenstruktur des payloads in dem RF24 Netzwerk. Sie wird nur benötigt wenn der RF24Gateway genutzt

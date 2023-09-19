@@ -1,3 +1,9 @@
+#include "config.h"
+
+// Das Sybol _ACTOR_LEDMATRIX_H_ wird gesetzt wenn die Headerdatei "actor_ledmatrix.h" in der 
+// Node-Konfiguration ("Node_settings.h") aufgerufen wurde.
+// Problem: Wird das Modul actor_ledmatrix kompiliert ist I2C (TWI) nicht mehr nutzbar!!!!!
+#ifdef _ACTOR_LEDMATRIX_H_
 #include "actor_ledmatrix.h"
 
 LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
@@ -146,3 +152,4 @@ void Actor_LEDMatrix::html_create_json_part(String& json) {
   json += matrix.getNumDevicesY() * 8;
   json += ",\"show_matrix\":1";
 }
+#endif

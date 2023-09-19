@@ -1,4 +1,6 @@
-#include "sensor_ldr.h"
+#include "config.h"
+
+#ifdef _SENSOR_LDR_H_
 
 void Sensor_LDR::begin(const char* html_place, const char* label) {
   Sensor_Generic::begin(html_place, label);
@@ -23,3 +25,5 @@ void Sensor_LDR::start_measure() {
 
   obj_changed = true;
 }
+
+#endif
