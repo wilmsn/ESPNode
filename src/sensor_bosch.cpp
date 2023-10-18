@@ -2,7 +2,7 @@
 
 #ifdef _SENSOR_BOSCH_H_
 #include "BMX_sensor.h"
-#include <twi.h>
+//#include <twi.h>
 #include <Wire.h>
 
 

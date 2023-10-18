@@ -61,7 +61,7 @@ void write2log(log_t kat, int count, ...) {
   }
   // Im AP-Mode wird nichts in Filesystem gelogged !!!
   if ( ! ap_mode ) {
-    snprintf(timeStr, 15, "[%02d:%02d:%02d.%03d]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (int)millis()%1000);
+    snprintf(timeStr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
     if ( do_log_critical && kat == log_daybreak ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
@@ -707,11 +707,13 @@ void loop() {
       write2log(log_critical,1,"WiFi connection lost");
       delay(1000);
       int i=0;
+      bool hourFlag=false;
       while ( ! do_wifi_con() ) {
         delay(10000);
         i++;
-        if ( i>360 ) {
+        if ( i>360 && !hourFlag) {
           write2log(log_critical,1,"Wifi already 1 hour offline");
+          hourFlag = true;
         }
       }
       write2log(log_critical,1,"WiFi reconnected");
