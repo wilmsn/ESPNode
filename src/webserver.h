@@ -1,9 +1,6 @@
 #ifndef _WEBSERVER_H_
 #define _WEBSERVER_H_
 
-#ifdef ESP32
-#include "Update.h"
-#endif
 #include "common.h"
 #include "secrets.h"
 

@@ -8,3 +8,5 @@ String& Sensor_Generic::sensorinfo_mqtt() {
   return obj_sensorinfo_mqtt;
 }
 
+void Sensor_Generic::start_measure() {}
+

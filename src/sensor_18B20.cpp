@@ -48,12 +48,11 @@ void Sensor_18B20::start_measure() {
   obj_mqtt_json += obj_mqtt_name;
   obj_mqtt_json += "\":\"";
   obj_mqtt_json += String(tempstr);
-  obj_mqtt_json += " °C\"";
+  obj_mqtt_json += "\"";
 
   obj_values_str = obj_mqtt_name;
   obj_values_str += ":";
   obj_values_str += String(tempstr);
-  obj_values_str += " °C";
 
   obj_changed = true;
 #if defined(DEBUG_SERIAL_MODULE)

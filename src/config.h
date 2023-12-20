@@ -1,6 +1,8 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include <Arduino.h>
+
 /**
  * \brief
  * In der Datei "config.h" wird:
@@ -12,14 +14,15 @@
 //#define NODESIMPLE
 //#define ESP32SIMPLE
 //#define NODE18B20
-#define NODEBOSCH
+//#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
 //#define NODEGWTEST
 //#define WITTYNODE1
+//#define NODE_GASZAEHLER
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
-//#define NODE_TERASSE
+#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------

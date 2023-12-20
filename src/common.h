@@ -10,19 +10,24 @@
 #include <string.h>
 #include <stdint.h>
 #include <ESPAsyncWebServer.h>
+#include <ElegantOTA.h>
+//#include <AsyncElegantOTA.h>
 #include <LittleFS.h>
 #include <PubSubClient.h>
 #include <WiFiUdp.h>
 #include <time.h>
 #include <Uptime.h>
+
 #ifdef ESP32
 #include <Preferences.h>
 #include <WiFi.h>
 #include "AsyncTCP.h"
 #include <rom/rtc.h>
 typedef unsigned char uint8_t;
-#else
-#include <PreferencesESP8266.h>
+#endif
+
+#ifdef ESP8266
+#include <Preferences8266.h>
 #include <ESP8266WiFi.h>
 #include "ESPAsyncTCP.h"
 #endif
@@ -113,10 +118,21 @@ extern SWITCH1_DEFINITION
 extern SWITCH2_DEFINITION
 #endif
 
+#if defined(SWITCH3)
+extern SWITCH3_DEFINITION
+#endif
+
+#if defined(SWITCH4)
+extern SWITCH4_DEFINITION
+#endif
+
 #if defined(SENSOR1)
 extern SENSOR1_DEFINITION
 #endif
 
+#if defined(SENSOR2)
+extern SENSOR2_DEFINITION
+#endif
 
 void write2log(log_t kat, int count, ...);
 

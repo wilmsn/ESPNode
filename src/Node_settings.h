@@ -13,9 +13,7 @@ Enable Sensor debugging
 
 ++++++++RF24:+++++++++++
 RF24 Gateway:
-(m) #define RF24GW_NO   <Gateway ID>
-
-RF24 Node:
+(m) #define RF24GW_NO   <Gateway ID>  //enables the gateway
 
 
 ******************************************************/
@@ -58,7 +56,7 @@ RF24 Node:
 
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
-#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp");
+#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "terassennode"
 #define MQTT_TOPICP2             "terassennode"
@@ -83,7 +81,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
-#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp");
+#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "TeichNode"
 #define MQTT_TOPICP2             "TeichNode"
@@ -325,12 +323,6 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #endif
 #if defined(SENSOR2_DEFINITION)
 #define SENSOR2
-#endif
-#if defined(SENSOR3_DEFINITION)
-#define SENSOR3
-#endif
-#if defined(SENSOR4_DEFINITION)
-#define SENSOR4
 #endif
 
 

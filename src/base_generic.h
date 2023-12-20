@@ -79,7 +79,7 @@ public:
 
     /// @brief Dummy, Erstelle ein Teil json für die MQTT Übertragung in einem abgeleiteten Objekt
     /// @return Ein JSON formatierter String
-    const char* mqtt_json_part();
+    String& mqtt_json_part();
     
     /// @brief Dummy, erstellt ein Teil-JSON zur initialen Konfiguration der Webseite in einem abgeleiteten Objekt
     /// @param json Ein übergebener String der erweitert wird
@@ -87,7 +87,7 @@ public:
     
     /// @brief Erstellt einen JSON der den aktuellen Wert inklusive evtl. benötigter HTML-Syntax beinhaltet
     /// @return json Ein übergebener String der komplett mit json Syntax gefüllt wird
-    const char* html_stat_json(void);
+    String& html_stat_json(void);
 
     /// @brief Zeigt das gesetzte keyword
     /// @return das keyword als Zeiger auf einen String

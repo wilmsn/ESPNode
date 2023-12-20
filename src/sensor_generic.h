@@ -26,6 +26,7 @@ public:
     /// @brief Informationen zum Sensor für MQTT als json abgespeichert;
     String     obj_sensorinfo_mqtt;
 
+    void start_measure();
 
 };
 

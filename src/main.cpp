@@ -72,7 +72,7 @@ void write2log(log_t kat, int count, ...) {
     if (do_log_critical && kat == log_critical) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
-        f.print(timeStr);
+        f.printf("%s ",timeStr);
         n = 0;
         while (n < count) {
           f.print(c[n]);
@@ -681,6 +681,7 @@ void setup() {
  * Main Loop
 *************************************************/
 void loop() {
+  ElegantOTA.loop();
   if ( rebootflag ) {
     preferences.end();
     write2log(log_critical,1,"Reboot Flag gesetzt => reboot");
@@ -720,21 +721,25 @@ void loop() {
     }
     time(&now);                   // read the current time
     localtime_r(&now, &timeinfo); // update the structure tm with the current time
+    yield();
     ws.cleanupClients();
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
       write2log(log_critical,1,loopmsg);
     }
+    yield();
 #if defined(RF24GW)
     rf24gw_loop();
-#endif
+    yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
       write2log(log_critical,1,loopmsg);
     }
+#endif
 #if defined(MQTT)
     mqtt_loop();
-    delay(0);
+//    delay(0);
+    yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
       write2log(log_critical,1,loopmsg);
@@ -742,32 +747,41 @@ void loop() {
 #endif
 #if defined(SWITCH1)
     switch1.loop();
+    yield();
 #endif
 #if defined(SWITCH2)
     switch2.loop();
+    yield();
 #endif
 #if defined(SWITCH3)
     switch3.loop();
+    yield();
 #endif
 #if defined(SWITCH4)
     switch4.loop();
+    yield();
 #endif
 #if defined(SENSOR1)
     sensor1.loop();
+    yield();
 #endif
 #if defined(SENSOR2)
     sensor2.loop();
+    yield();
 #endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
       write2log(log_critical,1,loopmsg);
     }
+    yield();
     if ( (millis() - mqtt_last_stat) > (STATINTERVAL * 1000) ) {
 #if defined(SENSOR1)
       sensor1.start_measure();
+      yield();
 #endif
 #if defined(SENSOR2)
       sensor2.start_measure();
+      yield();
 #endif
       measure_starttime = millis();
       measure_started = true;
@@ -782,11 +796,13 @@ void loop() {
       html_json = sensor1.html_stat_json();
       write2log(log_sensor,1,html_json.c_str());
       ws.textAll(html_json);
+      yield();
 #endif
 #if defined(SENSOR2)  
       html_json = sensor2.html_stat_json();
       write2log(log_sens,1,html_json.c_str());
       ws.textAll(html_json);
+      yield();
 #endif
     }
 #if defined(MQTT)
@@ -800,6 +816,7 @@ void loop() {
       write2log(log_critical,1,loopmsg);
     }
 // Dinge die täglich erledigt werden sollen
+    yield();
     if ( lastDay != timeinfo.tm_mday ) {
       setupTime();
       write2log(log_daybreak,0);

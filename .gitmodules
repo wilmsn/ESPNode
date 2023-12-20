@@ -1,0 +1,36 @@
+[submodule "lib/ElegantOTA"]
+	path = lib/ElegantOTA
+	url = git@github.com:wilmsn/ElegantOTA.git
+[submodule "lib/RF24"]
+	path = lib/RF24
+	url = git@github.com:wilmsn/RF24.git
+[submodule "lib/AsyncTCP"]
+	path = lib/AsyncTCP
+	url = git@github.com:wilmsn/AsyncTCP.git
+[submodule "lib/BMX_sensor"]
+	path = lib/BMX_sensor
+	url = git@github.com:wilmsn/BMX_sensor.git
+[submodule "lib/DallasTemperature"]
+	path = lib/DallasTemperature
+	url = git@github.com:wilmsn/Arduino-Temperature-Control-Library.git
+[submodule "lib/ESPAsyncWebServer"]
+	path = lib/ESPAsyncWebServer
+	url = git@github.com:wilmsn/ESPAsyncWebServer.git
+[submodule "lib/LED_Matrix"]
+	path = lib/LED_Matrix
+	url = git@github.com:wilmsn/LED_Matrix.git
+[submodule "lib/OneWire"]
+	path = lib/OneWire
+	url = git@github.com:wilmsn/OneWire.git
+[submodule "lib/ESPAsyncTCP"]
+	path = lib/ESPAsyncTCP
+	url = git@github.com:wilmsn/ESPAsyncTCP.git
+[submodule "lib/PubSubClient"]
+	path = lib/PubSubClient
+	url = git@github.com:wilmsn/pubsubclient.git
+[submodule "lib/Preferences"]
+	path = lib/Preferences
+	url = git@github.com:wilmsn/Preferences.git
+[submodule "lib/Uptime"]
+	path = lib/Uptime
+	url = git@github.com:wilmsn/Uptime.git

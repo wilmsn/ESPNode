@@ -61,13 +61,13 @@ bool Base_Generic::keyword_match(const String& keyword) {
   return retval;
 }
 
-const char* Base_Generic::mqtt_json_part(void) {
-  return obj_mqtt_json.c_str();
+String& Base_Generic::mqtt_json_part(void) {
+  return obj_mqtt_json;
 }
 
-const char* Base_Generic::html_stat_json(void) {
+String& Base_Generic::html_stat_json(void) {
   obj_changed = false;
-  return obj_html_stat_json.c_str();
+  return obj_html_stat_json;
 }
 
 bool Base_Generic::changed() {

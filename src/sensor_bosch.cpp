@@ -110,12 +110,12 @@ void Sensor_Bosch::start_measure() {
   obj_mqtt_json += "\":\"";
   snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
   obj_mqtt_json += String(tempstr);
-  obj_mqtt_json += " °C\",\"";
+  obj_mqtt_json += "\",\"";
   obj_mqtt_json += obj_mqtt_name2;
   obj_mqtt_json += "\":\"";
   snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
   obj_mqtt_json += String(tempstr);
-  obj_mqtt_json += " hPa\"";
+  obj_mqtt_json += "\"";
   if ( bmx_sensor.hasHumidity() ) {
     obj_mqtt_json += ",\"";
     obj_mqtt_json += obj_mqtt_name3;
@@ -129,19 +129,19 @@ void Sensor_Bosch::start_measure() {
   obj_values_str += ":";
   snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
   obj_values_str += String(tempstr);
-  obj_values_str += " °C; ";
+  obj_values_str += "; ";
   obj_values_str += obj_mqtt_name2;
   obj_values_str += ":";
   snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
   obj_values_str += String(tempstr);
-  obj_values_str += " hPa";
+  //obj_values_str += " hPa";
   if ( bmx_sensor.hasHumidity() ) {
     obj_values_str += "; ";
     obj_values_str += obj_mqtt_name3;
     obj_values_str += ":";
     snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
     obj_values_str += String(tempstr);
-    obj_values_str += " %";
+  //  obj_values_str += " %";
   }
 
   obj_changed = true;

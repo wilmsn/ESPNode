@@ -338,52 +338,10 @@ void setup_webserver() {
                 { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
   httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); });
-  httpServer.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {},
-    [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-      if (!index) {
-        int cmd;
-#if defined(ESP8266)
-        if (filename == "filesystem") {
-          cmd = U_FS;
-          write2log(log_sys, 1, "Filesystem update");
-        } else {
-          cmd = U_FLASH;
-          write2log(log_sys, 1, "Firmware update");
-        }
-        Update.runAsync(true);
-        size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
-        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-        if (!Update.begin((cmd == U_FS)?fsSize:maxSketchSpace, cmd)){ // Start with max available size
-#elif defined(ESP32)
-        if (filename == "filesystem") {
-          cmd = U_SPIFFS;
-          write2log(log_sys, 1, "Filesystem update");
-        } else {
-          cmd = U_FLASH;
-          write2log(log_sys, 1, "Firmware update");
-        }
-        if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) { // Start with max available size
-#endif
-          write2log(log_sys, 1, "Error Updater begin");
-        }
-      }
-
-      if(len){
-        if (Update.write(data, len) != len) {
-          write2log(log_sys, 1, "Error: Updater could not start");
-        }
-      }
-                    
-      if (final) {
-        if (!Update.end(true)) {
-          write2log(log_sys, 1, "Error: Updater end");
-        } else {
-          rebootflag = true;
-        }
-      }
-  });
   // This serves all static web content
   httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+  ElegantOTA.begin(&httpServer);    // Start AsyncElegantOTA
+
   // Start server
   httpServer.begin();
 }
