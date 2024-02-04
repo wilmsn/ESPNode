@@ -12,7 +12,7 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
-//#define ESP32SIMPLE
+#define ESP32SIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
@@ -22,7 +22,7 @@
 //#define NODE_GASZAEHLER
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
-#define NODE_TERASSE
+//#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
 //---------------------------

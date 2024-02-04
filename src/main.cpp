@@ -153,7 +153,7 @@ bool do_wifi_con(void) {
   WiFi.hostname(HOSTNAME);
   WiFi.begin(wifi_ssid, wifi_pass);
 #endif
-  write2log(log_sys, 2, "WIFI try to connect to ", wifi_ssid);
+  write2log(log_sys, 2, "WIFI try to connect to ", wifi_ssid.c_str());
 
   // ... Give ESP 10 seconds to connect to station.
   unsigned int i = 0;
@@ -169,9 +169,9 @@ bool do_wifi_con(void) {
 #endif
   if ( WiFi.status() == WL_CONNECTED ) {
     retval = true;
-    write2log(log_sys, 2, " OK connected!", wifi_ssid);
+    write2log(log_sys, 2, " OK connected!", wifi_ssid.c_str());
   } else {
-    write2log(log_sys, 2, " ERROR not connected!", wifi_ssid);
+    write2log(log_sys, 2, " ERROR not connected!", wifi_ssid.c_str());
     retval = false;
   }
   
