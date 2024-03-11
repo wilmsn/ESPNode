@@ -12,7 +12,8 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
-#define ESP32SIMPLE
+//#define ESP32SIMPLE
+#define NODE_WEBRADIO
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
@@ -29,7 +30,7 @@
 
 #include "Node_settings.h"
 
-#define SWVERSION   "0.997"
+#define SWVERSION   "0.997radio"
 #define NTP_SERVER  "de.pool.ntp.org"
 #define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
 // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
@@ -50,6 +51,11 @@
 #ifndef RF24GW_GW_UDP_PORTNO
 #define RF24GW_GW_UDP_PORTNO           7003
 #endif
+
+//Settings for I2S
+#define I2S_DOUT     25
+#define I2S_BCLK     27
+#define I2S_LRC      26
 
 //Settings for Logging
 #ifndef LOG_WEB
