@@ -34,17 +34,6 @@ typedef unsigned char uint8_t;
 
 #include "config.h"
 
-/// @brief Ein emum für den Logtype. Dieser wird bei write2log übergeben und dort gegen die Voreinstellungen geprüft.
-typedef enum {
-  log_rf24 = 0,
-  log_sys,
-  log_mqtt,
-  log_sensor,
-  log_web,
-  log_critical,
-  log_daybreak
-} log_t;
-
 // externe Referenzen
 // Modul: webserver
 extern AsyncWebSocket ws;
@@ -133,8 +122,6 @@ extern SENSOR1_DEFINITION
 #if defined(SENSOR2)
 extern SENSOR2_DEFINITION
 #endif
-
-void write2log(log_t kat, int count, ...);
 
 /// @brief Der Komandoprozessor. Hier werden alle Befehle in der Form "Kommando = Wert" abgearbeitet
 /// @param cmd Das Komando, der bezeichner des Komandos

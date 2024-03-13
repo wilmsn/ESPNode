@@ -47,7 +47,7 @@ void getVcc(String& json) {
 
 
 // Kommentiert in main.h
-void write2log(log_t kat, int count, ...) {
+void write2log(uint8_t kat, int count, ...) {
   va_list args;
   int n = 0;
   if (count > 12) count = 12; 
@@ -62,14 +62,14 @@ void write2log(log_t kat, int count, ...) {
   // Im AP-Mode wird nichts in Filesystem gelogged !!!
   if ( ! ap_mode ) {
     snprintf(timeStr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
-    if ( do_log_critical && kat == log_daybreak ) {
+    if ( do_log_critical && kat == LOG_DAYBREAK ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
         f.printf("----%d.%d.%d----\n",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year);
         f.close();
       }
     }
-    if (do_log_critical && kat == log_critical) {
+    if (do_log_critical && kat == LOG_CRITICAL) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
         f.printf("%s ",timeStr);
@@ -83,16 +83,16 @@ void write2log(log_t kat, int count, ...) {
       }
     }
   }
-  if ((do_log_sensor && (kat == log_sensor)    ) ||
-      (do_log_web && (kat == log_web)     ) ||
+  if (do_log_sensor && (kat == LOG_SENSOR    ) ||
+      (do_log_web && (kat == LOG_WEB)     ) ||
 #if defined(MQTT)
-      (do_log_mqtt && (kat == log_mqtt)   ) ||
+      (do_log_mqtt && (kat == LOG_MQTT)   ) ||
 #endif
 #if defined(RF24GW)
-      (do_log_rf24 && (kat == log_rf24)   ) ||
+      (do_log_rf24 && (kat == LOG_RF24)   ) ||
 #endif
-      (do_log_sys && (kat == log_sys) ) || 
-      (do_log_critical && (kat == log_critical) )) {
+      (do_log_sys && (kat == LOG_SYS) ) || 
+      (do_log_critical && (kat == LOG_CRITICAL) )) {
     log_str = "{\"log\":\"";
     log_str += timeStr;
     n = 0;
@@ -143,7 +143,7 @@ bool getNTPtime(long unsigned int sec) {
 
 bool do_wifi_con(void) {
   bool retval = false;
-  write2log(log_sys, 4, "Try to connect to ", wifi_ssid.c_str(), " with password ", wifi_pass.c_str());
+  write2log(LOG_SYS, 4, "Try to connect to ", wifi_ssid.c_str(), " with password ", wifi_pass.c_str());
   WiFi.mode(WIFI_STA);
 #ifdef ESP32
   WiFi.setHostname(HOSTNAME);
@@ -153,7 +153,7 @@ bool do_wifi_con(void) {
   WiFi.hostname(HOSTNAME);
   WiFi.begin(wifi_ssid, wifi_pass);
 #endif
-  write2log(log_sys, 2, "WIFI try to connect to ", wifi_ssid.c_str());
+  write2log(LOG_SYS, 2, "WIFI try to connect to ", wifi_ssid.c_str());
 
   // ... Give ESP 10 seconds to connect to station.
   unsigned int i = 0;
@@ -169,9 +169,9 @@ bool do_wifi_con(void) {
 #endif
   if ( WiFi.status() == WL_CONNECTED ) {
     retval = true;
-    write2log(log_sys, 2, " OK connected!", wifi_ssid.c_str());
+    write2log(LOG_SYS, 2, " OK connected!", wifi_ssid.c_str());
   } else {
-    write2log(log_sys, 2, " ERROR not connected!", wifi_ssid.c_str());
+    write2log(LOG_SYS, 2, " ERROR not connected!", wifi_ssid.c_str());
     retval = false;
   }
   
@@ -259,7 +259,7 @@ const char *mk_sysinfo1(String& info_str) {
   info_str += uptime.uptimestr();
   info_str += "\"";
   info_str += "}";
-  write2log(log_web,1,info_str.c_str());
+  write2log(LOG_WEB,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Sysinfo1: ");
   Serial.print(info_str.length());
@@ -398,7 +398,7 @@ const char *mk_sysinfo2(String& info_str) {
   info_str += __DATE__;
   info_str += ")\"";
   info_str += "}";
-  write2log(log_web,1,info_str.c_str());
+  write2log(LOG_WEB,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Sysinfo2: ");
   Serial.print(info_str.length());
@@ -450,7 +450,7 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
   }
 #endif
   info_str += "}";
-  write2log(log_web,1,info_str.c_str());
+  write2log(LOG_WEB,1,info_str.c_str());
 #if defined(DEBUG_SERIAL_HTML)
   Serial.print("Sysinfo3: ");
   Serial.print(info_str.length());
@@ -461,19 +461,19 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
 
 
 void start_AP() {
-  write2log(log_sys,1, "Start Accesspoint: ESPNode");
+  write2log(LOG_SYS,1, "Start Accesspoint: ESPNode");
   ap_mode = true;
   if (WiFi.mode(WIFI_AP)) {
-    write2log(log_sys,1, "WIFI_AP => OK");
+    write2log(LOG_SYS,1, "WIFI_AP => OK");
   } else {
-    write2log(log_sys,1, "WIFI_AP => ERROR");
+    write2log(LOG_SYS,1, "WIFI_AP => ERROR");
   }
   delay(500);  
   if (WiFi.softAP("ESPNode")) {
     IPAddress IP = WiFi.softAPIP();
-    write2log(log_sys,2, "Http Server started on", IP.toString().c_str());
+    write2log(LOG_SYS,2, "Http Server started on", IP.toString().c_str());
   } else {
-    write2log(log_sys,1, "Error starting AP");
+    write2log(LOG_SYS,1, "Error starting AP");
   }
   wifi_ap_starttime = millis();
 #if defined(MQTT)    
@@ -619,7 +619,7 @@ void setup() {
     ESP.restart();
     return;
   } else {
-    write2log(log_sys,1, "++ Begin Startup: LittleFS mounted ++");
+    write2log(LOG_SYS,1, "++ Begin Startup: LittleFS mounted ++");
   }
 
   // Connect to Wi-Fi
@@ -628,14 +628,14 @@ void setup() {
   } else {
 #if defined(DEBUG_SERIAL)
     IPAddress IP = WiFi.localIP();
-    write2log(log_sys,2, "Node Address is ", IP.toString().c_str());
+    write2log(LOG_SYS,2, "Node Address is ", IP.toString().c_str());
 #endif
     setupTime();
     if ( !getNTPtime(10) ) {
-      write2log(log_sys,1, "Error getting NTP Time");
+      write2log(LOG_SYS,1, "Error getting NTP Time");
     }
     lastDay = timeinfo.tm_mday;
-    write2log(log_daybreak, 0);
+    write2log(LOG_DAYBREAK, 0);
 #ifdef ESP32
     //ToDo
 #else
@@ -674,7 +674,7 @@ void setup() {
 #if defined(MQTT)
   mqtt_setup();
 #endif
-  write2log(log_sys,1, "Setup Ende");
+  write2log(LOG_SYS,1, "Setup Ende");
 }
 
 /************************************************
@@ -684,7 +684,7 @@ void loop() {
   ElegantOTA.loop();
   if ( rebootflag ) {
     preferences.end();
-    write2log(log_critical,1,"Reboot Flag gesetzt => reboot");
+    write2log(LOG_CRITICAL,1,"Reboot Flag gesetzt => reboot");
     yield();
     delay(2000);
     yield();
@@ -705,7 +705,7 @@ void loop() {
   } else {
     loop_starttime = millis();
     if (WiFi.status() != WL_CONNECTED) {
-      write2log(log_critical,1,"WiFi connection lost");
+      write2log(LOG_CRITICAL,1,"WiFi connection lost");
       delay(1000);
       int i=0;
       bool hourFlag=false;
@@ -713,11 +713,11 @@ void loop() {
         delay(10000);
         i++;
         if ( i>360 && !hourFlag) {
-          write2log(log_critical,1,"Wifi already 1 hour offline");
+          write2log(LOG_CRITICAL,1,"Wifi already 1 hour offline");
           hourFlag = true;
         }
       }
-      write2log(log_critical,1,"WiFi reconnected");
+      write2log(LOG_CRITICAL,1,"WiFi reconnected");
     }
     time(&now);                   // read the current time
     localtime_r(&now, &timeinfo); // update the structure tm with the current time
@@ -725,7 +725,7 @@ void loop() {
     ws.cleanupClients();
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
-      write2log(log_critical,1,loopmsg);
+      write2log(LOG_CRITICAL,1,loopmsg);
     }
     yield();
 #if defined(RF24GW)
@@ -733,7 +733,7 @@ void loop() {
     yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
-      write2log(log_critical,1,loopmsg);
+      write2log(LOG_CRITICAL,1,loopmsg);
     }
 #endif
 #if defined(MQTT)
@@ -742,7 +742,7 @@ void loop() {
     yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
-      write2log(log_critical,1,loopmsg);
+      write2log(LOG_CRITICAL,1,loopmsg);
     }
 #endif
 #if defined(SWITCH1)
@@ -771,7 +771,7 @@ void loop() {
 #endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
-      write2log(log_critical,1,loopmsg);
+      write2log(LOG_CRITICAL,1,loopmsg);
     }
     yield();
     if ( (millis() - mqtt_last_stat) > (STATINTERVAL * 1000) ) {
@@ -794,13 +794,13 @@ void loop() {
       measure_started = false;
 #if defined(SENSOR1)  
       html_json = sensor1.html_stat_json();
-      write2log(log_sensor,1,html_json.c_str());
+      write2log(LOG_SENSOR,1,html_json.c_str());
       ws.textAll(html_json);
       yield();
 #endif
 #if defined(SENSOR2)  
       html_json = sensor2.html_stat_json();
-      write2log(log_sens,1,html_json.c_str());
+      write2log(LOG_SENSOR,1,html_json.c_str());
       ws.textAll(html_json);
       yield();
 #endif
@@ -813,13 +813,13 @@ void loop() {
 #endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
-      write2log(log_critical,1,loopmsg);
+      write2log(LOG_CRITICAL,1,loopmsg);
     }
 // Dinge die täglich erledigt werden sollen
     yield();
     if ( lastDay != timeinfo.tm_mday ) {
       setupTime();
-      write2log(log_daybreak,0);
+      write2log(LOG_DAYBREAK,0);
       lastDay = timeinfo.tm_mday;
     }
 // Dinge die stündlich erledigt werden sollen
@@ -837,13 +837,13 @@ void loop() {
 #endif
       tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
                 String(frag) + ")";
-      write2log(log_critical,1,tmp_str.c_str());
+      write2log(LOG_CRITICAL,1,tmp_str.c_str());
       uptime.update();
       lastHour = timeinfo.tm_hour;
     }
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));
-      write2log(log_critical,1,loopmsg);
+      write2log(LOG_CRITICAL,1,loopmsg);
     }
   }
 }
