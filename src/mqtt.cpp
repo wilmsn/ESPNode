@@ -20,11 +20,11 @@ void reconnect_mqtt() {
     // ... and resubscribe
     mqttClient.subscribe(mk_topic(MQTT_COMMAND, "#"));
     if (do_log_mqtt) {
-      write2log(log_mqtt, 2, mqtt_topic.c_str()," => subcribed");
+      write2log(LOG_MQTT, 2, mqtt_topic.c_str()," => subcribed");
     }
   } else {
     if (do_log_mqtt) {
-      write2log(log_mqtt, 1, "Mqtt => not connected");
+      write2log(LOG_MQTT, 1, "Mqtt => not connected");
     }
   }
 }
@@ -43,13 +43,13 @@ void send_mqtt_stat() {
 #endif
       mqtt_json += "}";
       mqttClient.publish(mk_topic(MQTT_STATUS, "sensordata"), mqtt_json.c_str());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+      write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
 
       mqtt_json = "{";
       mqtt_json_length_old = mqtt_json.length();
 #if defined(SWITCH1)  
       mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch1.show_value());
+      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch1.show_value());
       mqtt_json += switch1.mqtt_json_part();
 #endif
 #if defined(SWITCH2)  
@@ -58,7 +58,7 @@ void send_mqtt_stat() {
         mqtt_json_length_old = mqtt_json.length();
       }
       mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch2.show_value());
+      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch2.show_value());
       mqtt_json += switch2.mqtt_json_part();
 #endif
 #if defined(SWITCH3)  
@@ -67,7 +67,7 @@ void send_mqtt_stat() {
         mqtt_json_length_old = mqtt_json.length();
       }
       mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch3.show_value());
+      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch3.show_value());
       mqtt_json += switch3.mqtt_json_part();
 #endif
 #if defined(SWITCH4)  
@@ -76,12 +76,12 @@ void send_mqtt_stat() {
         mqtt_json_length_old = mqtt_json.length();
       }
       mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), switch4.show_value());
+      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch4.show_value());
       mqtt_json += switch4.mqtt_json_part();
 #endif
       mqtt_json += "}";
       mqttClient.publish(mk_topic(MQTT_STATUS, "switchdata"), mqtt_json.c_str());
-      write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+      write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
     } else {
       reconnect_mqtt();
     }
@@ -98,17 +98,17 @@ void send_mqtt_tele() {
       mk_sysinfo1(mqtt_json); // Hier wird die Variable "info_str" gefüllt!
       mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info1"), mqtt_json.c_str());
       if (do_log_mqtt) {
-        write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
       }
       mk_sysinfo2(mqtt_json);
       mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info2"), mqtt_json.c_str());
       if (do_log_mqtt) {
-        write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
       }
       mk_sysinfo3(mqtt_json, true);
       mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info3"), mqtt_json.c_str());
       if (do_log_mqtt) {
-        write2log(log_mqtt,2, mqtt_topic.c_str(), mqtt_json.c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
       }
     } else {
       reconnect_mqtt();
@@ -126,7 +126,7 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
   char* cmd = (char*)malloc(length + 2);
   if (do_mqtt) {
     snprintf(cmd, length + 1, "%s", (char*)payload);
-    write2log(log_mqtt,2, topic, cmd);
+    write2log(LOG_MQTT,2, topic, cmd);
     ptr = strtok(topic, delimiter);
     if (ptr != NULL) snprintf(part1, TOPIC_PART1_SIZE, "%s", ptr);
     ptr = strtok(NULL, delimiter);
@@ -149,7 +149,7 @@ void mqtt_setup() {
     mqttClient.setCallback(callback_mqtt);
     mqttClient.setBufferSize(512);
     if (do_log_mqtt) {
-      write2log(log_mqtt,3, "MQTT: Connected to Server:", mqtt_server.c_str(), "Port: 1883");
+      write2log(LOG_MQTT,3, "MQTT: Connected to Server:", mqtt_server.c_str(), "Port: 1883");
     }
     send_mqtt_tele();
   }

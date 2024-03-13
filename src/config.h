@@ -13,7 +13,7 @@
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
 //#define ESP32SIMPLE
-#define NODE_WEBRADIO
+//#define NODE_WEBRADIO
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
@@ -25,12 +25,12 @@
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
-//#define NODE_FLUR
+#define NODE_FLUR
 //---------------------------
 
 #include "Node_settings.h"
 
-#define SWVERSION   "0.997radio"
+#define SWVERSION   "0.998radio"
 #define NTP_SERVER  "de.pool.ntp.org"
 #define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
 // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
@@ -196,6 +196,32 @@ typedef struct {
 /// Die Payloadstruktur wie unter payload_t definiert.
   payload_t         payload;      // the payload to send forward
 } udpdata_t;
+
+/// Definition der LogTypen
+#ifndef LOG_RF24
+#define  LOG_RF24      0
+#endif
+#ifndef LOG_SYS
+#define  LOG_SYS       1
+#endif
+#ifndef LOG_MQTT
+#define  LOG_MQTT      2
+#endif
+#ifndef LOG_SENSOR
+#define  LOG_SENSOR    3
+#endif
+#ifndef LOG_WEB
+#define  LOG_WEB       4
+#endif
+#ifndef LOG_CRITICAL
+#define  LOG_CRITICAL  5
+#endif
+#ifndef LOG_DAYBREAK
+#define  LOG_DAYBREAK  6
+#endif
+
+extern void write2log(uint8_t kat, int count, ...);
+
 
 
 #endif

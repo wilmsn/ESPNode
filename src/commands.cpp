@@ -1,3 +1,4 @@
+#include "common.h"
 #include "commands.h"
 
 void show_settings() {
@@ -35,12 +36,12 @@ void console_help() {
 
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
-  write2log(log_sys,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
+  write2log(LOG_SYS,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
 #if defined(SWITCH1)
   if ( switch1.set( cmd, value ) ) {
     html_json = switch1.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
+    write2log(LOG_SENSOR,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
@@ -52,7 +53,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH2)
   if ( switch2.set( cmd, value ) ) {
     html_json = switch2.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
+    write2log(LOG_SENSOR,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
