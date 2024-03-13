@@ -53,6 +53,7 @@ bool ap_mode = false;
 
 // Logging
 bool do_log_sensor;
+bool do_log_module;
 bool do_log_sys;
 bool do_log_critical;
 
@@ -104,7 +105,7 @@ void getVcc(String& json);
 /// @param kat Die Logkategorie dieses Eintrags
 /// @param count Anzahl der übergebenen Textblöcke
 /// @param Maximal 10 übergebene Textblöcke 
-void write2log(log_t kat, int count, ...);
+void write2log(uint8_t kat, int count, ...);
 
 /// @brief Beziehen der Netzzeit
 /// @param sec Wartezeit für die Syncronisation

@@ -24,7 +24,7 @@
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
-//#define NODE_FLUR
+#define NODE_FLUR
 //---------------------------
 
 #include "Node_settings.h"
@@ -190,6 +190,32 @@ typedef struct {
 /// Die Payloadstruktur wie unter payload_t definiert.
   payload_t         payload;      // the payload to send forward
 } udpdata_t;
+
+/// Definition der LogTypen
+#ifndef LOG_RF24
+#define  LOG_RF24      0
+#endif
+#ifndef LOG_SYS
+#define  LOG_SYS       1
+#endif
+#ifndef LOG_MQTT
+#define  LOG_MQTT      2
+#endif
+#ifndef LOG_SENSOR
+#define  LOG_SENSOR    3
+#endif
+#ifndef LOG_WEB
+#define  LOG_WEB       4
+#endif
+#ifndef LOG_CRITICAL
+#define  LOG_CRITICAL  5
+#endif
+#ifndef LOG_DAYBREAK
+#define  LOG_DAYBREAK  6
+#endif
+
+extern void write2log(uint8_t kat, int count, ...);
+
 
 
 #endif
