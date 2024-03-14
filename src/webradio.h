@@ -29,8 +29,7 @@ private:
     void webradio_off();
     void webradio_on();
     void set_vol();
-
-    uint8_t myvol;
+    float myvol;
     uint8_t slider_val_old;
     bool    mystate;
 };

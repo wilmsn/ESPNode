@@ -4,15 +4,15 @@
  ***************************************************************************************/
 #include "switch_generic.h"
 
-/// @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.\n 
+/// @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.\n
 ///Der Schalter reagiert nur wenn es in der **set** Funktion mit dem Schlüsselwort aufgerufen 
-///wurde das bei der Initialisierung hinterlegt wurde.\n 
-///Folgende Strings als **value** übergeben schalten **aus**:\n 
-///**0** **aus** **Aus** **off** **Off**\n 
-///Folgende Strings als **value** übergeben schalten **ein**:\n 
-///**1** **ein** **Ein** **on** **On**\n 
-///Folgende Strings als **value** übergeben schalten **um**:\n 
-///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n 
+///wurde das bei der Initialisierung hinterlegt wurde.\n
+///Folgende Strings als **value** übergeben schalten **aus**:\n
+///**0** **aus** **Aus** **off** **Off**\n
+///Folgende Strings als **value** übergeben schalten **ein**:\n
+///**1** **ein** **Ein** **on** **On**\n
+///Folgende Strings als **value** übergeben schalten **um**:\n
+///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n
 
 class Switch_OnOff : public Switch_Generic {
 
@@ -102,25 +102,26 @@ public:
     /// @return true = Schalter ein; false = Schalter aus
     bool get_switch_val();
 
-//private:
-   /// @brief Schaltet die Hardware auf den in "state" übergebenen Zustand. "true" = Ein, "false" = Aus
-   /// @param state Der neue Zustand des Schalters (0...255).
-   void do_switch(bool state);
+    /// @brief Schaltet die Hardware auf den in "state" übergebenen Zustand. "true" = Ein, "false" = Aus
+    /// @param state Der neue Zustand des Schalters (0...255).
+    void do_switch(bool state);
 
-   /// @brief Der hardwareseitige Einschaltwert des Schalters. 
-   bool obj_on_value;
-   /// @brief Der zu setzende Wert beim Boot Vorgang
-   bool obj_start_value;
-   /// @brief Der aktuelle Wert/Zustand des Schalters: "0" oder "1" 
-   bool obj_value;
-   /// @brief "true" wenn der Slider genutzt wird, sonst "false"
-   bool obj_slider_used = false;
-   /// @brief Nimmt den MQTT Namen für den Slider auf 
-   String obj_slider_mqtt_name;
-   /// @brief Nimmt den aktuellen Wert des Sliders auf
-   uint8_t obj_slider_val;
-   /// @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
-   uint8_t obj_slider_no;
+    /// @brief Der hardwareseitige Einschaltwert des Schalters.
+    bool obj_on_value;
+    /// @brief Der zu setzende Wert beim Boot Vorgang
+    bool obj_start_value;
+    /// @brief Der aktuelle Wert/Zustand des Schalters: "0" oder "1"
+    bool obj_value;
+    /// @brief "true" wenn der Slider genutzt wird, sonst "false"
+    bool obj_slider_used = false;
+    /// @brief Nimmt den MQTT Namen für den Slider auf
+    String obj_slider_mqtt_name;
+    /// @brief Nimmt den aktuellen Wert des Sliders auf
+    uint8_t obj_slider_val;
+    /// @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
+    uint8_t obj_slider_no;
+//private:
+
 };
 
 #endif

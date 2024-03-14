@@ -9,7 +9,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_val = intensity;
   obj_slider_no = slider_no;
   obj_slider_mqtt_name = slider_mqtt_name;
-  // Imitialisierung üer  Fall 2
+  // Imitialisierung über  Fall 2
   begin(html_place, label, mqtt_name, keyword, hw_pin1, start_value, on_value);
 }
 
@@ -128,6 +128,7 @@ bool Switch_OnOff::set(const String& keyword, const String& value) {
       obj_changed = true;
       retval = true;
     }
+    if (obj_changed) Serial.println("switch_on_off: OBJ_CHANGED = true");
   }
   return retval;
 }
