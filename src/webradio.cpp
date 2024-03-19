@@ -3,14 +3,13 @@
 #ifdef _WEBRADIO_H_
 //#include "webradio.h"
 #include "Audio.h"
+#include "AiEsp32RotaryEncoder.h"
 
 #define I2S_DOUT     25
 #define I2S_BCLK     27
 #define I2S_LRC      26
 
 Audio audio;
-
-void Webradio::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword) {
 
 // Definitions for ESP32 Board
 #ifdef ESP32
@@ -72,15 +71,8 @@ void IRAM_ATTR readRotaryISR() {
   rotary.readEncoder_ISR();
 }
 
-
 void Webradio::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword) {
   // First, preallocate all the memory needed for the buffering and codecs, never to be freed
-  preallocateBuffer = malloc(preallocateBufferSize);
-  preallocateCodec = malloc(preallocateCodecSize);
-  if (!preallocateBuffer || !preallocateCodec) {
-    write2log(LOG_CRITICAL,1,"FATAL ERROR:  Unable to preallocate Memory for app");
-    while (1) delay(1000); // Infinite halt
-  }
   bool start_value = true;
   bool on_value = true;
   if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
@@ -107,15 +99,11 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
 // Im Webinterface muss der slider auf die aktuelle Lautstärke gesetzt werden.
 //  myvol = (float)(obj_slider_val / 2.55);
 // ToDo
-  file = NULL;
-  buff = NULL;
-  out = new AudioOutputI2S();
-  if (out->SetPinout(BCLK, LRCLK, DOUT)) {
+  if (audio.setPinout(BCLK, LRCLK, DOUT)) {
 #if defined(DEBUG_SERIAL_MODULE)
     Serial.println("Failed to set pinout");
 #endif
   }
-  decoder = NULL;
 // ToDo
 // Stationsliste aus den Preferences laden  
   sprintf(url,"%s","http://stream.lokalradio.nrw/4459m27");
@@ -145,10 +133,10 @@ void Webradio::webradio_on() {
 void Webradio::set_vol() {
     char volstr[20];
     slider_val_old = obj_slider_val;
-    myvol = (uint8_t)(obj_slider_val / 11);
-    sprintf(volstr,"New Volume %u",myvol);
+    cur_vol = (uint8_t)(obj_slider_val / 11);
+    sprintf(volstr,"New Volume %u",cur_vol);
     write2log(LOG_SENSOR,1,volstr);
-    audio.setVolume(myvol);
+    audio.setVolume(cur_vol);
 }
 
 void Webradio::loop() {
