@@ -26,8 +26,6 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   audio.setBufsize(30000,-1);
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value, on_value, 100, 1, "Lautstärke");
   webradio_on();
-//  Serial.println("---- on ------");
-//  audio.connecttohost("http://stream.lokalradio.nrw/4459m27");
   mystate = true;
 }
 
@@ -36,6 +34,7 @@ void Webradio::webradio_off() {
     Serial.println("webadio_off");
 #endif
     audio.setVolume(0);
+    audio.stopSong();
 }
 
 void Webradio::webradio_on() {
@@ -48,31 +47,29 @@ void Webradio::webradio_on() {
 }
 
 void Webradio::set_vol() {
+    char volstr[20];
     slider_val_old = obj_slider_val;
     myvol = (uint8_t)(obj_slider_val / 11);
-    Serial.print("New Volume: ");
-    Serial.println(myvol);
+    sprintf(volstr,"New Volume %u",myvol);
+    write2log(LOG_SENSOR,1,volstr);
     audio.setVolume(myvol);
 }
 
 void Webradio::loop() {
   audio.loop();
+  if (!audio.isRunning()) {
+    webradio_off();
+    webradio_on();
+  }
   if (slider_val_old != obj_slider_val ) {
-#if defined(DEBUG_SERIAL_MODULE)
-    Serial.println("Volume");
-#endif
     set_vol();
   }
   if (obj_value != mystate) {
     if (obj_value) { 
-#if defined(DEBUG_SERIAL_MODULE)
-      Serial.println("Radio ON");
-#endif
+      write2log(LOG_SENSOR,1,"Radio on");
       webradio_on();
     } else {
-#if defined(DEBUG_SERIAL_MODULE)
-      Serial.println("Radio OFF");
-#endif
+      write2log(LOG_SENSOR,1,"Radio off");
       webradio_off();
     }
     mystate = obj_value;
@@ -80,19 +77,11 @@ void Webradio::loop() {
 }
 
 void audio_info(const char *info){
-#ifdef DEBUG_SERIAL_MODULE
-    Serial.println("****Info****");
-    Serial.println(info);
-    Serial.println("---------------");
-#endif
+    write2log(LOG_SENSOR,2,"Info:", info);
 }
 
 void audio_showstreamtitle(const char *info){
-#ifdef DEBUG_SERIAL_MODULE
-    Serial.println("####Titel####");
-    Serial.println(String(info));
-    Serial.println("-------------");
-#endif
+    write2log(LOG_SENSOR,2,"Titel:", info);
 }
 
 void audio_bitrate(const char *info) {
@@ -102,21 +91,13 @@ void audio_bitrate(const char *info) {
     bpsInfo[2] = info[2];
     bpsInfo[3] = 'K';
     bpsInfo[4] = 0;
-#ifdef DEBUG_SERIAL_MODULE
-    Serial.println("####Bitrate####");
-    Serial.println(String(bpsInfo));
-    Serial.println("-------------");
-#endif
+    write2log(LOG_SENSOR,2,"Bitrate:", info);
 }
 
 void audio_showstation(const char *info){
     String sinfo = String(info);
     sinfo.replace("|", "\n");
-#ifdef DEBUG_SERIAL_MODULE
-    Serial.println("####Station####");
-    Serial.println(String(info));
-    Serial.println("-------------");
-#endif
+    write2log(LOG_SENSOR,2,"Station:", info);
 }
 
 

@@ -231,7 +231,7 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       html_json += ",\"set_rf24gw_enable\":0";
 #endif      
       html_json += "}";
-      write2log(log_web,1,html_json.c_str());
+      write2log(LOG_WEB,1,html_json.c_str());
 #if defined(DEBUG_SERIAL_HTML)
       Serial.println(html_json);
 #endif
@@ -324,7 +324,7 @@ const char *mk_cmd(AsyncWebServerRequest *request) {
 
 void setup_webserver() {
   initWebSocket();
-  write2log(log_web,1, "initWebsocket ok");
+  write2log(LOG_WEB,1, "initWebsocket ok");
 
   httpServer.on("/wifiscan", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "application/json", mk_wifiscan()); });
