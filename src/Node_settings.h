@@ -268,7 +268,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #include "webradio.h"
 
-#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_HTML
 
 #define HOSTNAME                 "Webradio"

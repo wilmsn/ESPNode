@@ -13,7 +13,7 @@
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
 //#define ESP32SIMPLE
-//#define NODE_WEBRADIO
+#define NODE_WEBRADIO
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
@@ -25,7 +25,7 @@
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
-#define NODE_FLUR
+//#define NODE_FLUR
 //---------------------------
 
 #include "Node_settings.h"
