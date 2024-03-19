@@ -4,6 +4,7 @@
  ***************************************************************************************/
 #include "switch_onoff.h"
 
+
 /// @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.\n 
 ///Der Schalter reagiert nur wenn es in der **set** Funktion mit dem Schlüsselwort aufgerufen 
 ///wurde das bei der Initialisierung hinterlegt wurde.\n 
@@ -13,6 +14,7 @@
 ///**1** **ein** **Ein** **on** **On**\n 
 ///Folgende Strings als **value** übergeben schalten **um**:\n 
 ///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n 
+
 
 class Webradio : public Switch_OnOff {
 
@@ -29,10 +31,12 @@ private:
     void webradio_off();
     void webradio_on();
     void set_vol();
-
-    uint8_t myvol;
+    uint8_t cur_vol = 30;   // Die aktuelle Lautstärke von 0 bis 100 Prozent
     uint8_t slider_val_old;
     bool    mystate;
 };
+
+
+
 
 #endif
