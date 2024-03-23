@@ -31,12 +31,35 @@ private:
     void webradio_off();
     void webradio_on();
     void set_vol();
-    uint8_t cur_vol = 30;   // Die aktuelle Lautstärke von 0 bis 100 Prozent
+    uint8_t cur_vol = 10;   // Die aktuelle Lautstärke von 0 bis 100 Prozent
     uint8_t slider_val_old;
     bool    mystate;
 };
 
+#include "SPI.h"
+#include "Adafruit_GFX.h"
+#include "Adafruit_GC9A01A.h"
 
+#define ARC_SIGMENT_DEGREES 3
+#define ARC_WIDTH 5
+
+
+class RadioDisplay {
+public:
+  void begin(Adafruit_GC9A01A* mytft);
+  void show_ip(const char* myip);
+  void show_vol(uint8_t vol);
+  void show_station(const char* mystation);
+  void show_title(const char* mytitle);
+  void show_time();
+
+private:
+  void fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour);
+  int splitStr(const char* inStr, int startPos, int maxLen, char* resultStr);
+  void show_text(const char* mytext, int posx, int posy, uint16_t color);
+  
+  Adafruit_GC9A01A* tft;
+};
 
 
 #endif
