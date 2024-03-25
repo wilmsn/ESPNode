@@ -31,6 +31,8 @@ private:
     void webradio_off();
     void webradio_on();
     void set_vol();
+    void set_station();
+    void show_station();
     uint8_t cur_vol = 10;   // Die aktuelle Lautstärke von 0 bis 100 Prozent
     uint8_t slider_val_old;
     bool    mystate;
@@ -47,11 +49,13 @@ private:
 class RadioDisplay {
 public:
   void begin(Adafruit_GC9A01A* mytft);
+  void clear();
   void show_ip(const char* myip);
   void show_vol(uint8_t vol);
   void show_station(const char* mystation);
   void show_title(const char* mytitle);
   void show_time();
+  void select_station(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4);
 
 private:
   void fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour);

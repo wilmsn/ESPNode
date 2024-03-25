@@ -53,9 +53,9 @@
 #endif
 
 //Settings for I2S
-#define I2S_DOUT     25
-#define I2S_BCLK     27
-#define I2S_LRC      26
+//define I2S_DOUT     25
+//#define I2S_BCLK     27
+//#define I2S_LRC      26
 
 //Settings for Logging
 #ifndef LOG_WEB

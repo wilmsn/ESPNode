@@ -4,12 +4,16 @@
 //#include "webradio.h"
 #include "Audio.h"
 #include "AiEsp32RotaryEncoder.h"
+#include <Preferences.h>
 
-//#define I2S_DOUT     25
-//#define I2S_BCLK     27
-//#define I2S_LRC      26
+/// Da ich die Direktive für den ESP32S3 nicht kenne, hier eine eigene:
 #define DO_ESP32S3
+/// Alternative auch eine eigene Direktive für den ESP32:
+//#define DO_ESP32
+
+/// @brief Eine Instanz für das Audio 
 Audio audio;
+/// @brief Die Variable timeinfo wird im Rumpfprogramm verwaltet, hier nur für die Anzeige der Zeit genutzt.
 extern tm timeinfo;
 
 // Definitions for ESP32 Board
@@ -44,6 +48,8 @@ extern tm timeinfo;
 #define ROTARY_ENCODER_BUTTON_PIN 35
 #define ROTARY_ENCODER_VCC_PIN    -1
 #define ROTARY_ENCODER_STEPS      4
+#define LONG_PRESSED_AFTER_MS     1000
+#define SHORT_PRESSED_AFTER_MS    50
 // Display
 // SCL (Display) => SCK  12
 // SDA (Display) => MOSI 11
@@ -52,24 +58,26 @@ extern tm timeinfo;
 #endif
 
 
-// Level definitions
+/// @brief Level definitions:
+/// @brief Level beginnen bei MINLEVEL und enden bei MAXLEVEL
+/// @brief 
+#define MINLEVEL    1
 #define MAXLEVEL    3
-// Level 1 ist die Lautst#rke
+/// @brief Level 0 ist die Lautst#rke
+#define LEVEL0_MIN  0
+#define LEVEL0_MAX  100
+/// @brief Level 1 ist die Senderauswahl
 #define LEVEL1_MIN  0
-#define LEVEL1_MAX  100
-// Level 2 ist die Senderauswahl
+#define LEVEL1_MAX  9
+/// @brief Level 2 ist ???
 #define LEVEL2_MIN  0
-#define LEVEL2_MAX  9
-// Level 3 ist ???
-#define LEVEL3_MIN  0
-#define LEVEL3_MIN  0
+#define LEVEL2_MIN  0
 // Station definitions
-#define MAXSTATION            10
-#define STATION_NAME_LENGTH   20
-#define STATION_URL_LENGTH    30
+#define MAXSTATION            9
+#define STATION_NAME_LENGTH   30
+#define STATION_URL_LENGTH    128
 
 typedef struct {
-    uint8_t level;
     uint8_t min;
     uint8_t max;
     uint8_t cur;
@@ -81,19 +89,39 @@ typedef struct {
     char    url[STATION_URL_LENGTH];
 } station_t;
 
-
-level_t level[MAXLEVEL];
+/// The settings for each level for the rotary encoder
+/// 0 => Radio playing level
+/// 1 => station select level
+/// 2 => ????
+level_t level[MAXLEVEL+1];
+/// @brief Das aktuelle Level des Rotaryencoders
+uint8_t cur_level;
+/// @brief Die aktuelle Position des Rotaryencoders
+uint8_t cur_position = 0;
+/// @brief Die aktuelle Station aus der Senderliste
+uint8_t cur_station = 0;
+/// @brief Array to take all the Stations (URL and Name)
 station_t station[MAXSTATION];
+/// @brief Zeitmessung Rotary Schalter
+unsigned long lastTimeButtonDown = 0;
+/// @brief Letzter Zustand Rotary Schalter
+bool wasButtonDown = false;
+/// @brief Alte Minute u den Minutenwechsel sicher zu stellen
 int last_min = 0;
-char url[128];
-
-//instance for rotary encoder
-AiEsp32RotaryEncoder rotary = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
-//instance for TFT Display
-Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
-RadioDisplay mydisplay;
-
+/// @brief Titleinfos to display
 char title[128];
+
+
+/// @brief Instance for rotary encoder
+AiEsp32RotaryEncoder rotary = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
+/// @brief Instance for TFT Display
+Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
+/// @brief Instance for displayhandling
+RadioDisplay mydisplay;
+/// @brief Instances to save the Preferences
+/// @brief For stations and other settings
+Preferences prefs;
+
 
 void IRAM_ATTR readRotaryISR() {
   rotary.readEncoder_ISR();
@@ -103,6 +131,88 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   // First, preallocate all the memory needed for the buffering and codecs, never to be freed
   bool start_value = true;
   bool on_value = true;
+  prefs.begin("prefs",false);
+  if ( !prefs.isKey("cur_vol") ) {
+    prefs.putUChar("cur_vol", 5);
+    prefs.putUChar("cur_station", 0);
+  }
+  cur_vol = prefs.getUChar("cur_vol");
+  cur_level = MINLEVEL;
+  cur_station = prefs.getUChar("cur_station");
+  uint8_t mylevel = MINLEVEL;
+  level[mylevel].min = 0;
+  level[mylevel].max = 100;
+  level[mylevel].cur = cur_vol;
+  mylevel++;
+  level[mylevel].min = 0;
+  level[mylevel].max = MAXSTATION;
+  level[mylevel].cur = cur_station;
+  mylevel++;
+  level[mylevel].min = 0;
+  level[mylevel].max = 1;
+  level[mylevel].cur = 0;
+  if ( ! prefs.isKey("stat_0_url") ) {
+    prefs.putString("stat_0_url","http://stream.lokalradio.nrw/4459m27");
+    prefs.putString("stat_0_name","Radio Kiepenkerl");
+  }
+  if ( ! prefs.isKey("stat_1_url") ) {
+    prefs.putString("stat_1_url","http://streams.radio21.de/nrw/mp3-192/web");
+    prefs.putString("stat_1_name","Radio 21 NRW");
+  }
+  if ( ! prefs.isKey("stat_2_url") ) {
+    prefs.putString("stat_2_url","http://icecast.ndr.de/ndr/njoy/live/mp3/128/stream.mp3");
+    prefs.putString("stat_2_name","N-Joy");
+  }
+//  if ( ! prefs.isKey("stat_3_url") ) {
+    prefs.putString("stat_3_url","");
+    prefs.putString("stat_3_name","leer");
+//  }
+//  if ( ! prefs.isKey("stat_4_url") ) {
+    prefs.putString("stat_4_url","");
+    prefs.putString("stat_4_name","leer");
+//  }
+//  if ( ! prefs.isKey("stat_5_url") ) {
+    prefs.putString("stat_5_url","");
+    prefs.putString("stat_5_name","leer");
+//  }
+//  if ( ! prefs.isKey("stat_6_url") ) {
+    prefs.putString("stat_6_url","");
+    prefs.putString("stat_6_name","leer");
+//  }
+//  if ( ! prefs.isKey("stat_7_url") ) {
+    prefs.putString("stat_7_url","");
+    prefs.putString("stat_7_name","leer");
+//  }
+//  if ( ! prefs.isKey("stat_8_url") ) {
+    prefs.putString("stat_8_url","");
+    prefs.putString("stat_8_name","leer");
+//  }
+//  if ( ! prefs.isKey("stat_9_url") ) {
+    prefs.putString("stat_9_url","");
+    prefs.putString("stat_9_name","leer");
+//  }
+  prefs.getString("stat_0_url",station[0].url,STATION_URL_LENGTH);
+  prefs.getString("stat_0_name",station[0].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_1_url",station[1].url,STATION_URL_LENGTH);
+  prefs.getString("stat_1_name",station[1].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_2_url",station[2].url,STATION_URL_LENGTH);
+  prefs.getString("stat_2_name",station[2].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_3_url",station[3].url,STATION_URL_LENGTH);
+  prefs.getString("stat_3_name",station[3].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_4_url",station[4].url,STATION_URL_LENGTH);
+  prefs.getString("stat_4_name",station[4].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_5_url",station[5].url,STATION_URL_LENGTH);
+  prefs.getString("stat_5_name",station[5].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_6_url",station[6].url,STATION_URL_LENGTH);
+  prefs.getString("stat_6_name",station[6].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_7_url",station[7].url,STATION_URL_LENGTH);
+  prefs.getString("stat_7_name",station[7].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_8_url",station[8].url,STATION_URL_LENGTH);
+  prefs.getString("stat_8_name",station[8].name,STATION_NAME_LENGTH);
+  prefs.getString("stat_9_url",station[9].url,STATION_URL_LENGTH);
+  prefs.getString("stat_9_name",station[9].name,STATION_NAME_LENGTH);
+  prefs.end();
+// ToDo erweitern um alle Stationen
   if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
 #if defined(DEBUG_SERIAL_MODULE)
     Serial.print("Set PinOut: BCLK:");
@@ -115,13 +225,9 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   }
   audio.setBufsize(30000,300000);
   audio.setVolumeSteps(100);
-//  audioLogger = &Serial;
   mydisplay.begin(&tftx);
   mydisplay.show_ip(WiFi.localIP().toString().c_str());
   rotary.begin(); //satrencoder handling
-// ToDo
-// Level Array aus den Preferences einlesen  
-// Danach folgende 3 Zeilen löschen
   rotary.setup(readRotaryISR); //register interrupt service routine
   rotary.setBoundaries(0, 100, false); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
   rotary.setEncoderValue(cur_vol); //preset the value to current gain
@@ -137,7 +243,7 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
 //  }
 // ToDo
 // Stationsliste aus den Preferences laden  
-  sprintf(url,"%s","http://stream.lokalradio.nrw/4459m27");
+//  sprintf(url,"%s","http://stream.lokalradio.nrw/4459m27");
 // End ToDo  
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value, on_value, 100, 1, "Lautstärke");
   webradio_on();
@@ -153,12 +259,10 @@ void Webradio::webradio_off() {
 }
 
 void Webradio::webradio_on() {
-  if (audio.connecttohost("http://stream.lokalradio.nrw/4459m27")) {
-#if defined(DEBUG_SERIAL_MODULE)
-    Serial.println("Playing Radio Kiepenkerl");
-#endif
-  }
-  set_vol();  
+  cur_level = MINLEVEL;
+  set_station();
+  show_station();
+  set_vol();
 }
 
 void Webradio::set_vol() {
@@ -168,6 +272,32 @@ void Webradio::set_vol() {
   write2log(LOG_SENSOR,1,volstr);
   audio.setVolume(cur_vol);
   mydisplay.show_vol(cur_vol);
+  prefs.begin("prefs",false);
+  prefs.putUChar("cur_vol", cur_vol);
+  prefs.end();
+}
+
+void Webradio::show_station() {
+  if (cur_level == MINLEVEL) {
+    mydisplay.clear();
+    mydisplay.show_ip(WiFi.localIP().toString().c_str());
+    mydisplay.show_vol(cur_vol);
+    mydisplay.show_time();
+    mydisplay.show_station(station[cur_station].name);
+  }
+}
+
+void Webradio::set_station() {
+  if (cur_level == MINLEVEL+1) {
+    mydisplay.select_station(
+        cur_station > 1 ? station[cur_station-2].name : "",
+        cur_station > 0 ? station[cur_station-1].name : "",
+        station[cur_station].name,
+        cur_station < MAXSTATION ? station[cur_station+1].name : "s3",
+        cur_station < MAXSTATION - 1 ? station[cur_station+2].name : "s4"
+    );
+  }
+  if ( strlen(station[cur_station].url) > 10 ) audio.connecttohost(station[cur_station].url);
 }
 
 void Webradio::loop() {
@@ -179,16 +309,74 @@ void Webradio::loop() {
   if (slider_val_old != obj_slider_val ) {
     
     slider_val_old = obj_slider_val;
-    cur_vol = obj_slider_val / 2.55;
+//    cur_vol = obj_slider_val / 2.55;
 //    rotary.setEncoderValue(cur_vol); 
 //    set_vol();
   }
+  /// Loop actions for rotary encoder
+  /// 1. change of position  
   if (rotary.encoderChanged()) {
-    cur_vol = rotary.readEncoder();
-    Serial.print("Rotary changed: ");
-    Serial.println(cur_vol);
-    set_vol();
+    cur_position = rotary.readEncoder();
+    switch (cur_level) {
+    case MINLEVEL:
+      cur_vol = cur_position;
+      set_vol();
+      break;
+    case MINLEVEL+1:
+      cur_station = cur_position;
+      set_station();
+      break;
+    }
   }
+  /// 2. Button is pressed
+  if (rotary.isEncoderButtonDown()) {
+    if (!wasButtonDown) {
+      //start measuring
+      lastTimeButtonDown = millis();
+    }
+    //else we wait since button is still down
+    wasButtonDown = true;
+  //  return;
+  } else {
+    //button is up
+    if (wasButtonDown) {
+    //click happened, lets see if it was short click, long click or just too short
+      if (millis() - lastTimeButtonDown >= LONG_PRESSED_AFTER_MS) {
+//        longClicked = true;
+      } else if (millis() - lastTimeButtonDown >= SHORT_PRESSED_AFTER_MS) {
+//      Change Level
+//      Store values for old level first
+        level[cur_level].cur = cur_position;
+//      Enter new level
+        cur_level++;
+        if (cur_level > MAXLEVEL) cur_level = MINLEVEL;
+//      Set Boundries for new Level
+        rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false);
+//      Restore Position
+        rotary.setEncoderValue(level[cur_level].cur);
+        cur_position = level[cur_level].cur;
+//      Do the action for this new level
+        last_min = -1;   
+        switch (cur_level) {
+        case MINLEVEL:
+          /* Aktuelles Ratioprogramm anzeigen */
+          show_station();
+          break;        
+        case MINLEVEL+1:
+          /* Senderwahl anzeigen */
+          set_station();
+          break;
+        case MINLEVEL+2:
+          mydisplay.clear();
+
+          break;
+        }
+      }
+    }
+    wasButtonDown = false;
+  }
+  /// End rotary
+
   if (obj_value != mystate) {
     if (obj_value) { 
       write2log(LOG_SENSOR,1,"Radio on");
@@ -200,7 +388,7 @@ void Webradio::loop() {
     mystate = obj_value;
   }
   if (last_min != timeinfo.tm_min) {
-    mydisplay.show_time();
+    if (cur_level == MINLEVEL) mydisplay.show_time();
     last_min = timeinfo.tm_min;
   }
 }
@@ -211,7 +399,7 @@ void audio_info(const char *info){
 
 void audio_showstreamtitle(const char *info){
   write2log(LOG_SENSOR,2,"Titel:", info);
-  mydisplay.show_title(info);
+  if (cur_level == MINLEVEL) mydisplay.show_title(info);
 }
 
 void audio_bitrate(const char *info) {
@@ -225,28 +413,25 @@ void audio_bitrate(const char *info) {
 }
 
 void audio_showstation(const char *info){
-//  String sinfo = String(info);
-//  sinfo.replace("|", "\n");
   write2log(LOG_SENSOR,2,"Station:", info);
-  mydisplay.show_station(info);  
 }
 
 
-/**************************
+/**************************************************************************************************
  * 
  * Display
  * 
-***************************/
+***************************************************************************************************/
 
-
+void RadioDisplay::clear() {
+  tft->fillScreen(GC9A01A_BLACK);
+}
 
 void RadioDisplay::show_ip(const char* myip) {
-  tft->fillScreen(GC9A01A_BLACK);
   tft->setTextColor(GC9A01A_WHITE);  
   tft->setTextSize(1);
   tft->setCursor(75, 225);
   tft->println(myip);
-
 }
 
 void RadioDisplay::show_vol(uint8_t vol) {
@@ -275,6 +460,36 @@ void RadioDisplay::show_station(const char* mystation) {
 void RadioDisplay::show_title(const char* mytitle) {
   tft->fillRect(0, 130, 240, 60, GC9A01A_BLACK);
   show_text(mytitle, 25, 130, GC9A01A_GREEN);
+}
+
+void RadioDisplay::select_station(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
+  clear();
+  tft->setTextSize(2);
+  if (strlen(s0) > 0) {
+    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setCursor(70, 50);
+    tft->println(s0);
+  }
+  if (strlen(s1) > 0) {
+    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setCursor(40, 80);
+    tft->println(s1);
+  }
+  if (strlen(s2) > 0) {
+    tft->setTextColor(GC9A01A_ORANGE);  
+    tft->setCursor(10, 120);
+    tft->println(s2);
+  }
+  if (strlen(s3) > 0) {
+    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setCursor(40, 150);
+    tft->println(s3);
+  }
+  if (strlen(s4) > 0) {
+    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setCursor(70, 180);
+    tft->println(s4);
+  }
 }
 
 void RadioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t color) {
@@ -327,25 +542,10 @@ int RadioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* re
     char2cut = strlen(inStr);
     retval = char2cut;
   }
-  Serial.print("Char2cut:");
-  Serial.println(char2cut);
   for(int i=startPos; i<char2cut; i++) {
     resultStr[i-startPos] = inStr[i];
-    Serial.print(inStr[i]);
-    int xx = (inStr[i]);
-    Serial.println(xx);
   }
   resultStr[char2cut-startPos] = 0;
-  Serial.print(" Str in:");
-  Serial.print(inStr);
-  Serial.print(" Retval:");
-  Serial.print(retval);
-  Serial.print(" StartPos:");
-  Serial.print(startPos);
-  Serial.print(" MaxLen:");
-  Serial.print(maxLen);
-  Serial.print(" ");
-  Serial.println(resultStr);
   return retval;
 }
 
