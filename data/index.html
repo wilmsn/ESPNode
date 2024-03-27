@@ -648,6 +648,12 @@ case "wifi_ssid":
     case "Heap_frag":
       $("#Tab").append("<tr><td class='tab_left'> Heap Fragmentation: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
+    case "PSRamSize":
+      $("#Tab").append("<tr><td class='tab_left'> PSRAM Size: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "PsRamFree":
+      $("#Tab").append("<tr><td class='tab_left'> PSRAM Free: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
     case "ResetReason":
       $("#Tab").append("<tr><td class='tab_left'> Reset Reason: </td><td class='tab_right'>"+val+"</td></tr>");
     break;

@@ -206,6 +206,12 @@ const char *mk_sysinfo1(String& info_str) {
 #ifdef ESP32
   info_str += ",\"Cores\":";
   info_str += String(ESP.getChipCores());
+  info_str += ",\"PSRamSize\":\"";
+  info_str += String((float)ESP.getPsramSize()/1024.0);
+  info_str += " KB\"";
+  info_str += ",\"PsRamFree\":\"";
+  info_str += String((float)ESP.getFreePsram()/1024.0);
+  info_str += " KB\"";
 #else
   info_str += ",\"Cores\":\"1\"";
 #endif
