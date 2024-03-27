@@ -266,6 +266,7 @@ void Webradio::webradio_on() {
 void Webradio::set_vol() {
   char volstr[20];
   int  bg;
+//  cur_vol=10;
   sprintf(volstr,"New Volume %u",cur_vol);
   write2log(LOG_SENSOR,1,volstr);
   if (cur_vol == 0) { 
