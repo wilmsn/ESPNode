@@ -49,7 +49,7 @@ extern tm timeinfo;
 #define ROTARY_ENCODER_VCC_PIN    -1
 #define ROTARY_ENCODER_STEPS      4
 #define LONG_PRESSED_AFTER_MS     1000
-#define SHORT_PRESSED_AFTER_MS    50
+#define SHORT_PRESSED_AFTER_MS    20
 // Display
 // SCL (Display) => SCK  12
 // SDA (Display) => MOSI 11
@@ -76,6 +76,8 @@ extern tm timeinfo;
 #define MAXSTATION            9
 #define STATION_NAME_LENGTH   30
 #define STATION_URL_LENGTH    128
+#define ACTOR_START_VALUE     true
+#define ACTOR_ON_VALUE        true
 
 typedef struct {
     uint8_t min;
@@ -103,13 +105,15 @@ uint8_t cur_station = 0;
 /// @brief Array to take all the Stations (URL and Name)
 station_t station[MAXSTATION];
 /// @brief Zeitmessung Rotary Schalter
-unsigned long lastTimeButtonDown = 0;
+unsigned long millis_Button_pressed = 0;
 /// @brief Letzter Zustand Rotary Schalter
 bool wasButtonDown = false;
 /// @brief Alte Minute u den Minutenwechsel sicher zu stellen
 int last_min = 0;
 /// @brief Titleinfos to display
 char title[128];
+/// @brief Current state of the Radio
+bool radio_is_on;
 
 
 /// @brief Instance for rotary encoder
@@ -129,8 +133,6 @@ void IRAM_ATTR readRotaryISR() {
 
 void Webradio::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword) {
   // First, preallocate all the memory needed for the buffering and codecs, never to be freed
-  bool start_value = true;
-  bool on_value = true;
   prefs.begin("prefs",false);
   if ( !prefs.isKey("cur_vol") ) {
     prefs.putUChar("cur_vol", 5);
@@ -231,35 +233,31 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   rotary.setup(readRotaryISR); //register interrupt service routine
   rotary.setBoundaries(0, 100, false); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
   rotary.setEncoderValue(cur_vol); //preset the value to current gain
-//
-// ToDo 
-// Im Webinterface muss der slider auf die aktuelle Lautstärke gesetzt werden.
-//  myvol = (float)(obj_slider_val / 2.55);
-// ToDo
-//  if (audio.setPinout(BCLK, LRCLK, DOUT)) {
-//#if defined(DEBUG_SERIAL_MODULE)
-//    Serial.println("Failed to set pinout");
-//#endif
-//  }
-// ToDo
-// Stationsliste aus den Preferences laden  
-//  sprintf(url,"%s","http://stream.lokalradio.nrw/4459m27");
-// End ToDo  
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value, on_value, 100, 1, "Lautstärke");
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, ACTOR_START_VALUE, ACTOR_ON_VALUE, cur_vol, 1, "Lautstärke");
   webradio_on();
   mystate = true;
+}
+
+void Webradio::html_create_json_part(String& json) {
+  Switch_OnOff::html_create_json_part(json);
+  json += ",\"slider1max\":100";
 }
 
 void Webradio::webradio_off() {
 #if defined(DEBUG_SERIAL_MODULE)
     Serial.println("webadio_off");
 #endif
-    audio.setVolume(0);
-    audio.stopSong();
+  write2log(LOG_SENSOR,1,"Radio off");
+  audio.setVolume(0);
+  audio.stopSong();
+  radio_is_on = false;
+  mydisplay.clear();
 }
 
 void Webradio::webradio_on() {
   cur_level = MINLEVEL;
+  radio_is_on = true;
+  write2log(LOG_SENSOR,1,"Radio on");
   set_station();
   show_station();
   set_vol();
@@ -270,11 +268,19 @@ void Webradio::set_vol() {
   int  bg;
   sprintf(volstr,"New Volume %u",cur_vol);
   write2log(LOG_SENSOR,1,volstr);
-  audio.setVolume(cur_vol);
-  mydisplay.show_vol(cur_vol);
-  prefs.begin("prefs",false);
-  prefs.putUChar("cur_vol", cur_vol);
-  prefs.end();
+  if (cur_vol == 0) { 
+    write2log(LOG_SENSOR,1,"Vol CMD: Radio off");
+    set(obj_keyword,String("off")); 
+  } else { 
+    if ( ! radio_is_on) {
+      write2log(LOG_SENSOR,1,"Vol CMD: Radio on");
+      set(obj_keyword,String("on")); 
+    }
+    mydisplay.show_vol(cur_vol);
+    prefs.begin("prefs",false);
+    prefs.putUChar("cur_vol", cur_vol);
+    prefs.end();
+  }
 }
 
 void Webradio::show_station() {
@@ -301,26 +307,34 @@ void Webradio::set_station() {
 }
 
 void Webradio::loop() {
-  audio.loop();
-  if (!audio.isRunning()) {
-    webradio_off();
-    webradio_on();
+  if (radio_is_on) {
+    audio.loop();
+    if (!audio.isRunning()) {
+      webradio_off();
+      webradio_on();
+    }
   }
   if (slider_val_old != obj_slider_val ) {
-    
+    write2log(LOG_SENSOR,1,"Set Volume via Web");
+    cur_vol = obj_slider_val;
+    rotary.setEncoderValue(cur_vol); 
+    set_vol();
     slider_val_old = obj_slider_val;
-//    cur_vol = obj_slider_val / 2.55;
-//    rotary.setEncoderValue(cur_vol); 
-//    set_vol();
   }
   /// Loop actions for rotary encoder
   /// 1. change of position  
   if (rotary.encoderChanged()) {
     cur_position = rotary.readEncoder();
+    char logstr[20];
+    snprintf(logstr,19,"rotary pos: %u", cur_position);
+    write2log(LOG_SENSOR,1,logstr);
     switch (cur_level) {
     case MINLEVEL:
       cur_vol = cur_position;
-      set_vol();
+      write2log(LOG_SENSOR,1,"Set Volume via Rotary");
+      char vol_str[10];
+      snprintf(vol_str,9,"S:%u",cur_position);
+      set(obj_keyword,vol_str);
       break;
     case MINLEVEL+1:
       cur_station = cur_position;
@@ -332,19 +346,19 @@ void Webradio::loop() {
   if (rotary.isEncoderButtonDown()) {
     if (!wasButtonDown) {
       //start measuring
-      lastTimeButtonDown = millis();
+      millis_Button_pressed = millis();
     }
     //else we wait since button is still down
     wasButtonDown = true;
-  //  return;
   } else {
     //button is up
     if (wasButtonDown) {
-    //click happened, lets see if it was short click, long click or just too short
-      if (millis() - lastTimeButtonDown >= LONG_PRESSED_AFTER_MS) {
-//        longClicked = true;
-      } else if (millis() - lastTimeButtonDown >= SHORT_PRESSED_AFTER_MS) {
-//      Change Level
+      wasButtonDown = false;
+      if (millis() - millis_Button_pressed >= LONG_PRESSED_AFTER_MS) {
+//        long click => Radio off;
+        set(obj_keyword,String("toggle")); 
+      } else if (millis() - millis_Button_pressed >= SHORT_PRESSED_AFTER_MS) {
+//      short click => Change Level
 //      Store values for old level first
         level[cur_level].cur = cur_position;
 //      Enter new level
@@ -355,8 +369,8 @@ void Webradio::loop() {
 //      Restore Position
         rotary.setEncoderValue(level[cur_level].cur);
         cur_position = level[cur_level].cur;
-//      Do the action for this new level
         last_min = -1;   
+//      Do the action for this new level
         switch (cur_level) {
         case MINLEVEL:
           /* Aktuelles Ratioprogramm anzeigen */
@@ -373,20 +387,20 @@ void Webradio::loop() {
         }
       }
     }
-    wasButtonDown = false;
   }
   /// End rotary
 
   if (obj_value != mystate) {
+    mystate = obj_value;
     if (obj_value) { 
-      write2log(LOG_SENSOR,1,"Radio on");
+      write2log(LOG_SENSOR,1,"Web CMD: Radio on");
       webradio_on();
     } else {
-      write2log(LOG_SENSOR,1,"Radio off");
+      write2log(LOG_SENSOR,1,"Web CMD: Radio off");
       webradio_off();
     }
-    mystate = obj_value;
   }
+  // Uhr aktualisieren wenn Minutenwechsel und Anzeige auf Radioprogramm
   if (last_min != timeinfo.tm_min) {
     if (cur_level == MINLEVEL) mydisplay.show_time();
     last_min = timeinfo.tm_min;

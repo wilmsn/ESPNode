@@ -26,6 +26,9 @@ public:
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
     void loop();
+    /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
+    /// @param json Nimmt den JSON String zur Initialisierung auf
+    void html_create_json_part(String& json);
     
 private:
     void webradio_off();
