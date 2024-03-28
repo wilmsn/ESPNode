@@ -1,4 +1,5 @@
 #include "config.h"
+#include "common.h"
 
 #ifdef _WEBRADIO_H_
 //#include "webradio.h"
@@ -72,24 +73,10 @@ extern tm timeinfo;
 /// @brief Level 2 ist ???
 #define LEVEL2_MIN  0
 #define LEVEL2_MIN  0
-// Station definitions
-#define MAXSTATION            9
-#define STATION_NAME_LENGTH   30
-#define STATION_URL_LENGTH    128
+// Start definitions
 #define ACTOR_START_VALUE     true
 #define ACTOR_ON_VALUE        true
 
-typedef struct {
-    uint8_t min;
-    uint8_t max;
-    uint8_t cur;
-} level_t;
-
-typedef struct {
-    uint8_t num;
-    char    name[STATION_NAME_LENGTH];
-    char    url[STATION_URL_LENGTH];
-} station_t;
 
 /// The settings for each level for the rotary encoder
 /// 0 => Radio playing level
@@ -306,6 +293,33 @@ void Webradio::set_station() {
     );
   }
   if ( strlen(station[cur_station].url) > 10 ) audio.connecttohost(station[cur_station].url);
+}
+
+bool Webradio::set(const String& keyword, const String& value) {
+  bool retval = false;
+  if (! Switch_OnOff::set(keyword, value)) {
+    for (int i=0; i<10; i++) {
+      if (!retval && keyword == String("station"+String(i)+"_url") ) {
+        write2log(LOG_SENSOR,1,String("Found: station"+String(i)+"_url").c_str());
+        prefs.putString(String("stat_"+String(i)+"_url").c_str(),value.c_str());
+        snprintf(station[i].url,STATION_URL_LENGTH,"%s",value.c_str());
+        retval = true;
+      }
+      if (!retval && keyword == String("station"+String(i)+"_name") ) {
+        write2log(LOG_SENSOR,1,String("Found: station"+String(i)+"_url").c_str());
+        prefs.putString(String("stat_"+String(i)+"_name").c_str(),value.c_str());
+        snprintf(station[i].name,STATION_NAME_LENGTH,"%s",value.c_str());
+        retval = true;
+      }
+    }
+    if (!retval && keyword == String("play") ) {
+      write2log(LOG_SENSOR,1,String("Found: play").c_str());
+      retval = true;
+    }
+  } else {
+    retval = true;
+  }
+  return retval;
 }
 
 void Webradio::loop() {

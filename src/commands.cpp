@@ -8,6 +8,21 @@ void show_settings() {
   cons_str += loop_time_alarm;
   cons_str += " ms\"}";
   ws.textAll(cons_str);
+  for (int i=0; i<10;i++) {
+    cons_str = "{\"stat\":\"Station"+String(i)+"_Name: ";
+    cons_str += station[i].name;
+    cons_str += "\"}";
+    ws.textAll(cons_str);
+    write2log(LOG_SENSOR,1,cons_str.c_str());
+    cons_str = "{\"stat\":\"Station"+String(i)+"_URL: ";
+    cons_str += station[i].url;
+    cons_str += "\"}";
+    ws.textAll(cons_str);
+    write2log(LOG_SENSOR,1,cons_str.c_str());
+  }
+//  cons_str += "\"stat\":\"ENDE\"}";
+//  write2log(LOG_SENSOR,1,cons_str.c_str());
+//  ws.textAll(cons_str);
 
 }
 
@@ -19,19 +34,20 @@ void console_help() {
   ws.textAll(cons_str);
   cons_str = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
   ws.textAll(cons_str);
+  cons_str = "{\"stat\":\"station[0..9]_name=<neuer Name>\"}";
+  ws.textAll(cons_str);
+  cons_str = "{\"stat\":\"Gibt einen neuen Namen für die Station ein\"}";
+  ws.textAll(cons_str);
+  cons_str = "{\"stat\":\"station[0..9]_url=<neue URL>\"}";
+  ws.textAll(cons_str);
+  cons_str = "{\"stat\":\"Gibt eine neue URL für die Station ein\"}";
+  ws.textAll(cons_str);
 
-  cons_str = "{\"stat\":\"help2\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"help3\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"help4\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"help5\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"help6\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"help7\"}";
-  ws.textAll(cons_str);
+//  cons_str = "{\"stat\":\"help6\"}";
+//  ws.textAll(cons_str);
+//  cons_str = "{\"stat\":\"help7\"}";
+//  ws.textAll(cons_str);
+
 }
 
 // Kommentiert in main.h

@@ -34,6 +34,18 @@ typedef unsigned char uint8_t;
 
 #include "config.h"
 
+typedef struct {
+    uint8_t min;
+    uint8_t max;
+    uint8_t cur;
+} level_t;
+
+typedef struct {
+    uint8_t num;
+    char    name[STATION_NAME_LENGTH];
+    char    url[STATION_URL_LENGTH];
+} station_t;
+
 // externe Referenzen
 // Modul: webserver
 extern AsyncWebSocket ws;
@@ -64,6 +76,9 @@ extern int rf24gw_gw_no;
 
 void rf24gw_setup();
 void rf24gw_loop();
+
+// Modul: commands
+extern station_t station[MAXSTATION];
 
 // Modul: main
 //extern AsyncWebServer httpServer;
@@ -132,4 +147,6 @@ void prozess_cmd(const String cmd, const String value);
 extern String html_json;
 
 const char* mk_topic(const char* part1, const char* part3);
+
+
 #endif

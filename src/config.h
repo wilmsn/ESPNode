@@ -57,6 +57,12 @@
 //#define I2S_BCLK     27
 //#define I2S_LRC      26
 
+// Settings for Webradio-Stations definitions
+#define MAXSTATION            9
+#define STATION_NAME_LENGTH   30
+#define STATION_URL_LENGTH    128
+
+
 //Settings for Logging
 #ifndef LOG_WEB
 #define LOG_WEB                      false

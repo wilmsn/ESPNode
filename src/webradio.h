@@ -29,6 +29,14 @@ public:
     /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
     /// @param json Nimmt den JSON String zur Initialisierung auf
     void html_create_json_part(String& json);
+    /// @brief Die normale Set Funktion aus de Grundmodul erweitert um feste Schlüsselwörter 
+    /// @brief zur Einspeicherung von Radiostationen und zur Senderwahl.
+    /// @brief station[0..9]_url; station[0..9]_name; play;
+    /// @param keyword Das zu testende "keyword"
+    /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
+    /// @return "true" bei Übereinstimmung der Keywörter sonst false
+    bool set(const String& keyword, const String& value);
+
     
 private:
     void webradio_off();
