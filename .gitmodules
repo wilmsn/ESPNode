@@ -38,3 +38,15 @@
         path = lib/ESP32-audioI2S
         url = git@github.com:wilmsn/ESP32-audioI2S.git
 
+[submodule "lib/Ai_Esp32_Rotary_Encoder"]
+	path = lib/Ai_Esp32_Rotary_Encoder
+	url = git@github.com:wilmsn/ai-esp32-rotary-encoder.git
+[submodule "lib/Adafruit_BusIO"]
+	path = lib/Adafruit_BusIO
+	url = git@github.com:wilmsn/Adafruit_BusIO.git
+[submodule "lib/Adafruit_GC9A01A"]
+	path = lib/Adafruit_GC9A01A
+	url = git@github.com:wilmsn/Adafruit_GC9A01A.git
+[submodule "lib/Adafruit_GFX_Library"]
+	path = lib/Adafruit_GFX_Library
+	url = git@github.com:wilmsn/Adafruit-GFX-Library.git
