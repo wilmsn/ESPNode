@@ -34,3 +34,7 @@
 [submodule "lib/Uptime"]
 	path = lib/Uptime
 	url = git@github.com:wilmsn/Uptime.git
+[submodule "lib/ESP32-audioI2S"]
+        path = lib/ESP32-audioI2S
+        url = git@github.com:wilmsn/ESP32-audioI2S.git
+

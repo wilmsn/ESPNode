@@ -225,7 +225,7 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
     Serial.println(I2S_DOUT);
 #endif
   }
-  audio.setBufsize(30000,300000);
+  audio.setBufsize(30000,600000);
   audio.setVolumeSteps(100);
   mydisplay.begin(&tftx);
   mydisplay.show_ip(WiFi.localIP().toString().c_str());
@@ -277,6 +277,7 @@ void Webradio::set_vol() {
       write2log(LOG_SENSOR,1,"Vol CMD: Radio on");
       set(obj_keyword,String("on")); 
     }
+    audio.setVolume(cur_vol);
     mydisplay.show_vol(cur_vol);
     prefs.begin("prefs",false);
     prefs.putUChar("cur_vol", cur_vol);
