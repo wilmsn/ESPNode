@@ -753,18 +753,38 @@ void loop() {
 #endif
 #if defined(SWITCH1)
     switch1.loop();
+    if (switch1.changed()) {
+      html_json = switch1.html_stat_json();
+      write2log(LOG_SENSOR,1,html_json.c_str());
+      ws.textAll(html_json);
+    }
     yield();
 #endif
 #if defined(SWITCH2)
     switch2.loop();
+    if (switch2.changed()) {
+      html_json = switch2.html_stat_json();
+      write2log(LOG_SENSOR,1,html_json.c_str());
+      ws.textAll(html_json);
+    }
     yield();
 #endif
 #if defined(SWITCH3)
     switch3.loop();
+    if (switch3.changed()) {
+      html_json = switch3.html_stat_json();
+      write2log(LOG_SENSOR,1,html_json.c_str());
+      ws.textAll(html_json);
+    }
     yield();
 #endif
 #if defined(SWITCH4)
     switch4.loop();
+    if (switch4.changed()) {
+      html_json = switch4.html_stat_json();
+      write2log(LOG_SENSOR,1,html_json.c_str());
+      ws.textAll(html_json);
+    }
     yield();
 #endif
 #if defined(SENSOR1)
