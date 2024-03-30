@@ -8,6 +8,7 @@ void show_settings() {
   cons_str += loop_time_alarm;
   cons_str += " ms\"}";
   ws.textAll(cons_str);
+/*
   for (int i=0; i<10;i++) {
     cons_str = "{\"stat\":\"Station"+String(i)+"_Name: ";
     cons_str += station[i].name;
@@ -20,10 +21,36 @@ void show_settings() {
     ws.textAll(cons_str);
     write2log(LOG_SENSOR,1,cons_str.c_str());
   }
-//  cons_str += "\"stat\":\"ENDE\"}";
-//  write2log(LOG_SENSOR,1,cons_str.c_str());
-//  ws.textAll(cons_str);
-
+*/
+  cons_str = "{\"stat\":\"Sender:\"}";
+  ws.textAll(cons_str);
+  File f = LittleFS.open( "/sender.txt", "r" );
+  if (f) {
+    Serial.print("sender.txt size: ");
+    Serial.println(f.size());
+    while (f.available()) {
+      cons_str = "{\"stat\":\"";
+      cons_str += f.readStringUntil('\n');
+      cons_str += "\"}";
+      cons_str.replace("\r", "");
+//      cons_str.replace("\n", "\0");
+      Serial.println(cons_str);
+      write2log(LOG_SENSOR,1,cons_str.c_str());
+      ws.textAll(cons_str);
+    }
+    f.close();
+  } else {
+    cons_str = "{\"stat\":\"Error opening sender.txt\"}";
+    ws.textAll(cons_str);
+  }
+/*
+  for (int i=0; i<10;i++) {
+    Serial.printf("X%sX\n",station[i].name);
+    Serial.printf("X%sX\n",station[i].url);
+  }
+*/
+  cons_str += "{\"stat\":\"ENDE\"}";
+  ws.textAll(cons_str);
 }
 
 

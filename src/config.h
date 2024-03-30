@@ -58,7 +58,7 @@
 //#define I2S_LRC      26
 
 // Settings for Webradio-Stations definitions
-#define MAXSTATION            9
+#define MAXSTATION            10
 #define STATION_NAME_LENGTH   30
 #define STATION_URL_LENGTH    128
 

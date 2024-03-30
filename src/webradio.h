@@ -44,6 +44,7 @@ private:
     void set_vol();
     void set_station();
     void show_station();
+    void save_station();
     uint8_t cur_vol = 10;   // Die aktuelle Lautstärke von 0 bis 100 Prozent
     uint8_t slider_val_old;
     bool    mystate;

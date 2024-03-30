@@ -111,23 +111,23 @@ Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
 RadioDisplay mydisplay;
 /// @brief Instances to save the Preferences
 /// @brief For stations and other settings
-Preferences prefs;
-
+//Preferences prefs;
+extern Preferences preferences;
+extern String cons_str;
+extern AsyncWebSocket ws;
 
 void IRAM_ATTR readRotaryISR() {
   rotary.readEncoder_ISR();
 }
 
 void Webradio::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword) {
-  // First, preallocate all the memory needed for the buffering and codecs, never to be freed
-  prefs.begin("prefs",false);
-  if ( !prefs.isKey("cur_vol") ) {
-    prefs.putUChar("cur_vol", 5);
-    prefs.putUChar("cur_station", 0);
+  if ( !preferences.isKey("cur_vol") ) {
+    preferences.putUChar("cur_vol", 5);
+    preferences.putUChar("cur_station", 0);
   }
-  cur_vol = prefs.getUChar("cur_vol");
+  cur_vol = preferences.getUChar("cur_vol");
   cur_level = MINLEVEL;
-  cur_station = prefs.getUChar("cur_station");
+  cur_station = preferences.getUChar("cur_station");
   uint8_t mylevel = MINLEVEL;
   level[mylevel].min = 0;
   level[mylevel].max = 100;
@@ -140,68 +140,22 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   level[mylevel].min = 0;
   level[mylevel].max = 1;
   level[mylevel].cur = 0;
-  if ( ! prefs.isKey("stat_0_url") ) {
-    prefs.putString("stat_0_url","http://stream.lokalradio.nrw/4459m27");
-    prefs.putString("stat_0_name","Radio Kiepenkerl");
+  File f = LittleFS.open( "/sender.txt", "r" );
+  if (f) {
+    for (int i=0; i<MAXSTATION; i++) {
+      snprintf(station[i].name,STATION_NAME_LENGTH,"%s",f.readStringUntil('\n').c_str());
+      snprintf(station[i].url,STATION_URL_LENGTH,"%s",f.readStringUntil('\n').c_str());
+    }
+    f.close();
   }
-  if ( ! prefs.isKey("stat_1_url") ) {
-    prefs.putString("stat_1_url","http://streams.radio21.de/nrw/mp3-192/web");
-    prefs.putString("stat_1_name","Radio 21 NRW");
+  f = LittleFS.open( "/sender.txt", "r" );
+  if (f) {
+    for (int i=0; i<MAXSTATION; i++) {
+      Serial.printf("%s=>%s\n",f.readStringUntil('\n').c_str(),station[i].name);
+      Serial.printf("%s=>%s\n",f.readStringUntil('\n').c_str(),station[i].url);
+    }
+    f.close();
   }
-  if ( ! prefs.isKey("stat_2_url") ) {
-    prefs.putString("stat_2_url","http://icecast.ndr.de/ndr/njoy/live/mp3/128/stream.mp3");
-    prefs.putString("stat_2_name","N-Joy");
-  }
-//  if ( ! prefs.isKey("stat_3_url") ) {
-    prefs.putString("stat_3_url","");
-    prefs.putString("stat_3_name","leer");
-//  }
-//  if ( ! prefs.isKey("stat_4_url") ) {
-    prefs.putString("stat_4_url","");
-    prefs.putString("stat_4_name","leer");
-//  }
-//  if ( ! prefs.isKey("stat_5_url") ) {
-    prefs.putString("stat_5_url","");
-    prefs.putString("stat_5_name","leer");
-//  }
-//  if ( ! prefs.isKey("stat_6_url") ) {
-    prefs.putString("stat_6_url","");
-    prefs.putString("stat_6_name","leer");
-//  }
-//  if ( ! prefs.isKey("stat_7_url") ) {
-    prefs.putString("stat_7_url","");
-    prefs.putString("stat_7_name","leer");
-//  }
-//  if ( ! prefs.isKey("stat_8_url") ) {
-    prefs.putString("stat_8_url","");
-    prefs.putString("stat_8_name","leer");
-//  }
-//  if ( ! prefs.isKey("stat_9_url") ) {
-    prefs.putString("stat_9_url","");
-    prefs.putString("stat_9_name","leer");
-//  }
-  prefs.getString("stat_0_url",station[0].url,STATION_URL_LENGTH);
-  prefs.getString("stat_0_name",station[0].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_1_url",station[1].url,STATION_URL_LENGTH);
-  prefs.getString("stat_1_name",station[1].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_2_url",station[2].url,STATION_URL_LENGTH);
-  prefs.getString("stat_2_name",station[2].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_3_url",station[3].url,STATION_URL_LENGTH);
-  prefs.getString("stat_3_name",station[3].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_4_url",station[4].url,STATION_URL_LENGTH);
-  prefs.getString("stat_4_name",station[4].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_5_url",station[5].url,STATION_URL_LENGTH);
-  prefs.getString("stat_5_name",station[5].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_6_url",station[6].url,STATION_URL_LENGTH);
-  prefs.getString("stat_6_name",station[6].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_7_url",station[7].url,STATION_URL_LENGTH);
-  prefs.getString("stat_7_name",station[7].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_8_url",station[8].url,STATION_URL_LENGTH);
-  prefs.getString("stat_8_name",station[8].name,STATION_NAME_LENGTH);
-  prefs.getString("stat_9_url",station[9].url,STATION_URL_LENGTH);
-  prefs.getString("stat_9_name",station[9].name,STATION_NAME_LENGTH);
-  prefs.end();
-// ToDo erweitern um alle Stationen
   if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
 #if defined(DEBUG_SERIAL_MODULE)
     Serial.print("Set PinOut: BCLK:");
@@ -223,6 +177,13 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, ACTOR_START_VALUE, ACTOR_ON_VALUE, cur_vol, 1, "Lautstärke");
   webradio_on();
   mystate = true;
+
+      Serial.println("station array");
+    for (int i=0; i<MAXSTATION; i++) {
+      Serial.println(station[i].name);
+      Serial.println(station[i].url);
+    }
+
 }
 
 void Webradio::html_create_json_part(String& json) {
@@ -231,9 +192,6 @@ void Webradio::html_create_json_part(String& json) {
 }
 
 void Webradio::webradio_off() {
-#if defined(DEBUG_SERIAL_MODULE)
-    Serial.println("webadio_off");
-#endif
   write2log(LOG_SENSOR,1,"Radio off");
   audio.setVolume(0);
   audio.stopSong();
@@ -253,7 +211,6 @@ void Webradio::webradio_on() {
 void Webradio::set_vol() {
   char volstr[20];
   int  bg;
-//  cur_vol=10;
   sprintf(volstr,"New Volume %u",cur_vol);
   write2log(LOG_SENSOR,1,volstr);
   if (cur_vol == 0) { 
@@ -266,9 +223,7 @@ void Webradio::set_vol() {
     }
     audio.setVolume(cur_vol);
     mydisplay.show_vol(cur_vol);
-    prefs.begin("prefs",false);
-    prefs.putUChar("cur_vol", cur_vol);
-    prefs.end();
+    preferences.putUChar("cur_vol", cur_vol);
   }
 }
 
@@ -292,29 +247,87 @@ void Webradio::set_station() {
         cur_station < MAXSTATION - 1 ? station[cur_station+2].name : "s4"
     );
   }
-  if ( strlen(station[cur_station].url) > 10 ) audio.connecttohost(station[cur_station].url);
+  if ( strlen(station[cur_station].url) > 10 ) {
+    audio.connecttohost(station[cur_station].url);
+    write2log(LOG_SENSOR,2,"Switch to ",station[cur_station].url);
+  }
+}
+
+void Webradio::save_station() {
+  File f;
+    Serial.println("########################");
+    Serial.println("station array");
+    for (int i=0; i<MAXSTATION; i++) {
+      Serial.println(station[i].name);
+      Serial.println(station[i].url);
+    }
+    Serial.println("sender.txt vorher");
+  f = LittleFS.open( "/sender.txt", "r" );
+  if (f) {
+    Serial.println("Datei sender.txt zum lesen geöffnet");
+    while (f.available()) {
+      Serial.print(f.readStringUntil('\n'));
+    }
+    delay(5);
+    f.close();
+    Serial.println("Datei sender.txt geschlossen");
+  }
+    Serial.println("sender.txt wird beschrieben");
+  f = LittleFS.open( "/sender.txt", "w" );
+  if (f) {
+    Serial.println("Datei sender.txt zum schreiben geöffnet");
+    for (int i=0; i<MAXSTATION; i++) {
+      write2log(LOG_SENSOR,2,station[i].name,station[i].url);
+      Serial.println(station[i].name);
+      Serial.println(station[i].url);
+      f.printf("%s\n",station[i].name);
+      f.printf("%s\n",station[i].url);
+    }
+    delay(5);
+    f.close();
+    Serial.println("Datei sender.txt geschlossen");
+  }
+      Serial.println("sender.txt nachher");
+  f = LittleFS.open( "/sender.txt", "r" );
+  if (f) {
+    Serial.println("Datei sender.txt zum lesen geöffnet");
+    while (f.available()) {
+      Serial.println(f.readStringUntil('\n'));
+    }
+    delay(5);
+    f.close();
+    Serial.println("Datei sender.txt geschlossen");
+  }
+    Serial.println("########################");
 }
 
 bool Webradio::set(const String& keyword, const String& value) {
   bool retval = false;
+  String myvalue = value;
+  replace(myvalue.begin(),myvalue.end(),'\n',' ');
   if (! Switch_OnOff::set(keyword, value)) {
-    for (int i=0; i<10; i++) {
+    for (int i=0; i<MAXSTATION; i++) {
       if (!retval && keyword == String("station"+String(i)+"_url") ) {
         write2log(LOG_SENSOR,1,String("Found: station"+String(i)+"_url").c_str());
-        prefs.putString(String("stat_"+String(i)+"_url").c_str(),value.c_str());
-        snprintf(station[i].url,STATION_URL_LENGTH,"%s",value.c_str());
+        snprintf(station[i].url,STATION_URL_LENGTH,"%s",myvalue.c_str());
+        save_station();
         retval = true;
       }
       if (!retval && keyword == String("station"+String(i)+"_name") ) {
         write2log(LOG_SENSOR,1,String("Found: station"+String(i)+"_url").c_str());
-        prefs.putString(String("stat_"+String(i)+"_name").c_str(),value.c_str());
-        snprintf(station[i].name,STATION_NAME_LENGTH,"%s",value.c_str());
+        snprintf(station[i].name,STATION_NAME_LENGTH,"%s",myvalue.c_str());
+        save_station();
         retval = true;
       }
-    }
-    if (!retval && keyword == String("play") ) {
-      write2log(LOG_SENSOR,1,String("Found: play").c_str());
-      retval = true;
+      if (!retval && keyword == String("station"+String(i))) {
+        write2log(LOG_SENSOR,1,String("Found: station"+String(i)).c_str());
+        cur_station = i;
+        if ( strlen(station[cur_station].url) > 10 ) {
+          audio.connecttohost(station[cur_station].url);
+          write2log(LOG_SENSOR,2,"Switch to ",station[cur_station].url);
+        }
+        retval = true;
+      }
     }
   } else {
     retval = true;
@@ -430,20 +443,32 @@ void audio_info(const char *info){
 void audio_showstreamtitle(const char *info){
   write2log(LOG_SENSOR,2,"Titel:", info);
   if (cur_level == MINLEVEL) mydisplay.show_title(info);
+  cons_str = "{\"sens2\":\"";
+  cons_str += info;
+  cons_str += "\"}";
+  ws.textAll(cons_str);
 }
 
 void audio_bitrate(const char *info) {
-    char bpsInfo[5];
-    bpsInfo[0] = info[0];
-    bpsInfo[1] = info[1];
-    bpsInfo[2] = info[2];
-    bpsInfo[3] = 'K';
-    bpsInfo[4] = 0;
-    write2log(LOG_SENSOR,2,"Bitrate:", info);
+  char bpsInfo[5];
+  bpsInfo[0] = info[0];
+  bpsInfo[1] = info[1];
+  bpsInfo[2] = info[2];
+  bpsInfo[3] = 'K';
+  bpsInfo[4] = 0;
+  write2log(LOG_SENSOR,2,"Bitrate:", info);
+  cons_str = "{\"sens3\":\"";
+  cons_str += bpsInfo;
+  cons_str += "\"}";
+  ws.textAll(cons_str);
 }
 
 void audio_showstation(const char *info){
   write2log(LOG_SENSOR,2,"Station:", info);
+  cons_str = "{\"sens1\":\"";
+  cons_str += info;
+  cons_str += "\"}";
+  ws.textAll(cons_str);
 }
 
 
