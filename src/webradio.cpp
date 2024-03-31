@@ -1,68 +1,28 @@
 #include "config.h"
 #include "common.h"
 
-#ifdef _WEBRADIO_H_
+#ifdef WEBRADIO
 //#include "webradio.h"
 #include "Audio.h"
 #include "AiEsp32RotaryEncoder.h"
 #include <Preferences.h>
 
-/// Da ich die Direktive für den ESP32S3 nicht kenne, hier eine eigene:
-#define DO_ESP32S3
-/// Alternative auch eine eigene Direktive für den ESP32:
-//#define DO_ESP32
+#ifdef CONFIG_ESP32S3
+#warning "Compiling Webradio with Settings for ESP32-S3"
+#endif
+#ifdef CONFIG_ESP32
+#warning "Compiling Webradio with Settings for ESP32"
+#endif
 
 /// @brief Eine Instanz für das Audio 
 Audio audio;
 /// @brief Die Variable timeinfo wird im Rumpfprogramm verwaltet, hier nur für die Anzeige der Zeit genutzt.
 extern tm timeinfo;
 
-// Definitions for ESP32 Board
-#ifdef DO_ESP32
-#warning "ESP32"
-// I2S Settings
-#define LRCLK 26
-#define BCLK 27
-#define DOUT 25
-// Rotary Encoder Settings
-#define ROTARY_ENCODER_A_PIN 32
-#define ROTARY_ENCODER_B_PIN 33
-#define ROTARY_ENCODER_BUTTON_PIN 4
-#define ROTARY_ENCODER_VCC_PIN -1
-//depending on your encoder - try 1,2 or 4 to get expected behaviour
-//#define ROTARY_ENCODER_STEPS 1
-//#define ROTARY_ENCODER_STEPS 2
-#define ROTARY_ENCODER_STEPS 4
-//TFT Settings
-#define GC9A01A_TFT_DC 5
-#define GC9A01A_TFT_CS 21
-#define ARC_SIGMENT_DEGREES 3
-#define ARC_WIDTH 5
-#endif
-#ifdef DO_ESP32S3
-#warning "ESP32-S3"
-#define I2S_DOUT     6
-#define I2S_BCLK     5
-#define I2S_LRC      4
-#define ROTARY_ENCODER_A_PIN      37
-#define ROTARY_ENCODER_B_PIN      36
-#define ROTARY_ENCODER_BUTTON_PIN 35
-#define ROTARY_ENCODER_VCC_PIN    -1
-#define ROTARY_ENCODER_STEPS      4
-#define LONG_PRESSED_AFTER_MS     1000
-#define SHORT_PRESSED_AFTER_MS    20
-// Display
-// SCL (Display) => SCK  12
-// SDA (Display) => MOSI 11
-#define GC9A01A_TFT_CS        10
-#define GC9A01A_TFT_DC        9
-#endif
-
 
 /// @brief Level definitions:
-/// @brief Level beginnen bei MINLEVEL und enden bei MAXLEVEL
+/// @brief Level beginnen bei 0 und enden bei MAXLEVEL-1
 /// @brief 
-#define MINLEVEL    1
 #define MAXLEVEL    3
 /// @brief Level 0 ist die Lautst#rke
 #define LEVEL0_MIN  0
@@ -126,15 +86,15 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
     preferences.putUChar("cur_station", 0);
   }
   cur_vol = preferences.getUChar("cur_vol");
-  cur_level = MINLEVEL;
+  cur_level = 0;
   cur_station = preferences.getUChar("cur_station");
-  uint8_t mylevel = MINLEVEL;
+  uint8_t mylevel = 0;
   level[mylevel].min = 0;
   level[mylevel].max = 100;
   level[mylevel].cur = cur_vol;
   mylevel++;
   level[mylevel].min = 0;
-  level[mylevel].max = MAXSTATION;
+  level[mylevel].max = MAXSTATION-1;
   level[mylevel].cur = cur_station;
   mylevel++;
   level[mylevel].min = 0;
@@ -197,10 +157,11 @@ void Webradio::webradio_off() {
   audio.stopSong();
   radio_is_on = false;
   mydisplay.clear();
+  mydisplay.show_time(true);
 }
 
 void Webradio::webradio_on() {
-  cur_level = MINLEVEL;
+  cur_level = 0;
   radio_is_on = true;
   write2log(LOG_SENSOR,1,"Radio on");
   set_station();
@@ -228,23 +189,23 @@ void Webradio::set_vol() {
 }
 
 void Webradio::show_station() {
-  if (cur_level == MINLEVEL) {
+  if (cur_level == 0) {
     mydisplay.clear();
     mydisplay.show_ip(WiFi.localIP().toString().c_str());
     mydisplay.show_vol(cur_vol);
-    mydisplay.show_time();
+    mydisplay.show_time(false);
     mydisplay.show_station(station[cur_station].name);
   }
 }
 
 void Webradio::set_station() {
-  if (cur_level == MINLEVEL+1) {
+  if (cur_level == 1) {
     mydisplay.select_station(
         cur_station > 1 ? station[cur_station-2].name : "",
         cur_station > 0 ? station[cur_station-1].name : "",
         station[cur_station].name,
-        cur_station < MAXSTATION ? station[cur_station+1].name : "s3",
-        cur_station < MAXSTATION - 1 ? station[cur_station+2].name : "s4"
+        cur_station < MAXSTATION ? station[cur_station+1].name : "",
+        cur_station < MAXSTATION - 1 ? station[cur_station+2].name : ""
     );
   }
   if ( strlen(station[cur_station].url) > 10 ) {
@@ -255,72 +216,79 @@ void Webradio::set_station() {
 
 void Webradio::save_station() {
   File f;
-    Serial.println("########################");
-    Serial.println("station array");
-    for (int i=0; i<MAXSTATION; i++) {
-      Serial.println(station[i].name);
-      Serial.println(station[i].url);
-    }
-    Serial.println("sender.txt vorher");
   f = LittleFS.open( "/sender.txt", "r" );
-  if (f) {
-    Serial.println("Datei sender.txt zum lesen geöffnet");
-    while (f.available()) {
-      Serial.print(f.readStringUntil('\n'));
-    }
-    delay(5);
-    f.close();
-    Serial.println("Datei sender.txt geschlossen");
-  }
-    Serial.println("sender.txt wird beschrieben");
   f = LittleFS.open( "/sender.txt", "w" );
   if (f) {
-    Serial.println("Datei sender.txt zum schreiben geöffnet");
     for (int i=0; i<MAXSTATION; i++) {
       write2log(LOG_SENSOR,2,station[i].name,station[i].url);
-      Serial.println(station[i].name);
-      Serial.println(station[i].url);
       f.printf("%s\n",station[i].name);
       f.printf("%s\n",station[i].url);
     }
     delay(5);
     f.close();
-    Serial.println("Datei sender.txt geschlossen");
   }
-      Serial.println("sender.txt nachher");
-  f = LittleFS.open( "/sender.txt", "r" );
-  if (f) {
-    Serial.println("Datei sender.txt zum lesen geöffnet");
-    while (f.available()) {
-      Serial.println(f.readStringUntil('\n'));
-    }
-    delay(5);
-    f.close();
-    Serial.println("Datei sender.txt geschlossen");
-  }
-    Serial.println("########################");
 }
 
 bool Webradio::set(const String& keyword, const String& value) {
   bool retval = false;
   String myvalue = value;
   replace(myvalue.begin(),myvalue.end(),'\n',' ');
+// Gibt zusätzliche Hilfen für dieses Modul aus
+  if ( keyword == String("?") || keyword == String("help") ) {
+    cons_str = "{\"stat\":\"sender[0..9]_name=<neuer Name>\"}";
+    ws.textAll(cons_str);
+    cons_str = "{\"stat\":\"Gibt einen neuen Namen für die Station ein\"}";
+    ws.textAll(cons_str);
+    cons_str = "{\"stat\":\"sender[0..9]_url=<neue URL>\"}";
+    ws.textAll(cons_str);
+    cons_str = "{\"stat\":\"Gibt eine neue URL für die Station ein\"}";
+    ws.textAll(cons_str);
+    cons_str = "{\"stat\":\"sender[0..9] >>> Schaltet den Sender um\"}";
+    ws.textAll(cons_str);
+  }
+// Gibt zusätzliche Settings für dieses Modul aus
+  if (keyword == String("settings") ) {
+    cons_str = "{\"stat\":\"Sender:\"}";
+    ws.textAll(cons_str);
+    File f = LittleFS.open( "/sender.txt", "r" );
+    if (f) {
+      Serial.print("sender.txt size: ");
+      Serial.println(f.size());
+      while (f.available()) {
+        cons_str = "{\"stat\":\"";
+        cons_str += f.readStringUntil('\n');
+        cons_str += "\"}";
+        write2log(LOG_SENSOR,1,cons_str.c_str());
+        ws.textAll(cons_str);
+      }
+      f.close();
+    } else {
+      cons_str = "{\"stat\":\"Error opening sender.txt\"}";
+      ws.textAll(cons_str);
+    }
+/*
+  for (int i=0; i<10;i++) {
+    Serial.printf("X%sX\n",station[i].name);
+    Serial.printf("X%sX\n",station[i].url);
+  }
+*/
+  }
   if (! Switch_OnOff::set(keyword, value)) {
     for (int i=0; i<MAXSTATION; i++) {
-      if (!retval && keyword == String("station"+String(i)+"_url") ) {
-        write2log(LOG_SENSOR,1,String("Found: station"+String(i)+"_url").c_str());
+      if (!retval && keyword == String("sender"+String(i)+"_url") ) {
+        write2log(LOG_SENSOR,1,String("Found: sender"+String(i)+"_url").c_str());
         snprintf(station[i].url,STATION_URL_LENGTH,"%s",myvalue.c_str());
         save_station();
         retval = true;
       }
-      if (!retval && keyword == String("station"+String(i)+"_name") ) {
-        write2log(LOG_SENSOR,1,String("Found: station"+String(i)+"_url").c_str());
+      if (!retval && keyword == String("sender"+String(i)+"_name") ) {
+        write2log(LOG_SENSOR,1,String("Found: sender"+String(i)+"_url").c_str());
         snprintf(station[i].name,STATION_NAME_LENGTH,"%s",myvalue.c_str());
         save_station();
         retval = true;
       }
-      if (!retval && keyword == String("station"+String(i))) {
-        write2log(LOG_SENSOR,1,String("Found: station"+String(i)).c_str());
+      if (!retval && keyword == String("sender"+String(i))) {
+        write2log(LOG_SENSOR,1,String("Found: sender"+String(i)).c_str());
         cur_station = i;
         if ( strlen(station[cur_station].url) > 10 ) {
           audio.connecttohost(station[cur_station].url);
@@ -358,14 +326,14 @@ void Webradio::loop() {
     snprintf(logstr,19,"rotary pos: %u", cur_position);
     write2log(LOG_SENSOR,1,logstr);
     switch (cur_level) {
-    case MINLEVEL:
+    case 0:
       cur_vol = cur_position;
       write2log(LOG_SENSOR,1,"Set Volume via Rotary");
       char vol_str[10];
       snprintf(vol_str,9,"S:%u",cur_position);
       set(obj_keyword,vol_str);
       break;
-    case MINLEVEL+1:
+    case 1:
       cur_station = cur_position;
       set_station();
       break;
@@ -392,7 +360,7 @@ void Webradio::loop() {
         level[cur_level].cur = cur_position;
 //      Enter new level
         cur_level++;
-        if (cur_level > MAXLEVEL) cur_level = MINLEVEL;
+        if (cur_level > MAXLEVEL-1) cur_level = 0;
 //      Set Boundries for new Level
         rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false);
 //      Restore Position
@@ -401,15 +369,15 @@ void Webradio::loop() {
         last_min = -1;   
 //      Do the action for this new level
         switch (cur_level) {
-        case MINLEVEL:
+        case 0:
           /* Aktuelles Ratioprogramm anzeigen */
           show_station();
           break;        
-        case MINLEVEL+1:
+        case 1:
           /* Senderwahl anzeigen */
           set_station();
           break;
-        case MINLEVEL+2:
+        case 2:
           mydisplay.clear();
 
           break;
@@ -431,7 +399,11 @@ void Webradio::loop() {
   }
   // Uhr aktualisieren wenn Minutenwechsel und Anzeige auf Radioprogramm
   if (last_min != timeinfo.tm_min) {
-    if (cur_level == MINLEVEL) mydisplay.show_time();
+    if (radio_is_on) {
+      if (cur_level == 0) mydisplay.show_time(false);
+    } else {
+      mydisplay.show_time(true);
+    }
     last_min = timeinfo.tm_min;
   }
 }
@@ -442,7 +414,7 @@ void audio_info(const char *info){
 
 void audio_showstreamtitle(const char *info){
   write2log(LOG_SENSOR,2,"Titel:", info);
-  if (cur_level == MINLEVEL) mydisplay.show_title(info);
+  if (cur_level == 0) mydisplay.show_title(info);
   cons_str = "{\"sens2\":\"";
   cons_str += info;
   cons_str += "\"}";
@@ -495,11 +467,17 @@ void RadioDisplay::show_vol(uint8_t vol) {
   fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
 }
 
-void RadioDisplay::show_time() {
-  tft->fillRect(80, 30, 90, 23, GC9A01A_BLACK);
+void RadioDisplay::show_time(bool big) {
   tft->setTextColor(GC9A01A_WHITE); 
-  tft->setTextSize(3);
-  tft->setCursor(80,30);
+  if (big) {
+    clear();
+    tft->setTextSize(7);
+    tft->setCursor(50,100);
+  } else {
+    tft->fillRect(80, 30, 90, 23, GC9A01A_BLACK);
+    tft->setTextSize(3);
+    tft->setCursor(80,30);
+  }
   if ( timeinfo.tm_min < 10) {
     tft->printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
   } else {
