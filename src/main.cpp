@@ -508,13 +508,16 @@ void setup() {
 #endif
   }
 #endif
-
-  preferences.begin("credentials");
+  // Zunächst werden die Preferences im Schreibmodus geöffnet.
+  // Sollte die "magicno" nicht mit der gespeicherten übereinstimmen
+  // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
+  preferences.begin("settings",true);
   magicno = preferences.getInt("magicno");
+  preferences.end();
 #if defined(DEBUG_SERIAL)
-  Serial.print("MagicNo = ");
+  Serial.print("MagicNo(Prefs) = ");
   Serial.println(magicno);
-  Serial.print("MagicNo = ");
+  Serial.print("MagicNo(Prg) = ");
   Serial.println(MAGICNO);
 #if defined(MQTT)
   Serial.print("MQTT_SERVER = ");
@@ -534,6 +537,7 @@ void setup() {
     do_log_mqtt = LOG_MQTT;
 #endif
 // Save the defaults for the next start!
+    preferences.begin("settings",false);
     preferences.putInt("magicno", MAGICNO);
     preferences.putString("wifi_ssid", wifi_ssid); 
     preferences.putString("wifi_pass", wifi_pass);
@@ -567,7 +571,9 @@ void setup() {
     preferences.putBool("do_log_web", do_log_web);
     preferences.putBool("do_log_sys", do_log_sys);
     preferences.putBool("do_log_critical", do_log_critical);
+    preferences.end();
   } else {
+    preferences.begin("settings",true);
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
     wifi_ssid = preferences.getString("wifi_ssid"); 
     wifi_pass = preferences.getString("wifi_pass");
@@ -591,8 +597,8 @@ void setup() {
     do_log_web = preferences.getBool("do_log_web");
     do_log_sys = preferences.getBool("do_log_sys");
     do_log_critical = preferences.getBool("do_log_critical");
+    preferences.end();
   }
-//  preferences.end();
 #if defined(DEBUG_SERIAL)
 #if defined(MQTT)
   Serial.print("MQTT: ");

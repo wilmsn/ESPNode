@@ -267,6 +267,10 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #if defined(NODE_WEBRADIO)
 
 #include "webradio.h"
+#define CONFIG_ESP32S3
+//#define CONFIG_ESP32
+#define MAGICNO                  471
+#define WEBRADIO
 
 //#define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_HTML

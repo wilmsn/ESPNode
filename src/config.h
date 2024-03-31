@@ -52,16 +52,6 @@
 #define RF24GW_GW_UDP_PORTNO           7003
 #endif
 
-//Settings for I2S
-//define I2S_DOUT     25
-//#define I2S_BCLK     27
-//#define I2S_LRC      26
-
-// Settings for Webradio-Stations definitions
-#define MAXSTATION            10
-#define STATION_NAME_LENGTH   30
-#define STATION_URL_LENGTH    128
-
 
 //Settings for Logging
 #ifndef LOG_WEB
@@ -152,7 +142,7 @@
 
 
 /// @brief Die Datenstruktur des payloads in dem RF24 Netzwerk. Sie wird nur benötigt wenn der RF24Gateway genutzt
-/// wird und auch dies nur damit LOginformationen angezeigt werden können.
+/// wird und auch dies nur damit Logging-Informationen angezeigt werden können.
 typedef struct {
 /// Die Node_ID ist der eindeutige Identifizierer für einen Node.
 /// Aktuell können hier die Nodes 1..255 genutzt werden (8 Bit Begrenzung)
@@ -228,6 +218,56 @@ typedef struct {
 
 extern void write2log(uint8_t kat, int count, ...);
 
+// Config für das Webradio
+// Definitions for ESP32 Board
+#ifdef CONFIG_ESP32
+//#warning "Settings for ESP32"
+// I2S Settings
+#define LRCLK 26
+#define BCLK 27
+#define DOUT 25
+// Rotary Encoder Settings
+#define ROTARY_ENCODER_A_PIN 32
+#define ROTARY_ENCODER_B_PIN 33
+#define ROTARY_ENCODER_BUTTON_PIN 4
+#define ROTARY_ENCODER_VCC_PIN -1
+//depending on your encoder - try 1,2 or 4 to get expected behaviour
+//#define ROTARY_ENCODER_STEPS 1
+//#define ROTARY_ENCODER_STEPS 2
+#define ROTARY_ENCODER_STEPS 4
+//TFT Settings
+#define GC9A01A_TFT_DC 5
+#define GC9A01A_TFT_CS 21
+#define ARC_SIGMENT_DEGREES 3
+#define ARC_WIDTH 5
+#endif
+
+#ifdef CONFIG_ESP32S3
+//#warning "Settings for ESP32-S3"
+#define I2S_DOUT     6
+#define I2S_BCLK     5
+#define I2S_LRC      4
+#define ROTARY_ENCODER_A_PIN      37
+#define ROTARY_ENCODER_B_PIN      36
+#define ROTARY_ENCODER_BUTTON_PIN 35
+#define ROTARY_ENCODER_VCC_PIN    -1
+#define ROTARY_ENCODER_STEPS      4
+#define LONG_PRESSED_AFTER_MS     1000
+#define SHORT_PRESSED_AFTER_MS    20
+// Display
+// SCL (Display) => SCK  12
+// SDA (Display) => MOSI 11
+#define GC9A01A_TFT_CS        10
+#define GC9A01A_TFT_DC        9
+#endif
+
+// Settings for Webradio-Stations definitions
+#define MAXSTATION            10
+#define STATION_NAME_LENGTH   30
+#define STATION_URL_LENGTH    128
+
+// Setting or the Levels of the Rotaryencoder
+#define MAXLEVEL              3
 
 
 #endif
