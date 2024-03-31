@@ -263,6 +263,27 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //#define RF24GW_NO                198
 
 #endif
+//-----------------------------------------------------
+#if defined(NODE_WEBRADIO)
+
+#include "webradio.h"
+#define CONFIG_ESP32S3
+//#define CONFIG_ESP32
+#define MAGICNO                  471
+#define WEBRADIO
+
+//#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_HTML
+
+#define HOSTNAME                 "Webradio"
+#define HOST_DISCRIPTION         "Ein Webradio Testnode"
+
+#define SWITCH1_DEFINITION       Webradio switch1;
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "radio", "radio", "radio");
+
+//#define MQTT_CLIENT              "RadioNode"
+
+#endif
 
 
 //define constrains for precompiler 
