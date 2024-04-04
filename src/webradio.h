@@ -28,7 +28,7 @@ public:
     void loop();
     /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
     /// @param json Nimmt den JSON String zur Initialisierung auf
-    void html_create_json_part(String& json);
+    //void html_create_json_part(String& json);
     /// @brief Die normale Set Funktion aus de Grundmodul erweitert um feste Schlüsselwörter 
     /// @brief zur Einspeicherung von Radiostationen und zur Senderwahl.
     /// @brief station[0..9]_url; station[0..9]_name; play;
@@ -63,6 +63,7 @@ public:
   void begin(Adafruit_GC9A01A* mytft);
   void clear();
   void show_ip(const char* myip);
+  void show_bps(const char* mybps);
   void show_vol(uint8_t vol);
   void show_station(const char* mystation);
   void show_title(const char* mytitle);

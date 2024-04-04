@@ -1,6 +1,7 @@
 #include "config.h"
 #include "common.h"
 
+#ifdef ESP32
 #ifdef WEBRADIO
 //#include "webradio.h"
 #include "Audio.h"
@@ -18,6 +19,10 @@
 Audio audio;
 /// @brief Die Variable timeinfo wird im Rumpfprogramm verwaltet, hier nur für die Anzeige der Zeit genutzt.
 extern tm timeinfo;
+/// @brief Instances for the Preferences is defined in main.h
+extern Preferences preferences;
+/// @brief Instance for websockets is defined in webserver.h
+extern AsyncWebSocket ws;
 
 
 /// @brief Level definitions:
@@ -69,18 +74,13 @@ AiEsp32RotaryEncoder rotary = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_
 Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
 /// @brief Instance for displayhandling
 RadioDisplay mydisplay;
-/// @brief Instances to save the Preferences
-/// @brief For stations and other settings
-//Preferences prefs;
-extern Preferences preferences;
-extern String cons_str;
-extern AsyncWebSocket ws;
 
 void IRAM_ATTR readRotaryISR() {
   rotary.readEncoder_ISR();
 }
 
 void Webradio::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword) {
+  preferences.begin("settings",false);
   if ( !preferences.isKey("cur_vol") ) {
     preferences.putUChar("cur_vol", 5);
     preferences.putUChar("cur_station", 0);
@@ -88,6 +88,7 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   cur_vol = preferences.getUChar("cur_vol");
   cur_level = 0;
   cur_station = preferences.getUChar("cur_station");
+  preferences.end();
   uint8_t mylevel = 0;
   level[mylevel].min = 0;
   level[mylevel].max = 100;
@@ -135,6 +136,7 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   rotary.setBoundaries(0, 100, false); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
   rotary.setEncoderValue(cur_vol); //preset the value to current gain
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, ACTOR_START_VALUE, ACTOR_ON_VALUE, cur_vol, 1, "Lautstärke");
+  set_slider_max_value(100);
   webradio_on();
   mystate = true;
 
@@ -146,10 +148,10 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
 
 }
 
-void Webradio::html_create_json_part(String& json) {
-  Switch_OnOff::html_create_json_part(json);
-  json += ",\"slider1max\":100";
-}
+//void Webradio::html_create_json_part(String& json) {
+//  Switch_OnOff::html_create_json_part(json);
+//  json += ",\"slider1max\":100";
+//}
 
 void Webradio::webradio_off() {
   write2log(LOG_SENSOR,1,"Radio off");
@@ -184,7 +186,9 @@ void Webradio::set_vol() {
     }
     audio.setVolume(cur_vol);
     mydisplay.show_vol(cur_vol);
+    preferences.begin("settings",false);
     preferences.putUChar("cur_vol", cur_vol);
+    preferences.end();
   }
 }
 
@@ -235,36 +239,41 @@ bool Webradio::set(const String& keyword, const String& value) {
   replace(myvalue.begin(),myvalue.end(),'\n',' ');
 // Gibt zusätzliche Hilfen für dieses Modul aus
   if ( keyword == String("?") || keyword == String("help") ) {
-    cons_str = "{\"stat\":\"sender[0..9]_name=<neuer Name>\"}";
-    ws.textAll(cons_str);
-    cons_str = "{\"stat\":\"Gibt einen neuen Namen für die Station ein\"}";
-    ws.textAll(cons_str);
-    cons_str = "{\"stat\":\"sender[0..9]_url=<neue URL>\"}";
-    ws.textAll(cons_str);
-    cons_str = "{\"stat\":\"Gibt eine neue URL für die Station ein\"}";
-    ws.textAll(cons_str);
-    cons_str = "{\"stat\":\"sender[0..9] >>> Schaltet den Sender um\"}";
-    ws.textAll(cons_str);
+    html_json = "{\"stat\":\"sender[0..9]_name=<neuer Name>\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+    html_json = "{\"stat\":\"Gibt einen neuen Namen für die Station ein\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+    html_json = "{\"stat\":\"sender[0..9]_url=<neue URL>\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+    html_json = "{\"stat\":\"Gibt eine neue URL für die Station ein\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+    html_json = "{\"stat\":\"sender[0..9] >>> Schaltet den Sender um\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
   }
 // Gibt zusätzliche Settings für dieses Modul aus
   if (keyword == String("settings") ) {
-    cons_str = "{\"stat\":\"Sender:\"}";
-    ws.textAll(cons_str);
+    html_json = "{\"stat\":\"Sender:\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
     File f = LittleFS.open( "/sender.txt", "r" );
     if (f) {
-      Serial.print("sender.txt size: ");
-      Serial.println(f.size());
       while (f.available()) {
-        cons_str = "{\"stat\":\"";
-        cons_str += f.readStringUntil('\n');
-        cons_str += "\"}";
-        write2log(LOG_SENSOR,1,cons_str.c_str());
-        ws.textAll(cons_str);
+        html_json = "{\"stat\":\"";
+        html_json += f.readStringUntil('\n');
+        html_json += "\"}";
+        write2log(LOG_SENSOR,1,html_json.c_str());
+        ws.textAll(html_json);
       }
       f.close();
     } else {
-      cons_str = "{\"stat\":\"Error opening sender.txt\"}";
-      ws.textAll(cons_str);
+      html_json = "{\"stat\":\"Error opening sender.txt\"}";
+      write2log(LOG_WEB,1,html_json.c_str());
+      ws.textAll(html_json);
     }
 /*
   for (int i=0; i<10;i++) {
@@ -329,9 +338,10 @@ void Webradio::loop() {
     case 0:
       cur_vol = cur_position;
       write2log(LOG_SENSOR,1,"Set Volume via Rotary");
-      char vol_str[10];
-      snprintf(vol_str,9,"S:%u",cur_position);
-      set(obj_keyword,vol_str);
+//      char vol_str[10];
+//      snprintf(vol_str,9,"S:%u",cur_position);
+//      set(obj_keyword,vol_str);
+      set_slider(cur_vol);
       break;
     case 1:
       cur_station = cur_position;
@@ -415,32 +425,39 @@ void audio_info(const char *info){
 void audio_showstreamtitle(const char *info){
   write2log(LOG_SENSOR,2,"Titel:", info);
   if (cur_level == 0) mydisplay.show_title(info);
-  cons_str = "{\"sens2\":\"";
-  cons_str += info;
-  cons_str += "\"}";
-  ws.textAll(cons_str);
+  html_json = "{\"sens2\":\"";
+  html_json += info;
+  html_json += "\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
 }
 
 void audio_bitrate(const char *info) {
-  char bpsInfo[5];
+  char bpsInfo[8];
   bpsInfo[0] = info[0];
   bpsInfo[1] = info[1];
   bpsInfo[2] = info[2];
   bpsInfo[3] = 'K';
-  bpsInfo[4] = 0;
+  bpsInfo[4] = 'B';
+  bpsInfo[5] = 'p';
+  bpsInfo[6] = 's';
+  bpsInfo[7] = 0;
   write2log(LOG_SENSOR,2,"Bitrate:", info);
-  cons_str = "{\"sens3\":\"";
-  cons_str += bpsInfo;
-  cons_str += "\"}";
-  ws.textAll(cons_str);
+  if (cur_level == 0) mydisplay.show_bps(info);
+  html_json = "{\"sens3\":\"";
+  html_json += bpsInfo;
+  html_json += "\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
 }
 
 void audio_showstation(const char *info){
   write2log(LOG_SENSOR,2,"Station:", info);
-  cons_str = "{\"sens1\":\"";
-  cons_str += info;
-  cons_str += "\"}";
-  ws.textAll(cons_str);
+  html_json = "{\"sens1\":\"";
+  html_json += info;
+  html_json += "\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
 }
 
 
@@ -461,6 +478,13 @@ void RadioDisplay::show_ip(const char* myip) {
   tft->println(myip);
 }
 
+void RadioDisplay::show_bps(const char* mybps) {
+  tft->setTextColor(GC9A01A_RED);  
+  tft->setTextSize(1);
+  tft->setCursor(75, 205);
+  tft->println(mybps);
+}
+
 void RadioDisplay::show_vol(uint8_t vol) {
   if (vol > 90) vol=90;
   fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
@@ -472,11 +496,19 @@ void RadioDisplay::show_time(bool big) {
   if (big) {
     clear();
     tft->setTextSize(7);
-    tft->setCursor(50,100);
+    if ( timeinfo.tm_hour < 10) {
+      tft->setCursor(60,100);
+    } else {
+      tft->setCursor(20,100);
+    }
   } else {
     tft->fillRect(80, 30, 90, 23, GC9A01A_BLACK);
     tft->setTextSize(3);
-    tft->setCursor(80,30);
+    if ( timeinfo.tm_hour < 10) {
+      tft->setCursor(90,30);
+    } else {
+      tft->setCursor(80,30);
+    }
   }
   if ( timeinfo.tm_min < 10) {
     tft->printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
@@ -619,9 +651,5 @@ void RadioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
 }
 
 
-
-
-
-
-
+#endif
 #endif
