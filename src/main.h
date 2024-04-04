@@ -61,7 +61,7 @@ bool do_log_critical;
 String log_str;
 
 /// @brief Ein String zur temporären Nutzung im Programm.
-String tmp_str;
+//String tmp_str;
 
 /// @brief Ein fixes Array zur Aufnahme des Zeitstempels
 char timeStr[16];

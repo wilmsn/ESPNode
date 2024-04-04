@@ -8,6 +8,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_used = true;
   obj_slider_val = intensity;
   obj_slider_no = slider_no;
+  obj_slider_max_val = 255;
   obj_slider_mqtt_name = slider_mqtt_name;
   // Imitialisierung über  Fall 2
   begin(html_place, label, mqtt_name, keyword, hw_pin1, start_value, on_value);
@@ -21,6 +22,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_used = true;
   obj_slider_val = intensity;
   obj_slider_no = slider_no;
+  obj_slider_max_val = 255;
   obj_slider_mqtt_name = slider_mqtt_name;
   // Initialisierung über Fall 1
   begin(html_place, label, mqtt_name, keyword, start_value, on_value);
@@ -158,6 +160,10 @@ void Switch_OnOff::html_create_json_part(String& json) {
     json += String(obj_slider_no);
     json += "val\":";
     json += obj_slider_val;
+    json += ",\"slider";
+    json += String(obj_slider_no);
+    json += "max\":";
+    json += obj_slider_max_val;
   }
 }
 
@@ -167,4 +173,18 @@ uint8_t Switch_OnOff::get_slider_val() {
 
 bool Switch_OnOff::get_switch_val() {
   return obj_value;
+}
+
+void Switch_OnOff::set_switch(uint8_t val) {
+  set(obj_keyword, String(val));
+}
+
+void Switch_OnOff::set_slider(uint8_t val) {
+  obj_slider_val = val;
+  do_switch(obj_value);
+  obj_changed = true;
+}
+
+void Switch_OnOff::set_slider_max_value(uint8_t val) {
+  obj_slider_max_val = val;
 }

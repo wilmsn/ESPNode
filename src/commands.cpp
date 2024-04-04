@@ -2,33 +2,33 @@
 #include "commands.h"
 
 void show_settings() {
-  cons_str = "{\"stat\":\"looptimealarm: ";
-  cons_str += loop_time_alarm;
-  cons_str += " ms\"}";
-  ws.textAll(cons_str);
-  cons_str += "{\"stat\":\"ENDE\"}";
-  ws.textAll(cons_str);
+  html_json = "{\"stat\":\"looptimealarm: ";
+  html_json += loop_time_alarm;
+  html_json += " ms\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
+  html_json += "{\"stat\":\"ENDE\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
 }
 
 
 void console_help() {
-  cons_str = "{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
-  ws.textAll(cons_str);
-//  cons_str = "{\"stat\":\"help6\"}";
-//  ws.textAll(cons_str);
-//  cons_str = "{\"stat\":\"help7\"}";
-//  ws.textAll(cons_str);
-
+  html_json = "{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
+  html_json = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
 }
 
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
   write2log(LOG_SYS,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
-  cons_str = "{\"statclear\":1}";
-  ws.textAll(cons_str);
+  html_json = "{\"statclear\":1}";
+  write2log(LOG_WEB,1,html_json.c_str());
+  ws.textAll(html_json);
 #if defined(SWITCH1)
   if ( switch1.set( cmd, value ) ) {
     html_json = switch1.html_stat_json();
@@ -56,7 +56,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH3)
   if ( switch3.set( cmd, value ) ) {
     html_json = switch3.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
+    write2log(LOG_SENSOR,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
@@ -68,7 +68,7 @@ void prozess_cmd(const String cmd, const String value)  {
 #if defined(SWITCH4)
   if ( switch4.set( cmd, value ) ) {
     html_json = switch4.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
+    write2log(LOG_SENSOR,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
@@ -205,11 +205,14 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.begin("settings",false);
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
-    ws.textAll("{\"statclear\":1}");
-    tmp_str = "{\"stat\":\"looptimealarm: set to ";
-    tmp_str += loop_time_alarm;
-    tmp_str += "\"}";
-    ws.textAll(tmp_str);
+    html_json = "{\"statclear\":1}"; 
+    write2log(LOG_SENSOR,1,html_json.c_str());
+    ws.textAll(html_json);
+    html_json = "{\"stat\":\"looptimealarm: set to ";
+    html_json += loop_time_alarm;
+    html_json += "\"}";
+    write2log(LOG_SENSOR,1,html_json.c_str());
+    ws.textAll(html_json);
     cmd_valid = true;
     cmd_no++;
   }
@@ -290,10 +293,11 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( ! cmd_valid ) {
-    tmp_str  = "{\"stat\":\"Ungültiges Komando:";
-    tmp_str += cmd;
-    tmp_str += "\"}";
-    ws.textAll(tmp_str);
+    html_json  = "{\"stat\":\"Ungültiges Komando:";
+    html_json += cmd;
+    html_json += "\"}";
+    write2log(LOG_SENSOR,1,html_json.c_str());
+    ws.textAll(html_json);
   }
 }
 

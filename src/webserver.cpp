@@ -232,51 +232,36 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 #endif      
       html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
       ws.textAll(html_json);
 
 #if defined(SENSOR1)
       html_json = sensor1.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
+      write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
 #if defined(SENSOR2)
       html_json = sensor2.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
+      write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH1)
       html_json = switch1.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
+      write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH2)
       html_json = switch2.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
+      write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH3)
       html_json = switch3.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
+      write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
 #if defined(SWITCH4)
       html_json = switch4.html_stat_json();
-#if defined(DEBUG_SERIAL_HTML)
-      Serial.println(html_json);
-#endif
+      write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
 

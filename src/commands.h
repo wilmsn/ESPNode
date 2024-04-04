@@ -5,9 +5,6 @@
 
 
 bool cmd_valid = false;
-String cons_str;
-
-
 
 void prozess_cmd(const String cmd, const String value);
 

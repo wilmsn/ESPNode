@@ -22,9 +22,11 @@ SENSOR2_DEFINITION
 void setupTime() {                              
   // deinen NTP Server einstellen (von 0 - 5 aus obiger Liste) alternativ lassen sich durch Komma getrennt bis zu 3 Server angeben
 #ifdef ESP32
-  configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp_server);
+//  configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp_server);
+  configTzTime(TZ_INFO, ntp_server);
 #else
-  configTime("CET-1CEST,M3.5.0,M10.5.0/3", ntp_server);  
+//  configTime("CET-1CEST,M3.5.0,M10.5.0/3", ntp_server);
+  configTime(TZ_INFO, ntp_server);
 #endif
   // Zeitzone einstellen https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 }
@@ -83,16 +85,16 @@ void write2log(uint8_t kat, int count, ...) {
       }
     }
   }
-  if (do_log_sensor && (kat == LOG_SENSOR    ) ||
-      (do_log_web && (kat == LOG_WEB)     ) ||
+  if (  (do_log_sensor && ( kat == LOG_SENSOR )) ||
+        (do_log_web && ( kat == LOG_WEB ))       ||
 #if defined(MQTT)
-      (do_log_mqtt && (kat == LOG_MQTT)   ) ||
+        (do_log_mqtt && ( kat == LOG_MQTT ))     ||
 #endif
 #if defined(RF24GW)
-      (do_log_rf24 && (kat == LOG_RF24)   ) ||
+        (do_log_rf24 && ( kat == LOG_RF24 ))     ||
 #endif
-      (do_log_sys && (kat == LOG_SYS) ) || 
-      (do_log_critical && (kat == LOG_CRITICAL) )) {
+        (do_log_sys && ( kat == LOG_SYS ))       || 
+        (do_log_critical && ( kat == LOG_CRITICAL )) ) {
     log_str = "{\"log\":\"";
     log_str += timeStr;
     n = 0;
@@ -651,7 +653,7 @@ void setup() {
 #ifdef ESP32
     //ToDo
 #else
-    write2log(log_critical, 2, "Reboot: ", ESP.getResetReason().c_str());
+    write2log(LOG_CRITICAL, 2, "Reboot: ", ESP.getResetReason().c_str());
 #endif
   }
   setup_webserver();
@@ -867,6 +869,7 @@ void loop() {
 #else
       ESP.getHeapStats(&free, &max, &frag);
 #endif
+      String tmp_str;
       tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
                 String(frag) + ")";
       write2log(LOG_CRITICAL,1,tmp_str.c_str());

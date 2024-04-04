@@ -7,8 +7,8 @@
  * Jedes spezialisierte Objekt wird als Ableitung dieses Objektes erstellt.
  ***************************************************************************************/
 
-/// @brief Ein generisches Objekt für einen Sensor. Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.\n 
-/// Hier werden Grundfähigkeiten für jeden Sensor oder Switch erstellt.\n \n 
+/// @brief Ein generisches Objekt für einen Sensor. Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.\n
+/// Hier werden Grundfähigkeiten für jeden Sensor oder Switch erstellt.\n \n
 /// Funktionsfähig sind folgende Funktionen:\n 
 /// **begin**: zum Einbau ins "setup" des Hauptprogrammes. Diese ist ggf. in einem abgeleiteten Objekt um zusätzliche Parameter zu erweitern.\n 
 /// **set_label** zum nachträglichen setzen oder verändern eines Labels.\n 

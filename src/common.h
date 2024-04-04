@@ -88,7 +88,6 @@ extern bool do_log_sys;
 extern bool do_log_critical;
 extern String wifi_ssid;
 extern String wifi_pass;
-extern String tmp_str;
 extern int cmd_no;
 extern Preferences preferences;
 extern unsigned long loop_time_alarm;

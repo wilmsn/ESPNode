@@ -102,6 +102,18 @@ public:
     /// @return true = Schalter ein; false = Schalter aus
     bool get_switch_val();
 
+    /// @brief Sets the switch
+    /// @param val 0=off 1=on 2=toogle
+    void set_switch(uint8_t val);
+
+    /// @brief Sets the slider
+    /// @param val The value to set (0...255)
+    void set_slider(uint8_t val);
+
+    /// @brief Sets the sliders max value
+    /// @param val The value to set (0...255)
+    void set_slider_max_value(uint8_t val);
+
     /// @brief Schaltet die Hardware auf den in "state" übergebenen Zustand. "true" = Ein, "false" = Aus
     /// @param state Der neue Zustand des Schalters (0...255).
     void do_switch(bool state);
@@ -118,6 +130,8 @@ public:
     String obj_slider_mqtt_name;
     /// @brief Nimmt den aktuellen Wert des Sliders auf
     uint8_t obj_slider_val;
+    /// @brief Nimmt den maximalen Wert des Sliders auf
+    uint8_t obj_slider_max_val;
     /// @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
     uint8_t obj_slider_no;
 //private:

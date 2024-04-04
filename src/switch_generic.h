@@ -1,14 +1,13 @@
 #ifndef _SWITCH_GENERIC_H_
 #define _SWITCH_GENERIC_H_
 #include "base_generic.h"
-//#define DEBUG_SERIAL_MODULE
 /***************************************************************************************
- * Ein leeres Objekt als Grundlage für alle Sensoren.
+ * Ein leeres Objekt als Grundlage für alle Switches.
  * Jedes spezialisierte Objekt wird als Ableitung dieses Objektes erstellt.
  ***************************************************************************************/
 
-/// @brief Ein generisches Objekt für einen Sensor. Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.\n 
-/// Hier werden Grundfähigkeiten für jeden Sensor erstellt.\n \n 
+/// @brief Ein generisches Objekt für einen Switch. Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.\n 
+/// Hier werden Grundfähigkeiten für jeden Switch erstellt.\n \n 
 
 class Switch_Generic : public Base_Generic {
 public:

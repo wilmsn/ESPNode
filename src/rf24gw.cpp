@@ -2,6 +2,7 @@
 
 // 
 void writeRf242log(const char* senddir, payload_t pl) {
+  String tmp_str;
   tmp_str = senddir;
   tmp_str += " O:";
   tmp_str += String(pl.orderno);
