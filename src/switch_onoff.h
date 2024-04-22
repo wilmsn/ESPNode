@@ -36,7 +36,7 @@ public:
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               uint8_t hw_pin, bool start_value, bool on_value);
+               bool start_value, bool on_value, uint8_t hw_pin);
 
     /// @brief Die Initialisierung des Schalters für zwei HW-Pins
     /// @param html_place Der Einbauort in der Webseite
@@ -48,7 +48,7 @@ public:
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               uint8_t hw_pin1, uint8_t hw_pin2, bool start_value, bool on_value);
+               bool start_value, bool on_value, uint8_t hw_pin1, uint8_t hw_pin2);
 
     /// @brief Die Initialisierung des Schalters mit Regler ohne HW-Pin
     /// @param html_place Der Einbauort in der Webseite
@@ -76,7 +76,7 @@ public:
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               uint8_t hw_pin, bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no,
+               bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_no,
                const char* slider_mqtt_name);
 
     /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "obj_keyword" übereinstimmt.

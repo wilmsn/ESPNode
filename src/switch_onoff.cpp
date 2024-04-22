@@ -3,7 +3,7 @@
 // Startet als Schalter mit Regler der einen HW-Pin steuert
 // Fall 5
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         uint8_t hw_pin1, bool start_value, bool on_value, uint8_t intensity, uint8_t slider_no,
+                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t intensity, uint8_t slider_no,
                          const char* slider_mqtt_name) {
   obj_slider_used = true;
   obj_slider_val = intensity;
@@ -11,7 +11,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_max_val = 255;
   obj_slider_mqtt_name = slider_mqtt_name;
   // Imitialisierung über  Fall 2
-  begin(html_place, label, mqtt_name, keyword, hw_pin1, start_value, on_value);
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value, hw_pin1);
 }
 
 // Startet als Schalter mit Regler ohne HW Bezug
@@ -31,10 +31,10 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
 // Startet als Schalter der zwei HW-Pins steuert
 // Fall 3
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         uint8_t hw_pin1, uint8_t hw_pin2, bool start_value, bool on_value) {
+                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t hw_pin2) {
   set_hw_pin(hw_pin1,hw_pin2);
   // Initialisierung über Fall 2
-  begin(html_place, label, mqtt_name, keyword, hw_pin1, start_value, on_value);
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value, hw_pin1);
   obj_hw_pin2_used = true;
   pinMode(hw_pin2, OUTPUT);
 }
@@ -42,7 +42,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
 // Startet als Schalter der einen HW-Pin steuert
 // Fall 2
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         uint8_t hw_pin1, bool start_value, bool on_value) {
+                         bool start_value, bool on_value, uint8_t hw_pin1) {
   set_hw_pin(hw_pin1);                    
   pinMode(hw_pin1, OUTPUT);
   // Initialisierung über Fall 1

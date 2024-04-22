@@ -27,7 +27,7 @@ RF24 Gateway:
 #define MAGICNO                  479
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Flurlicht", "licht", "licht", 0, false, true, 150, 1, "intensity");
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 1, "intensity");
 
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
@@ -49,10 +49,10 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Terasse", "terasse", "terasse", 2, false, false);
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Terasse", "terasse", "terasse", false, false, 2);
 
 #define SWITCH2_DEFINITION       Switch_OnOff switch2;
-#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "Balkon", "balkon", "balkon", 0, false, false);
+#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "Balkon", "balkon", "balkon", false, false, 0);
 
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
@@ -77,7 +77,7 @@ RF24 Gateway:
 void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                uint8_t hw_pin1, uint8_t hw_pin2, bool start_value, bool on_value);
 */
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Teichpumpe", "pumpe", "relais", 0, 2, false, false);
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, 0, 2);
 
 #include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
@@ -131,7 +131,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", 2, false, false);
+#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, false, 2);
 
 #endif
 //-----------------------------------------------------
@@ -145,7 +145,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", 2, false, true);
+#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, true, 2);
 #define LOG_SYS                 true
 #define MAGICNO                  471
 
@@ -166,8 +166,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
-#define MQTT_CLIENT            "wittynode"
-#define MQTT_TOPICP2           "wittynode"
+//#define MQTT_CLIENT            "wittynode"
+//#define MQTT_TOPICP2           "wittynode"
 
 //#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 //#define RF24GW_NO                155
@@ -179,16 +179,16 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define DEBUG_SERIAL_MQTT
 
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", WITTY_LED_PIN, false, false);
+#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, false, WITTY_LED_PIN);
 
 #define SWITCH2_DEFINITION      Switch_OnOff switch2;
-#define SWITCH2_BEGIN_STATEMENT switch2.begin("sw2", "RGB rot", "rot", "rot", WITTY_RGB_RT, false, true);
+#define SWITCH2_BEGIN_STATEMENT switch2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT);
 
 #define SWITCH3_DEFINITION      Switch_OnOff switch3;
-#define SWITCH3_BEGIN_STATEMENT switch3.begin("sw3", "RGB gruen", "gruen", "gruen", WITTY_RGB_GN, false, true);
+#define SWITCH3_BEGIN_STATEMENT switch3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN);
 
 #define SWITCH4_DEFINITION      Switch_OnOff switch4;
-#define SWITCH4_BEGIN_STATEMENT switch4.begin("sw4", "RGB blau", "blau", "blau", WITTY_RGB_BL, false, true);
+#define SWITCH4_BEGIN_STATEMENT switch4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL);
 
 #define SENSOR1_DEFINITION      Sensor_LDR sensor1;
 #define SENSOR1_BEGIN_STATEMENT sensor1.begin("sens1", "ldr");
@@ -211,10 +211,10 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp","sens2","Luftdruck","Pres","sens3","Luftfeuchte","Humi");
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "interne LED", "led1", "led1", 2, false, false);
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "interne LED", "led1", "led1", false, false, 2);
 
 #define SWITCH2_DEFINITION       Switch_OnOff switch2;
-#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "zweite LED", "led2", "led2", 0, false, false);
+#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "zweite LED", "led2", "led2", false, false, 0);
 
 #define MQTT_CLIENT              "BoschNode"
 
@@ -255,12 +255,23 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOST_DISCRIPTION         "Ein Slider Testnode"
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "blau", "blau", "blau", 13, false, true, 150, 1, "intensity");
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "blau", "blau", "blau", false, true, 13, 150, 1, "intensity");
 
 //#define MQTT_CLIENT              "SliderNode"
 
 //#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 //#define RF24GW_NO                198
+
+#endif
+//-----------------------------------------------------
+#if defined(MULTISWITCHAPP)
+
+#define DEBUG_SERIAL
+#include "multiappswitch.h"
+
+
+#define HOSTNAME                 "MultiAppSwitchNode"
+#define HOST_DISCRIPTION         "Ein Multi App Switch Testnode"
 
 #endif
 //-----------------------------------------------------

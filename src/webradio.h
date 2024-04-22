@@ -50,7 +50,7 @@ private:
     bool    mystate;
 };
 
-#include "SPI.h"
+//#include "SPI.h"  //Wird nur bei Software SPI benötigt!
 #include "Adafruit_GFX.h"
 #include "Adafruit_GC9A01A.h"
 
