@@ -100,6 +100,7 @@ $(document).ready(function(){
   $("#slider1div").hide();
   $("#slider2div").hide();
   $("#slider3div").hide();
+  $("#audio_div").hide();
   $('#rf24gw').click(function() {
     if (!$(this).is(':checked')) {
       $("#rf24gw_div").hide();
@@ -421,6 +422,9 @@ function prozessJS( key, val ) {
     break;
     case "slider3label":
       $("#slider3label").html(val);
+    break;
+    case "show_audio":
+
     break;
     case "matrix_x":
       ledmatrix_x = val;
@@ -1026,6 +1030,10 @@ function dellog() {
   }
 }
 
+function audio_sel_change(val) {
+  alert("audio selchanged: "+val);
+}
+
 </script>
 
 <title id="titel"></title>
@@ -1094,22 +1102,64 @@ function dellog() {
         </button>
       </div>
     </div>
-    <div id="slider1div">
+    <div id="slider1div" class="slidecontainer">
       <label for='slider1' id='slider1label'></label>
-      <input type='range' name='slider1' id='slider1' min='0' max='255' value='0'>	
+      <input type='range' name='slider1' class="slider" id='slider1' min='0' max='255' value='0'>	
     </div>
-    <div id="slider2div">
+    <div id="slider2div" class="slidecontainer">
       <label for='slider2' id='slider2label'></label>
-      <input type='range' name='slider2' id='slider2' min='0' max='255' value='0'>	
+      <input type='range' name='slider2' class="slider" id='slider2' min='0' max='255' value='0'>	
     </div>
-    <div id="slider3div">
+    <div id="slider3div" class="slidecontainer">
       <label for='slider3' id='slider3label'></label>
-      <input type='range' name='slider3' id='slider3' min='0' max='255' value='0'>	
+      <input type='range' name='slider3' class="slider" id='slider3' min='0' max='255' value='0'>	
     </div>
     <div id="ledmatrix" class="ledmatrix_div">
 	    <div style="width:10px;"></div>
 	    <div id="display" class="display"></div>
     </div>
+    <div id="audio_div" class="audio_div">
+      <div id="audio_radio" class="audio_sw_div">
+        <button id='sw4_but' class='sw_button' onclick='do_cmd("audio1","2");'>
+          Radio
+        </button>
+      </div>
+      <div id="audio_media" class="audio_sw_div">
+        <button id='sw4_but' class='sw_button' onclick='do_cmd("audio2","2");'>
+          Media
+        </button>
+      </div>
+      <div id="audio_bt" class="audio_sw_div">
+        <button id='sw4_but' class='sw_button' onclick='do_cmd("audio3","2");'>
+          LSP
+        </button>
+      </div>
+      <br>
+      <div class="slidecontainer">
+      <p style="margin-top: 2cm;">Lautstärke</p>
+      <input type='range' name='audio_vol' class="slider" id='audio_vol" min='0' max='100' value='0'>
+      </div>
+      <div class="slidecontainer">
+      <p>Bass</p>
+      <input type='range' name='audio_bas' class="slider" id='audio_bas' min='0' max='100' value='0'>
+      </div>
+      <div class="slidecontainer">
+      <p>Höhen</p>
+      <input type='range' name='audio_tre' class="slider" id='audio_tre' min='0' max='100' value='0'>
+      </div>
+      <div id="audio_div_sel">
+        <p id="audio_sel_text">Auswahl:</p>
+        <select id="audio_sel" class="custom-select" onchange="audio_sel_change(this.value)"">
+          <option>line1</option>
+          <option>line2</option>
+          <option>line3</option>
+          <option>line4</option>
+          <option>line5</option>
+          <option>line6</option>
+        </select>
+      </div>
+    </div>
+    
   </div>
 
   <div id="page_console" class="div_content">
