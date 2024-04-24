@@ -57,6 +57,10 @@ public:
     /// @param mqtt_name Der Name fürs json
     void set_mqtt_name(const char* mqtt_name);
     
+    /// @brief Zeigt den gesetzten MQTT Namen
+    /// @return den MQTT Namen als Zeiger auf einen String
+    String& show_mqtt_name();
+
     /// @brief Setzt den Hardware Pin
     /// @param pin1 Der Hardware Pin
     void set_hw_pin(uint8_t pin1);
@@ -96,6 +100,11 @@ public:
     /// @brief Zeigt das gesetzte label
     /// @return das label als Zeiger auf einen String
     String& show_label();
+
+    /// @brief Gibt den aktuellen Wert des Objektes aus. Wird hauptsächlich für den Wert von Schaltern benötigt.
+    /// @return den Wert des Objektes als Zeiger auf einen String
+    String& show_value();
+
 
     /// @brief Eine Funktion die im Hauptprogramm im loop regelmäßig aufgerufen wird. Hier können in den abgeleiteten Modulen regelmäßige Aufrufe hinterlegt werden.
     void loop();

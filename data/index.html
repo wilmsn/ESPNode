@@ -101,6 +101,11 @@ $(document).ready(function(){
   $("#slider2div").hide();
   $("#slider3div").hide();
   $("#audio_div").hide();
+  $("#audiomsg1div").hide();
+  $("#audiomsg2div").hide();
+  $("#audiomsg3div").hide();
+  $("#audiomsg4div").hide();
+  $("#audio_settings").hide();
   $('#rf24gw').click(function() {
     if (!$(this).is(':checked')) {
       $("#rf24gw_div").hide();
@@ -165,81 +170,40 @@ $(document).ready(function(){
       $('#console_cmd').val("");
     }
   });
-
-  $('#uploadmsg').html("Update von<br>Firmware oder Filesystem<br><br>Bitte Datei auswählen.");
-
-  $('#fs_file').on('change', function () {
-    var file = this.files[0];
-    filesize = file.size;
-    if (filesize > 200000 && filesize < 512000) {
-      $('#uploadmsg').html("Firmware Image<br>ausgewählt.");
-      myurl = "update_fw";
-    } else {
-      if ( filesize >= 1024000 ) {
-        $('#uploadmsg').html("Filesystem Image<br>ausgewählt.");
-        myurl = "update_fs";
-      } else {
-        $('#uploadmsg').html("Fehler!<br>Datei: "+file.name+"<br>ist weder Firware noch Filesystem Image!");
-      }
-    }
+/*
+  $('#audio_radio_but').click(function () {
+    do_cmd("radio","2");
   });
-  $('#fs_update').on('click', function () {
-    if ( filesize == 0) {
-      $('#uploadmsg').html("No file selected");
-    } else { 
-      if ( filesize > 0 && filesize < 200000 ) {
-        $('#uploadmsg').html("File to small!<br>Not the right image?");
-      } else {
-        if (filesize > 200000 && filesize < 512000) {
-          $('#uploadmsg').html("Firmware update läuft<br>bitte warten!");
-          fileOK = true;
-        } else {
-          if ( filesize >= 1024000 ) {
-            $('#uploadmsg').html("Filesystem update läuft<br>bitte warten!");
-            fileOK = true;
-          } else {
-            $('#uploadmsg').html("File überprüfen!");
-          }
-        }
-      }
-    }
-    if (fileOK) {
-      $.ajax({
-        url: myurl,
-        type: 'POST',
-        // Form data
-        data: new FormData($('#fs_form')[0]),
-        // Tell jQuery not to process data or worry about content-type
-        // You *must* include these options!
-        cache: false,
-        contentType: false,
-        processData: false,
-        complete: function(){
-          $('#uploadmsg').html("Update durchgeführt!<br><br>Bitte warten bis das System neu gestartet wurde");
-          window.setTimeout(function(){
-              window.location.reload();
-          }, 15000);
-        },
-        // Custom XMLHttpRequest
-        xhr: function () {
-          var myXhr = $.ajaxSettings.xhr();
-          if (myXhr.upload) {
-            // For handling the progress of the upload
-            myXhr.upload.addEventListener('progress', function (e) {
-              if (e.lengthComputable) {
-                $('#fs_progress').attr({
-                  value: e.loaded,
-                  max: e.total,
-                });
-              }
-            }, false);
-          }
-          return myXhr;
-        }
-      });
-    }
+
+  $('#audio_settings').click(function () {
+    do_cmd("media","2");
   });
-});
+
+  $('#audio_bt_but').click(function () {
+    do_cmd("bt","2");
+  });
+
+  $("#audio_vol").change(function() {
+    do_cmd("audio_vol",$(this).val());
+    alert("audio_vol");
+  });
+
+  $("#audio_tre").change(function() {
+    do_cmd("audio_tre",$(this).val());
+    alert("audio_tre");
+  });
+
+  $("#audio_bas").change(function() {
+    do_cmd("audio_bas",$(this).val());
+    alert("audio_bas"+$(this).val());
+  });
+  
+  $('#audio_menu').click(function () {
+    $("#audio_settings").toggle();
+  });
+*/
+ });
+
 
 function show_tab1() {
   $("#console_tab1").removeClass("tab_passive").addClass("tab_active");
@@ -423,9 +387,6 @@ function prozessJS( key, val ) {
     case "slider3label":
       $("#slider3label").html(val);
     break;
-    case "show_audio":
-
-    break;
     case "matrix_x":
       ledmatrix_x = val;
     break;
@@ -453,7 +414,86 @@ function prozessJS( key, val ) {
       }
       $("#ledmatrix").show();
     break;
-
+    case "show_audio":
+      $("#audio_div").show();
+    break;  
+    case "audio_radio":
+      if ( val > 0.5 ) {
+        $("#audio_radio_but").css("color","black").css("background-color","yellow");
+        $("#audio_radio_but").html("ein");
+        $("#audio_media_but").css("color","white").css("background-color","black");
+        $("#audio_media_but").html("aus");
+        $("#audio_bt_but").css("color","white").css("background-color","black");
+        $("#audio_bt_but").html("aus");
+      } else {
+        $("#audio_radio_but").css("color","white").css("background-color","black");
+        $("#audio_radio_but").html("aus");
+      }
+    break;
+    case "audio_media":
+      if ( val > 0.5 ) {
+        $("#audio_radio_but").css("color","white").css("background-color","black");
+        $("#audio_radio_but").html("aus");
+        $("#audio_media_but").css("color","black").css("background-color","yellow");
+        $("#audio_media_but").html("ein");
+        $("#audio_bt_but").css("color","white").css("background-color","black");
+        $("#audio_bt_but").html("aus");
+      } else {
+        $("#audio_media_but").css("color","white").css("background-color","black");
+        $("#audio_media_but").html("aus");
+      }
+    break;
+    case "audio_bt":
+      if ( val > 0.5 ) {
+        $("#audio_radio_but").css("color","white").css("background-color","black");
+        $("#audio_radio_but").html("aus");
+        $("#audio_media_but").css("color","white").css("background-color","black");
+        $("#audio_media_but").html("aus");
+        $("#audio_bt_but").css("color","black").css("background-color","yellow");
+        $("#audio_bt_but").html("ein");
+      } else {
+        $("#audio_bt_but").css("color","white").css("background-color","black");
+        $("#audio_bt_but").html("aus");
+      }
+    break;
+    case "audio_vol":
+      $("#audio_vol").val(val);
+    break;
+    case "audio_tre":
+      $("#audio_tre").val(val);
+    break;
+    case "audio_bas":
+      $("#audio_bas").val(val);
+    break;
+    case "audiomsg1":
+      $("#audiomsg1div").show();
+      $("#audiomsg1").html(val);
+    break;
+    case "audiomsg2":
+      $("#audiomsg2div").show();
+      $("#audiomsg2").html(val);
+    break;
+    case "audiomsg3":
+      $("#audiomsg3div").show();
+      $("#audiomsg3").html(val);
+    break;
+    case "audiomsg4":
+      $("#audiomsg4div").show();
+      $("#audiomsg4").html(val).css("fontSize", 10);
+    break;
+    case "audio_add_stn":
+      const valArray = val.split(":");
+      $('#audio_sel').append($('<option>', {
+        value: valArray[0],
+        text: valArray[1]
+      }));
+    break;
+    case "audio_stn_name":
+      $("#audio_stn_name").val(val);
+    break;
+    case "audio_stn_url":
+      $("#audio_stn_url").val(val);
+    break;
     //Ab hier Konsole
     case "log":
       logs[logs.length]=val;
@@ -847,9 +887,6 @@ function switch_sysinfo() {
   });
 }
 
-
-
-
 function store() {
   var mycmd = "/cmd?";
   if ( $("#rf24gw").is(":checked") ) {
@@ -882,7 +919,7 @@ function store() {
       rf24gwno_old = $("#rf24gwno").val();
     }
   } else {
-    if (   rf24gw_active_old ) {
+    if ( rf24gw_active_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
       mycmd = mycmd + "rf24gw_active=0";
     }
@@ -924,7 +961,7 @@ function store() {
       log_rf24_old = true;
     }
   } else {
-    if (   log_rf24_old ) {
+    if ( log_rf24_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
       mycmd = mycmd + "log_rf24=0";
       log_rf24_old = false;
@@ -937,7 +974,7 @@ function store() {
       log_sensor_old = true;
     }
   } else {
-    if (   log_sensor_old ) {
+    if ( log_sensor_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
       mycmd = mycmd + "log_sensor=0";
       log_sensor_old = false;
@@ -1031,7 +1068,28 @@ function dellog() {
 }
 
 function audio_sel_change(val) {
-  alert("audio selchanged: "+val);
+  do_cmd("audio_set_stn",val)
+}
+
+function audio_fill_sel() {
+  $('#audio_sel')
+    .find('option')
+    .remove()
+    .end()
+  ;
+  do_cmd("audio_menu","1");
+}
+
+function audio_menu(x) {
+  x.classList.toggle("change");
+  $("#audio_settings").toggle();
+  audio_fill_sel();
+}
+
+function audio_stn_update() {
+  do_cmd("audio_save_stn_name",$("#audio_stn_name").val());
+  do_cmd("audio_save_stn_url",$("#audio_stn_url").val());
+  audio_fill_sel();
 }
 
 </script>
@@ -1119,45 +1177,78 @@ function audio_sel_change(val) {
 	    <div id="display" class="display"></div>
     </div>
     <div id="audio_div" class="audio_div">
-      <div id="audio_radio" class="audio_sw_div">
-        <button id='sw4_but' class='sw_button' onclick='do_cmd("audio1","2");'>
-          Radio
+      <div id="audiomsg1div">
+        <div id="audiomsg1" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg2div">
+        <div id="audiomsg2" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg3div">
+        <div id="audiomsg3" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg4div">
+        <div id="audiomsg4" class="msg_div"></div>
+        <hr>
+      </div>
+        <div id="audio_radio" class="audio_sw_div">
+          Radio<br>
+        <button id='audio_radio_but' class='sw_button' onclick='do_cmd("radio","2");'>
+          aus
         </button>
       </div>
       <div id="audio_media" class="audio_sw_div">
-        <button id='sw4_but' class='sw_button' onclick='do_cmd("audio2","2");'>
-          Media
+        Media<br>
+        <button id='audio_media_but' class='sw_button' onclick='do_cmd("media","2");'>
+          aus
         </button>
       </div>
       <div id="audio_bt" class="audio_sw_div">
-        <button id='sw4_but' class='sw_button' onclick='do_cmd("audio3","2");'>
-          LSP
+        BT<br>
+        <button id='audio_bt_but' class='sw_button' onclick='do_cmd("bt","2");'>
+          aus
         </button>
       </div>
       <br>
       <div class="slidecontainer">
       <p style="margin-top: 2cm;">Lautstärke</p>
-      <input type='range' name='audio_vol' class="slider" id='audio_vol" min='0' max='100' value='0'>
+      <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
       </div>
-      <div class="slidecontainer">
-      <p>Bass</p>
-      <input type='range' name='audio_bas' class="slider" id='audio_bas' min='0' max='100' value='0'>
+      <div style="height: 50px;">
+      <div class="menu" onclick="audio_menu(this)">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
       </div>
-      <div class="slidecontainer">
-      <p>Höhen</p>
-      <input type='range' name='audio_tre' class="slider" id='audio_tre' min='0' max='100' value='0'>
+      <div class="menu_text">Erweiterte Einstellungen</div>
       </div>
-      <div id="audio_div_sel">
-        <p id="audio_sel_text">Auswahl:</p>
-        <select id="audio_sel" class="custom-select" onchange="audio_sel_change(this.value)"">
-          <option>line1</option>
-          <option>line2</option>
-          <option>line3</option>
-          <option>line4</option>
-          <option>line5</option>
-          <option>line6</option>
-        </select>
-      </div>
+      <div id="audio_settings">
+        <div class="slidecontainer">
+          <p>Bass</p>
+          <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
+        </div>
+        <div class="slidecontainer">
+        <p>Höhen</p>
+        <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
+        </div>
+        <div id="audio_div_sel">
+          <p id="audio_sel_text">Senderwahl:</p>
+          <select id="audio_sel" class="custom-select" onchange="audio_sel_change(this.value)" size="5">
+          </select>
+          <table><tr><td>
+            Sendername:
+          </td><td>
+            <input name="Sendername" id="audio_stn_name" size="30" maxlength="30">
+          </td></tr><tr><td>  
+            URL: 
+          </td><td>
+            <input name="SenderURL" id="audio_stn_url" size="30" maxlength="125">
+          </td></tr></table>  
+          <button id="audio_but_st_upd" class="button bg_rt" onclick="audio_stn_update();">Sender speichern</button>
+        </div>
+      </div>  
     </div>
     
   </div>

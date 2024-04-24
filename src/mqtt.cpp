@@ -48,7 +48,7 @@ void send_mqtt_stat() {
       mqtt_json = "{";
       mqtt_json_length_old = mqtt_json.length();
 #if defined(SWITCH1)  
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
+      mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name().c_str()), switch1.show_value().c_str());
       write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch1.show_value());
       mqtt_json += switch1.mqtt_json_part();
 #endif

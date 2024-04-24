@@ -136,7 +136,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 #if defined(DEBUG_SERIAL_HTML)
     Serial.print("Websocket cmd: ");
     Serial.print(cmd);
-    Serial.print("value: ");
+    Serial.print(" value: ");
     Serial.println(value); 
 #endif
     prozess_cmd(cmd,value);
@@ -149,11 +149,11 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
   switch (type) {
     case WS_EVT_CONNECT:
       html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
-      html_json += ",\"wifi_ssid\":\"";
-      html_json += wifi_ssid;
-      html_json += "\",\"wifi_pass\":\"";
-      html_json += wifi_pass;
-      html_json += "\"";
+//      html_json += ",\"wifi_ssid\":\"";
+//      html_json += wifi_ssid;
+//      html_json += "\",\"wifi_pass\":\"";
+//      html_json += wifi_pass;
+//      html_json += "\"";
 #if defined(HOST_DISCRIPTION)
       html_json += ",\"titel2\":\"";
       html_json += HOST_DISCRIPTION;

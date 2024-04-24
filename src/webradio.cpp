@@ -79,7 +79,7 @@ void IRAM_ATTR readRotaryISR() {
   rotary.readEncoder_ISR();
 }
 
-void Webradio::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword) {
+void Audiomodul::begin() {
   preferences.begin("settings",false);
   if ( !preferences.isKey("cur_vol") ) {
     preferences.putUChar("cur_vol", 5);
@@ -135,10 +135,10 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
   rotary.setup(readRotaryISR); //register interrupt service routine
   rotary.setBoundaries(0, 100, false); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
   rotary.setEncoderValue(cur_vol); //preset the value to current gain
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, ACTOR_START_VALUE, ACTOR_ON_VALUE, cur_vol, 1, "Lautstärke");
-  set_slider_max_value(100);
+//  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, ACTOR_START_VALUE, ACTOR_ON_VALUE, cur_vol, 1, "Lautstärke", "Lautstärke");
+//  set_slider_max_value(100);
   webradio_on();
-  mystate = true;
+//  mystate = true;
 
       Serial.println("station array");
     for (int i=0; i<MAXSTATION; i++) {
@@ -148,12 +148,33 @@ void Webradio::begin(const char* html_place, const char* label, const char* mqtt
 
 }
 
-//void Webradio::html_create_json_part(String& json) {
-//  Switch_OnOff::html_create_json_part(json);
-//  json += ",\"slider1max\":100";
-//}
+void Audiomodul::html_create_json_part(String& json) {
+  Base_Generic::html_create_json_part(json);
+  json += ",\"show_audio\":1";
+  json += ",\"audio_radio\":";
+  json += radio_on?1:0;
+  json += ",\"audio_media\":";
+  json += media_on?1:0;
+  json += ",\"audio_bt\":";
+  json += bt_on?1:0;
+  json += ",\"audio_vol\":";
+  json += audio_vol;
+  json += ",\"audio_bas\":";
+  json += audio_bas;
+  json += ",\"audio_tre\":";
+  json += audio_tre;
+/*  for (int i=0; i<MAXSTATION; i++) {
+    json += ",\"audio_add_stn\":";
+    json += "\"";
+    json += String(i);
+    json += ":";
+    json += station[i].name;
+    json += "\"";
+  }
+  Serial.println(json); */
+}
 
-void Webradio::webradio_off() {
+void Audiomodul::webradio_off() {
   write2log(LOG_SENSOR,1,"Radio off");
   audio.setVolume(0);
   audio.stopSong();
@@ -162,7 +183,7 @@ void Webradio::webradio_off() {
   mydisplay.show_time(true);
 }
 
-void Webradio::webradio_on() {
+void Audiomodul::webradio_on() {
   cur_level = 0;
   radio_is_on = true;
   write2log(LOG_SENSOR,1,"Radio on");
@@ -171,7 +192,7 @@ void Webradio::webradio_on() {
   set_vol();
 }
 
-void Webradio::set_vol() {
+void Audiomodul::set_vol() {
   char volstr[20];
   int  bg;
   sprintf(volstr,"New Volume %u",cur_vol);
@@ -192,7 +213,7 @@ void Webradio::set_vol() {
   }
 }
 
-void Webradio::show_station() {
+void Audiomodul::show_station() {
   if (cur_level == 0) {
     mydisplay.clear();
     mydisplay.show_ip(WiFi.localIP().toString().c_str());
@@ -202,7 +223,7 @@ void Webradio::show_station() {
   }
 }
 
-void Webradio::set_station() {
+void Audiomodul::set_station() {
   if (cur_level == 1) {
     mydisplay.select_station(
         cur_station > 1 ? station[cur_station-2].name : "",
@@ -218,13 +239,14 @@ void Webradio::set_station() {
   }
 }
 
-void Webradio::save_station() {
+void Audiomodul::save_station() {
   File f;
+  Serial.println("Save Station List");
   f = LittleFS.open( "/sender.txt", "r" );
   f = LittleFS.open( "/sender.txt", "w" );
   if (f) {
     for (int i=0; i<MAXSTATION; i++) {
-      write2log(LOG_SENSOR,2,station[i].name,station[i].url);
+      write2log(LOG_SENSOR,3,"Save: ",station[i].name,station[i].url);
       f.printf("%s\n",station[i].name);
       f.printf("%s\n",station[i].url);
     }
@@ -233,10 +255,115 @@ void Webradio::save_station() {
   }
 }
 
-bool Webradio::set(const String& keyword, const String& value) {
+bool Audiomodul::set(const String& keyword, const String& value) {
   bool retval = false;
   String myvalue = value;
   replace(myvalue.begin(),myvalue.end(),'\n',' ');
+  if ( keyword == String("radio") ) {
+    if (value == String(2)) {
+      radio_on = !radio_on;
+    }
+    if (value == String(1)) {
+      radio_on = true;
+    }
+    if (value == String(0)) {
+      radio_on = false;
+    }
+    html_json = "{\"audio_radio\":";
+    html_json += radio_on?1:0;
+    html_json += "}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+  }
+  if ( keyword == String("media") ) {
+    if (value == String(2)) {
+      media_on = !media_on;
+    }
+    if (value == String(1)) {
+      media_on = true;
+    }
+    if (value == String(0)) {
+      media_on = false;
+    }
+    html_json = "{\"audio_media\":";
+    html_json += media_on?1:0;
+    html_json += "}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+  }
+  if ( keyword == String("bt") ) {
+    if (value == String(2)) {
+      bt_on = !bt_on;
+    }
+    if (value == String(1)) {
+      bt_on = true;
+    }
+    if (value == String(0)) {
+      bt_on = false;
+    }
+    html_json = "{\"audio_bt\":";
+    html_json += bt_on?1:0;
+    html_json += "}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+  }
+  if ( keyword == String("audio_vol") ) {
+    audio_vol = value.toInt();
+    html_json = "{\"audio_vol\":";
+    html_json += audio_vol;
+    html_json += "}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+  }
+  if ( keyword == String("audio_bas") ) {
+    audio_bas = value.toInt();
+    html_json = "{\"audio_bas\":";
+    html_json += audio_bas;
+    html_json += "}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+  }
+  if ( keyword == String("audio_tre") ) {
+    audio_tre = value.toInt();
+    html_json = "{\"audio_tre\":";
+    html_json += audio_tre;
+    html_json += "}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+  }
+  if ( keyword == String("audio_menu") ) {
+    for (int i=0; i<MAXSTATION; i++) {
+    html_json = "{\"audio_add_stn\":";
+    html_json += "\"";
+    html_json += String(i);
+    html_json += ":";
+    html_json += station[i].name;
+    html_json += "\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+    }
+  }
+  if ( keyword == String("audio_set_stn") ) {
+    Serial.println("#####");
+    Serial.println(value);
+    cur_station = value.toInt();
+    html_json = "{\"audio_stn_name\":\"";
+    html_json += station[cur_station].name;
+    html_json += "\",\"audio_stn_url\":\"";
+    html_json += station[cur_station].url;
+    html_json += "\"}";
+    write2log(LOG_WEB,1,html_json.c_str());
+    ws.textAll(html_json);
+    set_station();   
+  }
+  if ( keyword == String("audio_save_stn_name") ) {
+    snprintf(station[cur_station].name,STATION_NAME_LENGTH,"%s",value.c_str());
+    save_station();
+  }
+  if ( keyword == String("audio_save_stn_url") ) {
+    snprintf(station[cur_station].url,STATION_URL_LENGTH,"%s",value.c_str());
+    save_station();
+  }
 // Gibt zusätzliche Hilfen für dieses Modul aus
   if ( keyword == String("?") || keyword == String("help") ) {
     html_json = "{\"stat\":\"sender[0..9]_name=<neuer Name>\"}";
@@ -281,8 +408,8 @@ bool Webradio::set(const String& keyword, const String& value) {
     Serial.printf("X%sX\n",station[i].url);
   }
 */
-  }
-  if (! Switch_OnOff::set(keyword, value)) {
+//  }
+/*  if (! Base_Generic::set(keyword, value)) {
     for (int i=0; i<MAXSTATION; i++) {
       if (!retval && keyword == String("sender"+String(i)+"_url") ) {
         write2log(LOG_SENSOR,1,String("Found: sender"+String(i)+"_url").c_str());
@@ -305,14 +432,14 @@ bool Webradio::set(const String& keyword, const String& value) {
         }
         retval = true;
       }
-    }
+    } */
   } else {
     retval = true;
   }
   return retval;
 }
 
-void Webradio::loop() {
+void Audiomodul::loop() {
   if (radio_is_on) {
     audio.loop();
     if (!audio.isRunning()) {
@@ -320,13 +447,13 @@ void Webradio::loop() {
       webradio_on();
     }
   }
-  if (slider_val_old != obj_slider_val ) {
+/*  if (slider_val_old != obj_slider_val ) {
     write2log(LOG_SENSOR,1,"Set Volume via Web");
     cur_vol = obj_slider_val;
     rotary.setEncoderValue(cur_vol); 
     set_vol();
     slider_val_old = obj_slider_val;
-  }
+  } */
   /// Loop actions for rotary encoder
   /// 1. change of position  
   if (rotary.encoderChanged()) {
@@ -341,7 +468,7 @@ void Webradio::loop() {
 //      char vol_str[10];
 //      snprintf(vol_str,9,"S:%u",cur_position);
 //      set(obj_keyword,vol_str);
-      set_slider(cur_vol);
+//      set_slider(cur_vol);
       break;
     case 1:
       cur_station = cur_position;
@@ -396,7 +523,7 @@ void Webradio::loop() {
     }
   }
   /// End rotary
-
+/*
   if (obj_value != mystate) {
     mystate = obj_value;
     if (obj_value) { 
@@ -406,7 +533,7 @@ void Webradio::loop() {
       write2log(LOG_SENSOR,1,"Web CMD: Radio off");
       webradio_off();
     }
-  }
+  } */
   // Uhr aktualisieren wenn Minutenwechsel und Anzeige auf Radioprogramm
   if (last_min != timeinfo.tm_min) {
     if (radio_is_on) {
@@ -425,7 +552,7 @@ void audio_info(const char *info){
 void audio_showstreamtitle(const char *info){
   write2log(LOG_SENSOR,2,"Titel:", info);
   if (cur_level == 0) mydisplay.show_title(info);
-  html_json = "{\"sens2\":\"";
+  html_json = "{\"audiomsg2\":\"";
   html_json += info;
   html_json += "\"}";
   write2log(LOG_WEB,1,html_json.c_str());
@@ -444,7 +571,7 @@ void audio_bitrate(const char *info) {
   bpsInfo[7] = 0;
   write2log(LOG_SENSOR,2,"Bitrate:", info);
   if (cur_level == 0) mydisplay.show_bps(info);
-  html_json = "{\"sens3\":\"";
+  html_json = "{\"audiomsg4\":\"";
   html_json += bpsInfo;
   html_json += "\"}";
   write2log(LOG_WEB,1,html_json.c_str());
@@ -453,7 +580,7 @@ void audio_bitrate(const char *info) {
 
 void audio_showstation(const char *info){
   write2log(LOG_SENSOR,2,"Station:", info);
-  html_json = "{\"sens1\":\"";
+  html_json = "{\"audiomsg1\":\"";
   html_json += info;
   html_json += "\"}";
   write2log(LOG_WEB,1,html_json.c_str());

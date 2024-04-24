@@ -13,6 +13,7 @@
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
 //#define ESP32SIMPLE
+//#define MULTISWITCHAPP
 #define NODE_WEBRADIO
 //#define NODE18B20
 //#define NODEBOSCH
@@ -20,7 +21,7 @@
 //#define NODEMATRIX
 //#define NODEGWTEST
 //#define WITTYNODE1
-//#define NODE_GASZAEHLER
+
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE

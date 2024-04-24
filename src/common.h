@@ -32,6 +32,8 @@ typedef unsigned char uint8_t;
 #include "ESPAsyncTCP.h"
 #endif
 
+#include <WiFiMulti.h>
+
 #include "config.h"
 
 typedef struct {

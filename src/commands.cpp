@@ -190,6 +190,10 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
 #endif
+#ifdef WEBRADIO
+
+
+#endif
   if ( cmd == "?" || cmd == "help" ) {
     console_help();
     cmd_valid = true;
@@ -216,8 +220,8 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_valid = true;
     cmd_no++;
   }
-  if ( cmd == "wifi_ssid" ) {
-    if ( wifi_ssid != value ) {
+/*  if ( cmd == "wifi_ssid" ) {
+    if ( wifi_ssid1 != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_ssid", value);
       preferences.end();
@@ -227,7 +231,7 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( cmd == "wifi_pass" ) {
-    if ( wifi_pass != value ) {
+    if ( wifi_pass1 != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_pass", value);
       preferences.end();
@@ -235,7 +239,7 @@ void prozess_cmd(const String cmd, const String value)  {
     }
     cmd_valid = true;
     cmd_no++;
-  }
+  } */
   if ( cmd == "log_sensor" ) {
     if ( do_log_sensor != ( value == "1" ) ) {
       do_log_sensor = ( value == "1" );

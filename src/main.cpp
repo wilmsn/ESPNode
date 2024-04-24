@@ -1,5 +1,7 @@
 #include "main.h"
 
+WiFiMulti wifiMulti;
+
 #if defined(SWITCH1)
 SWITCH1_DEFINITION
 #endif
@@ -145,21 +147,24 @@ bool getNTPtime(long unsigned int sec) {
 
 bool do_wifi_con(void) {
   bool retval = false;
-  write2log(LOG_SYS, 4, "Try to connect to ", wifi_ssid.c_str(), " with password ", wifi_pass.c_str());
+//  write2log(LOG_SYS, 4, "Try to connect to ", wifi_ssid1.c_str(), " with password ", wifi_pass1.c_str());
   WiFi.mode(WIFI_STA);
 #ifdef ESP32
   WiFi.setHostname(HOSTNAME);
-  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
+//  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
 #else
     //    WiFi.persistent(false);
   WiFi.hostname(HOSTNAME);
-  WiFi.begin(wifi_ssid, wifi_pass);
+//  WiFi.begin(wifi_ssid, wifi_pass);
 #endif
-  write2log(LOG_SYS, 2, "WIFI try to connect to ", wifi_ssid.c_str());
+  wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
+  wifiMulti.addAP(wifi_ssid2.c_str(), wifi_pass2.c_str());
+  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
+  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
 
   // ... Give ESP 10 seconds to connect to station.
   unsigned int i = 0;
-  while (WiFi.status() != WL_CONNECTED && i < 20) {
+  while ( (wifiMulti.run() != WL_CONNECTED) && (i < 20) ) {
     delay(500);
     i++;
 #if defined(DEBUG_SERIAL)
@@ -171,9 +176,9 @@ bool do_wifi_con(void) {
 #endif
   if ( WiFi.status() == WL_CONNECTED ) {
     retval = true;
-    write2log(LOG_SYS, 2, " OK connected!", wifi_ssid.c_str());
+//    write2log(LOG_SYS, 2, " OK connected!", wifi_ssid.c_str());
   } else {
-    write2log(LOG_SYS, 2, " ERROR not connected!", wifi_ssid.c_str());
+//    write2log(LOG_SYS, 2, " ERROR not connected!", wifi_ssid.c_str());
     retval = false;
   }
   
@@ -528,8 +533,10 @@ void setup() {
 #endif
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
-    wifi_ssid = WIFI_SSID;
-    wifi_pass = WIFI_PASS;
+    wifi_ssid1 = WIFI_SSID1;
+    wifi_pass1 = WIFI_PASS1;
+    wifi_ssid2 = WIFI_SSID2;
+    wifi_pass2 = WIFI_PASS2;
     loop_time_alarm = LOOP_TIME_ALARM;
 #if defined(MQTT)
     do_mqtt = MQTT;
@@ -541,8 +548,8 @@ void setup() {
 // Save the defaults for the next start!
     preferences.begin("settings",false);
     preferences.putInt("magicno", MAGICNO);
-    preferences.putString("wifi_ssid", wifi_ssid); 
-    preferences.putString("wifi_pass", wifi_pass);
+//    preferences.putString("wifi_ssid", wifi_ssid); 
+//    preferences.putString("wifi_pass", wifi_pass);
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
 #if defined(MQTT)
     preferences.putBool("do_mqtt", do_mqtt);
@@ -577,8 +584,8 @@ void setup() {
   } else {
     preferences.begin("settings",true);
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
-    wifi_ssid = preferences.getString("wifi_ssid"); 
-    wifi_pass = preferences.getString("wifi_pass");
+  //  wifi_ssid = preferences.getString("wifi_ssid"); 
+  //  wifi_pass = preferences.getString("wifi_pass");
     loop_time_alarm = preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
     do_mqtt = preferences.getBool("do_mqtt");
@@ -706,7 +713,7 @@ void loop() {
   }
   if ( ap_mode) {
     // IF we have an SSID stored we test every 5 Minutes to connect
-    if (millis() - wifi_ap_starttime > 300000 && wifi_ssid.length() > 2) {
+    if (millis() - wifi_ap_starttime > 300000 && wifi_ssid1.length() > 2) {
       
       if ( do_wifi_con() ) {
         // If connection is posible we restart 

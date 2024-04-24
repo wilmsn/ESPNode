@@ -2,7 +2,7 @@
 #define _SWITCH_ONOFF_H_
 /***************************************************************************************
  ***************************************************************************************/
-#include "switch_generic.h"
+#include "base_generic.h"
 
 /// @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.\n
 ///Der Schalter reagiert nur wenn es in der **set** Funktion mit dem Schlüsselwort aufgerufen 
@@ -14,7 +14,7 @@
 ///Folgende Strings als **value** übergeben schalten **um**:\n
 ///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n
 
-class Switch_OnOff : public Switch_Generic {
+class Switch_OnOff : public Base_Generic {
 
 public:
     /// @brief Die Initialisierung des Schalters als logischer Schalter ohne HW-Pin
@@ -62,7 +62,7 @@ public:
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no,
-               const char* slider_mqtt_name);
+               const char* slider_mqtt_name, const char* slider_label);
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin und PWM Steuerung
     /// @param html_place Der Einbauort in der Webseite
@@ -75,9 +75,10 @@ public:
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
+    /// @param slider_label Die Beschriftung für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_no,
-               const char* slider_mqtt_name);
+               const char* slider_mqtt_name, const char* slider_label);
 
     /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "obj_keyword" übereinstimmt.
     /// @param keyword Das zu testende "keyword"
@@ -110,6 +111,10 @@ public:
     /// @param val The value to set (0...255)
     void set_slider(uint8_t val);
 
+    /// @brief Sets the slider
+    /// @param val The value to set (0...255)
+    void set_slider_label(const char* label);
+
     /// @brief Sets the sliders max value
     /// @param val The value to set (0...255)
     void set_slider_max_value(uint8_t val);
@@ -128,6 +133,8 @@ public:
     bool obj_slider_used = false;
     /// @brief Nimmt den MQTT Namen für den Slider auf
     String obj_slider_mqtt_name;
+    /// @brief Nimmt das Label für den Slider auf
+    String obj_slider_label;
     /// @brief Nimmt den aktuellen Wert des Sliders auf
     uint8_t obj_slider_val;
     /// @brief Nimmt den maximalen Wert des Sliders auf

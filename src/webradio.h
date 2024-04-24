@@ -2,7 +2,7 @@
 #define _WEBRADIO_H_
 /***************************************************************************************
  ***************************************************************************************/
-#include "switch_onoff.h"
+#include "base_generic.h"
 
 
 /// @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.\n 
@@ -16,19 +16,18 @@
 ///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n 
 
 
-class Webradio : public Switch_OnOff {
+class Audiomodul : public Base_Generic {
 
 public:
-    /// @brief Die Initialisierung als logischer Schalter ohne HW-Pin
-    /// @param html_place Der Einbauort in der Webseite
-    /// @param label Ein Bezeichner für diesen Schalter
-    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
-    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
+    /// @brief Die Initialisierung des kompletten Audio Modules (Radio, Mediaplayer, Bluetoothspeaker)
+    /// @brief Alle Werte werden innerhalb des Modules gesetzt.
+    void begin();
+    
     void loop();
+    
     /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
     /// @param json Nimmt den JSON String zur Initialisierung auf
-    //void html_create_json_part(String& json);
+    void html_create_json_part(String& json);
     /// @brief Die normale Set Funktion aus de Grundmodul erweitert um feste Schlüsselwörter 
     /// @brief zur Einspeicherung von Radiostationen und zur Senderwahl.
     /// @brief station[0..9]_url; station[0..9]_name; play;
@@ -46,8 +45,13 @@ private:
     void show_station();
     void save_station();
     uint8_t cur_vol = 10;   // Die aktuelle Lautstärke von 0 bis 100 Prozent
-    uint8_t slider_val_old;
-    bool    mystate;
+//    uint8_t slider_val_old;
+    bool radio_on = false;
+    bool media_on = false;
+    bool bt_on    = false;
+    uint8_t audio_vol;
+    uint8_t audio_tre;
+    uint8_t audio_bas;
 };
 
 //#include "SPI.h"  //Wird nur bei Software SPI benötigt!

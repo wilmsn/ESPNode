@@ -88,3 +88,11 @@ String& Base_Generic::show_keyword() {
 String& Base_Generic::show_label() {
   return obj_label;
 }
+
+String& Base_Generic::show_mqtt_name() {
+  return obj_mqtt_name;
+}
+
+String& Base_Generic::show_value() {
+  return obj_values_str;
+}

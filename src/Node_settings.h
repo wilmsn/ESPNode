@@ -280,7 +280,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #include "webradio.h"
 #define CONFIG_ESP32S3
 //#define CONFIG_ESP32
-#define MAGICNO                  471
+#define MAGICNO                  0
+#define AUDIO
 #define WEBRADIO
 
 //#define DEBUG_SERIAL_MODULE
@@ -289,8 +290,8 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define HOSTNAME                 "Webradio"
 #define HOST_DISCRIPTION         "Ein Webradio Testnode"
 
-#define SWITCH1_DEFINITION       Webradio switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "radio", "radio", "radio");
+#define SWITCH1_DEFINITION       Audiomodul switch1;
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin();
 
 //#define MQTT_CLIENT              "RadioNode"
 
@@ -355,6 +356,11 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #endif
 #if defined(SENSOR2_DEFINITION)
 #define SENSOR2
+#endif
+
+/// Audio
+#if defined(WEBRADIO) || defined(MEDIAPLAYER) || defined(BTSPEAKER)
+#define AUDIOBOX
 #endif
 
 

@@ -3,13 +3,14 @@
 // Startet als Schalter mit Regler der einen HW-Pin steuert
 // Fall 5
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t intensity, uint8_t slider_no,
-                         const char* slider_mqtt_name) {
+                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t slider_val, uint8_t slider_no,
+                         const char* slider_mqtt_name, const char* slider_label) {
   obj_slider_used = true;
-  obj_slider_val = intensity;
+  obj_slider_val = slider_val;
   obj_slider_no = slider_no;
   obj_slider_max_val = 255;
   obj_slider_mqtt_name = slider_mqtt_name;
+  obj_slider_label = slider_label;
   // Imitialisierung über  Fall 2
   begin(html_place, label, mqtt_name, keyword, start_value, on_value, hw_pin1);
 }
@@ -17,13 +18,14 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
 // Startet als Schalter mit Regler ohne HW Bezug
 // Fall 4
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         bool start_value, bool on_value, uint8_t intensity, uint8_t slider_no,
-                         const char* slider_mqtt_name) {
+                         bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no,
+                         const char* slider_mqtt_name, const char* slider_label) {
   obj_slider_used = true;
-  obj_slider_val = intensity;
+  obj_slider_val = slider_val;
   obj_slider_no = slider_no;
   obj_slider_max_val = 255;
   obj_slider_mqtt_name = slider_mqtt_name;
+  obj_slider_label = slider_label;
   // Initialisierung über Fall 1
   begin(html_place, label, mqtt_name, keyword, start_value, on_value);
 }
@@ -152,7 +154,9 @@ void Switch_OnOff::html_create_json_part(String& json) {
     json += String(obj_slider_no);
     json += "\":1,\"slider";
     json += String(obj_slider_no);
-    json += "label\":\"Intensität\",\"slider";
+    json += "label\":\"";
+    json += obj_slider_label;
+    json += "\",\"slider";
     json += String(obj_slider_no);
     json += "name\":\"";
     json += obj_keyword;
@@ -177,6 +181,10 @@ bool Switch_OnOff::get_switch_val() {
 
 void Switch_OnOff::set_switch(uint8_t val) {
   set(obj_keyword, String(val));
+}
+
+void Switch_OnOff::set_slider_label(const char* label) {
+  obj_slider_label = label;
 }
 
 void Switch_OnOff::set_slider(uint8_t val) {
