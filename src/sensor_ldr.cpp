@@ -1,11 +1,12 @@
 #include "config.h"
-
-#ifdef _SENSOR_LDR_H_
+#ifdef USE_SENSOR_LDR
+#include "sensor_ldr.h"
+#include "config.h"
 
 void Sensor_LDR::begin(const char* html_place, const char* label) {
   Sensor_Generic::begin(html_place, label);
   obj_value = analogRead(A0);
-  obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#LDR an A0\"";
+  obj_info_html = "\"sensorinfo1\":\"Hardware:#LDR an A0\"";
 }
 
 void Sensor_LDR::start_measure() {

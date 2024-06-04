@@ -76,6 +76,12 @@ public:
     /// @return true: geändert; false unverändert
     bool changed();
 
+    /// @brief Eine Kontrollfunktion ob geänderte Werte für die Webseiteein vorliegen.
+    /// @brief Beim Sensor: Neue Werte sind erstellt worden
+    /// @brief Beim Actor: Ein Ereignis hat den Zustand geändert
+    /// @return true: geändert; false unverändert
+    bool webChange();
+
     /// @brief Prüft ob das übergebene keyword dem hinterlegten keyword entspricht
     /// @param keyword Das zu prüfende keyword
     /// @return true bei Übereinstimmung sonst false
@@ -105,6 +111,20 @@ public:
     /// @return den Wert des Objektes als Zeiger auf einen String
     String& show_value();
 
+    /// @brief Gibt json formatierte Informationen für die Webseite aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
+    /// @return Einen json Teilstring als String.
+    String& info_html();
+
+    /// @brief Gibt json formatierte Informationen für MQTT Übertragung aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
+    /// @return Einen json Teilstring als String.
+    String& info_mqtt();
+
+    void start_measure();
+
+    /// @brief Setzt die changed Variablen auf einen Wert.
+    /// @param val Der zu setztende Wert.
+    void set_changed(bool val);
+
 
     /// @brief Eine Funktion die im Hauptprogramm im loop regelmäßig aufgerufen wird. Hier können in den abgeleiteten Modulen regelmäßige Aufrufe hinterlegt werden.
     void loop();
@@ -115,6 +135,10 @@ public:
     String     obj_html_place;
     /// @brief Eine Beschriftung für die Webseite. Wird sie nicht gesetzt, wird hier das Schlüsselwort genutzt. 
     String     obj_label;
+    /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
+    String     obj_info_html;
+    /// @brief Informationen zum Sensor für MQTT als json abgespeichert;
+    String     obj_info_mqtt;
     /// @brief Der MQTT Name für diesen Sensor. Wird er nicht gesetzt wird hier das Schlüsselwort übertragen.
     String     obj_mqtt_name;
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
@@ -136,8 +160,10 @@ public:
     uint8_t    obj_hw_pin1;
     /// @brief Optional: Der Hardwarepin2 für diesen Sensor.
     uint8_t    obj_hw_pin2;
-    /// @brief Ein Changed Flag, wird durch das abgeleitete Objekt gefüllt.
-    bool       obj_changed;
+    /// @brief Ein Changed Flag für das Webinterface, wird durch das abgeleitete Objekt gefüllt.
+    bool       obj_changed_w;
+    /// @brief Ein Changed Flag für die Aplikation, wird durch das abgeleitete Objekt gefüllt.
+    bool       obj_changed_a;
 };
 
 #endif

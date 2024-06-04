@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <link rel='stylesheet' type='text/css' href='style.css' />
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
@@ -101,11 +102,9 @@ $(document).ready(function(){
   $("#slider2div").hide();
   $("#slider3div").hide();
   $("#audio_div").hide();
-  $("#audiomsg1div").hide();
-  $("#audiomsg2div").hide();
-  $("#audiomsg3div").hide();
-  $("#audiomsg4div").hide();
-  $("#audio_settings").hide();
+  $("#audio_radio_settings").hide();
+  $("#audio_media_settings").hide();
+  $("#audio_speak_settings").hide();
   $('#rf24gw').click(function() {
     if (!$(this).is(':checked')) {
       $("#rf24gw_div").hide();
@@ -170,38 +169,82 @@ $(document).ready(function(){
       $('#console_cmd').val("");
     }
   });
-/*
+
+  $('#audio_menu').click(function () {
+    do_cmd("#audio_menu","1");
+  });
+  /*  TEST */
+$("#fd_dir1").hide();
+  $("#fd_dir2").hide();
+  $("#fd_dir3").hide();
+  $("#fd_dir1_img").click(function() {
+    if ($("#fd_dir1").is(':hidden')) {
+      $("#fd_dir1_img").attr("src","dir_open.png");
+      $("#fd_dir1").show();
+      $("#fd_dir1_play").attr("src","leer.png");
+    } else {
+      $("#fd_dir1_img").attr("src","dir_close.png");
+      $("#fd_dir1").hide();
+      $("#fd_dir1_play").attr("src","play.png");
+    }
+  });
+  $("#fd_dir2_img").click(function() {
+    if ($("#fd_dir2").is(':hidden')) {
+      $("#fd_dir2_img").attr("src","dir_open.png");
+      $("#fd_dir2").show();
+      $("#fd_dir2_play").attr("src","leer.png");
+    } else {
+      $("#fd_dir2_img").attr("src","dir_close.png");
+      $("#fd_dir2").hide();
+      $("#fd_dir2_play").attr("src","play.png");
+    }
+  });
+  $("#fd_dir3_img").click(function() {
+    if ($("#fd_dir3").is(':hidden')) {
+      $("#fd_dir3_img").attr("src","dir_open.png");
+      $("#fd_dir3").show();
+      $("#fd_dir3_play").attr("src","leer.png");
+    } else {
+      $("#fd_dir3_img").attr("src","dir_close.png");
+      $("#fd_dir3").hide();
+      $("#fd_dir3_play").attr("src","play.png");
+    }
+  });
+/* Ende Test */
   $('#audio_radio_but').click(function () {
-    do_cmd("radio","2");
+//    alert("audio_radio click func");
+    do_cmd("audio_radio","1");
+  });
+  $('#audio_media_but').click(function () {
+    do_cmd("audio_media","1");
   });
 
-  $('#audio_settings').click(function () {
-    do_cmd("media","2");
-  });
-
-  $('#audio_bt_but').click(function () {
-    do_cmd("bt","2");
+  $('#audio_speak_but').click(function () {
+    do_cmd("audio_speak","1");
   });
 
   $("#audio_vol").change(function() {
     do_cmd("audio_vol",$(this).val());
-    alert("audio_vol");
+//    alert("audio_vol");
   });
 
   $("#audio_tre").change(function() {
     do_cmd("audio_tre",$(this).val());
-    alert("audio_tre");
+//    alert("audio_tre");
   });
 
   $("#audio_bas").change(function() {
     do_cmd("audio_bas",$(this).val());
-    alert("audio_bas"+$(this).val());
+//    alert("audio_bas"+$(this).val());
   });
-  
+ 
+
+
+
   $('#audio_menu').click(function () {
-    $("#audio_settings").toggle();
+    do_cmd("audio_menu",2);
   });
-*/
+
  });
 
 
@@ -414,47 +457,37 @@ function prozessJS( key, val ) {
       }
       $("#ledmatrix").show();
     break;
+// Ab hier Audiomodul    
     case "show_audio":
       $("#audio_div").show();
-    break;  
-    case "audio_radio":
+    break;
+    case "audio_settings":
       if ( val > 0.5 ) {
+        $("#audio_settings").show();
+      } else {
+        $("#audio_settings").hide();
+      }
+    break;
+    case "audio_menu":
+      $("#audio_menu").classList.toggle("change");
+    break;
+    case "audio_radio":
+        audio_mediaswitch();
         $("#audio_radio_but").css("color","black").css("background-color","yellow");
         $("#audio_radio_but").html("ein");
-        $("#audio_media_but").css("color","white").css("background-color","black");
-        $("#audio_media_but").html("aus");
-        $("#audio_bt_but").css("color","white").css("background-color","black");
-        $("#audio_bt_but").html("aus");
-      } else {
-        $("#audio_radio_but").css("color","white").css("background-color","black");
-        $("#audio_radio_but").html("aus");
-      }
+        $("#audio_radio_settings").show();
     break;
     case "audio_media":
-      if ( val > 0.5 ) {
-        $("#audio_radio_but").css("color","white").css("background-color","black");
-        $("#audio_radio_but").html("aus");
+        audio_mediaswitch();
         $("#audio_media_but").css("color","black").css("background-color","yellow");
         $("#audio_media_but").html("ein");
-        $("#audio_bt_but").css("color","white").css("background-color","black");
-        $("#audio_bt_but").html("aus");
-      } else {
-        $("#audio_media_but").css("color","white").css("background-color","black");
-        $("#audio_media_but").html("aus");
-      }
+        $("#audio_media_settings").show();
     break;
-    case "audio_bt":
-      if ( val > 0.5 ) {
-        $("#audio_radio_but").css("color","white").css("background-color","black");
-        $("#audio_radio_but").html("aus");
-        $("#audio_media_but").css("color","white").css("background-color","black");
-        $("#audio_media_but").html("aus");
-        $("#audio_bt_but").css("color","black").css("background-color","yellow");
-        $("#audio_bt_but").html("ein");
-      } else {
-        $("#audio_bt_but").css("color","white").css("background-color","black");
-        $("#audio_bt_but").html("aus");
-      }
+    case "audio_speak":
+        audio_mediaswitch();
+        $("#audio_speak_but").css("color","black").css("background-color","yellow");
+        $("#audio_speak_but").html("ein");
+        $("#audio_speak_settings").show();
     break;
     case "audio_vol":
       $("#audio_vol").val(val);
@@ -1071,6 +1104,24 @@ function audio_sel_change(val) {
   do_cmd("audio_set_stn",val)
 }
 
+function audio_mediaswitch() {
+  $("#audio_menu").removeClass("change");
+  $("#audiomsg1div").hide();
+  $("#audiomsg2div").hide();
+  $("#audiomsg3div").hide();
+  $("#audiomsg4div").hide();
+  $("#audio_settings").hide();
+  $("#audio_radio_settings").hide();
+  $("#audio_media_settings").hide();
+  $("#audio_speak_settings").hide();
+  $("#audio_radio_but").css("color","white").css("background-color","black");
+  $("#audio_radio_but").html("aus");
+  $("#audio_media_but").css("color","white").css("background-color","black");
+  $("#audio_media_but").html("aus");
+  $("#audio_speak_but").css("color","white").css("background-color","black");
+  $("#audio_speak_but").html("aus");
+}
+
 function audio_fill_sel() {
   $('#audio_sel')
     .find('option')
@@ -1193,21 +1244,21 @@ function audio_stn_update() {
         <div id="audiomsg4" class="msg_div"></div>
         <hr>
       </div>
-        <div id="audio_radio" class="audio_sw_div">
+      <div id="audio_radio" class="audio_sw_div">
           Radio<br>
-        <button id='audio_radio_but' class='sw_button' onclick='do_cmd("radio","2");'>
+        <button id='audio_radio_but' class='sw_button'>
           aus
         </button>
       </div>
       <div id="audio_media" class="audio_sw_div">
         Media<br>
-        <button id='audio_media_but' class='sw_button' onclick='do_cmd("media","2");'>
+        <button id='audio_media_but' class='sw_button'>
           aus
         </button>
       </div>
-      <div id="audio_bt" class="audio_sw_div">
+      <div id="audio_speak" class="audio_sw_div">
         BT<br>
-        <button id='audio_bt_but' class='sw_button' onclick='do_cmd("bt","2");'>
+        <button id='audio_speak_but' class='sw_button'>
           aus
         </button>
       </div>
@@ -1217,7 +1268,7 @@ function audio_stn_update() {
       <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
       </div>
       <div style="height: 50px;">
-      <div class="menu" onclick="audio_menu(this)">
+      <div id="audio_menu" class="menu">
         <div class="bar1"></div>
         <div class="bar2"></div>
         <div class="bar3"></div>
@@ -1230,31 +1281,98 @@ function audio_stn_update() {
           <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
         </div>
         <div class="slidecontainer">
-        <p>Höhen</p>
-        <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
+          <p>Höhen</p>
+          <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
         </div>
-        <div id="audio_div_sel">
-          <p id="audio_sel_text">Senderwahl:</p>
-          <select id="audio_sel" class="custom-select" onchange="audio_sel_change(this.value)" size="5">
-          </select>
-          <table><tr><td>
-            Sendername:
-          </td><td>
-            <input name="Sendername" id="audio_stn_name" size="30" maxlength="30">
-          </td></tr><tr><td>  
-            URL: 
-          </td><td>
-            <input name="SenderURL" id="audio_stn_url" size="30" maxlength="125">
-          </td></tr></table>  
-          <button id="audio_but_st_upd" class="button bg_rt" onclick="audio_stn_update();">Sender speichern</button>
-        </div>
-      </div>  
+      </div>
+      <div id="audio_radio_settings">
+        <p id="audio_radio_sel_div">Senderwahl:</p>
+        <select id="audio_radio_sel" class="custom-select" onchange="audio_radio_sel_change(this.value)" size="5">
+        </select>
+        <table><tr>
+          <td>Sendername:</td>
+          <td><input name="Sendername" id="audio_stn_name" size="30" maxlength="30"></td>
+        </tr><tr>
+          <td>URL:</td>
+          <td><input name="SenderURL" id="audio_stn_url" size="30" maxlength="125"></td>
+        </tr></table>  
+        <button id="audio_but_st_upd" class="button bg_rt" onclick="audio_stn_update();">Sender speichern</button>
+      </div>
+      <div id="audio_media_settings">
+          Media Menu TBD.
+
+
+
+
+
+
+          <div id="filedir">
+            <p>Dir: SD Karte</p>
+            <img id="fd_dir1_play" src="play.png" height="60px" width="60px">
+            <img id="fd_dir1_img" src="dir_close.png" height="60px" width="60px">
+             dir 1<br>
+            <div id="fd_dir1">
+              <img id="fd_file1_play" src="play.png" height="60px" width="60px">
+              <img src="leer.png" height="60px" width="60px">
+              <img id="fd_file1_img" src="mp3file.png" height="60px" width="60px">
+              file 1 <br>
+              <img id="fd_file1_play" src="play.png" height="60px" width="60px">
+              <img src="leer.png" height="60px" width="60px">
+              <img id="fd_file1_img" src="mp3file.png" height="60px" width="60px">
+              file 2 <br>
+              <img id="fd_file1_play" src="play.png" height="60px" width="60px">
+              <img src="leer.png" height="60px" width="60px">
+              <img id="fd_file1_img" src="mp3file.png" height="60px" width="60px">
+              file 3 <br>
+            </div>
+            <img id="fd_dir2_play" src="play.png" height="60px" width="60px">
+            <img id="fd_dir2_img" src="dir_close.png" height="60px" width="60px">
+             dir 2<br>
+            <div id="fd_dir2">
+              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
+              <img src="leer.png" height="30px" width="30px">
+              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
+              file 1 <br>
+              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
+              <img src="leer.png" height="30px" width="30px">
+              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
+              file 2 <br>
+              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
+              <img src="leer.png" height="30px" width="30px">
+              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
+              file 3 <br>
+            </div>
+            <img id="fd_dir3_play" src="play.png" height="60px" width="60px">
+            <img id="fd_dir3_img" src="dir_close.png" height="60px" width="60px">
+             dir 3<br>
+            <div id="fd_dir3">
+              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
+              <img src="leer.png" height="30px" width="30px">
+              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
+              file 1 <br>
+              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
+              <img src="leer.png" height="30px" width="30px">
+              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
+              file 2 <br>
+              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
+              <img src="leer.png" height="30px" width="30px">
+              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
+              file 3 <br>
+            </div>
+          </div>  
+
+
+
+      </div>
+      <div id="audio_speak_settings">
+          Speaker Menu TBD.
+      </div>
     </div>
     
   </div>
 
   <div id="page_console" class="div_content">
-    <div id="console_tab1">Debugfile</div>
+    <div id="console_tab1">Logfile</div>
     <div id="console_tab2">Logs</div>
     <div id="console_tab3">Meldungen</div>
     <textarea readonly id='console' cols='340' wrap='off'></textarea>

@@ -1,17 +1,15 @@
 #include "config.h"
-
-// Das Sybol _ACTOR_LEDMATRIX_H_ wird gesetzt wenn die Headerdatei "actor_ledmatrix.h" in der 
-// Node-Konfiguration ("Node_settings.h") aufgerufen wurde.
-// Problem: Wird das Modul actor_ledmatrix kompiliert ist I2C (TWI) nicht mehr nutzbar!!!!!
-#ifdef _ACTOR_LEDMATRIX_H_
+#ifdef USE_ACTOR_LEDMATRIX
+#include "config.h"
+#include "actor_ledmatrix.h"
 
 LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
 
 void Actor_LEDMatrix::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-                            bool start_value, bool on_value, unsigned int slider_val, uint8_t slider_no,
-                            const char* mqtt_line , const char* mqtt_graph, const char* slider_mqtt_name) {
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value,
-                      on_value, slider_val, slider_no, slider_mqtt_name);
+                            bool start_value, bool on_value, 
+                            uint8_t slider_val, uint8_t slider_no, const char* slider_mqtt_name, const char* slider_label,
+                            const char* mqtt_line , const char* mqtt_graph) {
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_no, slider_mqtt_name, slider_label);
   obj_mqtt_line = mqtt_line;
   obj_mqtt_graph = mqtt_graph;
   matrix.begin();

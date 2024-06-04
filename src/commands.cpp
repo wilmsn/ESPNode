@@ -36,7 +36,7 @@ void prozess_cmd(const String cmd, const String value)  {
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
+    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name().c_str()), switch1.show_value().c_str());
     do_send_mqtt_stat = true;
 #endif
   }

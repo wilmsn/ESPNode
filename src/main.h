@@ -46,10 +46,14 @@ bool rebootflag = false;
 /// @brief Variablen zur Nutzung im Umfeld der HTML Seite
 String html_json;
 // WiFi
+String wifi_ssid;
+String wifi_pass;
+#ifdef ESP32
 String wifi_ssid1;
 String wifi_pass1;
 String wifi_ssid2;
 String wifi_pass2;
+#endif
 
 bool ap_mode = false;
 

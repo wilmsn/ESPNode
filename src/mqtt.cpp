@@ -57,7 +57,7 @@ void send_mqtt_stat() {
         mqtt_json += ",";
         mqtt_json_length_old = mqtt_json.length();
       }
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
+      mqttClient.publish( mk_topic(MQTT_STATUS, switch2.show_mqtt_name().c_str()), switch2.show_value().c_str());
       write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch2.show_value());
       mqtt_json += switch2.mqtt_json_part();
 #endif
@@ -66,7 +66,7 @@ void send_mqtt_stat() {
         mqtt_json += ",";
         mqtt_json_length_old = mqtt_json.length();
       }
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
+      mqttClient.publish( mk_topic(MQTT_STATUS, switch2.show_mqtt_name().c_str()), switch2.show_value().c_str());
       write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch3.show_value());
       mqtt_json += switch3.mqtt_json_part();
 #endif
@@ -75,7 +75,7 @@ void send_mqtt_stat() {
         mqtt_json += ",";
         mqtt_json_length_old = mqtt_json.length();
       }
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
+      mqttClient.publish( mk_topic(MQTT_STATUS, switch2.show_mqtt_name().c_str()), switch2.show_value().c_str());
       write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch4.show_value());
       mqtt_json += switch4.mqtt_json_part();
 #endif

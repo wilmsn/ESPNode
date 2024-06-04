@@ -23,6 +23,7 @@
 #include <WiFi.h>
 #include "AsyncTCP.h"
 #include <rom/rtc.h>
+#include <WiFiMulti.h>
 typedef unsigned char uint8_t;
 #endif
 
@@ -32,23 +33,14 @@ typedef unsigned char uint8_t;
 #include "ESPAsyncTCP.h"
 #endif
 
-#include <WiFiMulti.h>
 
 #include "config.h"
 
-typedef struct {
-    uint8_t min;
-    uint8_t max;
-    uint8_t cur;
-} level_t;
-
-typedef struct {
-    uint8_t num;
-    char    name[STATION_NAME_LENGTH];
-    char    url[STATION_URL_LENGTH];
-} station_t;
-
 // externe Referenzen
+
+// Alle Module
+extern void write2log(uint8_t kat, int count, ...);
+
 // Modul: webserver
 extern AsyncWebSocket ws;
 extern bool do_log_web;
@@ -78,9 +70,6 @@ extern int rf24gw_gw_no;
 
 void rf24gw_setup();
 void rf24gw_loop();
-
-// Modul: commands
-extern station_t station[MAXSTATION];
 
 // Modul: main
 //extern AsyncWebServer httpServer;

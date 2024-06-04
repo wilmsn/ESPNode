@@ -1,3 +1,5 @@
+#include "config.h"
+#ifdef USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 
 // Startet als Schalter mit Regler der einen HW-Pin steuert
@@ -59,7 +61,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_on_value = on_value;
   obj_value = start_value;
   do_switch(start_value);
-  obj_changed = false;
+  set_changed(false);
 }
 
 void Switch_OnOff::do_switch(bool state) {
@@ -69,7 +71,9 @@ void Switch_OnOff::do_switch(bool state) {
         analogWrite(obj_hw_pin1, obj_slider_val);
       }
     } else {
-      digitalWrite(obj_hw_pin1, obj_on_value);
+      if ( obj_hw_pin1_used ) {
+        digitalWrite(obj_hw_pin1, obj_on_value);
+      }
       if (obj_hw_pin2_used) {
         digitalWrite(obj_hw_pin2, obj_on_value);
       }
@@ -113,26 +117,25 @@ bool Switch_OnOff::set(const String& keyword, const String& value) {
   if ( keyword_match(keyword) ) {
     if ( (value == "0") || (value == "aus") || (value == "Aus") || (value == "off") | (value == "Off") ) {
       do_switch(false);
-      obj_changed = true;
+      set_changed(true);
       retval = true;
     }
     if ( (value == "1") || (value == "ein") || (value == "Ein") || (value == "on") | (value == "On") ) {
       do_switch(true);
-      obj_changed = true;
+      set_changed(true);
       retval = true;
     }
     if ( (value == "2") || (value == "umschalten") || (value == "Umschalten") || (value == "toggle") | (value == "Toggle") ) {
       do_switch(! obj_value);
-      obj_changed = true;
+      set_changed(true);
       retval = true;
     }
     if ( value.startsWith("S:") ) {
       obj_slider_val = value.substring(2,value.length()).toInt();
       do_switch(obj_value); 
-      obj_changed = true;
+      set_changed(true);
       retval = true;
     }
-    if (obj_changed) Serial.println("switch_on_off: OBJ_CHANGED = true");
   }
   return retval;
 }
@@ -190,9 +193,11 @@ void Switch_OnOff::set_slider_label(const char* label) {
 void Switch_OnOff::set_slider(uint8_t val) {
   obj_slider_val = val;
   do_switch(obj_value);
-  obj_changed = true;
+  set_changed(true);
 }
 
 void Switch_OnOff::set_slider_max_value(uint8_t val) {
   obj_slider_max_val = val;
 }
+
+#endif

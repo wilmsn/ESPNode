@@ -2,28 +2,28 @@
 Sensormodule beschreiben bzw erzeugen eigene Objekte. Die Einbindung erfolgt über die Datei **"Node_settings.h"**. Dort müssen die nachfolgenden Funktionen vorhanden und mit Inhalt gefüllt sein. Zur Kompatibilität sind die Funktionen als Leerfunktion im Grundobjekt **"Sensor_Generic"** bereits vorhanden. Alle neuen Objekte für Sensoren werden von **"Sensor_Generic"** abgeleitet, Aktoren werden von **"Switch_Generic"** abgeleitet.
 
 ###Wichtiger Hinweis###
-Nicht benötigte Module mit Hardwarebezug müssen entweder
+Nicht benötigte Module ( wichtig bei Hardwarebezug z.B addressiete Pins ) müssen entweder
 
-a) durch eine passende Precompilerdirektive deaktiviert werden (Beispiel Modul "switch_demo"):
+a) durch eine passende Precompilerdirektive deaktiviert werden (Beispiel Modul "actor_ledmatrix"):
 
-Datei "switch_demo.h":
+Datei "actor_ledmatrix.h":
 
-	#ifndef _SWITCH_DEMO_H_
-	#define _SWITCH_DEMO_H_
+	#ifdef USE_ACTOR_LEDMATRIX
 	
 	... Programmext ...
 	
 	#endif
 	
-Datei "switch_demo.cpp":
+Datei "actor_ledmatrix.cpp":
 
-	#ifdef _SWITCH_DEMO_H_
+	#include "config.h"
+    #ifdef USE_ACTOR_LEDMATRIX
 	
 	... Programmext ...
 	
 	#endif
 	
-Zudem ist darauf zu achten das in der Headerdatei nur Deklarationen und keine Definitionen angegeben werden!
+Diese Direktive wird dann in der Datei "Node_settings.h" aktiviert:
 
 oder
 
@@ -31,11 +31,15 @@ b) entfernt werden => sehr unpraktisch!!
 
 **Problem:** Besitzt ein Modul einen Hardwarebezug stören sich die Programme gegenseitig auch wenn sie nicht aktiv sind. (Beispiel: 2 Module greifen mit unterschiedlichen Methoden auf GPIO 4 zu, jedoch ist für einen Node jeweils nur ein Modul mit einer Methode aktiviert) 
 
+**Lösung:** Umgesetzt ist die Methode a)
+
+Die benötigte Direktive steht jeweils in der ersten Zeile der Moduldateien *.h bzw. in der zweite Zeile von *.cpp
 
 ###Funktion "begin()"###
 Dies Funktion kann je nach Einsatz und Aufgabe unterschiedliche Parameter erfordern. Damit die Funktion universell eingebaut werden kann, erfolgt ihr "Einbau" in der Datei  **"Node_settings.h"** über eine Precompiler Direktive. Beispiel:
 
-	#include "sensor_18B20.h"
+    #ifdef USE_SENSOR_18B20	
+    #include "sensor_18B20.h"
 	#define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 	#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
@@ -54,7 +58,7 @@ Die Implementierung erfolgt wiederum über eine Precompilerdirektive (Zeile3):
 Der erste Teil "SENSOR1_BEGIN_STATEMENT" ist statisch. Der zweite Teil wird entsprechend der benötigten Objektinitialisierung angepasst.
 
 ###Funktion "start_measure()"###
-Innerhalb dieser Funktion  muss bei einem Sensor zwingend folgendes Programmiert werden:
+Innerhalb dieser Funktion muss bei einem Sensor zwingend folgendes Programmiert werden:
 
 1) Alles nötige zum Auslesen des oder der Messwerte.
 

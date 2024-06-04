@@ -1,3 +1,4 @@
+#ifdef USE_SWITCH_ONOFF
 #ifndef _SWITCH_ONOFF_H_
 #define _SWITCH_ONOFF_H_
 /***************************************************************************************
@@ -119,8 +120,8 @@ public:
     /// @param val The value to set (0...255)
     void set_slider_max_value(uint8_t val);
 
-    /// @brief Schaltet die Hardware auf den in "state" übergebenen Zustand. "true" = Ein, "false" = Aus
-    /// @param state Der neue Zustand des Schalters (0...255).
+    /// @brief Schaltet den Schalter auf einen neuen Zustand.
+    /// @param state Der neue Zustand des Schalters ("true" = Ein, "false" = Aus).
     void do_switch(bool state);
 
     /// @brief Der hardwareseitige Einschaltwert des Schalters.
@@ -145,4 +146,5 @@ public:
 
 };
 
+#endif
 #endif

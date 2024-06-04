@@ -1,6 +1,7 @@
 #include "config.h"
-
-#ifdef _SENSOR_BOSCH_H_
+#ifdef USE_SENSOR_BOSCH
+#include "config.h"
+#include "sensor_bosch.h"
 #include "BMX_sensor.h"
 //#include <twi.h>
 #include <Wire.h>
@@ -60,18 +61,18 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
   }
 #endif
   start_measure();
-  obj_sensorinfo_mqtt = "\"Sensor-HW\":";
+  obj_info_mqtt = "\"Sensor-HW\":";
   if (bmx_sensor.isBMP180()) {
-     obj_sensorinfo_mqtt += "\"BMP180\"";
-     obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BMP180\"";
+     obj_info_mqtt += "\"BMP180\"";
+     obj_info_html = "\"sensorinfo1\":\"Hardware:#BMP180\"";
   }
   if (bmx_sensor.isBMP280()) {
-    obj_sensorinfo_mqtt += "\"BMP280\"";
-    obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BMP280\"";
+    obj_info_mqtt += "\"BMP280\"";
+    obj_info_html = "\"sensorinfo1\":\"Hardware:#BMP280\"";
   }
   if (bmx_sensor.isBME280()) {
-    obj_sensorinfo_mqtt += "\"BME280\"";
-    obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#BME280\"";
+    obj_info_mqtt += "\"BME280\"";
+    obj_info_html = "\"sensorinfo1\":\"Hardware:#BME280\"";
   }
 }
 

@@ -21,7 +21,11 @@ RF24 Gateway:
 // Produktive Nodes
 //****************************************************
 #if defined(NODE_FLUR)
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+#define USE_SENSOR_18B20
+#include "sensor_18B20.h"
+
 #define HOSTNAME                 "FlurNode"
 #define HOST_DISCRIPTION         "Der Node im Flur: Hintergrundbeleuchtung"
 #define MAGICNO                  479
@@ -29,7 +33,6 @@ RF24 Gateway:
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
 #define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 1, "intensity");
 
-#include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
@@ -42,7 +45,11 @@ RF24 Gateway:
 #endif
 //****************************************************
 #if defined(NODE_TERASSE)
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+#define USE_SENSOR_18B20
+#include "sensor_18B20.h"
+
 #define MAGICNO                  475
 
 #define HOSTNAME                 "TerassenNode"
@@ -54,7 +61,6 @@ RF24 Gateway:
 #define SWITCH2_DEFINITION       Switch_OnOff switch2;
 #define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "Balkon", "balkon", "balkon", false, false, 0);
 
-#include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
@@ -67,19 +73,18 @@ RF24 Gateway:
 #endif
 //*****************************************************
 #if defined(NODE_TEICH)
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+#define USE_SENSOR_18B20
+#include "sensor_18B20.h"
+
 #define HOSTNAME                 "TeichNode"
 #define HOST_DISCRIPTION         "Der Node zur Steuerung der Teichpumpe"
 #define MAGICNO                  479
 
 #define SWITCH1_DEFINITION       Switch_OnOff switch1;
-/*
-void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               uint8_t hw_pin1, uint8_t hw_pin2, bool start_value, bool on_value);
-*/
 #define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, 0, 2);
 
-#include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
@@ -93,20 +98,20 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //-----------------------------------------------------
 #if defined(NODE_WOHNZIMMER)
 
+#define USE_ACTOR_LEDMATRIX
 #include "actor_ledmatrix.h"
 
-#define DEBUG_SERIAL
+#define USE_SENSOR_18B20
+#include "sensor_18B20.h"
 
 #define HOSTNAME                 "wohnzimmernode"
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
-#define MAGICNO                  475
-#define LOG_CRITICAL             true
+#define MAGICNO                  102
+#define DO_LOG_CRITICAL          true
 
 #define SWITCH1_DEFINITION       Actor_LEDMatrix switch1;
-// html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_no, mqtt_line, mqtt_graph, slider_mqtt_name
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Display", "display", "display", false, true, 3, 1, "mx_line", "mx_graph", "intensity");
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Anzeige", "display", "display", false, true, 3, 1, "intensity", "Helligkeit", "mx_line", "mx_graph");
 
-#include "sensor_18B20.h"
 #define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
 #define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
 
@@ -115,18 +120,19 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                102
-#define LOG_RF24                 true
+#define DO_LOG_RF24              true
 
 #endif
 //*****************************************************
 //    Individual settings
 //-----------------------------------------------------
 #if defined(NODESIMPLE)
+
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+
 #define HOSTNAME               "nodesimple"
 #define HOST_DISCRIPTION       "Ein ESP8266 Node ohne externe Elemente"
-//#define MQTT_CLIENT            "espmini"
-//#define MQTT_SERVER            "rpi1.fritz.box"
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
@@ -136,43 +142,40 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #endif
 //-----------------------------------------------------
 #ifdef ESP32SIMPLE
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+
 #define HOSTNAME               "nodesimple"
 #define HOST_DISCRIPTION       "Ein ESP32 Node ohne externe Elemente"
-//#define MQTT_CLIENT            "esp32mini"
-//#define MQTT_SERVER            "rpi1.fritz.box"
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
 #define SWITCH1_DEFINITION      Switch_OnOff switch1;
 #define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, true, 2);
-#define LOG_SYS                 true
-#define MAGICNO                  471
+#define DO_LOG_SYS              true
+#define MAGICNO                 471
 
 #endif
 //-----------------------------------------------------
 // Hier ein Witty Node, dessen 4 LED (interne + RGB) als einzelne Schalter angesteuert werden.
 // Dabei kann jede LED nur ein- oder ausgeschaltet werden.
-#if defined(WITTYNODE1)
+#if defined(WITTYNODE)
+
+#define USE_SWITCH_ONOFF
+#include "switch_onoff.h"
+#define USE_SENSOR_LDR
+#include "sensor_ldr.h"
+
 #define WITTY_RGB_RT           15
 #define WITTY_RGB_GN           12
 #define WITTY_RGB_BL           13
 #define WITTY_LED_PIN          2
-#include "switch_onoff.h"
-#include "sensor_ldr.h"
 
 #define MAGICNO                479
 
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
-//#define MQTT_CLIENT            "wittynode"
-//#define MQTT_TOPICP2           "wittynode"
-
-//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-//#define RF24GW_NO                155
-
-//#define DEBUG_SERIAL
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MODULE
@@ -197,8 +200,10 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //-----------------------------------------------------
 #if defined(NODEBOSCH)
 
-#include "sensor_bosch.h"
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+#define USE_SENSOR_BOSCH
+#include "sensor_bosch.h"
 
 #define MAGICNO                  471
 #define DEBUG_SERIAL_MODULE
@@ -221,14 +226,15 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO               198
 
-#define LOG_CRITICAL            true
-#define LOG_RF24                true
-#define LOG_MQTT                true
+#define DO_LOG_CRITICAL            true
+#define DO_LOG_RF24                true
+#define DO_LOG_MQTT                true
 
 #endif
 //-----------------------------------------------------
 #if defined(NODEMATRIX)
 
+#define USE_ACTOR_LEDMATRIX
 #include "actor_ledmatrix.h"
 
 #define DEBUG_SERIAL
@@ -245,7 +251,7 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 //-----------------------------------------------------
 #if defined(NODESLIDER)
 
-//#include "sensor_ldr.h"
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 
 #define DEBUG_SERIAL_MODULE
@@ -264,27 +270,17 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #endif
 //-----------------------------------------------------
-#if defined(MULTISWITCHAPP)
-
-#define DEBUG_SERIAL
-#include "multiappswitch.h"
-
-
-#define HOSTNAME                 "MultiAppSwitchNode"
-#define HOST_DISCRIPTION         "Ein Multi App Switch Testnode"
-
-#endif
-//-----------------------------------------------------
 #if defined(NODE_WEBRADIO)
 
-#include "webradio.h"
-#define CONFIG_ESP32S3
+#define USE_AUDIOMODUL
+#include "audiomodul.h"
+//#define CONFIG_ESP32S3
 //#define CONFIG_ESP32
 #define MAGICNO                  0
-#define AUDIO
-#define WEBRADIO
+//#define DO_MEDIAPLAYER
+#define DO_WEBRADIO
 
-//#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_HTML
 
 #define HOSTNAME                 "Webradio"
@@ -297,6 +293,51 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 
 #endif
 
+//-----------------------------------------------------
+#if defined(NODE_AUDIO)
+
+#define USE_AUDIOMODUL
+
+#include "audiomodul.h"
+#define MAGICNO                  0
+
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_HTML
+
+#define HOSTNAME                 "Audionode"
+#define HOST_DISCRIPTION         "Ein Audio Testnode"
+
+#define SWITCH1_DEFINITION       AudioModul switch1;
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Anlage", "anlage", "anlage");
+
+#define DO_LOG_WEB               true
+#define DO_LOG_SENSOR            true
+#define DO_LOG_SYS               true
+
+#endif
+
+//-----------------------------------------------------
+#if defined(NODE_ROTARYTEST)
+
+#define USE_ROTARYTEST
+#define USE_ROTARYMODUL
+#include "rotarytest.h"
+#define MAGICNO                  0
+
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_HTML
+
+#define HOSTNAME                 "Rotarytest"
+#define HOST_DISCRIPTION         "Ein Rotary Testnode"
+
+#define SWITCH1_DEFINITION       RotaryTest switch1;
+//#define SWITCH1_BEGIN_STATEMENT  switch1.begin();
+#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Anlage", "anlage", "anlage");
+
+#define SWITCH2_DEFINITION       Switch_OnOff switch2;
+#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "blau", "blau", "blau", false, true, 13, 150, 2, "regler","intensity");
+
+#endif
 
 //define constrains for precompiler 
 //no changes below !!!!!!!!!!!!!!!!
@@ -359,8 +400,9 @@ void begin(const char* html_place, const char* label, const char* mqtt_name, con
 #endif
 
 /// Audio
-#if defined(WEBRADIO) || defined(MEDIAPLAYER) || defined(BTSPEAKER)
+#if defined(DO_WEBRADIO) || defined(DO_MEDIAPLAYER) || defined(DO_BTSPEAKER)
 #define AUDIOBOX
+#warning "do we need this?"
 #endif
 
 

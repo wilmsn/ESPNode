@@ -66,12 +66,27 @@ String& Base_Generic::mqtt_json_part(void) {
 }
 
 String& Base_Generic::html_stat_json(void) {
-  obj_changed = false;
+  obj_changed_w = false;
   return obj_html_stat_json;
 }
 
 bool Base_Generic::changed() {
-  return obj_changed;
+//  if ( obj_changed_a ) Serial.println("Base_Generic::changed => true");
+  bool retval = obj_changed_a;
+  obj_changed_a = false;
+  return retval;
+}
+
+bool Base_Generic::webChange() {
+//  if ( obj_changed_w ) Serial.println("Base_Generic::webChange => true");
+  bool retval = obj_changed_w;
+  obj_changed_w = false;
+  return retval;
+}
+
+void Base_Generic::set_changed(bool val) {
+  obj_changed_w = val;
+  obj_changed_a = val;
 }
 
 void Base_Generic::loop() {
@@ -96,3 +111,13 @@ String& Base_Generic::show_mqtt_name() {
 String& Base_Generic::show_value() {
   return obj_values_str;
 }
+
+String& Base_Generic::info_html() {
+  return obj_info_html;
+}
+
+String& Base_Generic::info_mqtt() {
+  return obj_info_mqtt;
+}
+
+void Base_Generic::start_measure() {}

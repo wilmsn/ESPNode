@@ -1,6 +1,11 @@
 #include "main.h"
 
+
+#ifdef ESP32
 WiFiMulti wifiMulti;
+#else
+
+#endif
 
 #if defined(SWITCH1)
 SWITCH1_DEFINITION
@@ -63,7 +68,7 @@ void write2log(uint8_t kat, int count, ...) {
     c[n] = (char *)va_arg(args, char *);
     n++;
   }
-  // Im AP-Mode wird nichts in Filesystem gelogged !!!
+  // Im AP-Mode wird nichts gelogged !!!
   if ( ! ap_mode ) {
     snprintf(timeStr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
     if ( do_log_critical && kat == LOG_DAYBREAK ) {
@@ -73,7 +78,7 @@ void write2log(uint8_t kat, int count, ...) {
         f.close();
       }
     }
-    if (do_log_critical && kat == LOG_CRITICAL) {
+    if ( do_log_critical && (kat == LOG_CRITICAL) ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
         f.printf("%s ",timeStr);
@@ -86,50 +91,48 @@ void write2log(uint8_t kat, int count, ...) {
         f.close();
       }
     }
-  }
-  if (  (do_log_sensor && ( kat == LOG_SENSOR )) ||
-        (do_log_web && ( kat == LOG_WEB ))       ||
+    if (  (do_log_sensor && ( kat == LOG_SENSOR )) ||
+          (do_log_web && ( kat == LOG_WEB ))       ||
 #if defined(MQTT)
-        (do_log_mqtt && ( kat == LOG_MQTT ))     ||
+          (do_log_mqtt && ( kat == LOG_MQTT ))     ||
 #endif
 #if defined(RF24GW)
-        (do_log_rf24 && ( kat == LOG_RF24 ))     ||
+          (do_log_rf24 && ( kat == LOG_RF24 ))     ||
 #endif
-        (do_log_sys && ( kat == LOG_SYS ))       || 
-        (do_log_critical && ( kat == LOG_CRITICAL )) ) {
-    log_str = "{\"log\":\"";
-    log_str += timeStr;
+          (do_log_sys && ( kat == LOG_SYS ))       || 
+          (do_log_critical && ( kat == LOG_CRITICAL )) ) {
+      log_str = "{\"log\":\"";
+      log_str += timeStr;
+      n = 0;
+      while (n < count) {
+        log_str += " ";
+        // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
+        // Deshalb wird " gegen ' ersetzt!
+        for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
+          if ( c[n][i] == '"' ) {
+            log_str += "'";  
+          } else {
+            log_str += c[n][i];
+          }
+        }
+        n++;
+      }
+      log_str += "\"}";
+      ws.textAll(log_str);
+    }
+#if defined(DEBUG_SERIAL)
+    Serial.print(timeStr);
     n = 0;
     while (n < count) {
-      log_str += " ";
-      // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
-      // Deshalb wird " gegen ' ersetzt!
-      for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
-        if ( c[n][i] == '"' ) {
-          log_str += "'";  
-        } else {
-          log_str += c[n][i];
-        }
-      }
+      Serial.print(c[n]);
+      Serial.print(" ");
       n++;
     }
-    log_str += "\"}";
-    ws.textAll(log_str);
-  }
-#if defined(DEBUG_SERIAL)
-  Serial.print(timeStr);
-  n = 0;
-  while (n < count) {
-    Serial.print(c[n]);
-    Serial.print(" ");
-    n++;
-  }
-  Serial.println();
+    Serial.println();
 #endif
-  va_end(args);
+    va_end(args);
+  }
 }
-
-
 
 // Kommentiert in main.h
 // todo Schleifen maximaldauer könnte kritisch sein
@@ -151,20 +154,26 @@ bool do_wifi_con(void) {
   WiFi.mode(WIFI_STA);
 #ifdef ESP32
   WiFi.setHostname(HOSTNAME);
+  wifiMulti.addAP(wifi_ssid.c_str(), wifi_pass.c_str());
+  wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
+  wifiMulti.addAP(wifi_ssid2.c_str(), wifi_pass2.c_str());
+  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid.c_str(), " with Password ", wifi_pass.c_str());
+  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
+  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
 //  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
 #else
     //    WiFi.persistent(false);
   WiFi.hostname(HOSTNAME);
-//  WiFi.begin(wifi_ssid, wifi_pass);
+  WiFi.begin(wifi_ssid, wifi_pass);
 #endif
-  wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
-  wifiMulti.addAP(wifi_ssid2.c_str(), wifi_pass2.c_str());
-  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
-  write2log(LOG_SYS, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
 
   // ... Give ESP 10 seconds to connect to station.
   unsigned int i = 0;
+#ifdef ESP32
   while ( (wifiMulti.run() != WL_CONNECTED) && (i < 20) ) {
+#else
+  while ( (WiFi.status() != WL_CONNECTED) && (i < 20) ) {
+#endif
     delay(500);
     i++;
 #if defined(DEBUG_SERIAL)
@@ -178,7 +187,12 @@ bool do_wifi_con(void) {
     retval = true;
 //    write2log(LOG_SYS, 2, " OK connected!", wifi_ssid.c_str());
   } else {
-//    write2log(LOG_SYS, 2, " ERROR not connected!", wifi_ssid.c_str());
+    write2log(LOG_SYS, 1, " ERROR WiFi not connected!");
+#ifdef ESP32
+    write2log(LOG_SYS,4, "Tested SSID: ",wifi_ssid.c_str(),wifi_ssid1.c_str(),wifi_ssid2.c_str());
+#else
+    write2log(LOG_SYS,2, "Tested SSID: ",wifi_ssid.c_str());
+#endif
     retval = false;
   }
   
@@ -449,17 +463,17 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
 #if defined(SENSOR1)
   if ( info_str.length() > 3 ) info_str += ",";
   if (format_mqtt) {
-    info_str += sensor1.sensorinfo_mqtt();
+    info_str += sensor1.info_mqtt();
   } else {
-    info_str += sensor1.sensorinfo_html();
+    info_str += sensor1.info_html();
   }
 #endif
 #if defined(SENSOR2)
   if ( info_str.length() > 3 ) info_str += ",";
   if (format_mqtt) {
-    info_str += sensor2.sensorinfo_mqtt();
+    info_str += sensor2.info_mqtt();
   } else {
-    info_str += sensor2.sensorinfo_html();
+    info_str += sensor2.info_html();
   }
 #endif
   info_str += "}";
@@ -533,25 +547,29 @@ void setup() {
 #endif
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
+    wifi_ssid = WIFI_SSID;
+    wifi_pass = WIFI_PASS;
+#ifdef ESP32
     wifi_ssid1 = WIFI_SSID1;
     wifi_pass1 = WIFI_PASS1;
     wifi_ssid2 = WIFI_SSID2;
     wifi_pass2 = WIFI_PASS2;
+#endif
     loop_time_alarm = LOOP_TIME_ALARM;
+#if defined(MQTT)
+#endif
+// Save the defaults for the next start!
+    preferences.begin("settings",false);
+    preferences.putInt("magicno", MAGICNO);
+    preferences.putString("wifi_ssid", wifi_ssid); 
+    preferences.putString("wifi_pass", wifi_pass);
+    preferences.putUInt("loop_time_alarm", loop_time_alarm);
 #if defined(MQTT)
     do_mqtt = MQTT;
     mqtt_server = MQTT_SERVER;
     mqtt_client = MQTT_CLIENT;
     mqtt_topicP2 = MQTT_TOPICP2;
-    do_log_mqtt = LOG_MQTT;
-#endif
-// Save the defaults for the next start!
-    preferences.begin("settings",false);
-    preferences.putInt("magicno", MAGICNO);
-//    preferences.putString("wifi_ssid", wifi_ssid); 
-//    preferences.putString("wifi_pass", wifi_pass);
-    preferences.putUInt("loop_time_alarm", loop_time_alarm);
-#if defined(MQTT)
+    do_log_mqtt = DO_LOG_MQTT;
     preferences.putBool("do_mqtt", do_mqtt);
     preferences.putString("mqtt_server", mqtt_server);
     preferences.putString("mqtt_client", mqtt_client);
@@ -564,7 +582,7 @@ void setup() {
     rf24gw_hub_port = RF24GW_HUB_UDP_PORTNO;
     rf24gw_gw_port = RF24GW_GW_UDP_PORTNO;
     rf24gw_gw_no = RF24GW_NO;
-    do_log_rf24 = LOG_RF24;
+    do_log_rf24 = DO_LOG_RF24;
     preferences.putBool("do_rf24gw", do_rf24gw);
     preferences.putString("rf24gw_hub_server", rf24gw_hub_server);
     preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
@@ -572,10 +590,10 @@ void setup() {
     preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
     preferences.putBool("do_log_rf24", do_log_rf24);
 #endif
-    do_log_sensor = LOG_SENSOR;
-    do_log_web = LOG_WEB;
-    do_log_sys = LOG_SYS;
-    do_log_critical = LOG_CRITICAL;
+    do_log_sensor = DO_LOG_SENSOR;
+    do_log_web = DO_LOG_WEB;
+    do_log_sys = DO_LOG_SYS;
+    do_log_critical = DO_LOG_CRITICAL;
     preferences.putBool("do_log_sensor", do_log_sensor);
     preferences.putBool("do_log_web", do_log_web);
     preferences.putBool("do_log_sys", do_log_sys);
@@ -584,8 +602,8 @@ void setup() {
   } else {
     preferences.begin("settings",true);
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
-  //  wifi_ssid = preferences.getString("wifi_ssid"); 
-  //  wifi_pass = preferences.getString("wifi_pass");
+    wifi_ssid = preferences.getString("wifi_ssid"); 
+    wifi_pass = preferences.getString("wifi_pass");
     loop_time_alarm = preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
     do_mqtt = preferences.getBool("do_mqtt");
@@ -713,8 +731,7 @@ void loop() {
   }
   if ( ap_mode) {
     // IF we have an SSID stored we test every 5 Minutes to connect
-    if (millis() - wifi_ap_starttime > 300000 && wifi_ssid1.length() > 2) {
-      
+    if (millis() - wifi_ap_starttime > 300000 && wifi_ssid.length() > 2) {
       if ( do_wifi_con() ) {
         // If connection is posible we restart 
         delay(1000);
@@ -768,7 +785,7 @@ void loop() {
 #endif
 #if defined(SWITCH1)
     switch1.loop();
-    if (switch1.changed()) {
+    if (switch1.webChange()) {
       html_json = switch1.html_stat_json();
       write2log(LOG_SENSOR,1,html_json.c_str());
       ws.textAll(html_json);
@@ -777,7 +794,7 @@ void loop() {
 #endif
 #if defined(SWITCH2)
     switch2.loop();
-    if (switch2.changed()) {
+    if (switch2.webChange()) {
       html_json = switch2.html_stat_json();
       write2log(LOG_SENSOR,1,html_json.c_str());
       ws.textAll(html_json);
@@ -786,7 +803,7 @@ void loop() {
 #endif
 #if defined(SWITCH3)
     switch3.loop();
-    if (switch3.changed()) {
+    if (switch3.webChange()) {
       html_json = switch3.html_stat_json();
       write2log(LOG_SENSOR,1,html_json.c_str());
       ws.textAll(html_json);
@@ -795,7 +812,7 @@ void loop() {
 #endif
 #if defined(SWITCH4)
     switch4.loop();
-    if (switch4.changed()) {
+    if (switch4.webChange()) {
       html_json = switch4.html_stat_json();
       write2log(LOG_SENSOR,1,html_json.c_str());
       ws.textAll(html_json);

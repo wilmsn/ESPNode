@@ -1,15 +1,16 @@
+#ifdef USE_SENSOR_18B20
 #ifndef _SENSOR_18B20_H_
 #define _SENSOR_18B20_H_
 //#define DEBUG_SERIAL_MODULE
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include "sensor_generic.h"
+#include "base_generic.h"
 
 /// @brief Ein abgeleitetes Objekt für einen 18B20 Sensor.\n 
 /// Benötigt: OneWire und DallasTemperature als Gerätetreiber.\n 
 
-class Sensor_18B20 : public Sensor_Generic {
+class Sensor_18B20 : public Base_Generic {
 
 public:
     /// @brief Initialisierung des Sensorobjektes
@@ -27,4 +28,5 @@ private:
 
 };
 
+#endif
 #endif
