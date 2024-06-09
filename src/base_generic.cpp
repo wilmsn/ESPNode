@@ -84,12 +84,16 @@ bool Base_Generic::webChange() {
   return retval;
 }
 
+bool Base_Generic::set(const String& keyword, const String& value) {
+  return false;
+}
+
 void Base_Generic::set_changed(bool val) {
   obj_changed_w = val;
   obj_changed_a = val;
 }
 
-void Base_Generic::loop() {
+void Base_Generic::loop(time_t now) {
 }
 
 void Base_Generic::html_create_json_part(String& json) {
@@ -120,4 +124,12 @@ String& Base_Generic::info_mqtt() {
   return obj_info_mqtt;
 }
 
-void Base_Generic::start_measure() {}
+void Base_Generic::start_measure(time_t now) {}
+
+String& Base_Generic::sensorinfo_html() {
+  return obj_sensorinfo_html;
+}
+
+String& Base_Generic::sensorinfo_mqtt() {
+  return obj_sensorinfo_mqtt;
+}

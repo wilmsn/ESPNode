@@ -19,12 +19,28 @@ public:
     /// @param label Der Bezeichner des Messwertes
     void begin(const char* html_place, const char* label);
 
+    void html_create_json_part(String& json);
+
     /// @brief Startet eine Messung
-    void start_measure();
+    /// @param now Die aktuelle Zeit in Unix Sekunden
+    void start_measure(time_t now);
+
+    /// @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
+    /// @param now Die aktuelle Zeit in Unix Sekunden
+    void loop(time_t now);
 
 private:
 
-    int obj_value;
+    /// @brief Der numerische Messwert des LDR
+    int            obj_value;
+    /// @brief Ein Flag ob die Messung gestartet wurde
+    bool           obj_measure_started = false;
+    /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
+    time_t         obj_measure_starttime = 0;
+    /// @brief Das Intervall zwischen 2 Messungen in Sekunden
+    time_t         obj_measure_interval = 60;
+    /// @brief Der Abstand zwischen dem Start der Messung und dem Auslesen der Werte
+    time_t         obj_measure_delay = 2;
 
 };
 

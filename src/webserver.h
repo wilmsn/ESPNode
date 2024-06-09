@@ -5,7 +5,6 @@
 #include "secrets.h"
 
 int cmd_no = 0;
-bool do_log_web = false;
 
 /// @brief Create AsyncWebServer object on port 80
 AsyncWebServer httpServer(80);

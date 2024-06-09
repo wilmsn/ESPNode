@@ -18,12 +18,11 @@
 #define STATION_URL_LENGTH        128
 
 typedef struct {
-    uint8_t num;
     char    name[STATION_NAME_LENGTH];
     char    url[STATION_URL_LENGTH];
 } station_t;
 
-typedef enum Modus { Radio, Media, Speaker } modus_t;
+typedef enum Modus { Radio, Media, Speaker, Off } modus_t;
 
 class AudioModul : public Switch_OnOff {
 
@@ -43,17 +42,33 @@ public:
     /// @return "true" bei Übereinstimmung der Keywörter sonst false
     bool set(const String& keyword, const String& value);
  
-    void html_create_json_part(String& json);    
+    void html_create_json_part(String& json);
+
+    void audio_radio_off();
  
+    void audio_radio_on();
+
+    void audio_radio_set_station();
+
+    void audio_radio_show_station();
+
+    void audio_radio_save_stations();
+    
+    void audio_radio_load_stations();
+
+    void audio_radio_station_json(String& json);
+
     void loop();
 
 private:
-    void set_modus(uint8_t _modus);
-    station_t stations[MAXSTATIONS];
+    void      set_modus(uint8_t _modus);
+    uint8_t   get_modus(modus_t _modus);
+    station_t station[MAXSTATIONS];
     modus_t   modus;
     uint8_t   audio_vol;
     uint8_t   audio_bas;
     uint8_t   audio_tre;
+    uint8_t   audio_radio_cur_station;
 };
 
 

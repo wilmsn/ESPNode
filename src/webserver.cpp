@@ -165,23 +165,23 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 #if defined(ESP32)
       html_json += ",\"platform\":\"esp32\"";
 #endif
-#if defined(SWITCH1)
-      switch1.html_create_json_part(html_json);
+#if defined(MODULE1)
+      module1.html_create_json_part(html_json);
 #endif
-#if defined(SWITCH2)
-      switch2.html_create_json_part(html_json);
+#if defined(MODULE2)
+      module2.html_create_json_part(html_json);
 #endif
-#if defined(SWITCH3)
-      switch3.html_create_json_part(html_json);
+#if defined(MODULE3)
+      module3.html_create_json_part(html_json);
 #endif
-#if defined(SWITCH4)
-      switch4.html_create_json_part(html_json);
+#if defined(MODULE4)
+      module4.html_create_json_part(html_json);
 #endif
-#if defined(SENSOR1)
-      sensor1.html_create_json_part(html_json);
+#if defined(MODULE5)
+      module5.html_create_json_part(html_json);
 #endif
-#if defined(SENSOR2)
-      sensor2.html_create_json_part(html_json);
+#if defined(MODULE6)
+      module6.html_create_json_part(html_json);
 #endif
 #if defined(MQTT)
       html_json += ",\"set_mqtt_enable\":1";
@@ -206,8 +206,8 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       html_json += ",\"log_mqtt\":";
       html_json += do_log_mqtt? "1": "0";
 #endif
-      html_json += ",\"log_sensor\":";
-      html_json += do_log_sensor? "1": "0";
+      html_json += ",\"log_module\":";
+      html_json += do_log_module? "1": "0";
       html_json += ",\"log_sys\":";
       html_json += do_log_sys? "1": "0";
       html_json += ",\"log_critical\":";
@@ -234,33 +234,33 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 
-#if defined(SENSOR1)
-      html_json = sensor1.html_stat_json();
+#if defined(MODULE1)
+      html_json = module1.html_stat_json();
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
-#if defined(SENSOR2)
-      html_json = sensor2.html_stat_json();
+#if defined(MODULE2)
+      html_json = module2.html_stat_json();
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
-#if defined(SWITCH1)
-      html_json = switch1.html_stat_json();
+#if defined(MODULE3)
+      html_json = module3.html_stat_json();
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
-#if defined(SWITCH2)
-      html_json = switch2.html_stat_json();
+#if defined(MODULE4)
+      html_json = module4.html_stat_json();
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
-#if defined(SWITCH3)
-      html_json = switch3.html_stat_json();
+#if defined(MODULE5)
+      html_json = module5.html_stat_json();
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif
-#if defined(SWITCH4)
-      html_json = switch4.html_stat_json();
+#if defined(MODULE6)
+      html_json = module6.html_stat_json();
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
 #endif

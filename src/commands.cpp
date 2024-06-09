@@ -29,50 +29,75 @@ void prozess_cmd(const String cmd, const String value)  {
   html_json = "{\"statclear\":1}";
   write2log(LOG_WEB,1,html_json.c_str());
   ws.textAll(html_json);
-#if defined(SWITCH1)
-  if ( switch1.set( cmd, value ) ) {
-    html_json = switch1.html_stat_json();
-    write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE1)
+  if ( module1.set( cmd, value ) ) {
+    html_json = module1.html_stat_json();
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name().c_str()), switch1.show_value().c_str());
+    mqttClient.publish(mk_topic(MQTT_STATUS, module1.show_mqtt_name().c_str()), module1.show_value().c_str());
     do_send_mqtt_stat = true;
 #endif
   }
 #endif
-#if defined(SWITCH2)
-  if ( switch2.set( cmd, value ) ) {
-    html_json = switch2.html_stat_json();
-    write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE2)
+  if ( module2.set( cmd, value ) ) {
+    html_json = module2.html_stat_json();
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
+    mqttClient.publish(mk_topic(MQTT_STATUS, module2.show_mqtt_name().c_str()), module2.show_value().c_str());
     do_send_mqtt_stat = true;
 #endif
   }
 #endif
-#if defined(SWITCH3)
-  if ( switch3.set( cmd, value ) ) {
-    html_json = switch3.html_stat_json();
-    write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE3)
+  if ( module3.set( cmd, value ) ) {
+    html_json = module3.html_stat_json();
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
+    mqttClient.publish(mk_topic(MQTT_STATUS, module3.show_mqtt_name().c_str()), module3.show_value().c_str());
     do_send_mqtt_stat = true;
 #endif
   }
 #endif
-#if defined(SWITCH4)
-  if ( switch4.set( cmd, value ) ) {
-    html_json = switch4.html_stat_json();
-    write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE4)
+  if ( module4.set( cmd, value ) ) {
+    html_json = module4.html_stat_json();
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
 #if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
+    mqttClient.publish(mk_topic(MQTT_STATUS, module4.show_mqtt_name().c_str()), module4.show_value().c_str());
+    do_send_mqtt_stat = true;
+#endif
+  }
+#endif
+#if defined(MODULE5)
+  if ( module5.set( cmd, value ) ) {
+    html_json = module5.html_stat_json();
+    write2log(LOG_MODULE,1,html_json.c_str());
+    ws.textAll(html_json);
+    cmd_valid = true;
+#if defined(MQTT)
+    mqttClient.publish(mk_topic(MQTT_STATUS, module5.show_mqtt_name().c_str()), module5.show_value().c_str());
+    do_send_mqtt_stat = true;
+#endif
+  }
+#endif
+#if defined(MODULE6)
+  if ( module6.set( cmd, value ) ) {
+    html_json = module6.html_stat_json();
+    write2log(LOG_MODULE,1,html_json.c_str());
+    ws.textAll(html_json);
+    cmd_valid = true;
+#if defined(MQTT)
+    mqttClient.publish(mk_topic(MQTT_STATUS, module6.show_mqtt_name().c_str()), module6.show_value().c_str());
+    do_send_mqtt_stat = true;
 #endif
   }
 #endif
@@ -210,12 +235,12 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
     html_json = "{\"statclear\":1}"; 
-    write2log(LOG_SENSOR,1,html_json.c_str());
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
     html_json = "{\"stat\":\"looptimealarm: set to ";
     html_json += loop_time_alarm;
     html_json += "\"}";
-    write2log(LOG_SENSOR,1,html_json.c_str());
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
     cmd_valid = true;
     cmd_no++;
@@ -240,13 +265,13 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_valid = true;
     cmd_no++;
   } */
-  if ( cmd == "log_sensor" ) {
-    if ( do_log_sensor != ( value == "1" ) ) {
-      do_log_sensor = ( value == "1" );
+  if ( cmd == "log_module" ) {
+    if ( do_log_module != ( value == "1" ) ) {
+      do_log_module = ( value == "1" );
       preferences.begin("settings",false);
-      preferences.putBool("do_log_sensor", do_log_sensor);
+      preferences.putBool("do_log_module", do_log_module);
       preferences.end();
-      write2log(LOG_SYS,2,"do_log_sensor:",do_log_sensor?"1":"0");
+      write2log(LOG_SYS,2,"do_log_module:",do_log_module?"1":"0");
     }
     cmd_valid = true;
     cmd_no++;
@@ -300,7 +325,7 @@ void prozess_cmd(const String cmd, const String value)  {
     html_json  = "{\"stat\":\"Ungültiges Komando:";
     html_json += cmd;
     html_json += "\"}";
-    write2log(LOG_SENSOR,1,html_json.c_str());
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
   }
 }

@@ -413,6 +413,7 @@ select {
 .change .bar3 {
   transform: translate(0, -11px) rotate(45deg);
 }
+/* ENDE Menu amimated*/
 
 .menu_text {
   float: left;

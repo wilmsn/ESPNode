@@ -1,0 +1,21 @@
+ESP32-audioI2S-2.0.6 komplett
+RAM:   [==        ]  17.8% (used 58476 bytes from 327680 bytes)
+Flash: [========= ]  94.8% (used 1242285 bytes from 1310720 bytes)
+
+Ohne FLAC Codec
+RAM:   [==        ]  17.8% (used 58412 bytes from 327680 bytes)
+Flash: [========= ]  94.0% (used 1231569 bytes from 1310720 bytes)
+
+Ohne FLAC und AAC Codec
+RAM:   [==        ]  17.8% (used 58220 bytes from 327680 bytes)
+Flash: [========= ]  92.8% (used 1216413 bytes from 1310720 bytes)
+
+Mit neuer Version Audio 3.08p ohne alle Decoder (nur mp3)
+RAM:   [==        ]  15.2% (used 49676 bytes from 327680 bytes)
+Flash: [========= ]  91.5% (used 1199217 bytes from 1310720 bytes)
+
+
+
+komplett ohne audio
+RAM:   [=         ]  14.0% (used 45928 bytes from 327680 bytes)
+Flash: [=======   ]  73.0% (used 957001 bytes from 1310720 bytes)

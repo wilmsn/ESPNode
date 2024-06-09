@@ -40,10 +40,14 @@ typedef unsigned char uint8_t;
 
 // Alle Module
 extern void write2log(uint8_t kat, int count, ...);
+extern bool do_log_module;
+extern bool do_log_sys;
+extern bool do_log_critical;
+extern bool do_log_web;
+extern time_t now; 
 
 // Modul: webserver
 extern AsyncWebSocket ws;
-extern bool do_log_web;
 
 // Modul: mqtt
 extern PubSubClient mqttClient;
@@ -74,9 +78,6 @@ void rf24gw_loop();
 // Modul: main
 //extern AsyncWebServer httpServer;
 extern bool rebootflag;
-extern bool do_log_sensor;
-extern bool do_log_sys;
-extern bool do_log_critical;
 extern String wifi_ssid;
 extern String wifi_pass;
 extern int cmd_no;
@@ -104,28 +105,28 @@ const char *mk_sysinfo2(String& info_str);
 const char *mk_sysinfo3(String& info_str, bool format_mqtt);
 
 
-#if defined(SWITCH1)
-extern SWITCH1_DEFINITION
+#if defined(MODULE1)
+extern MODULE1_DEFINITION
 #endif
 
-#if defined(SWITCH2)
-extern SWITCH2_DEFINITION
+#if defined(MODULE2)
+extern MODULE2_DEFINITION
 #endif
 
-#if defined(SWITCH3)
-extern SWITCH3_DEFINITION
+#if defined(MODULE3)
+extern MODULE3_DEFINITION
 #endif
 
-#if defined(SWITCH4)
-extern SWITCH4_DEFINITION
+#if defined(MODULE4)
+extern MODULE4_DEFINITION
 #endif
 
-#if defined(SENSOR1)
-extern SENSOR1_DEFINITION
+#if defined(MODULE5)
+extern MODULE5_DEFINITION
 #endif
 
-#if defined(SENSOR2)
-extern SENSOR2_DEFINITION
+#if defined(MODULE6)
+extern MODULE6_DEFINITION
 #endif
 
 /// @brief Der Komandoprozessor. Hier werden alle Befehle in der Form "Kommando = Wert" abgearbeitet

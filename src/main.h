@@ -58,10 +58,10 @@ String wifi_pass2;
 bool ap_mode = false;
 
 // Logging
-bool do_log_sensor;
 bool do_log_module;
 bool do_log_sys;
 bool do_log_critical;
+bool do_log_web;
 
 /// @brief Ein String zum Einsatz in der Funktion write2log. Darf nicht genutzt werden wenn diese Funktion mit gefülltem String aufgerufen wird!
 String log_str;
@@ -79,13 +79,13 @@ unsigned long mqtt_last_stat = 0;
 /// @brief Zeitpunkt der letzten Telemetriedatenübertragung
 unsigned long mqtt_last_tele = 0;
 /// @brief Startzeitpunkt des Messvorgangs
-unsigned long measure_starttime = 0;
+//unsigned long measure_starttime = 0;
 /// @brief
 unsigned long loop_starttime = 0;
 /// @brief
 unsigned long wifi_ap_starttime = 0;
 /// @brief Ein Flag der anzeigt ob die Messdatengenerierung gestartet ist
-bool measure_started = false;
+//bool measure_started = false;
 int lastHour = 0;
 int lastDay  = 0;
 unsigned long loop_time_alarm;

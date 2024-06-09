@@ -4,47 +4,30 @@
 #include "audiomodul.h"
 #include "common.h"
 
-#if defined(CONFIG_IDF_TARGET_ESP32) 
-#warning ESP32
-#warning "Compiling AudioDisplay with Settings for ESP32"
-//TFT Settings
-// SCL (Display) => SCK  
-// SDA (Display) => MOSI 
-#define GC9A01A_TFT_CS                  21
-#define GC9A01A_TFT_DC                  5
+// define colors
+#ifdef DISPLAY_GC9A01A
+#define COLOR_WHITE       0xFFFF
+#define COLOR_RED         0xF800
+#define COLOR_BLACK       0x0000
+#define COLOR_YELLOW      0xFFE0
+#define COLOR_ORANGE      0xFD20
+#define COLOR_GREEN       0x07E0
+#define COLOR_LIGHTGREY   0xC618
 #endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
-#warning ESP32S2
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-//#warning ESP32S3
-#warning "Compiling AudioDisplay with Settings for ESP32-S3"
-//#warning "Settings for ESP32-S3"
-// Display
-// SCL (Display) => SCK                 12
-// SDA (Display) => MOSI                11
-#define GC9A01A_TFT_CS                  8
-#define GC9A01A_TFT_DC                  9
-#endif
-#define ARC_SIGMENT_DEGREES             3
-#define ARC_WIDTH                       5
-
 
 void AudioDisplay::clear() {
   tft->fillScreen(GC9A01A_BLACK);
 }
 
 void AudioDisplay::show_ip(const char* myip) {
-  tft->setTextColor(GC9A01A_WHITE);  
+  tft->setTextColor(COLOR_WHITE);  
   tft->setTextSize(1);
   tft->setCursor(75, 225);
   tft->println(myip);
 }
 
 void AudioDisplay::show_bps(const char* mybps) {
-  tft->setTextColor(GC9A01A_RED);  
+  tft->setTextColor(COLOR_RED);  
   tft->setTextSize(1);
   tft->setCursor(75, 205);
   tft->println(mybps);
@@ -52,12 +35,12 @@ void AudioDisplay::show_bps(const char* mybps) {
 
 void AudioDisplay::show_vol(uint8_t vol) {
   if (vol > 90) vol=90;
-  fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
-  fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
+  fillArc(119,119,-90,180,120,120,ARC_WIDTH,COLOR_BLACK);
+  fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,COLOR_YELLOW);
 }
 
 void AudioDisplay::show_time(bool big) {
-  tft->setTextColor(GC9A01A_WHITE); 
+  tft->setTextColor(COLOR_WHITE); 
   if (big) {
     clear();
     tft->setTextSize(7);
@@ -67,7 +50,7 @@ void AudioDisplay::show_time(bool big) {
       tft->setCursor(20,100);
     }
   } else {
-    tft->fillRect(80, 30, 90, 23, GC9A01A_BLACK);
+    tft->fillRect(80, 30, 90, 23, COLOR_BLACK);
     tft->setTextSize(3);
     if ( timeinfo.tm_hour < 10) {
       tft->setCursor(90,30);
@@ -83,40 +66,40 @@ void AudioDisplay::show_time(bool big) {
 }
 
 void AudioDisplay::show_station(const char* mystation) {
-  tft->fillRect(25, 65, 190, 55, GC9A01A_BLACK);
-  show_text(mystation, 25, 65, GC9A01A_ORANGE);
+  tft->fillRect(25, 65, 190, 55, COLOR_BLACK);
+  show_text(mystation, 25, 65, COLOR_ORANGE);
 }
 
 void AudioDisplay::show_title(const char* mytitle) {
-  tft->fillRect(0, 130, 240, 60, GC9A01A_BLACK);
-  show_text(mytitle, 25, 130, GC9A01A_GREEN);
+  tft->fillRect(0, 130, 240, 60, COLOR_BLACK);
+  show_text(mytitle, 25, 130, COLOR_GREEN);
 }
 
 void AudioDisplay::select_station(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
   clear();
   tft->setTextSize(2);
   if (strlen(s0) > 0) {
-    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setTextColor(COLOR_LIGHTGREY);  
     tft->setCursor(70, 50);
     tft->println(s0);
   }
   if (strlen(s1) > 0) {
-    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setTextColor(COLOR_LIGHTGREY);  
     tft->setCursor(40, 80);
     tft->println(s1);
   }
   if (strlen(s2) > 0) {
-    tft->setTextColor(GC9A01A_ORANGE);  
+    tft->setTextColor(COLOR_ORANGE);  
     tft->setCursor(10, 120);
     tft->println(s2);
   }
   if (strlen(s3) > 0) {
-    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setTextColor(COLOR_LIGHTGREY);  
     tft->setCursor(40, 150);
     tft->println(s3);
   }
   if (strlen(s4) > 0) {
-    tft->setTextColor(GC9A01A_LIGHTGREY);  
+    tft->setTextColor(COLOR_LIGHTGREY);  
     tft->setCursor(70, 180);
     tft->println(s4);
   }
@@ -148,10 +131,12 @@ void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t co
   tft->println(mystr);
 }
 
+#ifdef DISPLAY_GC9A01A
 void AudioDisplay::begin(Adafruit_GC9A01A* mytft) {
+#endif
   tft = mytft;
   tft->begin();
-  tft->fillScreen(GC9A01A_BLACK);
+  tft->fillScreen(COLOR_BLACK);
 }
 
 int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* resultStr) {
@@ -217,4 +202,3 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
 
 
 #endif
-

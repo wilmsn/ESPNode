@@ -177,24 +177,24 @@ RF24 Gateway:
 #define HOST_DISCRIPTION       "A Witty Node"
 
 #define DEBUG_SERIAL_HTML
-#define DEBUG_SERIAL_SENSOR
+#define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
 
-#define SWITCH1_DEFINITION      Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, false, WITTY_LED_PIN);
+#define MODULE1_DEFINITION      Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, WITTY_LED_PIN);
 
-#define SWITCH2_DEFINITION      Switch_OnOff switch2;
-#define SWITCH2_BEGIN_STATEMENT switch2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT);
+#define MODULE2_DEFINITION      Switch_OnOff module2;
+#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT);
 
-#define SWITCH3_DEFINITION      Switch_OnOff switch3;
-#define SWITCH3_BEGIN_STATEMENT switch3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN);
+#define MODULE3_DEFINITION      Switch_OnOff module3;
+#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN);
 
-#define SWITCH4_DEFINITION      Switch_OnOff switch4;
-#define SWITCH4_BEGIN_STATEMENT switch4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL);
+#define MODULE4_DEFINITION      Switch_OnOff module4;
+#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL);
 
-#define SENSOR1_DEFINITION      Sensor_LDR sensor1;
-#define SENSOR1_BEGIN_STATEMENT sensor1.begin("sens1", "ldr");
+#define MODULE5_DEFINITION      Sensor_LDR module5;
+#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "ldr");
 
 #endif
 //-----------------------------------------------------
@@ -297,6 +297,7 @@ RF24 Gateway:
 #if defined(NODE_AUDIO)
 
 #define USE_AUDIOMODUL
+#define DISPLAY_GC9A01A
 
 #include "audiomodul.h"
 #define MAGICNO                  0
@@ -374,29 +375,27 @@ RF24 Gateway:
 #define DEBUG_SERIAL
 #endif
 
-/// Actors
+/// Modules
 #if defined(LEDMATRIX_DEVICES_X) && defined(LEDMATRIX_DEVICES_Y)
 #define LEDMATRIX
 #endif
-#if defined(SWITCH1_DEFINITION)
-#define SWITCH1
+#if defined(MODULE1_DEFINITION)
+#define MODULE1
 #endif
-#if defined(SWITCH2_DEFINITION)
-#define SWITCH2
+#if defined(MODULE2_DEFINITION)
+#define MODULE2
 #endif
-#if defined(SWITCH3_DEFINITION)
-#define SWITCH3
+#if defined(MODULE3_DEFINITION)
+#define MODULE3
 #endif
-#if defined(SWITCH4_DEFINITION)
-#define SWITCH4
+#if defined(MODULE4_DEFINITION)
+#define MODULE4
 #endif
-
-/// Sensors
-#if defined(SENSOR1_DEFINITION)
-#define SENSOR1
+#if defined(MODULE5_DEFINITION)
+#define MODULE5
 #endif
-#if defined(SENSOR2_DEFINITION)
-#define SENSOR2
+#if defined(MODULE6_DEFINITION)
+#define MODULE6
 #endif
 
 /// Audio

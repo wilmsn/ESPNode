@@ -29,7 +29,7 @@ var mqtt_active_old;
 var mqttserver_old;
 var mqttclient_old;
 var mqtttopicp2_old;
-var log_sensor_old;
+var log_module_old;
 var log_web_old;
 var log_sys_old;
 var log_critical_old;
@@ -89,10 +89,10 @@ $(document).ready(function(){
   $("#titel2").hide();
   $("#rf24div").hide();
   $("#rf24log_div").hide();
-  $("#sens1div").hide();
-  $("#sens2div").hide();
-  $("#sens3div").hide();
-  $("#sens4div").hide();
+  $("#out1div").hide();
+  $("#out2div").hide();
+  $("#out3div").hide();
+  $("#out4div").hide();
   $("#sw1_div").hide();
   $("#sw2_div").hide();
   $("#sw3_div").hide();
@@ -170,9 +170,6 @@ $(document).ready(function(){
     }
   });
 
-  $('#audio_menu').click(function () {
-    do_cmd("#audio_menu","1");
-  });
   /*  TEST */
 $("#fd_dir1").hide();
   $("#fd_dir2").hide();
@@ -237,13 +234,6 @@ $("#fd_dir1").hide();
     do_cmd("audio_bas",$(this).val());
 //    alert("audio_bas"+$(this).val());
   });
- 
-
-
-
-  $('#audio_menu').click(function () {
-    do_cmd("audio_menu",2);
-  });
 
  });
 
@@ -281,21 +271,21 @@ function prozessJS( key, val ) {
       $("#titel2").show();
     break;
 // Hauptseite 
-    case "sens1":
-      $("#sens1").html(val);
-      $("#sens1div").show();
+    case "out1":
+      $("#out1").html(val);
+      $("#out1div").show();
     break;
-    case "sens2":
-      $("#sens2").html(val);
-      $("#sens2div").show();
+    case "out2":
+      $("#out2").html(val);
+      $("#out2div").show();
     break;
-    case "sens3":
-      $("#sens3").html(val);
-      $("#sens3div").show();
+    case "out3":
+      $("#out3").html(val);
+      $("#out3div").show();
     break;
-    case "sens4":
-      $("#sens4").html(val);
-      $("#sens4div").show();
+    case "out4":
+      $("#out4").html(val);
+      $("#out4div").show();
     break;
     case "sw1":
       if ( val > 0.5 ) {
@@ -458,7 +448,7 @@ function prozessJS( key, val ) {
       $("#ledmatrix").show();
     break;
 // Ab hier Audiomodul    
-    case "show_audio":
+    case "audio_show":
       $("#audio_div").show();
     break;
     case "audio_settings":
@@ -468,26 +458,29 @@ function prozessJS( key, val ) {
         $("#audio_settings").hide();
       }
     break;
-    case "audio_menu":
-      $("#audio_menu").classList.toggle("change");
-    break;
     case "audio_radio":
+      if ( val > 0.5 ) {
         audio_mediaswitch();
         $("#audio_radio_but").css("color","black").css("background-color","yellow");
         $("#audio_radio_but").html("ein");
         $("#audio_radio_settings").show();
+      }
     break;
     case "audio_media":
+      if ( val > 0.5 ) {
         audio_mediaswitch();
         $("#audio_media_but").css("color","black").css("background-color","yellow");
         $("#audio_media_but").html("ein");
         $("#audio_media_settings").show();
+      }
     break;
     case "audio_speak":
+      if ( val > 0.5 ) {
         audio_mediaswitch();
         $("#audio_speak_but").css("color","black").css("background-color","yellow");
         $("#audio_speak_but").html("ein");
         $("#audio_speak_settings").show();
+      }
     break;
     case "audio_vol":
       $("#audio_vol").val(val);
@@ -514,18 +507,18 @@ function prozessJS( key, val ) {
       $("#audiomsg4div").show();
       $("#audiomsg4").html(val).css("fontSize", 10);
     break;
-    case "audio_add_stn":
-      const valArray = val.split(":");
-      $('#audio_sel').append($('<option>', {
+    case "audio_radio_add_stn":
+      const valArray = val.split(";");
+      $('#audio_radio_sel').append($('<option>', {
         value: valArray[0],
         text: valArray[1]
       }));
     break;
-    case "audio_stn_name":
-      $("#audio_stn_name").val(val);
+    case "audio_radio_stn_name":
+      $("#audio_radio_stn_name").val(val);
     break;
-    case "audio_stn_url":
-      $("#audio_stn_url").val(val);
+    case "audio_radio_stn_url":
+      $("#audio_radio_stn_url").val(val);
     break;
     //Ab hier Konsole
     case "log":
@@ -636,13 +629,13 @@ case "wifi_ssid":
       mqtttopicp2_old = val;
       $('#mqtttopicp2').val(val);
     break;
-    case "log_sensor":
+    case "log_module":
       if ( val == 1 ) {
-        log_sensor_old = true;
-        $('#log_sensor').prop('checked', true);
+        log_module_old = true;
+        $('#log_module').prop('checked', true);
       } else {
-        log_sensor_old = false;
-        $('#log_sensor').prop('checked', false);
+        log_module_old = false;
+        $('#log_module').prop('checked', false);
       }
     break;
     case "log_rf24":
@@ -1000,17 +993,17 @@ function store() {
       log_rf24_old = false;
     }
   }
-  if ( $("#log_sensor").is(":checked") ) {
-    if ( ! log_sensor_old ) {
+  if ( $("#log_module").is(":checked") ) {
+    if ( ! log_module_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sensor=1";
-      log_sensor_old = true;
+      mycmd = mycmd + "log_module=1";
+      log_module_old = true;
     }
   } else {
-    if ( log_sensor_old ) {
+    if ( log_module_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sensor=0";
-      log_sensor_old = false;
+      mycmd = mycmd + "log_module=0";
+      log_module_old = false;
     }
   }
   if ( $("#log_mqtt").is(":checked") ) {
@@ -1100,8 +1093,8 @@ function dellog() {
   }
 }
 
-function audio_sel_change(val) {
-  do_cmd("audio_set_stn",val)
+function audio_radio_sel_change(val) {
+  do_cmd("audio_radio_set_stn",val)
 }
 
 function audio_mediaswitch() {
@@ -1122,25 +1115,28 @@ function audio_mediaswitch() {
   $("#audio_speak_but").html("aus");
 }
 
-function audio_fill_sel() {
-  $('#audio_sel')
+function audio_radio_fill_sel() {
+  $('#audio_radio_sel')
     .find('option')
     .remove()
     .end()
   ;
-  do_cmd("audio_menu","1");
 }
 
-function audio_menu(x) {
-  x.classList.toggle("change");
-  $("#audio_settings").toggle();
-  audio_fill_sel();
+function audio_menu() {
+  if ($("#audio_menu").hasClass("change")) {
+    $("#audio_menu").removeClass("change");
+    $("#audio_settings").hide();
+  } else {
+    $("#audio_menu").addClass("change");
+    $("#audio_settings").show();
+  }
 }
 
-function audio_stn_update() {
-  do_cmd("audio_save_stn_name",$("#audio_stn_name").val());
-  do_cmd("audio_save_stn_url",$("#audio_stn_url").val());
-  audio_fill_sel();
+function audio_radio_stn_update() {
+  do_cmd("audio_radio_save_stn_name",$("#audio_radio_stn_name").val());
+  do_cmd("audio_radio_save_stn_url",$("#audio_radio_stn_url").val());
+  audio_radio_fill_sel();
 }
 
 </script>
@@ -1159,20 +1155,20 @@ function audio_stn_update() {
       <div id="rf24" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens1div">
-      <div id="sens1" class="msg_div"></div>
+    <div id="out1div">
+      <div id="out1" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens2div">
-      <div id="sens2" class="msg_div"></div>
+    <div id="out2div">
+      <div id="out2" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens3div">
-      <div id="sens3" class="msg_div"></div>
+    <div id="out3div">
+      <div id="out3" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens4div">
-      <div id="sens4" class="msg_div"></div>
+    <div id="out4div">
+      <div id="out4" class="msg_div"></div>
       <hr>
     </div>
     <div id="sw1_div" class="sw_div">
@@ -1268,7 +1264,7 @@ function audio_stn_update() {
       <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
       </div>
       <div style="height: 50px;">
-      <div id="audio_menu" class="menu">
+      <div id="audio_menu" class="menu" onclick="audio_menu()">
         <div class="bar1"></div>
         <div class="bar2"></div>
         <div class="bar3"></div>
@@ -1291,12 +1287,12 @@ function audio_stn_update() {
         </select>
         <table><tr>
           <td>Sendername:</td>
-          <td><input name="Sendername" id="audio_stn_name" size="30" maxlength="30"></td>
+          <td><input name="Sendername" id="audio_radio_stn_name" size="30" maxlength="30"></td>
         </tr><tr>
           <td>URL:</td>
-          <td><input name="SenderURL" id="audio_stn_url" size="30" maxlength="125"></td>
+          <td><input name="SenderURL" id="audio_radio_stn_url" size="30" maxlength="125"></td>
         </tr></table>  
-        <button id="audio_but_st_upd" class="button bg_rt" onclick="audio_stn_update();">Sender speichern</button>
+        <button id="audio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
       </div>
       <div id="audio_media_settings">
           Media Menu TBD.
@@ -1440,8 +1436,8 @@ function audio_stn_update() {
         <input type="checkbox" name="log_rf24" id="log_rf24" class="checkbox">
         <label for="log_rf24" id="log_rf24l">RF24</label><br>
       </div>
-      <input type="checkbox" name="log_sensor" id="log_sensor" class="checkbox">
-      <label for="log_sensor">Sensor</label><br>
+      <input type="checkbox" name="log_module" id="log_module" class="checkbox">
+      <label for="log_module">Modul</label><br>
       <div id="mqttlog_div">
         <input type="checkbox" name="log_mqtt" id="log_mqtt" class="checkbox">
         <label for="log_mqtt">MQTT</label><br>

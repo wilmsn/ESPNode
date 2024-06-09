@@ -7,23 +7,23 @@ WiFiMulti wifiMulti;
 
 #endif
 
-#if defined(SWITCH1)
-SWITCH1_DEFINITION
+#if defined(MODULE1)
+MODULE1_DEFINITION
 #endif
-#if defined(SWITCH2)
-SWITCH2_DEFINITION
+#if defined(MODULE2)
+MODULE2_DEFINITION
 #endif
-#if defined(SWITCH3)
-SWITCH3_DEFINITION
+#if defined(MODULE3)
+MODULE3_DEFINITION
 #endif
-#if defined(SWITCH4)
-SWITCH4_DEFINITION
+#if defined(MODULE4)
+MODULE4_DEFINITION
 #endif
-#if defined(SENSOR1)
-SENSOR1_DEFINITION
+#if defined(MODULE5)
+MODULE5_DEFINITION
 #endif
-#if defined(SENSOR2)
-SENSOR2_DEFINITION
+#if defined(MODULE6)
+MODULE6_DEFINITION
 #endif
 
 void setupTime() {                              
@@ -91,7 +91,7 @@ void write2log(uint8_t kat, int count, ...) {
         f.close();
       }
     }
-    if (  (do_log_sensor && ( kat == LOG_SENSOR )) ||
+    if (  (do_log_module && ( kat == LOG_MODULE )) ||
           (do_log_web && ( kat == LOG_WEB ))       ||
 #if defined(MQTT)
           (do_log_mqtt && ( kat == LOG_MQTT ))     ||
@@ -460,20 +460,52 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
   info_str += ",\"RF24GW-No\":";
   info_str += String(RF24GW_NO);  
 #endif
-#if defined(SENSOR1)
+#if defined(MODULE1)
   if ( info_str.length() > 3 ) info_str += ",";
   if (format_mqtt) {
-    info_str += sensor1.info_mqtt();
+    info_str += module1.info_mqtt();
   } else {
-    info_str += sensor1.info_html();
+    info_str += module1.info_html();
   }
 #endif
-#if defined(SENSOR2)
+#if defined(MODULE2)
   if ( info_str.length() > 3 ) info_str += ",";
   if (format_mqtt) {
-    info_str += sensor2.info_mqtt();
+    info_str += module2.info_mqtt();
   } else {
-    info_str += sensor2.info_html();
+    info_str += module2.info_html();
+  }
+#endif
+#if defined(MODULE3)
+  if ( info_str.length() > 3 ) info_str += ",";
+  if (format_mqtt) {
+    info_str += module3.info_mqtt();
+  } else {
+    info_str += module3.info_html();
+  }
+#endif
+#if defined(MODULE4)
+  if ( info_str.length() > 3 ) info_str += ",";
+  if (format_mqtt) {
+    info_str += module4.info_mqtt();
+  } else {
+    info_str += module4.info_html();
+  }
+#endif
+#if defined(MODULE5)
+  if ( info_str.length() > 3 ) info_str += ",";
+  if (format_mqtt) {
+    info_str += module5.info_mqtt();
+  } else {
+    info_str += module5.info_html();
+  }
+#endif
+#if defined(MODULE6)
+  if ( info_str.length() > 3 ) info_str += ",";
+  if (format_mqtt) {
+    info_str += module6.info_mqtt();
+  } else {
+    info_str += module6.info_html();
   }
 #endif
   info_str += "}";
@@ -590,11 +622,11 @@ void setup() {
     preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
     preferences.putBool("do_log_rf24", do_log_rf24);
 #endif
-    do_log_sensor = DO_LOG_SENSOR;
+    do_log_module = DO_LOG_MODULE;
     do_log_web = DO_LOG_WEB;
     do_log_sys = DO_LOG_SYS;
     do_log_critical = DO_LOG_CRITICAL;
-    preferences.putBool("do_log_sensor", do_log_sensor);
+    preferences.putBool("do_log_module", do_log_module);
     preferences.putBool("do_log_web", do_log_web);
     preferences.putBool("do_log_sys", do_log_sys);
     preferences.putBool("do_log_critical", do_log_critical);
@@ -620,7 +652,7 @@ void setup() {
     rf24gw_gw_no = preferences.getInt("rf24gw_gw_no");
     do_log_rf24 = preferences.getBool("do_log_rf24");
 #endif
-    do_log_sensor = preferences.getBool("do_log_sensor");
+    do_log_module = preferences.getBool("do_log_module");
     do_log_web = preferences.getBool("do_log_web");
     do_log_sys = preferences.getBool("do_log_sys");
     do_log_critical = preferences.getBool("do_log_critical");
@@ -644,8 +676,8 @@ void setup() {
   Serial.print("RF24GW: ");
   Serial.println(do_log_rf24?"ja":"nein");
 #endif
-  Serial.print("Sensor: ");
-  Serial.println(do_log_sensor?"ja":"nein");
+  Serial.print("Modul: ");
+  Serial.println(do_log_module?"ja":"nein");
   Serial.print("Web: ");
   Serial.println(do_log_web?"ja":"nein");
   Serial.print("Sys: ");
@@ -682,31 +714,24 @@ void setup() {
 #endif
   }
   setup_webserver();
-#if defined(SWITCH1)
-  SWITCH1_BEGIN_STATEMENT
+#if defined(MODULE1)
+  MODULE1_BEGIN_STATEMENT
 #endif
-#if defined(SWITCH2)
-  SWITCH2_BEGIN_STATEMENT
+#if defined(MODULE2)
+  MODULE2_BEGIN_STATEMENT
 #endif
-#if defined(SWITCH3)
-  SWITCH3_BEGIN_STATEMENT
+#if defined(MODULE3)
+  MODULE3_BEGIN_STATEMENT
 #endif
-#if defined(SWITCH4)
-  SWITCH4_BEGIN_STATEMENT
+#if defined(MODULE4)
+  MODULE4_BEGIN_STATEMENT
 #endif
-#if defined(SENSOR1)
-  SENSOR1_BEGIN_STATEMENT
+#if defined(MODULE5)
+  MODULE5_BEGIN_STATEMENT
 #endif
-#if defined(SENSOR2)
-  SENSOR2_BEGIN_STATEMENT
+#if defined(MODULE6)
+  MODULE6_BEGIN_STATEMENT
 #endif
-#if defined(SENSOR1)
-  sensor1.start_measure();
-#endif
-#if defined(SENSOR2)
-  sensor2.start_measure();
-#endif
-  measure_starttime = millis();
 #if defined(RF24GW)
   rf24gw_setup(); 
 #endif
@@ -783,48 +808,58 @@ void loop() {
       write2log(LOG_CRITICAL,1,loopmsg);
     }
 #endif
-#if defined(SWITCH1)
-    switch1.loop();
-    if (switch1.webChange()) {
-      html_json = switch1.html_stat_json();
-      write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE1)
+    module1.loop(now);
+    if (module1.webChange()) {
+      html_json = module1.html_stat_json();
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
     }
     yield();
 #endif
-#if defined(SWITCH2)
-    switch2.loop();
-    if (switch2.webChange()) {
-      html_json = switch2.html_stat_json();
-      write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE2)
+    module2.loop(now);
+    if (module2.webChange()) {
+      html_json = module2.html_stat_json();
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
     }
     yield();
 #endif
-#if defined(SWITCH3)
-    switch3.loop();
-    if (switch3.webChange()) {
-      html_json = switch3.html_stat_json();
-      write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE3)
+    module3.loop(now);
+    if (module3.webChange()) {
+      html_json = module3.html_stat_json();
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
     }
     yield();
 #endif
-#if defined(SWITCH4)
-    switch4.loop();
-    if (switch4.webChange()) {
-      html_json = switch4.html_stat_json();
-      write2log(LOG_SENSOR,1,html_json.c_str());
+#if defined(MODULE4)
+    module4.loop(now);
+    if (module4.webChange()) {
+      html_json = module4.html_stat_json();
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
     }
     yield();
 #endif
-#if defined(SENSOR1)
-    sensor1.loop();
+#if defined(MODULE5)
+    module5.loop(now);
+    if (module5.webChange()) {
+      html_json = module5.html_stat_json();
+      write2log(LOG_MODULE,1,html_json.c_str());
+      ws.textAll(html_json);
+    }
     yield();
 #endif
-#if defined(SENSOR2)
-    sensor2.loop();
+#if defined(MODULE6)
+    module6.loop(now);
+    if (module6.webChange()) {
+      html_json = module6.html_stat_json();
+      write2log(LOG_MODULE,1,html_json.c_str());
+      ws.textAll(html_json);
+    }
     yield();
 #endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
@@ -832,37 +867,6 @@ void loop() {
       write2log(LOG_CRITICAL,1,loopmsg);
     }
     yield();
-    if ( (millis() - mqtt_last_stat) > (STATINTERVAL * 1000) ) {
-#if defined(SENSOR1)
-      sensor1.start_measure();
-      yield();
-#endif
-#if defined(SENSOR2)
-      sensor2.start_measure();
-      yield();
-#endif
-      measure_starttime = millis();
-      measure_started = true;
-      mqtt_last_stat = millis();
-    }
-    if ( ((millis() - measure_starttime) > (MESSINTERVAL * 1000)) && measure_started ) {
-#if defined(MQTT)
-      do_send_mqtt_stat = true;
-#endif
-      measure_started = false;
-#if defined(SENSOR1)  
-      html_json = sensor1.html_stat_json();
-      write2log(LOG_SENSOR,1,html_json.c_str());
-      ws.textAll(html_json);
-      yield();
-#endif
-#if defined(SENSOR2)  
-      html_json = sensor2.html_stat_json();
-      write2log(LOG_SENSOR,1,html_json.c_str());
-      ws.textAll(html_json);
-      yield();
-#endif
-    }
 #if defined(MQTT)
     if ( (millis() - mqtt_last_tele) > (TELEINTERVAL*1000) ) {
       mqtt_last_tele = millis();

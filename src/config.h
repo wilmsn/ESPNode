@@ -16,13 +16,13 @@
 //#define MULTISWITCHAPP
 //#define NODE_WEBRADIO
 //#define NODE_ROTARYTEST
-#define NODE_AUDIO
+//#define NODE_AUDIO
 //#define NODE18B20
 //#define NODEBOSCH
 //#define NODESLIDER
 //#define NODEMATRIX
 //#define NODEGWTEST
-//#define WITTYNODE1
+#define WITTYNODE
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
@@ -63,8 +63,8 @@
 #ifndef DO_LOG_WEB
 #define DO_LOG_WEB                      false
 #endif
-#ifndef DO_LOG_SENSOR
-#define DO_LOG_SENSOR                   false
+#ifndef DO_LOG_MODULE
+#define DO_LOG_MODULE                   false
 #endif
 #ifndef DO_LOG_SYS
 #define DO_LOG_SYS                      false
@@ -209,8 +209,8 @@ typedef struct {
 #ifndef LOG_MQTT
 #define  LOG_MQTT      2
 #endif
-#ifndef LOG_SENSOR
-#define  LOG_SENSOR    3
+#ifndef LOG_MODULE
+#define  LOG_MODULE    3
 #endif
 #ifndef LOG_WEB
 #define  LOG_WEB       4

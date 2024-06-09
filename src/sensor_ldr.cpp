@@ -4,27 +4,47 @@
 #include "config.h"
 
 void Sensor_LDR::begin(const char* html_place, const char* label) {
-  Sensor_Generic::begin(html_place, label);
-  obj_value = analogRead(A0);
+  Base_Generic::begin(html_place, label);
   obj_info_html = "\"sensorinfo1\":\"Hardware:#LDR an A0\"";
 }
 
-void Sensor_LDR::start_measure() {
-  obj_value = analogRead(A0);
-  obj_html_stat_json = "{\"";
-  obj_html_stat_json += obj_html_place;
-  obj_html_stat_json += "\":\"";
-  obj_html_stat_json += obj_label;
-  obj_html_stat_json += ": ";
-  obj_html_stat_json += String(obj_value);
-  obj_html_stat_json += "\"}";
+void Sensor_LDR::html_create_json_part(String& json) {
+//  json += ",\"";
+//  json += String(obj_html_place);
+//  json += "\":\"LDR: ---\"";
+}
 
-  obj_mqtt_json = "\"";
-  obj_mqtt_json += obj_mqtt_name;
-  obj_mqtt_json += "\": ";
-  obj_mqtt_json += String(obj_value);
+void Sensor_LDR::start_measure(time_t now) {
+  obj_measure_starttime = now;
+  obj_measure_started = true;
+}
 
-  obj_changed = true;
+void Sensor_LDR::loop(time_t now) {
+  if (obj_measure_started) {
+    if ((now - obj_measure_starttime) > obj_measure_delay) {
+      obj_value = analogRead(A0);
+      obj_html_stat_json = "{\"";
+      obj_html_stat_json += obj_html_place;
+      obj_html_stat_json += "\":\"";
+      obj_html_stat_json += obj_label;
+      obj_html_stat_json += ": ";
+      obj_html_stat_json += String(obj_value);
+      obj_html_stat_json += "\"}";
+
+      obj_mqtt_json = "\"";
+      obj_mqtt_json += obj_mqtt_name;
+      obj_mqtt_json += "\": ";
+      obj_mqtt_json += String(obj_value);
+
+      set_changed(true);
+      obj_measure_started = false;
+    }
+  } else {
+    if ((now - obj_measure_starttime) > obj_measure_interval) {
+      start_measure(now);
+    }
+  }
+
 }
 
 #endif

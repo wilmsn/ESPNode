@@ -47,6 +47,8 @@ public:
     /// @param keyword wird in obj_keyword gespeichert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
 
+    bool set(const String& keyword, const String& value);
+
     /// @brief Hier kann das Label separat gesetzt/geändert werden.
     void set_label(const char* label);
     
@@ -119,7 +121,15 @@ public:
     /// @return Einen json Teilstring als String.
     String& info_mqtt();
 
-    void start_measure();
+    /// @brief Gibt json formatierte Sensorinformationen für die Webseite aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
+    /// @return Einen json Teilstring als String.
+    String& sensorinfo_html();
+
+    /// @brief Gibt json formatierte Sensorinformationen für MQTT Übertragung aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
+    /// @return Einen json Teilstring als String.
+    String& sensorinfo_mqtt();
+
+    void start_measure(time_t now);
 
     /// @brief Setzt die changed Variablen auf einen Wert.
     /// @param val Der zu setztende Wert.
@@ -127,7 +137,7 @@ public:
 
 
     /// @brief Eine Funktion die im Hauptprogramm im loop regelmäßig aufgerufen wird. Hier können in den abgeleiteten Modulen regelmäßige Aufrufe hinterlegt werden.
-    void loop();
+    void loop(time_t now);
 
     /// @brief Das Schlüsselword für diesen Sensor.
     String     obj_keyword;
@@ -164,6 +174,11 @@ public:
     bool       obj_changed_w;
     /// @brief Ein Changed Flag für die Aplikation, wird durch das abgeleitete Objekt gefüllt.
     bool       obj_changed_a;
+    /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
+    String     obj_sensorinfo_html;
+    /// @brief Informationen zum Sensor für MQTT als json abgespeichert;
+    String     obj_sensorinfo_mqtt;
+
 };
 
 #endif
