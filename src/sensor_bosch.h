@@ -37,11 +37,14 @@ public:
                const char* html_place2, const char* label2, const char* mqtt_name2,
                const char* html_place3, const char* label3, const char* mqtt_name3);
 
-    /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
-    void start_measure();
+    /// @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
+    /// @param now Die aktuelle Zeit in Unix Sekunden
+    void loop(time_t now);
 
 private:
 
+    /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
+    void start_measure(time_t now);
     /// @brief Eine Beschriftung des zweiten Meßwertes für die Webseite. Wird sie nicht gesetzt, wird hier das Schlüsselwort genutzt. 
     String     obj_label2;
     /// @brief Der Einbauort des zweiten Meßwertes für diesen Sensor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
@@ -54,6 +57,14 @@ private:
     String     obj_html_place3;
     /// @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert3
     String     obj_mqtt_name3;
+    /// @brief Ein Flag ob die Messung gestartet wurde
+    bool       obj_measure_started = false;
+    /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
+    time_t     obj_measure_starttime = 0;
+    /// @brief Das Intervall zwischen zwei Messungen in Sekunden
+    time_t     obj_measure_interval = 300;
+    /// @brief Der Abstand zwischen dem Start der Messung und dem Auslesen der Werte
+    time_t     obj_measure_delay = 2;
 
 };
 

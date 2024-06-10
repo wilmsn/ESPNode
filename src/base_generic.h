@@ -129,8 +129,6 @@ public:
     /// @return Einen json Teilstring als String.
     String& sensorinfo_mqtt();
 
-    void start_measure(time_t now);
-
     /// @brief Setzt die changed Variablen auf einen Wert.
     /// @param val Der zu setztende Wert.
     void set_changed(bool val);

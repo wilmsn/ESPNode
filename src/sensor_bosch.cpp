@@ -60,7 +60,6 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
     Serial.println("Sensor unterstützt diese Messung nicht");
   }
 #endif
-  start_measure();
   obj_info_mqtt = "\"Sensor-HW\":";
   if (bmx_sensor.isBMP180()) {
      obj_info_mqtt += "\"BMP180\"";
@@ -76,7 +75,8 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
   }
 }
 
-void Sensor_Bosch::start_measure() {
+/*
+void Sensor_Bosch::start_measure(time_t now) {
   char tempstr[6];
   bmx_sensor.startSingleMeasure();
   obj_html_stat_json ="{\"";
@@ -145,6 +145,92 @@ void Sensor_Bosch::start_measure() {
   //  obj_values_str += " %";
   }
 
-  obj_changed = true;
+  set_changed(true);
+}
+*/
+
+void Sensor_Bosch::start_measure(time_t now) {
+  obj_measure_starttime = now;
+  obj_measure_started = true;
+  bmx_sensor.startSingleMeasure();
+}
+
+void Sensor_Bosch::loop(time_t now) {
+ if (obj_measure_started) {
+    if ((now - obj_measure_starttime) > obj_measure_delay) {
+      char tempstr[6];
+      obj_html_stat_json ="{\"";
+      obj_html_stat_json += obj_html_place;
+      obj_html_stat_json += "\":\"";
+      obj_html_stat_json += obj_label;
+      obj_html_stat_json += ": ";
+      snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
+      obj_html_stat_json += String(tempstr);
+      obj_html_stat_json += " °C\",\"";
+      obj_html_stat_json += obj_html_place2;
+      obj_html_stat_json += "\":\"";
+      obj_html_stat_json += obj_label2;
+      obj_html_stat_json += ": ";
+      snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
+      obj_html_stat_json += String(tempstr);
+      obj_html_stat_json += " hPa\"";
+      if ( bmx_sensor.hasHumidity() ) {
+        obj_html_stat_json += ",\"";
+        obj_html_stat_json += obj_html_place3;
+        obj_html_stat_json += "\":\"";
+        obj_html_stat_json += obj_label3;
+        obj_html_stat_json += ": ";
+        snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
+        obj_html_stat_json += String(tempstr);
+        obj_html_stat_json += " %\"";
+      }
+      obj_html_stat_json += "}";
+
+      obj_mqtt_json ="\"";
+      obj_mqtt_json += obj_mqtt_name;
+      obj_mqtt_json += "\":\"";
+      snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
+      obj_mqtt_json += String(tempstr);
+      obj_mqtt_json += "\",\"";
+      obj_mqtt_json += obj_mqtt_name2;
+      obj_mqtt_json += "\":\"";
+      snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
+      obj_mqtt_json += String(tempstr);
+      obj_mqtt_json += "\"";
+      if ( bmx_sensor.hasHumidity() ) {
+        obj_mqtt_json += ",\"";
+        obj_mqtt_json += obj_mqtt_name3;
+        obj_mqtt_json += "\":\"";
+        snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
+        obj_mqtt_json += String(tempstr);
+        obj_mqtt_json += " %\"";
+      }
+
+      obj_values_str = obj_mqtt_name;
+      obj_values_str += ":";
+      snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
+      obj_values_str += String(tempstr);
+      obj_values_str += "; ";
+      obj_values_str += obj_mqtt_name2;
+      obj_values_str += ":";
+      snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
+      obj_values_str += String(tempstr);
+      if ( bmx_sensor.hasHumidity() ) {
+        obj_values_str += "; ";
+        obj_values_str += obj_mqtt_name3;
+        obj_values_str += ":";
+        snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
+        obj_values_str += String(tempstr);
+      }
+
+      set_changed(true);
+      obj_measure_started = false;
+    }
+  } else {
+    if ((now - obj_measure_starttime) > obj_measure_interval) {
+      start_measure(now);
+    }
+  }
+
 }
 #endif

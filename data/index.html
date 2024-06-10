@@ -8,7 +8,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.997 (12/2023)";
+var htmlversion = "0.998audio (06/2024)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -31,7 +31,7 @@ var mqttclient_old;
 var mqtttopicp2_old;
 var log_module_old;
 var log_web_old;
-var log_sys_old;
+var log_system_old;
 var log_critical_old;
 var log_mqtt_old;
 var rf24hubname_old;
@@ -665,13 +665,13 @@ case "wifi_ssid":
         $('#log_web').prop('checked', false);
       }
     break;
-    case "log_sys":
+    case "log_system":
       if ( val == 1 ) {
-        log_sys_old = true;
-        $('#log_sys').prop('checked', true);
+        log_system_old = true;
+        $('#log_system').prop('checked', true);
       } else {
-        log_sys_old = false;
-        $('#log_sys').prop('checked', false);
+        log_system_old = false;
+        $('#log_system').prop('checked', false);
       }
     break;
     case "log_critical":
@@ -1032,17 +1032,17 @@ function store() {
       log_web_old = false;
     }
   }
-  if ( $("#log_sys").is(":checked") ) {
-    if ( ! log_sys_old ) {
+  if ( $("#log_system").is(":checked") ) {
+    if ( ! log_system_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sys=1";
-      log_sys_old = true;
+      mycmd = mycmd + "log_system=1";
+      log_system_old = true;
     }
   } else {
-    if (   log_sys_old ) {
+    if (   log_system_old ) {
       if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sys=0";
-      log_sys_old = false;
+      mycmd = mycmd + "log_system=0";
+      log_system_old = false;
     }
   }
   if ( $("#log_critical").is(":checked") ) {
@@ -1444,8 +1444,8 @@ function audio_radio_stn_update() {
       </div>
       <input type="checkbox" name="log_web" id="log_web" class="checkbox">
       <label for="log_web">Web / HTML</label><br>
-      <input type="checkbox" name="log_sys" id="log_sys" class="checkbox">
-      <label for="log_sys">System</label><br>
+      <input type="checkbox" name="log_system" id="log_system" class="checkbox">
+      <label for="log_system">System</label><br>
     </fieldset>
     
   </div>

@@ -59,7 +59,7 @@ bool ap_mode = false;
 
 // Logging
 bool do_log_module;
-bool do_log_sys;
+bool do_log_system;
 bool do_log_critical;
 bool do_log_web;
 

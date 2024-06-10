@@ -11,18 +11,17 @@
 */
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
-//#define NODESIMPLE
-//#define ESP32SIMPLE
 //#define MULTISWITCHAPP
 //#define NODE_WEBRADIO
 //#define NODE_ROTARYTEST
 //#define NODE_AUDIO
-//#define NODE18B20
-//#define NODEBOSCH
+/*In neuer Struktur getestet*/
+//#define ESP8266SIMPLE
+//#define ESP32SIMPLE
 //#define NODESLIDER
-//#define NODEMATRIX
-//#define NODEGWTEST
-#define WITTYNODE
+#define NODE_18B20_TEST
+//#define NODEBOSCH
+//#define WITTYNODE
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
@@ -66,8 +65,8 @@
 #ifndef DO_LOG_MODULE
 #define DO_LOG_MODULE                   false
 #endif
-#ifndef DO_LOG_SYS
-#define DO_LOG_SYS                      false
+#ifndef DO_LOG_SYSTEM
+#define DO_LOG_SYSTEM                   false
 #endif
 #ifndef DO_LOG_MQTT
 #define DO_LOG_MQTT                     false
@@ -203,8 +202,8 @@ typedef struct {
 #ifndef LOG_RF24
 #define  LOG_RF24      0
 #endif
-#ifndef LOG_SYS
-#define  LOG_SYS       1
+#ifndef LOG_SYSTEM
+#define  LOG_SYSTEM    1
 #endif
 #ifndef LOG_MQTT
 #define  LOG_MQTT      2

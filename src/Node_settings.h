@@ -124,9 +124,9 @@ RF24 Gateway:
 
 #endif
 //*****************************************************
-//    Individual settings
+//    Testnodes
 //-----------------------------------------------------
-#if defined(NODESIMPLE)
+#ifdef ESP8266SIMPLE
 
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
@@ -136,8 +136,8 @@ RF24 Gateway:
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
-#define SWITCH1_DEFINITION      Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, false, 2);
+#define MODULE1_DEFINITION      Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, 2);
 
 #endif
 //-----------------------------------------------------
@@ -150,16 +150,42 @@ RF24 Gateway:
 #define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
-#define SWITCH1_DEFINITION      Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT switch1.begin("sw1", "interne LED", "int_led", "int_led", false, true, 2);
-#define DO_LOG_SYS              true
-#define MAGICNO                 471
+#define MODULE1_DEFINITION      Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, 2);
+#define DO_LOG_SYSTEM           true
+#define MAGICNO                 0
 
 #endif
 //-----------------------------------------------------
+//****************************************************
+// Hier ein Node mit Temperatursensor 18B20.
+// Der Temperatursensor MUSS an GPIO 4 angeschlossen sein oder die Datei "sensor_18B20.cpp" muss abgeändert werden!
+#ifdef NODE_18B20_TEST
+#define USE_SWITCH_ONOFF
+#include "switch_onoff.h"
+#define USE_SENSOR_18B20
+#include "sensor_18B20.h"
+
+#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_MQTT
+
+#define HOSTNAME                 "Node 18B20 Test"
+#define HOST_DISCRIPTION         "Ein Testnode für den Temperatursensor 18B20"
+#define MAGICNO                  0
+
+#define MODULE1_DEFINITION       Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", "led", false, false, 2);
+
+#define MODULE2_DEFINITION       Sensor_18B20 module2;
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
+
+#endif
+//****************************************************
 // Hier ein Witty Node, dessen 4 LED (interne + RGB) als einzelne Schalter angesteuert werden.
 // Dabei kann jede LED nur ein- oder ausgeschaltet werden.
-#if defined(WITTYNODE)
+#ifdef WITTYNODE
 
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
@@ -198,58 +224,44 @@ RF24 Gateway:
 
 #endif
 //-----------------------------------------------------
-#if defined(NODEBOSCH)
+#ifdef NODEBOSCH
 
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 #define USE_SENSOR_BOSCH
 #include "sensor_bosch.h"
 
-#define MAGICNO                  471
+#define MAGICNO                  0
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_HTML
 
 #define HOSTNAME                 "BoschNode"
 #define HOST_DISCRIPTION         "Ein Bosch Sensor Testnode mit RF24 Gatway"
 
-#define SENSOR1_DEFINITION       Sensor_Bosch sensor1;
-#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temp","sens2","Luftdruck","Pres","sens3","Luftfeuchte","Humi");
+#define MODULE1_DEFINITION       Sensor_Bosch module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("out1","Temperatur","Temp","out2","Luftdruck","Pres","out3","Luftfeuchte","Humi");
 
-#define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "interne LED", "led1", "led1", false, false, 2);
+#define MODULE2_DEFINITION       Switch_OnOff module2;
+#define MODULE2_BEGIN_STATEMENT  module2.begin("sw1", "interne LED", "led1", "led1", false, false, 2);
 
-#define SWITCH2_DEFINITION       Switch_OnOff switch2;
-#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "zweite LED", "led2", "led2", false, false, 0);
+#define MODULE3_DEFINITION       Switch_OnOff module3;
+#define MODULE3_BEGIN_STATEMENT  module3.begin("sw2", "zweite LED", "led2", "led2", false, false, 0);
 
 #define MQTT_CLIENT              "BoschNode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO               198
+#define RF24GW_NO                198
 
-#define DO_LOG_CRITICAL            true
-#define DO_LOG_RF24                true
-#define DO_LOG_MQTT                true
-
-#endif
-//-----------------------------------------------------
-#if defined(NODEMATRIX)
-
-#define USE_ACTOR_LEDMATRIX
-#include "actor_ledmatrix.h"
-
-#define DEBUG_SERIAL
-
-#define HOSTNAME                 "MatrixNode"
-#define HOST_DISCRIPTION         "Ein Matrix Testnode"
-
-#define SWITCH1_DEFINITION       Actor_LEDMatrix switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Display", "display", "display",true, true, 3, 1, "mx_line", "mx_graph", "intensity");
-
-#define MQTT_CLIENT              "MatrixNode"
+#define DO_LOG_CRITICAL          true
+#define DO_LOG_RF24              true
+#define DO_LOG_MQTT              true
+#define DO_LOG_MODULE            true
+#define DO_LOG_WEB               true
+#define DO_LOG_SYSTEM            true
 
 #endif
 //-----------------------------------------------------
-#if defined(NODESLIDER)
+#ifdef NODESLIDER
 
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
@@ -260,13 +272,8 @@ RF24 Gateway:
 #define HOSTNAME                 "SliderNode"
 #define HOST_DISCRIPTION         "Ein Slider Testnode"
 
-#define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "blau", "blau", "blau", false, true, 13, 150, 1, "intensity");
-
-//#define MQTT_CLIENT              "SliderNode"
-
-//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-//#define RF24GW_NO                198
+#define MODULE1_DEFINITION       Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "blau", "blau", "blau", false, true, 13, 150, 1, "intensity", "intensity");
 
 #endif
 //-----------------------------------------------------
@@ -313,7 +320,7 @@ RF24 Gateway:
 
 #define DO_LOG_WEB               true
 #define DO_LOG_SENSOR            true
-#define DO_LOG_SYS               true
+#define DO_LOG_SYSTEM            true
 
 #endif
 

@@ -41,7 +41,7 @@ typedef unsigned char uint8_t;
 // Alle Module
 extern void write2log(uint8_t kat, int count, ...);
 extern bool do_log_module;
-extern bool do_log_sys;
+extern bool do_log_system;
 extern bool do_log_critical;
 extern bool do_log_web;
 extern time_t now; 

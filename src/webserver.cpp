@@ -208,8 +208,8 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 #endif
       html_json += ",\"log_module\":";
       html_json += do_log_module? "1": "0";
-      html_json += ",\"log_sys\":";
-      html_json += do_log_sys? "1": "0";
+      html_json += ",\"log_system\":";
+      html_json += do_log_system? "1": "0";
       html_json += ",\"log_critical\":";
       html_json += do_log_critical? "1": "0";
       html_json += ",\"log_web\":";

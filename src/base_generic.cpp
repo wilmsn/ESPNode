@@ -124,8 +124,6 @@ String& Base_Generic::info_mqtt() {
   return obj_info_mqtt;
 }
 
-void Base_Generic::start_measure(time_t now) {}
-
 String& Base_Generic::sensorinfo_html() {
   return obj_sensorinfo_html;
 }

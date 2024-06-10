@@ -24,7 +24,7 @@ void console_help() {
 
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
-  write2log(LOG_SYS,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
+  write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
   html_json = "{\"statclear\":1}";
   write2log(LOG_WEB,1,html_json.c_str());
@@ -271,7 +271,7 @@ void prozess_cmd(const String cmd, const String value)  {
       preferences.begin("settings",false);
       preferences.putBool("do_log_module", do_log_module);
       preferences.end();
-      write2log(LOG_SYS,2,"do_log_module:",do_log_module?"1":"0");
+      write2log(LOG_SYSTEM,2,"do_log_module:",do_log_module?"1":"0");
     }
     cmd_valid = true;
     cmd_no++;
@@ -286,11 +286,11 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_valid = true;
     cmd_no++;
   }
-  if ( cmd == "log_sys" ) {
-    if ( do_log_sys != ( value == "1" ) ) {
-      do_log_sys = ( value == "1" );
+  if ( cmd == "log_system" ) {
+    if ( do_log_system != ( value == "1" ) ) {
+      do_log_system = ( value == "1" );
       preferences.begin("settings",false);
-      preferences.putBool("do_log_sys", do_log_sys);
+      preferences.putBool("do_log_system", do_log_system);
       preferences.end();
     }
     cmd_valid = true;
