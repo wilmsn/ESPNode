@@ -11,7 +11,6 @@
 */
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
-//#define MULTISWITCHAPP
 //#define NODE_WEBRADIO
 //#define NODE_ROTARYTEST
 //#define NODE_AUDIO

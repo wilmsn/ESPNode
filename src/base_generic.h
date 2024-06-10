@@ -123,11 +123,11 @@ public:
 
     /// @brief Gibt json formatierte Sensorinformationen für die Webseite aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
     /// @return Einen json Teilstring als String.
-    String& sensorinfo_html();
+    //String& sensorinfo_html();
 
     /// @brief Gibt json formatierte Sensorinformationen für MQTT Übertragung aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
     /// @return Einen json Teilstring als String.
-    String& sensorinfo_mqtt();
+    //String& sensorinfo_mqtt();
 
     /// @brief Setzt die changed Variablen auf einen Wert.
     /// @param val Der zu setztende Wert.

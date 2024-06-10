@@ -892,6 +892,7 @@ function switch_update() {
 
 function switch_sysinfo() {
   hide_all();
+  $("#Tab").html("<tr><td colspan=2 class=\"tab_head\">WiFi Networks</td></tr><tr><td colspan=2><div id=\"wifinw2\"></div></td></tr><tr><td colspan=2 class=\"tab_right\"><div id=\"wifinw1\"><button id=\"nwscan\" class=\"button bg_gr\">Scan</button></div></td></tr>");
   $("#page_sysinfo").show();
   $("#but_main").show();
   $("#but_cons").show();
@@ -1462,9 +1463,6 @@ function audio_radio_stn_update() {
 
   <div id="page_sysinfo" class="div_content">
     <table style='width:100%;'' id='Tab'>
-      <tr><td colspan=2 class="tab_head">WiFi Networks</td></tr>
-      <tr><td colspan=2><div id="wifinw2"></div></td></tr>
-      <tr><td colspan=2 class="tab_right"><div id="wifinw1"><button id='nwscan' class='button bg_gr'>Scan</button></div></td></tr>
     </table> 
 </div>
 

@@ -16,12 +16,20 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   obj_resolution = 12;
   sensors.begin();
   sensors.setResolution(obj_resolution);
+
   obj_info_mqtt = "\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":";
   obj_info_mqtt += String(obj_resolution);
+  obj_info_mqtt += ",\"Sensor-Refreshtime\":";
+  obj_info_mqtt += String(obj_measure_interval);
+  obj_info_mqtt += " Sek.\"";
+
   obj_info_html =  "\"sensorinfo1\":\"Hardware:#18B20\"";
   obj_info_html += ",\"sensorinfo2\":\"Resolution:#";
   obj_info_html += String(obj_resolution);
   obj_info_html += "\"";
+  obj_info_html += ",\"sensorinfo3\":\"Refreshtime:#";
+  obj_info_html += String(obj_measure_interval);
+  obj_info_html += " Sek.\"";
 }
 
 void Sensor_18B20::start_measure(time_t now) {

@@ -28,13 +28,13 @@ RF24 Gateway:
 
 #define HOSTNAME                 "FlurNode"
 #define HOST_DISCRIPTION         "Der Node im Flur: Hintergrundbeleuchtung"
-#define MAGICNO                  479
+#define MAGICNO                  480
 
-#define SWITCH1_DEFINITION       Switch_OnOff switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 1, "intensity");
+#define MODULE1_DEFINITION       Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 1, "intensity", "Helligkeit");
 
-#define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
-#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
+#define MODULE2_DEFINITION       Sensor_18B20 module2;
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "flurnode"
 #define MQTT_TOPICP2             "flurnode"

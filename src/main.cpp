@@ -439,6 +439,7 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
 #if defined(DEBUG_SERIAL_HTML)
   Serial.println("Generiere sysinfo3 ... ");
 #endif
+  bool stringIsFilled = false;
   info_str = "{";
 #if defined(MQTT)  
   info_str += "\"mqttserver\":\"";
@@ -448,9 +449,10 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
   info_str += "\",\"mqtttopicp2\":\"";
   info_str += mqtt_topicP2;
   info_str += "\"";
+  stringIsFilled = true;
 #endif
 #if defined(RF24GW)  
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   info_str += "\"RF24HUB-Server\":\"";
   info_str += RF24GW_HUB_SERVER;
   info_str += "\",\"RF24HUB-Port\":";
@@ -459,53 +461,66 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
   info_str += String(RF24GW_GW_UDP_PORTNO);
   info_str += ",\"RF24GW-No\":";
   info_str += String(RF24GW_NO);  
+  stringIsFilled = true;
 #endif
 #if defined(MODULE1)
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   if (format_mqtt) {
     info_str += module1.info_mqtt();
+    stringIsFilled = (module1.info_mqtt().length() > 1);
   } else {
     info_str += module1.info_html();
+    stringIsFilled = (module1.info_mqtt().length() > 1);
   }
 #endif
 #if defined(MODULE2)
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   if (format_mqtt) {
     info_str += module2.info_mqtt();
+    stringIsFilled = (module2.info_mqtt().length() > 1);
   } else {
     info_str += module2.info_html();
+    stringIsFilled = (module2.info_mqtt().length() > 1);
   }
 #endif
 #if defined(MODULE3)
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   if (format_mqtt) {
     info_str += module3.info_mqtt();
+    stringIsFilled = (module3.info_mqtt().length() > 1);
   } else {
     info_str += module3.info_html();
+    stringIsFilled = (module3.info_mqtt().length() > 1);
   }
 #endif
 #if defined(MODULE4)
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   if (format_mqtt) {
     info_str += module4.info_mqtt();
+    stringIsFilled = (module4.info_mqtt().length() > 1);
   } else {
     info_str += module4.info_html();
+    stringIsFilled = (module4.info_mqtt().length() > 1);
   }
 #endif
 #if defined(MODULE5)
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   if (format_mqtt) {
     info_str += module5.info_mqtt();
+    stringIsFilled = (module5.info_mqtt().length() > 1);
   } else {
     info_str += module5.info_html();
+    stringIsFilled = (module5.info_mqtt().length() > 1);
   }
 #endif
 #if defined(MODULE6)
-  if ( info_str.length() > 3 ) info_str += ",";
+  if ( stringIsFilled ) info_str += ",";
   if (format_mqtt) {
     info_str += module6.info_mqtt();
+    stringIsFilled = (module6.info_mqtt().length() > 1);
   } else {
     info_str += module6.info_html();
+    stringIsFilled = (module6.info_mqtt().length() > 1);
   }
 #endif
   info_str += "}";

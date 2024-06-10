@@ -33,7 +33,7 @@ private:
     /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
     time_t     obj_measure_starttime = 0;
     /// @brief Das Intervall zwischen zwei Messungen in Sekunden
-    time_t     obj_measure_interval = 30;
+    time_t     obj_measure_interval = 300;
     /// @brief Der Abstand zwischen dem Start der Messung und dem Auslesen der Werte
     time_t     obj_measure_delay = 2;
 
