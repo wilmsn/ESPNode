@@ -13,6 +13,7 @@
 #define COLOR_ORANGE      0xFD20
 #define COLOR_GREEN       0x07E0
 #define COLOR_LIGHTGREY   0xC618
+#define COLOR_BLUE        0x001F
 #endif
 
 void AudioDisplay::clear() {
@@ -129,6 +130,29 @@ void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t co
   }
   tft->setCursor(posx, posy + pixel_to_next_line);
   tft->println(mystr);
+}
+
+void AudioDisplay::show_modus(uint8_t modus) {
+  clear();
+  switch(modus) {
+    case 0:
+      tft->setTextColor(COLOR_RED);  
+      tft->setCursor(20, 100);
+      tft->println("Radio");
+    break;
+    case 1:
+      tft->setTextColor(COLOR_YELLOW);  
+      tft->setCursor(20, 100);
+      tft->println("Media");
+      tft->println("Player");
+    break;
+    case 2:
+      tft->setTextColor(COLOR_BLUE);  
+      tft->setCursor(20, 100);
+      tft->println("Bluetooth");
+      tft->println("Speaker");
+    break;
+  }  
 }
 
 #ifdef DISPLAY_GC9A01A

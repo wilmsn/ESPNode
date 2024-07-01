@@ -215,10 +215,6 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
 #endif
-#ifdef WEBRADIO
-
-
-#endif
   if ( cmd == "?" || cmd == "help" ) {
     console_help();
     cmd_valid = true;
@@ -245,8 +241,8 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_valid = true;
     cmd_no++;
   }
-/*  if ( cmd == "wifi_ssid" ) {
-    if ( wifi_ssid1 != value ) {
+  if ( cmd == "wifi_ssid" ) {
+    if ( wifi_ssid != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_ssid", value);
       preferences.end();
@@ -256,7 +252,7 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( cmd == "wifi_pass" ) {
-    if ( wifi_pass1 != value ) {
+    if ( wifi_pass != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_pass", value);
       preferences.end();
@@ -264,7 +260,49 @@ void prozess_cmd(const String cmd, const String value)  {
     }
     cmd_valid = true;
     cmd_no++;
-  } */
+  }
+#ifdef ESP32
+  if ( cmd == "wifi_ssid1" ) {
+    if ( wifi_ssid1 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_ssid1", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "wifi_pass1" ) {
+    if ( wifi_pass1 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_pass1", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "wifi_ssid2" ) {
+    if ( wifi_ssid2 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_ssid2", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "wifi_pass2" ) {
+    if ( wifi_pass2 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_pass2", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+#endif
   if ( cmd == "log_module" ) {
     if ( do_log_module != ( value == "1" ) ) {
       do_log_module = ( value == "1" );

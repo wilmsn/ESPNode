@@ -18,7 +18,7 @@ public:
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
     
-    void loop();
+    void loop(time_t mytime);
 
 };
 

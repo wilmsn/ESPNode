@@ -80,6 +80,12 @@ void rf24gw_loop();
 extern bool rebootflag;
 extern String wifi_ssid;
 extern String wifi_pass;
+#ifdef ESP32
+extern String wifi_ssid1;
+extern String wifi_pass1;
+extern String wifi_ssid2;
+extern String wifi_pass2;
+#endif
 extern int cmd_no;
 extern Preferences preferences;
 extern unsigned long loop_time_alarm;

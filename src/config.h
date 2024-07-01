@@ -12,13 +12,13 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODE_WEBRADIO
-//#define NODE_ROTARYTEST
-//#define NODE_AUDIO
+#define NODE_AUDIO
 /*In neuer Struktur getestet*/
 //#define ESP8266SIMPLE
 //#define ESP32SIMPLE
+//#define NODE_ROTARYTEST
 //#define NODESLIDER
-#define NODE_18B20_TEST
+//#define NODE_18B20_TEST
 //#define NODEBOSCH
 //#define WITTYNODE
 

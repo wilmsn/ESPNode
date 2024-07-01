@@ -106,14 +106,14 @@ RF24 Gateway:
 
 #define HOSTNAME                 "wohnzimmernode"
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
-#define MAGICNO                  102
+#define MAGICNO                  103
 #define DO_LOG_CRITICAL          true
 
-#define SWITCH1_DEFINITION       Actor_LEDMatrix switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Anzeige", "display", "display", false, true, 3, 1, "intensity", "Helligkeit", "mx_line", "mx_graph");
+#define MODULE1_DEFINITION       Actor_LEDMatrix module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", false, true, 3, 1, "intensity", "Helligkeit", "mx_line", "mx_graph");
 
-#define SENSOR1_DEFINITION       Sensor_18B20 sensor1;
-#define SENSOR1_BEGIN_STATEMENT  sensor1.begin("sens1","Temperatur","Temperatur");
+#define MODULE2_DEFINITION       Sensor_18B20 module2;
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "wohnzimmernode"
 #define MQTT_TOPICP2             "wohnzimmernode"
@@ -151,7 +151,7 @@ RF24 Gateway:
 #define DEBUG_SERIAL_SENSOR
 #define DEBUG_SERIAL_MQTT
 #define MODULE1_DEFINITION      Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, 2);
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, LED_BUILTIN);
 #define DO_LOG_SYSTEM           true
 #define MAGICNO                 0
 
@@ -197,7 +197,7 @@ RF24 Gateway:
 #define WITTY_RGB_BL           13
 #define WITTY_LED_PIN          2
 
-#define MAGICNO                479
+#define MAGICNO                123
 
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
@@ -277,30 +277,6 @@ RF24 Gateway:
 
 #endif
 //-----------------------------------------------------
-#if defined(NODE_WEBRADIO)
-
-#define USE_AUDIOMODUL
-#include "audiomodul.h"
-//#define CONFIG_ESP32S3
-//#define CONFIG_ESP32
-#define MAGICNO                  0
-//#define DO_MEDIAPLAYER
-#define DO_WEBRADIO
-
-#define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_HTML
-
-#define HOSTNAME                 "Webradio"
-#define HOST_DISCRIPTION         "Ein Webradio Testnode"
-
-#define SWITCH1_DEFINITION       Audiomodul switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin();
-
-//#define MQTT_CLIENT              "RadioNode"
-
-#endif
-
-//-----------------------------------------------------
 #if defined(NODE_AUDIO)
 
 #define USE_AUDIOMODUL
@@ -315,17 +291,18 @@ RF24 Gateway:
 #define HOSTNAME                 "Audionode"
 #define HOST_DISCRIPTION         "Ein Audio Testnode"
 
-#define SWITCH1_DEFINITION       AudioModul switch1;
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Anlage", "anlage", "anlage");
+#define MODULE1_DEFINITION       AudioModul module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
 
 #define DO_LOG_WEB               true
-#define DO_LOG_SENSOR            true
+#define DO_LOG_MODULE            true
 #define DO_LOG_SYSTEM            true
 
 #endif
 
 //-----------------------------------------------------
 #if defined(NODE_ROTARYTEST)
+
 
 #define USE_ROTARYTEST
 #define USE_ROTARYMODUL
@@ -336,14 +313,16 @@ RF24 Gateway:
 #define DEBUG_SERIAL_HTML
 
 #define HOSTNAME                 "Rotarytest"
-#define HOST_DISCRIPTION         "Ein Rotary Testnode"
+#define HOST_DISCRIPTION         "Der Rotary steuert die Helligkeit der internen LED"
 
-#define SWITCH1_DEFINITION       RotaryTest switch1;
-//#define SWITCH1_BEGIN_STATEMENT  switch1.begin();
-#define SWITCH1_BEGIN_STATEMENT  switch1.begin("sw1", "Anlage", "anlage", "anlage");
+/*
+void RotaryTest::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
+*/
+#define MODULE1_DEFINITION      RotaryTest module1;
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "Gerät", "geraet", "geraet");
 
-#define SWITCH2_DEFINITION       Switch_OnOff switch2;
-#define SWITCH2_BEGIN_STATEMENT  switch2.begin("sw2", "blau", "blau", "blau", false, true, 13, 150, 2, "regler","intensity");
+#define DO_LOG_SYSTEM           true
+#define MAGICNO                 0
 
 #endif
 

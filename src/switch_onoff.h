@@ -59,10 +59,11 @@ public:
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
+    /// @param slider_max_val Der maximale Wert des Schiebereglers (maximal zulässig: 255)
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no,
+               bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                const char* slider_mqtt_name, const char* slider_label);
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin und PWM Steuerung
@@ -74,11 +75,12 @@ public:
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
+    /// @param slider_max_val Der maximale Wert des Schiebereglers (maximal zulässig: 255)
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     /// @param slider_label Die Beschriftung für den Schieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_no,
+               bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                const char* slider_mqtt_name, const char* slider_label);
 
     /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "obj_keyword" übereinstimmt.

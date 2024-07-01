@@ -556,6 +556,7 @@ void start_AP() {
 #if defined(RF24GW)
   do_rf24gw = false;
 #endif
+  setup_webserver();
 }
 
 /****************************************************
@@ -614,6 +615,16 @@ void setup() {
     preferences.putInt("magicno", MAGICNO);
     preferences.putString("wifi_ssid", wifi_ssid); 
     preferences.putString("wifi_pass", wifi_pass);
+#ifdef ESP32
+#ifdef WIFI_SSID1
+    preferences.putString("wifi_ssid1", wifi_ssid1); 
+    preferences.putString("wifi_pass1", wifi_pass1);
+#endif
+#ifdef WIFI_SSID2
+    preferences.putString("wifi_ssid2", wifi_ssid2); 
+    preferences.putString("wifi_pass2", wifi_pass2);
+#endif
+#endif
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
 #if defined(MQTT)
     do_mqtt      = MQTT;
@@ -655,6 +666,12 @@ void setup() {
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
     wifi_ssid         = preferences.getString("wifi_ssid"); 
     wifi_pass         = preferences.getString("wifi_pass");
+#ifdef ESP32
+    if (preferences.isKey("wifi_ssid1")) wifi_ssid1 = preferences.getString("wifi_ssid1"); 
+    if (preferences.isKey("wifi_pass1")) wifi_pass1 = preferences.getString("wifi_pass1");
+    if (preferences.isKey("wifi_ssid2")) wifi_ssid2 = preferences.getString("wifi_ssid2"); 
+    if (preferences.isKey("wifi_pass1")) wifi_pass2 = preferences.getString("wifi_pass2");
+#endif
     loop_time_alarm   = preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
     do_mqtt           = preferences.getBool("do_mqtt");

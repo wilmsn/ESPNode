@@ -44,9 +44,9 @@ public:
  
     void html_create_json_part(String& json);
 
-    void audio_radio_off();
+    void audio_off();
  
-    void audio_radio_on();
+    void audio_on();
 
     void audio_radio_set_station();
 
@@ -58,11 +58,11 @@ public:
 
     void audio_radio_station_json(String& json);
 
-    void loop();
+    void loop(time_t now);
 
 private:
     void      set_modus(uint8_t _modus);
-    uint8_t   get_modus(modus_t _modus);
+    uint8_t   get_modus();
     station_t station[MAXSTATIONS];
     modus_t   modus;
     uint8_t   audio_vol;
