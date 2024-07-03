@@ -22,7 +22,14 @@ typedef struct {
     char    url[STATION_URL_LENGTH];
 } station_t;
 
-typedef enum Modus { Radio, Media, Speaker, Off } modus_t;
+typedef enum Modus { Radio = 0, Media, Speaker, Off } modus_t;
+
+// Die Keywordliste auf die in der "set" Funktion reagiert wird:
+#define AUDIO_RADIO_STATION     "station"
+#define AUDIO_RADIO             "radio"
+#define AUDIO_MEDIA             "media"
+#define AUDIO_SPEAKER           "speaker"
+
 
 class AudioModul : public Switch_OnOff {
 
@@ -44,9 +51,11 @@ public:
  
     void html_create_json_part(String& json);
 
-    void audio_off();
+    void audio_radio_off();
  
-    void audio_on();
+    void audio_radio_on();
+
+    void audio_radio_show_set_station();
 
     void audio_radio_set_station();
 
@@ -61,14 +70,14 @@ public:
     void loop(time_t now);
 
 private:
-    void      set_modus(uint8_t _modus);
-    uint8_t   get_modus();
-    station_t station[MAXSTATIONS];
+    void      set_modus(modus_t _modus);
     modus_t   modus;
+    station_t station[MAXSTATIONS];
     uint8_t   audio_vol;
     uint8_t   audio_bas;
     uint8_t   audio_tre;
     uint8_t   audio_radio_cur_station;
+    int       old_min = 0;
 };
 
 

@@ -52,6 +52,11 @@ AudioOutputI2S *out = NULL;
 // SDA (Display) => MOSI                11
 #define GC9A01A_TFT_CS                  8
 #define GC9A01A_TFT_DC                  9
+// SD Card
+#define SD_SCK
+#define SD_MISO
+#define SD_MOSI
+#define SD_CS
 #endif
 
 #define ARC_SIGMENT_DEGREES             3
@@ -82,7 +87,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
     preferences.putUChar("ar_cur_station", 0);
   }
   audio_radio_cur_station = preferences.getUChar("ar_cur_station");
-  audio_vol = 5; //preferences.getUChar("audio_vol");
+  audio_vol = 0; //preferences.getUChar("audio_vol");
   audio_tre = preferences.getUChar("audio_tre");
   audio_bas = preferences.getUChar("audio_bas");
   preferences.end();
@@ -122,7 +127,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 #endif
   set("audio_radio","1");
   set("audio_vol",String(audio_vol).c_str());
-  audio_on();
+  audio_radio_off();
 }
 
 void AudioModul::html_create_json_part(String& json) {
@@ -146,8 +151,12 @@ void AudioModul::html_create_json_part(String& json) {
 bool AudioModul::set(const String& keyword, const String& value) {
   bool retval = false;
   String myvalue = value;
+  Serial.print("Audiomodul::set: ");
+  Serial.print(keyword);
+  Serial.println();
   if ( ! Switch_OnOff::set(keyword, value) ) {
-  std::replace(myvalue.begin(),myvalue.end(),'\n',' ');
+    Serial.println("Switch_OnOff::set war false!");
+    std::replace(myvalue.begin(),myvalue.end(),'\n',' ');
     if ( keyword == String("audio_vol") ) {
       audio_vol = value.toInt();
       html_json = "{\"audio_vol\":";
@@ -186,12 +195,20 @@ bool AudioModul::set(const String& keyword, const String& value) {
       retval = true;
     }
     // Set for radio
-    if ( keyword == String("audio_radio") ) {
-      modus = Radio;
+    if ( keyword == String(AUDIO_RADIO) || keyword == String("audio_radio") ) {
+      set_modus(Radio);
       html_json = "{\"audio_radio\":1}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
       // TODO: Radio einschalten, alles ander aus
+      retval = true;
+    }
+    if ( keyword == String(AUDIO_RADIO_STATION) ) {
+//      html_json = "{\"audio_radio\":1}";
+//      write2log(LOG_WEB,1,html_json.c_str());
+//      ws.textAll(html_json);
+      uint8_t newstation = value.toInt();
+      if ( newstation < MAXSTATIONS) audio_radio_cur_station = newstation;
       retval = true;
     }
     if ( keyword == String("audio_radio_save_stn_name") ) {
@@ -203,8 +220,8 @@ bool AudioModul::set(const String& keyword, const String& value) {
       audio_radio_save_stations();
     }
     // Set for media
-    if ( keyword == String("audio_media") ) {
-      modus = Media;
+    if ( keyword == String(AUDIO_MEDIA) || keyword == String("audio_media") ) {
+      set_modus(Media);
       html_json = "{\"audio_media\":1}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
@@ -212,8 +229,8 @@ bool AudioModul::set(const String& keyword, const String& value) {
       retval = true;
     }
     // Set for speaker
-    if ( keyword == String("audio_speak") ) {
-      modus = Speaker;
+    if ( keyword == String(AUDIO_SPEAKER) || keyword == String("audio_speak") ) {
+      set_modus(Speaker);
       html_json = "{\"audio_speak\":1}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
@@ -221,52 +238,61 @@ bool AudioModul::set(const String& keyword, const String& value) {
       retval = true;
     }
 
+  } else {
+    retval = true;
   }
   return retval;
 }
 
-// Wofür ???
-void AudioModul::set_modus(uint8_t _modus) {
+void AudioModul::set_modus(modus_t _modus) {
   switch (_modus) {
-    case 0:
-      modus = Radio;
-      set("audio_radio","1");
-    break;
-    case 1:
-      modus = Media;
-      set("audio_media","1");
-    break;
-    case 2:
-      modus = Speaker;
-      set("audio_speak","1");
-    break;        
-  }
-}
-
-uint8_t AudioModul::get_modus() {
-  uint8_t retval = 0; 
-  switch (modus) {
     case Radio:
-      retval = 0;
+      modus = Radio;
+      audio_radio_on();
     break;
     case Media:
-      retval = 1;
+      modus = Media;
+      audio_radio_off();
     break;
     case Speaker:
-      retval = 2;
-    break;        
+      modus = Speaker;
+      audio_radio_off();
+    break;
+    default:
+      modus = Off;
+      audio_radio_off();
+      set_switch(0);
+      audiodisplay.show_time(true);
+    break;
   }
-  return retval;
 }
 
 void AudioModul::loop(time_t now) {
+  // Jede Minute benötigt die Uhrzeit ein Update
+  if (timeinfo.tm_min != old_min) {
+    switch(modus) {
+      case Radio:
+        audiodisplay.show_time(false);
+      break;
+      case Media:
+        audiodisplay.show_time(false);
+      break;
+      case Speaker:
+        audiodisplay.show_time(false);
+      break;
+      default:
+        audiodisplay.show_time(true);
+      break;
+    }
+    old_min = timeinfo.tm_min;
+  }
   if (modus != Off) {
 #if defined(USE_AUDIO_LIB)
     audio.loop();
     if (!audio.isRunning()) {
       if (modus == Radio) {
-        audio_off();
-        audio_on();
+        audio_radio_off();
+        audio_radio_on();
       }
     }
 #elif defined(USE_ESP8266AUDIO_LIB)
@@ -274,9 +300,9 @@ void AudioModul::loop(time_t now) {
     // ToDo wieder neu starten
 #endif
   }
-  rotarymodul.loop();
+  rotarymodul.loop(now);
   switch (rotarymodul.changed()) {
-    case 1:
+    case 1: {
       // Der Rotary wurde gedreht
       if ( rotarymodul.curLevel() == 0 ) {
         audio_vol = rotarymodul.curValue();
@@ -285,9 +311,10 @@ void AudioModul::loop(time_t now) {
           set_switch(1);
           if ( modus == Radio ) audio_radio_show_station();
         }
-        if ( obj_value && (audio_vol == 0) ) {
-          set_switch(0);
-          audiodisplay.show_time(true);
+        if ( audio_vol == 0 ) {
+          set_modus(Off);
+        } else {
+          if ( modus == Off) set_modus(Radio);
         }
       }
       // Level 1 wählt den Sender
@@ -297,11 +324,37 @@ void AudioModul::loop(time_t now) {
       }
       // Level 2 wählt den Modus (Radio, Mediaplayer, Bluetoothspeaker)
       if ( rotarymodul.curLevel() == 2 ) {
-        set_modus(rotarymodul.curValue());
-        audiodisplay.show_modus(get_modus());
+        switch(rotarymodul.curValue()) {
+          case 1:
+              set(AUDIO_MEDIA,"1");
+          break;
+          case 2:
+              set(AUDIO_SPEAKER,"1");
+          break;
+          default:
+              set(AUDIO_RADIO,"1");
+          break;
+        }
+        Serial.print("Loop Rot-Level:2 modus=");
+        switch(modus) {
+          case Radio:
+            Serial.println("Radio");
+          break;
+          case Media:
+            Serial.println("Media");
+          break;
+          case Speaker:
+            Serial.println("Speaker");
+          break;
+          default:
+            Serial.println("Off");
+          break;
+        }
+        audiodisplay.show_modus(modus);
       }
+    }
     break;
-    case 2:
+    case 2: {
       // Der Rotary wurde kurz gedrueckt
       if (obj_value) {
         Serial.printf("Rotary Level %u Position: %u Slider: %u\n", rotarymodul.curLevel(), rotarymodul.curValue(), audio_vol);
@@ -310,35 +363,50 @@ void AudioModul::loop(time_t now) {
             audio_radio_show_station();
           break;
           case 1:
-            audio_radio_set_station();
+            audio_radio_show_set_station();
           break;
           case 2:
-            audiodisplay.show_modus(get_modus());
+            audiodisplay.show_modus(modus);
           break;
         }
       } else {
         rotarymodul.setLevel(0);
       }
+    }
     break;
-    case 3: 
+    case 3: { 
       // Der Rotary wurde lang gedrueckt
       set_switch(2);
       rotarymodul.setLevel(0);
       rotarymodul.setValue(0);
       set("audio_vol",String(0));
+    }
     break;
   }
   if ( changed() ) {
 //    Serial.printf("Web Slider Position: %u \n", get_slider_val());
+    if (modus != Off && ! obj_value) {
+      set_modus(Off);
+    }
+    if ( modus == Off && obj_value) {
+      if ( modus == Off) set_modus(Radio);
+    }
     if ( rotarymodul.curLevel() == 0 ) {
-      rotarymodul.setValue( audio_vol );  
+      if (modus != Off) rotarymodul.setValue( audio_vol );  
       Serial.printf("Rotary Level %u Position: %u Slider: %u\n", rotarymodul.curLevel(), rotarymodul.curValue(), audio_vol);
     }
   }
 }
 
-void AudioModul::audio_off() {
-  write2log(LOG_MODULE,1,"Audio off");
+/*********************************************************************************************************
+ * 
+ *  Ab hier alles fürs Radio
+ * 
+ * 
+**********************************************************************************************************/
+
+void AudioModul::audio_radio_off() {
+  write2log(LOG_MODULE,1,"Radio off");
 #if defined(USE_AUDIO_LIB)
   audio.stopSong();
 #elif defined(USE_ESP8266AUDIO_LIB)
@@ -358,44 +426,29 @@ void AudioModul::audio_off() {
     file = NULL;
   }
 #endif
-  modus = Off;
 }
 
-void AudioModul::audio_on() {
-//  modus = Radio;
-  write2log(LOG_MODULE,1,"Audio on");
-  if ( modus == Radio ) {
-    if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
+void AudioModul::audio_radio_on() {
+  write2log(LOG_MODULE,1,"Radio on");
+  if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
 #if defined(USE_AUDIO_LIB)
-      audio.connecttohost(station[audio_radio_cur_station].url);
+    audio.connecttohost(station[audio_radio_cur_station].url);
 #elif defined(USE_ESP8266AUDIO_LIB)
-      file = new AudioFileSourceICYStream(station[audio_radio_cur_station].url);
+    file = new AudioFileSourceICYStream(station[audio_radio_cur_station].url);
 //  file->RegisterMetadataCB(MDCallback, (void*)"ICY");
-      buff = new AudioFileSourceBuffer(file, 2048);
+    buff = new AudioFileSourceBuffer(file, 2048);
 //  buff->RegisterStatusCB(StatusCallback, (void*)"buffer");
-      out = new AudioOutputI2S();
-      out->SetPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-      out->SetGain(((float)audio_vol)/100.0);
-      mp3 = new AudioGeneratorMP3();
+    out = new AudioOutputI2S();
+    out->SetPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+    out->SetGain(((float)audio_vol)/100.0);
+    mp3 = new AudioGeneratorMP3();
 //  mp3->RegisterStatusCB(StatusCallback, (void*)"mp3");
-      mp3->begin(buff, out);
+    mp3->begin(buff, out);
 #endif
-      write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
-    }
+    write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
     audio_radio_show_station();
   }
-// modus = Media
-// todo  
-// modus = Speaker
-// todo  
 }
-
-/*********************************************************************************************************
- * 
- *  Ab hier alles fürs Radio
- * 
- * 
-**********************************************************************************************************/
 
 void AudioModul::audio_radio_station_json(String& json) {
   for (int i=0; i<MAXSTATIONS; i++) {
@@ -415,7 +468,7 @@ void AudioModul::audio_radio_show_station() {
   audiodisplay.show_station(station[audio_radio_cur_station].name);
 }
 
-void AudioModul::audio_radio_set_station() {
+void AudioModul::audio_radio_show_set_station() {
   audiodisplay.select_station(
     audio_radio_cur_station > 1 ? station[audio_radio_cur_station-2].name : "",
     audio_radio_cur_station > 0 ? station[audio_radio_cur_station-1].name : "",
@@ -423,6 +476,10 @@ void AudioModul::audio_radio_set_station() {
     audio_radio_cur_station < MAXSTATIONS ? station[audio_radio_cur_station+1].name : "",
     audio_radio_cur_station < MAXSTATIONS - 1 ? station[audio_radio_cur_station+2].name : ""
   );
+}
+
+void AudioModul::audio_radio_set_station() {
+  audio_radio_show_set_station();
   if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
 #if defined(USE_AUDIO_LIB)
     audio.connecttohost(station[audio_radio_cur_station].url);

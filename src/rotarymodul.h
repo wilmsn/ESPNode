@@ -29,21 +29,20 @@ public:
     uint8_t curValue();
     void setLevel(uint8_t level);
     void setValue(uint8_t value);
-    void loop();
+    void loop(time_t now);
 
 
 private:
+/// @brief Das Level Array. Hier werden alle Einstellungen in diesem Level verwaltet.
     level_t level[ROTARY_MAXLEVEL+1];
-/// @brief Die aktuelle Position des Rotaryencoders
-//    uint8_t cur_position = 0;
-/// @brief Die aktuelle Station aus der Senderliste
+/// @brief Das aktuelle Level des Rotaryencoders
     uint8_t cur_level = 0;
 /// @brief Zeitmessung Rotary Schalter
     unsigned long millis_Button_pressed = 0;
 /// @brief Letzter Zustand Rotary Schalter
     bool wasButtonDown = false;
     uint8_t isChanged = 0;
-
+    time_t timeout_cnt;
 };
 
 #endif

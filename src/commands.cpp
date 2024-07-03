@@ -360,7 +360,7 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( ! cmd_valid ) {
-    html_json  = "{\"stat\":\"Ungültiges Komando:";
+    html_json  = "{\"stat\":\"Ungültiges Kommando:";
     html_json += cmd;
     html_json += "\"}";
     write2log(LOG_MODULE,1,html_json.c_str());

@@ -91,7 +91,14 @@ void RotaryModul::setValue(uint8_t _value) {
   rotary.setEncoderValue(level[cur_level].cur); //preset the value to current gain
 }
 
-void RotaryModul::loop() {
+void RotaryModul::loop(time_t now) {
+  // 0. Check reset of level
+  if (cur_level != 0) {
+    if (now - timeout_cnt > 60) {
+      setLevel(0);
+      isChanged = 2;
+    }
+  }
   // 1. Position changed
   if (rotary.encoderChanged()) {
     level[cur_level].cur = rotary.readEncoder();
@@ -116,6 +123,7 @@ void RotaryModul::loop() {
 //      short click => Change Level
         if ( cur_level < ROTARY_MAXLEVEL) {
           setLevel(cur_level+1);
+          if (cur_level != 0) timeout_cnt = now;
         } else {
           setLevel(0);
         }

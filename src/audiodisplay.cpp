@@ -134,23 +134,25 @@ void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t co
 
 void AudioDisplay::show_modus(uint8_t modus) {
   clear();
+  tft->setTextSize(3);
+  tft->setCursor(TEXT_UNDER_BMP_X, TEXT_UNDER_BMP_Y);
   switch(modus) {
     case 0:
+      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
       tft->setTextColor(COLOR_RED);  
-      tft->setCursor(20, 100);
       tft->println("Radio");
     break;
     case 1:
-      tft->setTextColor(COLOR_YELLOW);  
-      tft->setCursor(20, 100);
+      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
       tft->println("Media");
-      tft->println("Player");
+      tft->setTextColor(COLOR_GREEN);  
     break;
     case 2:
-      tft->setTextColor(COLOR_BLUE);  
-      tft->setCursor(20, 100);
-      tft->println("Bluetooth");
+      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
       tft->println("Speaker");
+      tft->setTextColor(COLOR_BLUE);  
+    break;
+    default:
     break;
   }  
 }
