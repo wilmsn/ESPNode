@@ -77,7 +77,7 @@ Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
 AudioDisplay     audiodisplay;
 
 void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, true, true);
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true);
   audio_radio_load_stations();
   preferences.begin("settings",false);
   if ( !preferences.isKey("audio_vol") ) {
@@ -125,16 +125,21 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   audio.setVolumeSteps(100);
   audio.setVolume(audio_vol);
 #endif
-  set("audio_radio","1");
-  set("audio_vol",String(audio_vol).c_str());
-  audio_radio_off();
+  set_modus(Off);
+//  set("audio_radio","1");
+//  set("audio_vol",String(audio_vol).c_str());
+//  audio_radio_off();
 }
 
 void AudioModul::html_create_json_part(String& json) {
   Switch_OnOff::html_create_json_part(json);
   json += ",\"audio_show\":1";
   json += ",\"audio_radio\":";
-  json += (modus == Radio)?1:0;
+  if (obj_value) {
+    json += (modus == Radio)?1:0;
+  } else {
+    json += "1";
+  }
   json += ",\"audio_media\":";
   json += (modus == Media)?1:0;
   json += ",\"audio_speak\":";
@@ -145,7 +150,15 @@ void AudioModul::html_create_json_part(String& json) {
   json += audio_bas;
   json += ",\"audio_tre\":";
   json += audio_tre;
-  audio_radio_station_json(json);
+  for (int i=0; i<MAXSTATIONS; i++) {
+    String html_json = "{\"audio_radio_add_stn\":\"";
+    html_json += station[i].url;
+    html_json += ";";
+    html_json += station[i].name;
+    html_json += "\"}";
+      write2log(LOG_WEB,1,html_json.c_str());
+      ws.textAll(html_json);
+  }
 }
 
 bool AudioModul::set(const String& keyword, const String& value) {
@@ -195,26 +208,33 @@ bool AudioModul::set(const String& keyword, const String& value) {
       retval = true;
     }
     // Set for radio
+    // Radio einschalten
     if ( keyword == String(AUDIO_RADIO) || keyword == String("audio_radio") ) {
       set_modus(Radio);
-      html_json = "{\"audio_radio\":1}";
+      html_json = "{\"audio_radio\":\"1\"}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-      // TODO: Radio einschalten, alles ander aus
       retval = true;
     }
-    if ( keyword == String(AUDIO_RADIO_STATION) ) {
-//      html_json = "{\"audio_radio\":1}";
-//      write2log(LOG_WEB,1,html_json.c_str());
-//      ws.textAll(html_json);
+    // Radio: Sender einstellen hier ueber command "station 2"
+    if ( keyword == String(AUDIO_RADIO_SET_STATION) ) {
       uint8_t newstation = value.toInt();
       if ( newstation < MAXSTATIONS) audio_radio_cur_station = newstation;
       retval = true;
     }
+    // Radio: Sender einstellen ueber Webinterface
+    if ( keyword == String("audio_radio_set_stn") ) {
+      for (int i=0; i<MAXSTATIONS; i++) {
+        if (String(station[i].name) == value) audio_radio_cur_station = i;  
+      }
+      audio_radio_on();
+    }
+    // Radio: Sender Name speichern ueber Webinterface
     if ( keyword == String("audio_radio_save_stn_name") ) {
       snprintf(station[audio_radio_cur_station].name,STATION_NAME_LENGTH,"%s",value.c_str());
       audio_radio_save_stations();
     }
+    // Radio: Sender URL speichern ueber Webinterface
     if ( keyword == String("audio_radio_save_stn_url") ) {
       snprintf(station[audio_radio_cur_station].url,STATION_URL_LENGTH,"%s",value.c_str());
       audio_radio_save_stations();
@@ -225,7 +245,8 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json = "{\"audio_media\":1}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-      // TODO: Media einschalten, alles ander aus
+      audio_media_show();
+      // TODO: Media einschalten, alles andere aus
       retval = true;
     }
     // Set for speaker
@@ -234,7 +255,8 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json = "{\"audio_speak\":1}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-      // TODO: Speaker einschalten, alles ander aus
+      audio_speak_show();
+      // TODO: Speaker einschalten, alles andere aus
       retval = true;
     }
 
@@ -272,13 +294,13 @@ void AudioModul::loop(time_t now) {
   if (timeinfo.tm_min != old_min) {
     switch(modus) {
       case Radio:
-        audiodisplay.show_time(false);
+         if ( rotarymodul.curLevel() == 0 ) audiodisplay.show_time(false);
       break;
       case Media:
-        audiodisplay.show_time(false);
+         if ( rotarymodul.curLevel() == 0 ) audiodisplay.show_time(false);
       break;
       case Speaker:
-        audiodisplay.show_time(false);
+         if ( rotarymodul.curLevel() == 0 ) audiodisplay.show_time(false);
       break;
       default:
         audiodisplay.show_time(true);
@@ -309,7 +331,7 @@ void AudioModul::loop(time_t now) {
         set("audio_vol",String(audio_vol));
         if ( ! obj_value && (audio_vol > 0) ) {
           set_switch(1);
-          if ( modus == Radio ) audio_radio_show_station();
+          if ( modus == Radio ) audio_radio_show();
         }
         if ( audio_vol == 0 ) {
           set_modus(Off);
@@ -360,10 +382,10 @@ void AudioModul::loop(time_t now) {
         Serial.printf("Rotary Level %u Position: %u Slider: %u\n", rotarymodul.curLevel(), rotarymodul.curValue(), audio_vol);
         switch(rotarymodul.curLevel()) {
           case 0:
-            audio_radio_show_station();
+            audio_radio_show();
           break;
           case 1:
-            audio_radio_show_set_station();
+            audio_radio_select_station();
           break;
           case 2:
             audiodisplay.show_modus(modus);
@@ -446,21 +468,21 @@ void AudioModul::audio_radio_on() {
     mp3->begin(buff, out);
 #endif
     write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
-    audio_radio_show_station();
+    audio_radio_show();
   }
 }
-
+/*
 void AudioModul::audio_radio_station_json(String& json) {
   for (int i=0; i<MAXSTATIONS; i++) {
-    json += ",\"audio_radio_add_stn\":\"";
+    json += "{\"audio_radio_add_stn\":\"";
     json += station[i].url;
     json += ";";
     json += station[i].name;
-    json += "\"";
+    json += "\"}";
   }
 }
-
-void AudioModul::audio_radio_show_station() {
+*/
+void AudioModul::audio_radio_show() {
   audiodisplay.clear();
   audiodisplay.show_ip(WiFi.localIP().toString().c_str());
   audiodisplay.show_vol(audio_vol);
@@ -468,7 +490,7 @@ void AudioModul::audio_radio_show_station() {
   audiodisplay.show_station(station[audio_radio_cur_station].name);
 }
 
-void AudioModul::audio_radio_show_set_station() {
+void AudioModul::audio_radio_select_station() {
   audiodisplay.select_station(
     audio_radio_cur_station > 1 ? station[audio_radio_cur_station-2].name : "",
     audio_radio_cur_station > 0 ? station[audio_radio_cur_station-1].name : "",
@@ -479,7 +501,7 @@ void AudioModul::audio_radio_show_set_station() {
 }
 
 void AudioModul::audio_radio_set_station() {
-  audio_radio_show_set_station();
+  audio_radio_select_station();
   if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
 #if defined(USE_AUDIO_LIB)
     audio.connecttohost(station[audio_radio_cur_station].url);
@@ -564,12 +586,42 @@ void audio_bitrate(const char *info) {
 
 void audio_showstation(const char *info){
     write2log(LOG_MODULE,2,"Station:", info);
-    if (rotarymodul.curLevel() == 0) audiodisplay.show_station(info);
+//    if (rotarymodul.curLevel() == 0) audiodisplay.show_station(info);
     html_json = "{\"audiomsg1\":\"";
     html_json += info;
     html_json += "\"}";
     write2log(LOG_WEB,1,html_json.c_str());
     ws.textAll(html_json);
+}
+
+/*********************************************************************************************************
+ * 
+ *  Ab hier alles für den Mediaplayer
+ * 
+ * 
+**********************************************************************************************************/
+
+void AudioModul::audio_media_show() {
+  audiodisplay.clear();
+  audiodisplay.show_ip(WiFi.localIP().toString().c_str());
+  audiodisplay.show_vol(audio_vol);
+  audiodisplay.show_time(false);
+  audiodisplay.show_station("Mediaplayer");
+}
+
+/*********************************************************************************************************
+ * 
+ *  Ab hier alles für den Bluetoothspeaker
+ * 
+ * 
+**********************************************************************************************************/
+
+void AudioModul::audio_speak_show() {
+  audiodisplay.clear();
+  audiodisplay.show_ip(WiFi.localIP().toString().c_str());
+  audiodisplay.show_vol(audio_vol);
+  audiodisplay.show_time(false);
+  audiodisplay.show_station("Bluetooth Player");
 }
 
 

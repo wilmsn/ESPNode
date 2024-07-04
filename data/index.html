@@ -212,6 +212,18 @@ $("#fd_dir1").hide();
 //    alert("audio_radio click func");
     do_cmd("audio_radio","1");
   });
+
+  $('#audio_radio_but').change(function () {
+    alert("audio_radio change func");
+    $("#audio_radio_sel").empty();
+    do_cmd("audio_radio_fill","1");
+  });
+
+  $('#audio_radio_sel').click(function() {
+    $("#audio_radio_stn_name").val($('#audio_radio_sel option:selected').text());
+    $("#audio_radio_stn_url").val($('#audio_radio_sel option:selected').val());
+    do_cmd("audio_radio_set_stn",$('#audio_radio_sel option:selected').text());
+  });
   $('#audio_media_but').click(function () {
     do_cmd("audio_media","1");
   });
@@ -506,6 +518,9 @@ function prozessJS( key, val ) {
     case "audiomsg4":
       $("#audiomsg4div").show();
       $("#audiomsg4").html(val).css("fontSize", 10);
+    break;
+    case "audio_radio_empty":
+      $('#audio_radio_sel').empty();
     break;
     case "audio_radio_add_stn":
       const valArray = val.split(";");
@@ -1094,8 +1109,15 @@ function dellog() {
   }
 }
 
-function audio_radio_sel_change(val) {
-  do_cmd("audio_radio_set_stn",val)
+// Ab hier Funktionen fuer das Audio Modul
+function audio_menu() {
+  if ($("#audio_menu").hasClass("change")) {
+    $("#audio_menu").removeClass("change");
+    $("#audio_settings").hide();
+  } else {
+    $("#audio_menu").addClass("change");
+    $("#audio_settings").show();
+  }
 }
 
 function audio_mediaswitch() {
@@ -1116,7 +1138,11 @@ function audio_mediaswitch() {
   $("#audio_speak_but").html("aus");
 }
 
-function audio_radio_fill_sel() {
+// Ab hier Funktionen fuer das Audio Modul Radio
+
+function audio_radio_stn_update() {
+  do_cmd("audio_radio_save_stn_name",$("#audio_radio_stn_name").val());
+  do_cmd("audio_radio_save_stn_url",$("#audio_radio_stn_url").val());
   $('#audio_radio_sel')
     .find('option')
     .remove()
@@ -1124,21 +1150,20 @@ function audio_radio_fill_sel() {
   ;
 }
 
-function audio_menu() {
-  if ($("#audio_menu").hasClass("change")) {
-    $("#audio_menu").removeClass("change");
-    $("#audio_settings").hide();
-  } else {
-    $("#audio_menu").addClass("change");
-    $("#audio_settings").show();
-  }
+/*
+function audio_radio_sel_change(val) {
+  alert(val);
+  do_cmd("audio_radio_set_stn",val);
 }
 
-function audio_radio_stn_update() {
-  do_cmd("audio_radio_save_stn_name",$("#audio_radio_stn_name").val());
-  do_cmd("audio_radio_save_stn_url",$("#audio_radio_stn_url").val());
-  audio_radio_fill_sel();
+function audio_radio_fill_sel() {
+  $('#audio_radio_sel')
+    .find('option')
+    .remove()
+    .end()
+  ;
 }
+*/
 
 </script>
 
@@ -1284,7 +1309,7 @@ function audio_radio_stn_update() {
       </div>
       <div id="audio_radio_settings">
         <p id="audio_radio_sel_div">Senderwahl:</p>
-        <select id="audio_radio_sel" class="custom-select" onchange="audio_radio_sel_change(this.value)" size="5">
+        <select id="audio_radio_sel" class="custom-select" size="5">
         </select>
         <table><tr>
           <td>Sendername:</td>
@@ -1293,7 +1318,7 @@ function audio_radio_stn_update() {
           <td>URL:</td>
           <td><input name="SenderURL" id="audio_radio_stn_url" size="30" maxlength="125"></td>
         </tr></table>  
-        <button id="audio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
+        <button id="audio_radio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
       </div>
       <div id="audio_media_settings">
           Media Menu TBD.

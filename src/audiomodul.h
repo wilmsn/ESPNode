@@ -25,7 +25,7 @@ typedef struct {
 typedef enum Modus { Radio = 0, Media, Speaker, Off } modus_t;
 
 // Die Keywordliste auf die in der "set" Funktion reagiert wird:
-#define AUDIO_RADIO_STATION     "station"
+#define AUDIO_RADIO_SET_STATION "station"
 #define AUDIO_RADIO             "radio"
 #define AUDIO_MEDIA             "media"
 #define AUDIO_SPEAKER           "speaker"
@@ -55,17 +55,21 @@ public:
  
     void audio_radio_on();
 
-    void audio_radio_show_set_station();
+    void audio_radio_select_station();
 
     void audio_radio_set_station();
 
-    void audio_radio_show_station();
+    void audio_radio_show();
 
     void audio_radio_save_stations();
     
     void audio_radio_load_stations();
 
-    void audio_radio_station_json(String& json);
+ //   void audio_radio_station_json(String& json);
+
+    void audio_media_show();
+
+    void audio_speak_show();
 
     void loop(time_t now);
 
