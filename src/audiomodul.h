@@ -16,6 +16,10 @@
 #define MAXSTATIONS               10
 #define STATION_NAME_LENGTH       30
 #define STATION_URL_LENGTH        128
+// Settings for Mediaplayer
+#define MAXALBUM                  100
+#define ALBUMLENGTH               40
+#define SONGLENGTH                40
 
 typedef struct {
     char    name[STATION_NAME_LENGTH];
@@ -55,7 +59,7 @@ public:
  
     void audio_radio_on();
 
-    void audio_radio_select_station();
+    void audio_radio_select();
 
     void audio_radio_set_station();
 
@@ -65,9 +69,21 @@ public:
     
     void audio_radio_load_stations();
 
+    void audio_radio_send_stn2web();
+
  //   void audio_radio_station_json(String& json);
 
+    void audio_media_off();
+ 
+    void audio_media_on();
+
+    void audio_media_select();
+
     void audio_media_show();
+
+    void audio_speak_off();
+ 
+    void audio_speak_on();
 
     void audio_speak_show();
 
@@ -76,11 +92,18 @@ public:
 private:
     void      set_modus(modus_t _modus);
     modus_t   modus;
-    station_t station[MAXSTATIONS];
     uint8_t   audio_vol;
     uint8_t   audio_bas;
     uint8_t   audio_tre;
+// Radio
+    station_t station[MAXSTATIONS];
     uint8_t   audio_radio_cur_station;
+// Mediaplayer
+    uint8_t   audio_media_cur_dir = 0;
+    uint8_t   audio_media_cur_file = 0;    
+// Bluetoothspeaker
+
+// Generic use
     int       old_min = 0;
 };
 

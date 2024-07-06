@@ -8,12 +8,13 @@ SWR 3
 https://liveradio.swr.de/sw282p3/swr3/play.mp3
 FFH
 http://mp3.ffh.de/radioffh/hqlivestream-nordhessen.mp3
-empty
-
-empty
-
-empty
-
-empty
-
-empty
+Antenne Bayern
+http://stream.antenne.de/antenne/stream/mp3
+Antenne NRW
+http://stream.antenne.de/antenne-nrw/stream/mp3
+Antenne Coffee Music
+http://stream.antenne.de/coffee/stream/mp3
+Antenne Oldie
+http://stream.antenne.de/oldie-antenne/stream/mp3
+Antenne Rock
+http://stream.antenne.de/rockantenne-bayern/stream/mp3

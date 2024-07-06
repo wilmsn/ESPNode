@@ -66,17 +66,17 @@ void AudioDisplay::show_time(bool big) {
   }
 }
 
-void AudioDisplay::show_station(const char* mystation) {
+void AudioDisplay::show_info1(const char* myinfo) {
   tft->fillRect(25, 65, 190, 55, COLOR_BLACK);
-  show_text(mystation, 25, 65, COLOR_ORANGE);
+  show_text(myinfo, 25, 65, COLOR_ORANGE);
 }
 
-void AudioDisplay::show_title(const char* mytitle) {
+void AudioDisplay::show_info2(const char* myinfo) {
   tft->fillRect(0, 130, 240, 60, COLOR_BLACK);
-  show_text(mytitle, 25, 130, COLOR_GREEN);
+  show_text(myinfo, 25, 130, COLOR_GREEN);
 }
 
-void AudioDisplay::select_station(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
+void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
   clear();
   tft->setTextSize(2);
   if (strlen(s0) > 0) {

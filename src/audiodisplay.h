@@ -16,11 +16,11 @@ public:
   void show_ip(const char* myip);
   void show_bps(const char* mybps);
   void show_vol(uint8_t vol);
-  void show_station(const char* mystation);
-  void show_title(const char* mytitle);
+  void show_info1(const char* myinfo);
+  void show_info2(const char* myinfo);
   void show_time(bool big);
   void show_modus(uint8_t modus);
-  void select_station(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4);
+  void select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4);
 
 private:
   void fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour);

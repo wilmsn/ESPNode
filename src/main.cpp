@@ -154,13 +154,17 @@ bool do_wifi_con(void) {
   WiFi.mode(WIFI_STA);
 #ifdef ESP32
   WiFi.setHostname(HOSTNAME);
+#ifdef USE_WIFIMULTI  
   wifiMulti.addAP(wifi_ssid.c_str(), wifi_pass.c_str());
   wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
   wifiMulti.addAP(wifi_ssid2.c_str(), wifi_pass2.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid.c_str(), " with Password ", wifi_pass.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
+#else  
 //  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+#endif  
 #else
     //    WiFi.persistent(false);
   WiFi.hostname(HOSTNAME);
@@ -169,10 +173,10 @@ bool do_wifi_con(void) {
 
   // ... Give ESP 10 seconds to connect to station.
   unsigned int i = 0;
-#ifdef ESP32
+#ifdef USE_WIFIMULTI
   while ( (wifiMulti.run() != WL_CONNECTED) && (i < 20) ) {
 #else
-  while ( (WiFi.status() != WL_CONNECTED) && (i < 20) ) {
+  while ( (WiFi.status() != WL_CONNECTED) && (i < 100) ) {
 #endif
     delay(500);
     i++;
@@ -188,7 +192,7 @@ bool do_wifi_con(void) {
 //    write2log(LOG_SYSTEM, 2, " OK connected!", wifi_ssid.c_str());
   } else {
     write2log(LOG_SYSTEM, 1, " ERROR WiFi not connected!");
-#ifdef ESP32
+#ifdef USE_WIFIMULTI
     write2log(LOG_SYSTEM,4, "Tested SSID: ",wifi_ssid.c_str(),wifi_ssid1.c_str(),wifi_ssid2.c_str());
 #else
     write2log(LOG_SYSTEM,2, "Tested SSID: ",wifi_ssid.c_str());
