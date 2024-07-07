@@ -24,7 +24,6 @@ public:
     void begin();
     void initLevel(uint8_t _level, uint8_t _minVal, uint8_t _curVal, uint8_t _maxVal);
     uint8_t changed();
-//    void reset_changed();
     uint8_t curLevel();
     uint8_t curValue();
     void setLevel(uint8_t level);

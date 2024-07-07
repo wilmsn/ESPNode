@@ -25,9 +25,9 @@
 //#warning ESP32S3
 #warning "Compiling Rotarymodule with Settings for ESP32-S3"
 //#warning "Settings for ESP32-S3"
-#define ROTARY_ENCODER_A_PIN      38 //37
-#define ROTARY_ENCODER_B_PIN      39 //36
-#define ROTARY_ENCODER_BUTTON_PIN 35
+#define ROTARY_ENCODER_A_PIN      1 //38 //37
+#define ROTARY_ENCODER_B_PIN      2 //39 //36
+#define ROTARY_ENCODER_BUTTON_PIN 3 //40 //35
 #define ROTARY_ENCODER_VCC_PIN    -1
 #define ROTARY_ENCODER_STEPS      4
 #endif

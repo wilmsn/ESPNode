@@ -163,6 +163,7 @@ void AudioDisplay::begin(Adafruit_GC9A01A* mytft) {
   tft = mytft;
   tft->begin();
   tft->fillScreen(COLOR_BLACK);
+  tft->setRotation(3);
 }
 
 int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* resultStr) {

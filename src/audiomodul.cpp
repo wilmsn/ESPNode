@@ -240,7 +240,11 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-      // TODO: Übergabe an Audio
+#if defined(USE_AUDIO_LIB)
+      audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
+#elif defined(USE_ESP8266AUDIO_LIB)
+//      out->SetGain(((float)audio_vol)/100.0);
+#endif
       retval = true;
     }
     if ( keyword == String("audio_tre") ) {
@@ -251,7 +255,11 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-      // TODO: Übergabe an Audio
+#if defined(USE_AUDIO_LIB)
+      audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
+#elif defined(USE_ESP8266AUDIO_LIB)
+//      out->SetGain(((float)audio_vol)/100.0);
+#endif
       retval = true;
     }
     // Set for radio

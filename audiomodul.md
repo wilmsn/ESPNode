@@ -1,5 +1,38 @@
-#Webradio und Medienplayer
+#Audiomodul
+##Bedienung
+###Allgemein:
+Das Modul startet im Zustand ausgeshaltet- Das Einschalten erfolgt durch Drehung des Lautstärkereglers in Richtung "lauter", Ausschalten erfolgt durch den Lautstärkeregler durch drehen in Richtung "leiser".
+Durch Druck auf den Lautstärkeregler sind weitere Funktionen verfügbar. Dabei wird zwishen kurzem Druck (kleiner 1 Sekunde) und lange Druck (größer 1 Sekunde) unterschieden. Wird der Grundzustand verlassen und ca. 1 Minute nichts gemacht wird automatisch in den Grundzustand zurückgeschaltet.
 
+###Modus
+Durch einen langen Druck wird der Modus umgeschaltet zwischen Radio, Mediaplayer, Bluetoothlautsprecher und Einstellungen.
+
+1* kurz drücken: Aktiviert den Modus.
+
+###Einstellungen
+Grundzustand: Höhen einstellen
+
+1* kurz drücken: Bässe einstellen
+
+2* kurz drücken: Beenden 
+
+###Radio
+Grundzustand: Der aktuelle Sender wird angezeigt.
+
+1* kurz drücken: Senderwahl. Durch kurzen Druck auf den Lautstärkeregler wird auf Senderwahl umgeschaltet. Durch drehen wird der Sender gewechselt.
+
+2* kurz drücken: Rückkehr in den Grundzustand
+ 
+##Mediaplayer
+Gndzustand: Wiedergabe, das aktuelle Stück wird angezeigt.
+
+1* kurz drücken: Albenauswahl. Durch drehen wird das gewünschte Album ausgewählt.
+
+2* kurz drücken: Titelwahl. Durch drehen wird der gewünshte Titel bzw. alle Titel ausgewählt
+
+3* kurz drücken: Auswahl bestätigt => Grundzustand.
+
+##Einschränkungen
 Das Webradio und/oder der Medienplayer wurden von mir auf einem ESP32-S3 konzipiert und getestet. Alle anderen ESPs sind ungetestet und werden auch teilweise wegen der verwendeten Bibliotheken nicht funktionieren.
 
 ##Bauteile und deren Verbindung beim ESP32S3:
