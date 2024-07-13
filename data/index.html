@@ -8,7 +8,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.998audio (06/2024)";
+var htmlversion = "0.998audio V1 (07/2024)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -102,6 +102,12 @@ $(document).ready(function(){
   $("#slider2div").hide();
   $("#slider3div").hide();
   $("#audio_div").hide();
+  $("#audio_radio_txt").hide();
+  $("#audio_radio_but").hide();
+  $("#audio_media_txt").hide();
+  $("#audio_media_but").hide();
+  $("#audio_speak_txt").hide();
+  $("#audio_speak_but").hide();
   $("#audio_radio_settings").hide();
   $("#audio_media_settings").hide();
   $("#audio_speak_settings").hide();
@@ -470,12 +476,24 @@ function prozessJS( key, val ) {
         $("#audio_settings").hide();
       }
     break;
-    case "audio_radio":
+    case "audio_radio_show":
       if ( val > 0.5 ) {
+        $("#audio_radio_txt").show();
+        $("#audio_radio_but").show();
+      }
+    break;
+    case "audio_radio":
+    if ( val > 0.5 ) {
         audio_mediaswitch();
         $("#audio_radio_but").css("color","black").css("background-color","yellow");
         $("#audio_radio_but").html("ein");
         $("#audio_radio_settings").show();
+      }
+    break;
+    case "audio_media_show":
+      if ( val > 0.5 ) {
+        $("#audio_media_txt").show();
+        $("#audio_media_but").show();
       }
     break;
     case "audio_media":
@@ -484,6 +502,12 @@ function prozessJS( key, val ) {
         $("#audio_media_but").css("color","black").css("background-color","yellow");
         $("#audio_media_but").html("ein");
         $("#audio_media_settings").show();
+      }
+    break;
+    case "audio_speak_show":
+      if ( val > 0.5 ) {
+        $("#audio_speak_txt").show();
+        $("#audio_speak_but").show();
       }
     break;
     case "audio_speak":
@@ -1267,24 +1291,24 @@ function audio_radio_fill_sel() {
         <hr>
       </div>
       <div id="audio_radio" class="audio_sw_div">
-          Radio<br>
+        <p id="audio_radio_txt">Radio</p>
         <button id='audio_radio_but' class='sw_button'>
           aus
         </button>
       </div>
       <div id="audio_media" class="audio_sw_div">
-        Media<br>
+        <p id="audio_media_txt">Media</p>
         <button id='audio_media_but' class='sw_button'>
           aus
         </button>
       </div>
       <div id="audio_speak" class="audio_sw_div">
-        BT<br>
+        <p id="audio_speak_txt">BT</p>
         <button id='audio_speak_but' class='sw_button'>
           aus
         </button>
       </div>
-      <br>
+      <hr>
       <div class="slidecontainer">
       <p style="margin-top: 2cm;">Lautstärke</p>
       <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>

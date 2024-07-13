@@ -309,6 +309,7 @@ input[type="range"]{
   float: left;
   text-align: center;
   width: 33%;
+  height: 120px;
 }
 
 .slidecontainer {

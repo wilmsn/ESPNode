@@ -13,7 +13,7 @@ typedef struct {
 
 #define LONG_PRESSED_AFTER_MS     1000
 #define SHORT_PRESSED_AFTER_MS    20
-#define ROTARY_MAXLEVEL           2
+#define ROTARY_MAXLEVEL           5
 
 
 class RotaryModul {
@@ -26,8 +26,11 @@ public:
     uint8_t changed();
     uint8_t curLevel();
     uint8_t curValue();
-    void setLevel(uint8_t level);
-    void setValue(uint8_t value);
+    uint8_t curValue(uint8_t _level);
+    void setMaxLevel(uint8_t _level);
+    void setLevel(uint8_t _level);
+    void setValue(uint8_t _value);
+    void setIsChanged(uint8_t _changed);
     void loop(time_t now);
 
 
@@ -36,12 +39,14 @@ private:
     level_t level[ROTARY_MAXLEVEL+1];
 /// @brief Das aktuelle Level des Rotaryencoders
     uint8_t cur_level = 0;
+/// @brief Der maximale Level des Rotaryencoders
+    uint8_t max_level = 0;
 /// @brief Zeitmessung Rotary Schalter
     unsigned long millis_Button_pressed = 0;
 /// @brief Letzter Zustand Rotary Schalter
     bool wasButtonDown = false;
     uint8_t isChanged = 0;
-    time_t timeout_cnt;
+//    time_t timeout_cnt;
 };
 
 #endif

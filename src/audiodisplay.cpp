@@ -29,7 +29,7 @@ void AudioDisplay::show_ip(const char* myip) {
 
 void AudioDisplay::show_bps(const char* mybps) {
   tft->setTextColor(COLOR_RED);  
-  tft->setTextSize(1);
+  tft->setTextSize(2);
   tft->setCursor(75, 205);
   tft->println(mybps);
 }
@@ -132,29 +132,36 @@ void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t co
   tft->println(mystr);
 }
 
-void AudioDisplay::show_modus(uint8_t modus) {
+void AudioDisplay::show_modus(const char* _modusStr) {
+  String modusStr = String(_modusStr);
   clear();
   tft->setTextSize(3);
   tft->setCursor(TEXT_UNDER_BMP_X, TEXT_UNDER_BMP_Y);
-  switch(modus) {
-    case 0:
-      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+  if (modusStr == "Off") {
+      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
       tft->setTextColor(COLOR_RED);  
-      tft->println("Radio");
-    break;
-    case 1:
+      tft->println(modusStr);
+  }
+  if (modusStr == "Radio") {
+      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+      tft->setTextColor(COLOR_ORANGE);  
+      tft->println(modusStr);
+  }
+  if (modusStr == "Media") {
       tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
-      tft->println("Media");
       tft->setTextColor(COLOR_GREEN);  
-    break;
-    case 2:
+      tft->println(modusStr);
+  }
+  if (modusStr == "Speaker") {
       tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
-      tft->println("Speaker");
       tft->setTextColor(COLOR_BLUE);  
-    break;
-    default:
-    break;
-  }  
+      tft->println(modusStr);
+  }
+  if (modusStr == "Settings") {
+      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
+      tft->setTextColor(COLOR_RED);  
+      tft->println(modusStr);
+  }
 }
 
 #ifdef DISPLAY_GC9A01A

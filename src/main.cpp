@@ -778,6 +778,22 @@ void setup() {
 #if defined(MQTT)
   mqtt_setup();
 #endif
+#ifdef ESP32
+#if defined(DEBUG_SERIAL)
+  Serial.print("ESP32: (Cores Model Revision) ");
+  Serial.print(ESP.getChipCores());
+  Serial.print(" ");
+  Serial.print(ESP.getChipModel());
+  Serial.print(" ");
+  Serial.println(ESP.getChipRevision());
+  Serial.print("Gesamt PSRAM: ");
+  Serial.println(ESP.getPsramSize());
+  Serial.print("Free PSRAM: ");
+  Serial.println(ESP.getFreePsram());
+  Serial.print("Cycle Count: ");
+  Serial.println(ESP.getCycleCount());
+#endif
+#endif
   write2log(LOG_SYSTEM,1, "Setup Ende");
 }
 

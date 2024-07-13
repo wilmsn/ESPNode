@@ -72,6 +72,10 @@ uint8_t RotaryModul::changed() {
   return retval;
 }
 
+void RotaryModul::setIsChanged(uint8_t _changed) {
+  isChanged = _changed;
+}
+
 uint8_t RotaryModul::curLevel() {
   return cur_level;
 }
@@ -80,10 +84,22 @@ uint8_t RotaryModul::curValue() {
   return level[cur_level].cur;
 }
 
+uint8_t RotaryModul::curValue(uint8_t _level) {
+  return level[_level].cur;
+}
+
+void RotaryModul::setMaxLevel(uint8_t _level) {
+  max_level = _level;
+}
+
 void RotaryModul::setLevel(uint8_t _level) {
-  cur_level = _level;
-  rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
-  rotary.setEncoderValue(level[cur_level].cur); //preset the value to current gain
+  if (_level <= max_level) {
+    cur_level = _level;
+  } else {
+    cur_level = 0;
+  }
+  rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false);
+  rotary.setEncoderValue(level[cur_level].cur);
 }
 
 void RotaryModul::setValue(uint8_t _value) {
@@ -93,12 +109,12 @@ void RotaryModul::setValue(uint8_t _value) {
 
 void RotaryModul::loop(time_t now) {
   // 0. Check reset of level
-  if (cur_level != 0) {
-    if (now - timeout_cnt > 60) {
-      setLevel(0);
-      isChanged = 2;
-    }
-  }
+//  if (cur_level != 0) {
+//    if (now - timeout_cnt > 60) {
+//      setLevel(0);
+//      isChanged = 2;
+//    }
+//  }
   // 1. Position changed
   if (rotary.encoderChanged()) {
     level[cur_level].cur = rotary.readEncoder();
@@ -123,7 +139,7 @@ void RotaryModul::loop(time_t now) {
 //      short click => Change Level
         if ( cur_level < ROTARY_MAXLEVEL) {
           setLevel(cur_level+1);
-          if (cur_level != 0) timeout_cnt = now;
+//          if (cur_level != 0) timeout_cnt = now;
         } else {
           setLevel(0);
         }

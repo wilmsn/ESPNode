@@ -282,6 +282,8 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define DISPLAY_GC9A01A
 #define USE_MEDIAPLAYER
+#define USE_AUDIO_RADIO
+#define USE_AUDIO_MEDIA
 
 #include "audiomodul.h"
 #define MAGICNO                  0
