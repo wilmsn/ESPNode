@@ -126,6 +126,7 @@ private:
  
     void audio_media_on();
 
+    void audio_media_sel_file(File& dir, File& file, uint8_t count);
 //    void audio_media_file_from_dir(File mydir, File *myfile, uint8_t fileNo);
     File audio_media_file_from_dir(File mydir, uint8_t fileNo);
 

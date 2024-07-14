@@ -20,13 +20,15 @@ public:
   void show_info2(const char* myinfo);
   void show_time(bool big);
   void show_modus(const char* modusStr);
+  void show_jpg(String& jpgFile);
+  void select(const char* s0, const char* s1, const char* s2);
   void select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4);
 
 private:
   void fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour);
   int splitStr(const char* inStr, int startPos, int maxLen, char* resultStr);
   void show_text(const char* mytext, int posx, int posy, uint16_t color);
-  
+  void show_text_s2(const char* mytext, int posx, int posy, uint16_t color);
   Adafruit_GC9A01A* tft;
 };
 

@@ -76,6 +76,13 @@ void AudioDisplay::show_info2(const char* myinfo) {
   show_text(myinfo, 25, 130, COLOR_GREEN);
 }
 
+void AudioDisplay::select(const char* s0, const char* s1, const char* s2) {
+  clear();
+  if (strlen(s0) > 0) show_text_s2(s0,40,50,COLOR_LIGHTGREY);
+  if (strlen(s1) > 0) show_text_s2(s1,10,110,COLOR_ORANGE);
+  if (strlen(s2) > 0) show_text_s2(s2,40,170,COLOR_LIGHTGREY);
+}
+
 void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
   clear();
   tft->setTextSize(2);
@@ -104,6 +111,26 @@ void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const 
     tft->setCursor(70, 180);
     tft->println(s4);
   }
+}
+
+void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t color) {
+  int mypos = 0;
+  int mytxtlength = strlen(mytext);
+  int chars_per_line;
+  int pixel_to_next_line;
+  tft->setTextColor(color);  
+  chars_per_line = 18;
+  tft->setTextSize(2);
+  pixel_to_next_line = 20;
+  char mystr[chars_per_line+1];
+  mypos = splitStr(mytext,mypos,chars_per_line,mystr);
+  if (mypos < strlen(mytext)) {
+    tft->setCursor(posx, posy);
+    tft->println(mystr);
+    mypos = splitStr(mytext,mypos,chars_per_line,mystr);
+  }
+  tft->setCursor(posx, posy + pixel_to_next_line);
+  tft->println(mystr);
 }
 
 void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t color) {
@@ -162,6 +189,10 @@ void AudioDisplay::show_modus(const char* _modusStr) {
       tft->setTextColor(COLOR_RED);  
       tft->println(modusStr);
   }
+}
+
+void AudioDisplay::show_jpg(String& jpgFile) {
+// todo
 }
 
 #ifdef DISPLAY_GC9A01A
@@ -233,6 +264,7 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
     y1 = y3;
   }
 }
+
 
 
 #endif

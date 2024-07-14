@@ -69,12 +69,12 @@ extern AsyncWebSocket ws;
 
 /// @brief Instance for the rotary module
 RotaryModul      rotarymodul;
+/// @brief Instance for displayhandling
+AudioDisplay     audiodisplay;
 /// @brief Instance for ohysical TFT Display
 #ifdef DISPLAY_GC9A01A
 Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
 #endif
-/// @brief Instance for displayhandling
-AudioDisplay     audiodisplay;
 
 /// @brief Variable zur Steuerung der Anzeige Steaminhalte im Display
 bool radioPlayMode = false;
@@ -147,8 +147,8 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   }
   file.close();
   root.close();
-  audio_media_cur_dir = 1;
-  audio_media_cur_file = 1;
+//  audio_media_cur_dir = 1;
+//  audio_media_cur_file = 1;
 #endif
   audio_set_modus(Off);
   last_modus = Radio;
@@ -524,6 +524,7 @@ void AudioModul::loop(time_t now) {
       if ( timeout_set && now - timeout_start > TIMEOUT) {
         rotarymodul.setLevel(0);
         timeout_set = false;
+        audio_media_show();
       }
       switch (rotarymodul.changed()) {
         case 1:
@@ -553,6 +554,7 @@ void AudioModul::loop(time_t now) {
             // Wiedergabe aktuellen Song anzeigen
               audio_media_play(audio_media_cur_dir,audio_media_cur_file);
               audio_media_show();
+              timeout_set = false;
             break;
             case 1:
             // Albumauswahl initiieren und anzeigen
@@ -649,12 +651,69 @@ void AudioModul::loop(time_t now) {
 ************************************************************************************/
 
 void audio_info(const char *info){
-    write2log(LOG_MODULE,2,"Info:", info);
+  char str2[30];
+  int j=0;
+  bool tz_found = false;
+  write2log(LOG_MODULE,2,"Info:", info);
+  for (int i=0; i<strlen(info) && i<40; i++) {
+    if (! tz_found) {
+      if (info[i] == ':') {
+        tz_found = true;
+        i++;
+        i++;
+      }
+    }
+    if(tz_found && j<30) {
+      str2[j] = info[i];
+      j++;
+    }
+  }
+  str2[j]=0;
+  if (info[0] == 'B' && info[1] == 'i' && info[3] == 'R') {
+    if (strlen(str2) == 6) {
+      str2[3]=' ';
+      str2[4]='K';
+      str2[5]='B';
+      str2[6]='s';
+      str2[7]=0;
+      if (mediaPlayMode) audiodisplay.show_bps(str2);
+    }
+    if (strlen(str2) == 5) {
+      str2[2]=' ';
+      str2[3]='K';
+      str2[4]='B';
+      str2[5]='s';
+      str2[6]=0;
+      if (mediaPlayMode) audiodisplay.show_bps(str2);
+    }
+  }
 }
 
 void audio_id3data(const char *info){
-    write2log(LOG_MODULE,2,"MP3 data:", info);
-    if (mediaPlayMode) audiodisplay.show_info2(info);   
+  char str2[30];
+  int j=0;
+  bool tz_found = false;
+  write2log(LOG_MODULE,2,"MP3 data:", info);
+  for (int i=0; i<strlen(info) && i<40; i++) {
+    if (! tz_found) {
+      if (info[i] == ':') {
+        tz_found = true;
+        i++;
+        i++;
+      }
+    }
+    if(tz_found && j<30) {
+      str2[j] = info[i];
+      j++;
+    }
+  }
+  str2[j]=0;
+  if (info[0] == 'A' && info[1] == 'r' && info[2] == 't') {
+    if (mediaPlayMode) audiodisplay.show_info1(str2);
+  }
+  if (info[0] == 'T' && info[1] == 'i' && info[2] == 't') {
+    if (mediaPlayMode) audiodisplay.show_info2(str2);
+  }
 }
 
 void audio_showstreamtitle(const char *info){
@@ -668,15 +727,16 @@ void audio_showstreamtitle(const char *info){
 }
 
 void audio_bitrate(const char *info) {
-    char bpsInfo[8];
+    char bpsInfo[9];
     bpsInfo[0] = info[0];
     bpsInfo[1] = info[1];
     bpsInfo[2] = info[2];
-    bpsInfo[3] = 'K';
-    bpsInfo[4] = 'B';
-    bpsInfo[5] = 'p';
-    bpsInfo[6] = 's';
-    bpsInfo[7] = 0;
+    bpsInfo[3] = ' ';
+    bpsInfo[4] = 'K';
+    bpsInfo[5] = 'B';
+    bpsInfo[6] = 'p';
+    bpsInfo[7] = 's';
+    bpsInfo[8] = 0;
     write2log(LOG_MODULE,2,"Bitrate:", info);
     if (radioPlayMode || mediaPlayMode) audiodisplay.show_bps(bpsInfo);
     html_json = "{\"audiomsg4\":\"";
@@ -841,21 +901,28 @@ void AudioModul::audio_media_on() {
 void AudioModul::audio_media_off() {
 }
 
+void AudioModul::audio_media_sel_file(File& dir, File& file, uint8_t count) {
+  for (int i=0; i<=count; i++) {
+        file = dir.openNextFile();
+        if (file) {
+          Serial.print("audio_media_sel_file: ");
+          Serial.println(file.name());
+        }
+  }
+}
+
 void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
   String fileName;
-  uint8_t tmp_dir;
-  uint8_t tmp_file;
   File root;
   File dir;
   File file;
   root = SD.open("/");
   if (root) {
-    for (int i=0; i<=_dirNo; i++) dir = root.openNextFile();
+    audio_media_sel_file(root, dir, _dirNo);
     if (dir) {
-      fileName = String(dir.name());
-      for (int i=0; i<=_fileNo; i++) file = dir.openNextFile();
+      audio_media_sel_file(dir, file, _fileNo);
       if (file) {
-        fileName += String("/") + String(file.name());
+        fileName = String(dir.name()) + String("/") + String(file.name());
       }
       file.close();
     }
@@ -867,137 +934,90 @@ void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
 }
 
 void AudioModul::audio_media_select_dir() {
-  Serial.print("audio_media_select_dir => cur_dir: ");
-  Serial.println(audio_media_cur_dir);
+  String albumpic;
   String obj[5];
   for(int i=0;i<5;i++) obj[i]="";
   File root;
   File dir;
   root = SD.open("/");
-  Serial.print("Anzahl Dirs: ");
-  Serial.println(audio_media_num_dir);
-  Serial.println(">>>>>>>FF>>>>>>>>>>>");
   if (root.isDirectory()) {
     if (audio_media_cur_dir > 2) {
-      for (int i=0; i<=audio_media_cur_dir-2; i++) {
-        dir = root.openNextFile();
-        if (dir.isDirectory()) {
-          Serial.print("audio_media_file_from_dir: ");
-          Serial.println(dir.name());
-        }
-      }
+      audio_media_sel_file(root, dir,audio_media_cur_dir-3);
     }
-  Serial.println(">>>>>>Stop>>>>>>>>>>");
+  }
   if (audio_media_cur_dir > 1) { 
     dir=root.openNextFile();
     if (dir) obj[0]=dir.name();
   }
-  Serial.println(obj[0]);
   if (audio_media_cur_dir > 0) { 
     dir=root.openNextFile();
     if (dir) obj[1]=dir.name();
   }
-  Serial.println(obj[1]);
   dir=root.openNextFile();
   if (dir) obj[2]=dir.name();
-  Serial.println(obj[2]);
   if (audio_media_cur_dir <= audio_media_num_dir -1) {
     dir=root.openNextFile();
     if (dir) obj[3]=dir.name();
   }
-  Serial.println(obj[3]);
   if (audio_media_cur_dir <= audio_media_num_dir -2) {
     dir=root.openNextFile();
     if (dir) obj[4]=dir.name();
   }
-  Serial.println(obj[4]);
-  Serial.println("----------------------");
+  albumpic = String("/")+String(dir.name())+String("/folder.jpg");
   dir.close();
   root.close();
-  audiodisplay.select(obj[0].c_str(),obj[1].c_str(),obj[2].c_str(),obj[3].c_str(),obj[4].c_str());
-  }
+  audiodisplay.select(obj[1].c_str(),obj[2].c_str(),obj[3].c_str());
+//  audiodisplay.show_jpg(albumpic);
 }
 
 void AudioModul::audio_media_select_file() {
-  Serial.print("audio_media_select_file => cur_dir: ");
-  Serial.println(audio_media_cur_dir);
-  Serial.print("audio_media_select_file => cur_file: ");
-  Serial.println(audio_media_cur_file);
   String obj[5];
   for(int i=0;i<5;i++) obj[i]="";
   File root;
   File dir;
   File file;
   root = SD.open("/");
-  Serial.print("Anzahl Dirs: ");
-  Serial.println(audio_media_num_dir);
-  Serial.println(">>>>>>>FF>Dir>>>>>>>>>>");
   if (root.isDirectory()) {
-    for (int i=0; i<=audio_media_cur_dir; i++) {
-      dir = root.openNextFile();
-      if (dir.isDirectory()) {
-        Serial.print("audio_media_file_from_file (dir): ");
-        Serial.println(dir.name());
-      }
-    }
+    audio_media_sel_file(root, dir, audio_media_cur_dir);
   }
-  Serial.println(">>>>>>Stop>Dir>>>>>>>>>");
   audio_media_num_file = 0;
   while (dir.openNextFile()) audio_media_num_file++;
   dir.rewindDirectory();
-  Serial.print("Anzahl Files: ");
-  Serial.println(audio_media_num_file);
-  Serial.println(">>>>>>>FF>File>>>>>>>>>>");
   if (dir.isDirectory()) {
     if (audio_media_cur_file > 2) {
-      for (int i=0; i<=audio_media_cur_file-3; i++) {
-        file = dir.openNextFile();
-        if (file) {
-          Serial.print("audio_media_file_from_file (file): ");
-          Serial.println(file.name());
-        }
-      }
+      audio_media_sel_file(dir, file, audio_media_cur_file-3);
     }
   }
-  Serial.println(">>>>>>Stop>File>>>>>>>>>");
   if (audio_media_cur_file > 1) { 
     file=dir.openNextFile();
     if (file) obj[0]=file.name();
   }
-  Serial.println(obj[0]);
   if (audio_media_cur_file > 0) { 
     file=dir.openNextFile();
     if (file) obj[1]=file.name();
   }
-  Serial.println(obj[1]);
   file=dir.openNextFile();
   if (file) obj[2]=file.name();
-  Serial.println(obj[2]);
-  if (audio_media_cur_file <= audio_media_num_file -1) {
+  if (audio_media_cur_file <= audio_media_num_file -2) {
     file=dir.openNextFile();
     if (file) obj[3]=file.name();
   }
-  Serial.println(obj[3]);
-  if (audio_media_cur_file <= audio_media_num_file -2) {
+  if (audio_media_cur_file <= audio_media_num_file -3) {
     file=dir.openNextFile();
     if (file) obj[4]=file.name();
   }
-  Serial.println(obj[4]);
-  Serial.println("----------------------");
+  rotarymodul.initLevel(2,0,audio_media_cur_file,audio_media_num_file-1);
   file.close();
   dir.close();
   root.close();
-  audiodisplay.select(obj[0].c_str(),obj[1].c_str(),obj[2].c_str(),obj[3].c_str(),obj[4].c_str());
-
+  audiodisplay.select(obj[1].c_str(),obj[2].c_str(),obj[3].c_str());
 }
 
 void AudioModul::audio_media_show() {
-  Serial.println("In audio_media_show");
   audiodisplay.clear();
   audiodisplay.show_ip(WiFi.localIP().toString().c_str());
   audiodisplay.show_vol(audio_vol);
   audiodisplay.show_time(false);
-  audiodisplay.show_info1("Mediaplayer");
 }
 
 #endif
