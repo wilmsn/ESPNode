@@ -114,20 +114,13 @@ public:
     String& show_value();
 
     /// @brief Gibt json formatierte Informationen für die Webseite aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
+    /// @brief Im Gegensatz zu ""
     /// @return Einen json Teilstring als String.
-    String& info_html();
+    //String& info_html();
 
     /// @brief Gibt json formatierte Informationen für MQTT Übertragung aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
     /// @return Einen json Teilstring als String.
     String& info_mqtt();
-
-    /// @brief Gibt json formatierte Sensorinformationen für die Webseite aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
-    /// @return Einen json Teilstring als String.
-    //String& sensorinfo_html();
-
-    /// @brief Gibt json formatierte Sensorinformationen für MQTT Übertragung aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
-    /// @return Einen json Teilstring als String.
-    //String& sensorinfo_mqtt();
 
     /// @brief Setzt die changed Variablen auf einen Wert.
     /// @param val Der zu setztende Wert.

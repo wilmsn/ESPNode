@@ -8,7 +8,7 @@ void initWebSocket() {
 
 // Kommentiert in main.h
 const char *mk_wifishow() {
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print("Generiere wifishow ... ");
 #endif
   html_json = "{";
@@ -97,7 +97,7 @@ const char *mk_wifishow() {
   }
   html_json += "}";
   WiFi.scanDelete();
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print(" ok (");
   Serial.print(html_json.length());
   Serial.println(" byte)");
@@ -108,12 +108,12 @@ const char *mk_wifishow() {
 
 // Kommentiert in main.h
 const char *mk_wifiscan() {
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print("Generiere wifiscan ... ");
 #endif
   html_json = "{ \"Wifi\": \"Scan started\" }";
   WiFi.scanNetworks(true, false);
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print(" ok (");
   Serial.print(html_json.length());
   Serial.println(" byte)");
@@ -133,7 +133,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (pos2 > 0) pos = pos2;
     String cmd = mycmd.substring(0, pos);
     String value = mycmd.substring(pos + 1);
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
     Serial.print("Websocket cmd: ");
     Serial.print(cmd);
     Serial.print(" value: ");
@@ -147,7 +147,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                 void *arg, uint8_t *data, size_t len) {
   switch (type) {
-    case WS_EVT_CONNECT:
+    case WS_EVT_CONNECT: {
       html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
       html_json += ",\"wifi_ssid\":\"";
       html_json += wifi_ssid;
@@ -233,38 +233,173 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
+// Daten für Sysinfo
+// Teil 1
+      uint32_t free;
+      uint32_t max;
+      uint8_t frag;
+#ifdef ESP32
+      free = ESP.getFreeHeap();
+      max = ESP.getMaxAllocHeap();
+#else
+      ESP.getHeapStats(&free, &max, &frag);
+#endif
+      html_json = "{";
+#ifdef ESP32
+      html_json +=  "\"Platform\":\"";
+      html_json +=  ESP.getChipModel();
+      html_json += "\"";
+#else
+      html_json += "\"Platform\":\"ESP8266\"";
+#endif
+#ifdef ESP32
+      html_json += ",\"Cores\":";
+      html_json += String(ESP.getChipCores());
+      html_json += ",\"PSRamSize\":\"";
+      html_json += String((float)ESP.getPsramSize()/1024.0);
+      html_json += " KB\"";
+      html_json += ",\"PsRamFree\":\"";
+      html_json += String((float)ESP.getFreePsram()/1024.0);
+      html_json += " KB\"";
+#else
+      html_json += ",\"Cores\":\"1\"";
+#endif
+      html_json += ",\"Hostname\":\"";
+#ifdef ESP32
+      html_json += HOSTNAME;
+#else
+      html_json += WiFi.hostname();
+#endif
+      html_json += "\"";
+      html_json += ",\"CpuFreq\":\"";
+      html_json += String((int)(F_CPU / 1000000));
+      html_json += " Mhz\"";
+      html_json += ",\"FlashSize\":\"";
+      html_json += String((int)(ESP.getFlashChipSize() / 1024 / 1024));
+      html_json += " MB \"";
+      html_json += ",\"FlashFreq\":\"";
+      html_json += String((int)(ESP.getFlashChipSpeed() / 1000000));
+      html_json += " Mhz\"";
+      html_json += ",\"Sketchsize\":\"";
+      html_json += String(ESP.getSketchSize() / 1024.0);
+      html_json += " kB\"";
+      html_json += ",\"Freespace\":\"";
+      html_json += String(ESP.getFreeSketchSpace() / 1024.0);
+      html_json += " kB\"";
+      html_json += ",\"Heap_free\":\"";
+      html_json += String((float)free / 1024.0);
+      html_json += " kB\"";
+      html_json += ",\"Heap_max\":\"";
+      html_json += String((float)max / 1024.0);
+      html_json += " kB\"";
+      html_json += ",\"Heap_frag\":\"";
+#ifdef ESP32
+      html_json += "n.a.\"";
+#else
+      html_json += String((float)frag / 1024.0);
+      html_json += "%\"";
+#endif
+      html_json += ",\"ResetReason\":\"";
+#ifdef ESP32
+      char tmp1[20];
+      html_json += getResetReason(tmp1);
+#else
+      html_json += ESP.getResetReason();
+#endif
+      html_json += "\"";
+      html_json += ",\"Vcc\":\"";
+      getVcc(html_json);
+      html_json += "\"";
+      html_json += ",\"UpTime\":\"";
+      html_json += uptime.uptimestr();
+      html_json += "\"";
+      html_json += "}";
+      write2log(LOG_WEB,1,html_json.c_str());
+      ws.textAll(html_json);
 
-#if defined(MODULE1)
-      html_json = module1.html_stat_json();
+// Teil 2
+      html_json = "{";
+      html_json += "\"IP\":\"";
+      html_json += WiFi.localIP().toString();
+      html_json += "\"";
+      html_json += ",\"SubNetMask\":\"";
+      html_json += WiFi.subnetMask().toString();
+      html_json += "\"";
+      html_json += ",\"GW-IP\":\"";
+      html_json += WiFi.gatewayIP().toString();
+      html_json += "\"";
+      html_json += ",\"DnsIP\":\"";
+      html_json += WiFi.dnsIP().toString();
+      html_json += "\"";
+      html_json += ",\"SSID\":\"";
+      html_json += WiFi.SSID();
+      html_json += " (";
+      html_json += String(rssi);
+      html_json += "dBm / ";
+      html_json += String(rssi_quality);
+      html_json += "%)\"";
+      html_json += ",\"Channel\":\"";
+      html_json += String(WiFi.channel());
+      html_json += "\"";
+      html_json += ",\"BSSID\":\"";
+      html_json += WiFi.BSSIDstr();
+      html_json += "\"";
+      html_json += ",\"MAC\":\"";
+      html_json += WiFi.macAddress();
+      html_json += "\"";
+      html_json += ",\"IdeVer\":\"";
+      html_json += String(ARDUINO);
+      html_json += "\"";
+#ifdef ESP32
+      html_json += ",\"CoreVer\":\"unknown\"";
+#else
+      html_json += ",\"CoreVer\":\"";
+      html_json += ESP.getCoreVersion();
+      html_json += "\"";
+#endif
+      html_json += ",\"SdkVer\":\"";
+      html_json += ESP.getSdkVersion();
+      html_json += "\"";
+      html_json += ",\"SW\":\"";
+      html_json += SWVERSION;
+      html_json += " (";
+      html_json += __DATE__;
+      html_json += ")\"";
+      html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
+// Teil 3
+      html_json = "{";
+#ifdef USE_SDCARD
+      html_json += "\"sdcard_enable\":1";
+      html_json += ",\"sdcard_size\":"+String(sd_cardsize);
+      html_json += ",\"sdcard_used\":"+String(sd_usedbytes);
+#else
+      html_json += "\"sdcard_enable\":0";
 #endif
-#if defined(MODULE2)
-      html_json = module2.html_stat_json();
+#if defined(MQTT)  
+      html_json += ",\"mqttserver\":\"";
+      html_json += mqtt_server;
+      html_json += "\",\"mqttclient\":\"";
+      html_json += mqtt_client;
+      html_json += "\",\"mqtttopicp2\":\"";
+      html_json += mqtt_topicP2;
+      html_json += "\"";
+#endif
+#if defined(RF24GW)  
+      html_json += ",\"RF24HUB-Server\":\"";
+      html_json += RF24GW_HUB_SERVER;
+      html_json += "\",\"RF24HUB-Port\":";
+      html_json += String(RF24GW_HUB_UDP_PORTNO);
+      html_json += ",\"RF24GW-Port\":";
+      html_json += String(RF24GW_GW_UDP_PORTNO);
+      html_json += ",\"RF24GW-No\":";
+      html_json += String(RF24GW_NO);  
+#endif
+      html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-#endif
-#if defined(MODULE3)
-      html_json = module3.html_stat_json();
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
-#endif
-#if defined(MODULE4)
-      html_json = module4.html_stat_json();
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
-#endif
-#if defined(MODULE5)
-      html_json = module5.html_stat_json();
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
-#endif
-#if defined(MODULE6)
-      html_json = module6.html_stat_json();
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
-#endif
-
+    }
     break;  //    case WS_EVT_CONNECT
 
     case WS_EVT_DISCONNECT:
@@ -286,7 +421,7 @@ const char *mk_cmd(AsyncWebServerRequest *request) {
   html_json = "";
   cmd_no = 0;
   for (int argNo = 0; argNo < args; argNo++) {
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
     Serial.print("prozess_cmd: ");
     Serial.print(request->argName(argNo));
     Serial.print(": ");
@@ -317,12 +452,12 @@ void setup_webserver() {
                 { request->send(200, "application/json", mk_wifishow()); });
   httpServer.on("/cmd", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_cmd(request)); });
-  httpServer.on("/sysinfo1", HTTP_GET, [](AsyncWebServerRequest *request)
+/*  httpServer.on("/sysinfo1", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_sysinfo1(html_json)); });
   httpServer.on("/sysinfo2", HTTP_GET, [](AsyncWebServerRequest *request)
                 { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
   httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); });
+                { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); }); */
   // This serves all static web content
   httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
   ElegantOTA.begin(&httpServer);    // Start AsyncElegantOTA

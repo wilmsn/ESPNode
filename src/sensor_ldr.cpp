@@ -5,13 +5,11 @@
 
 void Sensor_LDR::begin(const char* html_place, const char* label) {
   Base_Generic::begin(html_place, label);
-  obj_info_html = "\"sensorinfo1\":\"Hardware:#LDR an A0\"";
 }
 
 void Sensor_LDR::html_create_json_part(String& json) {
-//  json += ",\"";
-//  json += String(obj_html_place);
-//  json += "\":\"LDR: ---\"";
+  json += ",\"";
+  json += "\"sensorinfo1\":\"Hardware:#LDR an A0\"";
 }
 
 void Sensor_LDR::start_measure(time_t now) {

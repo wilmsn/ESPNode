@@ -7,6 +7,10 @@ WiFiMulti wifiMulti;
 
 #endif
 
+#ifdef USE_FTP
+FTPServer        ftp;
+#endif
+
 #if defined(MODULE1)
 MODULE1_DEFINITION
 #endif
@@ -153,7 +157,11 @@ bool do_wifi_con(void) {
 //  write2log(LOG_SYSTEM, 4, "Try to connect to ", wifi_ssid1.c_str(), " with password ", wifi_pass1.c_str());
   WiFi.mode(WIFI_STA);
 #ifdef ESP32
+// Wichtig fuer ESP32S3, sonst wird der Hostname nicht gesetzt!
+  WiFi.mode(WIFI_AP);
   WiFi.setHostname(HOSTNAME);
+  WiFi.mode(WIFI_STA);
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
 #ifdef USE_WIFIMULTI  
   wifiMulti.addAP(wifi_ssid.c_str(), wifi_pass.c_str());
   wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
@@ -205,7 +213,7 @@ bool do_wifi_con(void) {
 
 
 
-
+/*
 // Kommentiert in main.h
 const char *mk_sysinfo1(String& info_str) {
   uint32_t free;
@@ -217,7 +225,7 @@ const char *mk_sysinfo1(String& info_str) {
 #else
   ESP.getHeapStats(&free, &max, &frag);
 #endif
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.println("Generiere sysinfo1 ... ");
 #endif
   info_str = "{";
@@ -291,19 +299,19 @@ const char *mk_sysinfo1(String& info_str) {
   info_str += "\"";
   info_str += "}";
   write2log(LOG_WEB,1,info_str.c_str());
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print("Sysinfo1: ");
   Serial.print(info_str.length());
   Serial.println(" byte");
 #endif
   return info_str.c_str();
 }
-
+*/
 #ifdef ESP32
 // dokumentiert in main.h
 char *getResetReason(char *tmp)
 {
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.println("Reset Reason roh:");
   Serial.println(rtc_get_reset_reason(0));
 #endif
@@ -311,60 +319,60 @@ char *getResetReason(char *tmp)
   {
   case 1:
     sprintf(tmp, "%s", "POWERON_RESET");
-    break; /**<1,  Vbat power on reset*/
+    break; //1,  Vbat power on reset
   case 3:
     sprintf(tmp, "%s", "SW_RESET");
-    break; /**<3,  Software reset digital core*/
+    break; //3,  Software reset digital core
   case 4:
     sprintf(tmp, "%s", "OWDT_RESET");
-    break; /**<4,  Legacy watch dog reset digital core*/
+    break; //4,  Legacy watch dog reset digital core
   case 5:
     sprintf(tmp, "%s", "DEEPSLEEP_RESET");
-    break; /**<5,  Deep Sleep reset digital core*/
+    break; //5,  Deep Sleep reset digital core
   case 6:
     sprintf(tmp, "%s", "SDIO_RESET");
-    break; /**<6,  Reset by SLC module, reset digital core*/
+    break; //6,  Reset by SLC module, reset digital core
   case 7:
     sprintf(tmp, "%s", "TG0WDT_SYS_RESET");
-    break; /**<7,  Timer Group0 Watch dog reset digital core*/
+    break; //7,  Timer Group0 Watch dog reset digital core
   case 8:
     sprintf(tmp, "%s", "TG1WDT_SYS_RESET");
-    break; /**<8,  Timer Group1 Watch dog reset digital core*/
+    break; //8,  Timer Group1 Watch dog reset digital core
   case 9:
     sprintf(tmp, "%s", "RTCWDT_SYS_RESET");
-    break; /**<9,  RTC Watch dog Reset digital core*/
+    break; //9,  RTC Watch dog Reset digital core
   case 10:
     sprintf(tmp, "%s", "INTRUSION_RESET");
-    break; /**<10, Instrusion tested to reset CPU*/
+    break; //10, Instrusion tested to reset CPU
   case 11:
     sprintf(tmp, "%s", "TGWDT_CPU_RESET");
-    break; /**<11, Time Group reset CPU*/
+    break; //11, Time Group reset CPU
   case 12:
     sprintf(tmp, "%s", "SW_CPU_RESET");
-    break; /**<12, Software reset CPU*/
+    break; //12, Software reset CPU
   case 13:
     sprintf(tmp, "%s", "RTCWDT_CPU_RESET");
-    break; /**<13, RTC Watch dog Reset CPU*/
+    break; //13, RTC Watch dog Reset CPU
   case 14:
     sprintf(tmp, "%s", "EXT_CPU_RESET");
-    break; /**<14, for APP CPU, reseted by PRO CPU*/
+    break; //14, for APP CPU, reseted by PRO CPU
   case 15:
     sprintf(tmp, "%s", "RTCWDT_BROWN_OUT_RESET");
-    break; /**<15, Reset when the vdd voltage is not stable*/
+    break; //15, Reset when the vdd voltage is not stable
   case 16:
     sprintf(tmp, "%s", "RTCWDT_RTC_RESET");
-    break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    break; //16, RTC Watch dog reset digital core and rtc module
   default:
     sprintf(tmp, "%s", "NO_MEAN");
   }
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.println("Reset Reason:");
   Serial.println(tmp);
 #endif
   return tmp;
 }
 #endif
-
+/*
 // Kommentiert in main.h
 const char *mk_sysinfo2(String& info_str) {
   int rssi = WiFi.RSSI();
@@ -378,7 +386,7 @@ const char *mk_sysinfo2(String& info_str) {
       rssi_quality = 0;
     }
   }
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.println("Generiere sysinfo2 ... ");
 #endif
   info_str = "{";
@@ -430,7 +438,7 @@ const char *mk_sysinfo2(String& info_str) {
   info_str += ")\"";
   info_str += "}";
   write2log(LOG_WEB,1,info_str.c_str());
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print("Sysinfo2: ");
   Serial.print(info_str.length());
   Serial.println(" byte");
@@ -440,13 +448,20 @@ const char *mk_sysinfo2(String& info_str) {
 
 // Kommentiert in main.h
 const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.println("Generiere sysinfo3 ... ");
 #endif
   bool stringIsFilled = false;
   info_str = "{";
+#ifdef USE_SDCARD
+  info_str += "\"sdcard_enable\":1";
+  info_str += ",\"sdcard_size\":"+String(sd_cardsize);
+  info_str += ",\"sdcard_used\":"+String(sd_usedbytes);
+#else
+  info_str += "\"sdcard_enable\":0";
+#endif
 #if defined(MQTT)  
-  info_str += "\"mqttserver\":\"";
+  info_str += ",\"mqttserver\":\"";
   info_str += mqtt_server;
   info_str += "\",\"mqttclient\":\"";
   info_str += mqtt_client;
@@ -529,14 +544,14 @@ const char *mk_sysinfo3(String& info_str, bool format_mqtt) {
 #endif
   info_str += "}";
   write2log(LOG_WEB,1,info_str.c_str());
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
   Serial.print("Sysinfo3: ");
   Serial.print(info_str.length());
   Serial.println(" byte");
 #endif
   return info_str.c_str();
 }
-
+*/
 
 void start_AP() {
   write2log(LOG_SYSTEM,1, "Start Accesspoint: ESPNode");
@@ -754,6 +769,10 @@ void setup() {
 #endif
   }
   setup_webserver();
+#ifdef USE_FTP
+  ftp.addUser("ftp", "ftp");
+  ftp.addFilesystem("LittleFS", &LittleFS);
+#endif
 #if defined(MODULE1)
   MODULE1_BEGIN_STATEMENT
 #endif
@@ -794,6 +813,15 @@ void setup() {
   Serial.println(ESP.getCycleCount());
 #endif
 #endif
+#ifdef USE_FTP
+  ftp.begin();
+#endif
+#ifdef USE_SDCARD
+  SD.begin(SD_CS);
+  sd_cardsize = SD.cardSize();
+  sd_cardType = SD.cardType();
+  sd_usedbytes = SD.usedBytes();
+#endif
   write2log(LOG_SYSTEM,1, "Setup Ende");
 }
 
@@ -802,6 +830,9 @@ void setup() {
 *************************************************/
 void loop() {
   ElegantOTA.loop();
+#ifdef USE_FTP
+  ftp.handle();
+#endif
   if ( rebootflag ) {
     preferences.end();
     write2log(LOG_CRITICAL,1,"Reboot Flag gesetzt => reboot");
@@ -946,6 +977,17 @@ void loop() {
       uint32_t free;
       uint32_t max;
       uint8_t frag;
+      rssi = WiFi.RSSI();
+      rssi_quality = 0;
+      if ( rssi > -50) {
+        rssi_quality = 100;
+      } else {
+        if ( rssi > -100 ) {
+          rssi_quality = 2 * (rssi + 100);
+        } else {
+          rssi_quality = 0;
+        }
+      }
 #ifdef ESP32
       free = ESP.getFreeHeap();
       frag = 0;

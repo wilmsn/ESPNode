@@ -54,6 +54,11 @@
 #define RF24GW_GW_UDP_PORTNO           7003
 #endif
 
+//Setting for Components
+#ifdef USE_AUDIO_MEDIA
+#define USE_SDCARD
+#endif
+
 
 //Settings for Logging
 #ifndef DO_LOG_WEB

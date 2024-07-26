@@ -83,6 +83,12 @@ void AudioDisplay::select(const char* s0, const char* s1, const char* s2) {
   if (strlen(s2) > 0) show_text_s2(s2,40,170,COLOR_LIGHTGREY);
 }
 
+void AudioDisplay::select(const char* s0, uint16_t * pic) {
+  clear();
+  if (strlen(s0) > 0) show_text_s2(s0,10,110,COLOR_ORANGE);
+  tft->drawRGBBitmap(80,20,pic,80,80);
+}
+
 void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
   clear();
   tft->setTextSize(2);
@@ -116,10 +122,9 @@ void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const 
 void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t color) {
   int mypos = 0;
   int mytxtlength = strlen(mytext);
-  int chars_per_line;
+  int chars_per_line = 20;
   int pixel_to_next_line;
   tft->setTextColor(color);  
-  chars_per_line = 18;
   tft->setTextSize(2);
   pixel_to_next_line = 20;
   char mystr[chars_per_line+1];
@@ -133,14 +138,17 @@ void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t
   tft->println(mystr);
 }
 
-void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t color) {
-  int mypos = 0;
-  int mytxtlength = strlen(mytext);
+void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t color) {
+  int start_pos = 0;
   int chars_per_line;
   int pixel_to_next_line;
-  tft->setTextColor(color);  
-  if (mytxtlength > 20) {
-    chars_per_line = 16;
+  tft->setTextColor(color);
+  Serial.print("In Text: ");
+  Serial.println(in_text);
+  Serial.print("Stringlength: ");
+  Serial.println(strlen(in_text));
+  if (strlen(in_text) > 20) {
+    chars_per_line = 18;
     tft->setTextSize(2);
     pixel_to_next_line = 20;
   } else {
@@ -148,15 +156,18 @@ void AudioDisplay::show_text(const char* mytext, int posx, int posy, uint16_t co
     tft->setTextSize(3);
     pixel_to_next_line = 30;
   }
-  char mystr[chars_per_line+1];
-  mypos = splitStr(mytext,mypos,chars_per_line,mystr);
-  if (mypos < strlen(mytext)) {
-    tft->setCursor(posx, posy);
-    tft->println(mystr);
-    mypos = splitStr(mytext,mypos,chars_per_line,mystr);
-  }
-  tft->setCursor(posx, posy + pixel_to_next_line);
-  tft->println(mystr);
+  char result_str[chars_per_line+3];
+  do {
+    start_pos = splitStr(in_text,start_pos,chars_per_line,result_str);
+    Serial.print("StartPos: ");
+    Serial.println(start_pos);
+    Serial.println(result_str);
+    if (start_pos >= 0) {
+      tft->setCursor(posx, posy);
+      tft->println(result_str);
+      posy += pixel_to_next_line;
+    }
+  } while (start_pos < strlen(in_text));
 }
 
 void AudioDisplay::show_modus(const char* _modusStr) {
@@ -208,24 +219,28 @@ int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* re
   int char2cut = 0;
   int retval = 0;
   resultStr[0] = 0;
-  if (strlen(inStr) > maxLen + startPos) {
-    for(int i=startPos; i<maxLen+startPos; i++) {
-       if ( inStr[i] == ' ') char2cut = i;
-    }
-    if (char2cut > 0) {
-      retval = char2cut + 1;
+  if (strlen(inStr) > startPos) {
+    if (strlen(inStr) > maxLen + startPos) {
+      for(int i=startPos; i<maxLen+startPos; i++) {
+        if ( inStr[i] == ' ') char2cut = i;
+      }
+      if (char2cut > 0) {
+        retval = char2cut + 1;
+      } else {
+        retval = startPos + maxLen -1;
+        char2cut = startPos + maxLen -1;
+      }
     } else {
-      retval = startPos + maxLen -1;
-      char2cut = startPos + maxLen -1;
+      char2cut = strlen(inStr);
+      retval = char2cut;
     }
+    for(int i=startPos; i<char2cut; i++) {
+      resultStr[i-startPos] = inStr[i];
+    }
+    resultStr[char2cut-startPos] = 0;
   } else {
-    char2cut = strlen(inStr);
-    retval = char2cut;
+    retval = -1;
   }
-  for(int i=startPos; i<char2cut; i++) {
-    resultStr[i-startPos] = inStr[i];
-  }
-  resultStr[char2cut-startPos] = 0;
   return retval;
 }
 

@@ -38,7 +38,7 @@ Modus = Choose  Level = 0 Pos = beliebig    ==> Modus wird ausgewählt; Nach 60 
 #include "switch_onoff.h"
 #define USE_AUDIODISPLAY
 #include "audiodisplay.h"
-#ifdef USE_MEDIAPLAYER
+#ifdef USE_SDCARD
 #include "FS.h"
 #include "SD.h"
 #endif

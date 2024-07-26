@@ -115,20 +115,11 @@ String& Base_Generic::show_mqtt_name() {
 String& Base_Generic::show_value() {
   return obj_values_str;
 }
-
+/*
 String& Base_Generic::info_html() {
   return obj_info_html;
 }
-
+*/
 String& Base_Generic::info_mqtt() {
   return obj_info_mqtt;
 }
-/*
-String& Base_Generic::sensorinfo_html() {
-  return obj_sensorinfo_html;
-}
-
-String& Base_Generic::sensorinfo_mqtt() {
-  return obj_sensorinfo_mqtt;
-}
-*/

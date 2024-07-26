@@ -31,6 +31,8 @@ const char* ntp_server = NTP_SERVER;
 /// @brief TimeZone Info
 //const char* tz_info = TZ_INFO;
 
+int rssi_quality;
+int rssi;
 
 
 // preferences
@@ -99,6 +101,20 @@ tm timeinfo;
 /// @brief Eine Variable für Zeitinformationen
 time_t now;
 
+#ifdef USE_SDCARD
+#include "FS.h"
+#include "SD.h"
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+// ESP32S3: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
+//#define SD_SCK                        12
+//#define SD_MISO                       13 
+//#define SD_MOSI                       11 
+#define SD_CS                           10
+#endif
+uint64_t sd_cardsize;
+uint64_t sd_usedbytes;
+uint8_t sd_cardType;
+#endif
 
 /// @brief Eine Funktion als Dummy die nichts macht
 void noop() {}

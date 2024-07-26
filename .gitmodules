@@ -53,3 +53,6 @@
 [submodule "lib/ESP8266Audio"]
 	path = lib/ESP8266Audio
 	url = git@github.com:wilmsn/ESP8266Audio.git
+[submodule "lib/ESP-FTP-Server-Lib"]
+	path = lib/ESP-FTP-Server-Lib
+	url = https://github.com/peterus/ESP-FTP-Server-Lib.git

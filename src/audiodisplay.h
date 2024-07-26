@@ -23,6 +23,8 @@ public:
   void show_jpg(String& jpgFile);
   void select(const char* s0, const char* s1, const char* s2);
   void select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4);
+  void select(const char* s0, uint16_t * pic);
+
 
 private:
   void fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour);

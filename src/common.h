@@ -33,6 +33,10 @@ typedef unsigned char uint8_t;
 #include "ESPAsyncTCP.h"
 #endif
 
+//#ifdef USE_FTP
+#include "ESP-FTP-Server-Lib.h"
+#include "FTPFilesystem.h"
+//#endif
 
 #include "config.h"
 
@@ -44,10 +48,20 @@ extern bool do_log_module;
 extern bool do_log_system;
 extern bool do_log_critical;
 extern bool do_log_web;
-extern time_t now; 
+extern time_t now;
+extern FTPServer        ftp;
+
 
 // Modul: webserver
 extern AsyncWebSocket ws;
+extern uint64_t sd_cardsize;
+extern uint64_t sd_usedbytes;
+extern uint8_t sd_cardType;
+extern int rssi;
+extern int rssi_quality;
+extern char *getResetReason(char *tmp);
+extern Uptime uptime;
+extern void getVcc(String& json);
 
 // Modul: mqtt
 extern PubSubClient mqttClient;

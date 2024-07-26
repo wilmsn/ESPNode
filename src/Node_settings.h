@@ -5,11 +5,15 @@
 The following settings ca be used for the individual node:
 (m) = mandatory to enable; (o) = optional
 
-++++++++Debugging:+++++++++++
+++++++++Serial Debugging:+++++++++++
+Enable Web Debugging
+(o) #define DEBUG_SERIAL_WEB
+Enable MQTT Debugging
+(o) #define DEBUG_SERIAL_MQTT
 Enable RF24 debugging
 (o) #define DEBUG_SERIAL_RF24
-Enable Sensor debugging
-(o) #define DEBUG_SERIAL_SENSOR
+Enable Modul debugging
+(o) #define DEBUG_SERIAL_MODULE
 
 ++++++++RF24:+++++++++++
 RF24 Gateway:
@@ -133,8 +137,8 @@ RF24 Gateway:
 
 #define HOSTNAME               "nodesimple"
 #define HOST_DISCRIPTION       "Ein ESP8266 Node ohne externe Elemente"
-#define DEBUG_SERIAL_HTML
-#define DEBUG_SERIAL_SENSOR
+#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
 #define MODULE1_DEFINITION      Switch_OnOff module1;
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, 2);
@@ -147,8 +151,8 @@ RF24 Gateway:
 
 #define HOSTNAME               "nodesimple"
 #define HOST_DISCRIPTION       "Ein ESP32 Node ohne externe Elemente"
-#define DEBUG_SERIAL_HTML
-#define DEBUG_SERIAL_SENSOR
+#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
 #define MODULE1_DEFINITION      Switch_OnOff module1;
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, LED_BUILTIN);
@@ -166,7 +170,6 @@ RF24 Gateway:
 #define USE_SENSOR_18B20
 #include "sensor_18B20.h"
 
-#define DEBUG_SERIAL_HTML
 #define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
@@ -202,8 +205,7 @@ RF24 Gateway:
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
-#define DEBUG_SERIAL_HTML
-#define DEBUG_SERIAL_WEB
+##define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
 
@@ -233,7 +235,7 @@ RF24 Gateway:
 
 #define MAGICNO                  0
 #define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_WEB
 
 #define HOSTNAME                 "BoschNode"
 #define HOST_DISCRIPTION         "Ein Bosch Sensor Testnode mit RF24 Gatway"
@@ -267,7 +269,7 @@ RF24 Gateway:
 #include "switch_onoff.h"
 
 #define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_WEB
 
 #define HOSTNAME                 "SliderNode"
 #define HOST_DISCRIPTION         "Ein Slider Testnode"
@@ -281,17 +283,19 @@ RF24 Gateway:
 
 #define USE_AUDIOMODUL
 #define DISPLAY_GC9A01A
-#define USE_MEDIAPLAYER
+#define USE_SDCARD
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
+#define USE_FTP
+#define USE_WIFIMULTI
 
 #include "audiomodul.h"
 #define MAGICNO                  0
 
 #define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_WEB
 
-#define HOSTNAME                 "Audionode"
+#define HOSTNAME                 "Audiotestnode"
 #define HOST_DISCRIPTION         "Ein Audio Testnode"
 
 #define MODULE1_DEFINITION       AudioModul module1;
@@ -313,7 +317,7 @@ RF24 Gateway:
 #define MAGICNO                  0
 
 #define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_HTML
+#define DEBUG_SERIAL_WEB
 
 #define HOSTNAME                 "Rotarytest"
 #define HOST_DISCRIPTION         "Der Rotary steuert die Helligkeit der internen LED"
@@ -348,13 +352,13 @@ void RotaryTest::begin(const char* html_place, const char* label, const char* mq
 #endif
 
 /// Debug Settings
-#if defined(DEBUG_SERIAL_SENSOR)
+#if defined(DEBUG_SERIAL_MODULE)
 #define DEBUG_SERIAL
 #endif
 #if defined(DEBUG_SERIAL_RF24)
 #define DEBUG_SERIAL
 #endif
-#if defined(DEBUG_SERIAL_HTML)
+#if defined(DEBUG_SERIAL_WEB)
 #define DEBUG_SERIAL
 #endif
 #if defined(DEBUG_SERIAL_MQTT)

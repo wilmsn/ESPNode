@@ -52,11 +52,6 @@ AudioOutputI2S *out = NULL;
 // SDA (Display) => MOSI                11
 #define GC9A01A_TFT_CS                  8
 #define GC9A01A_TFT_DC                  9
-// SD Card mit HW-SPI (ok bei 3V3 Adaptern)
-//#define SD_SCK                        12
-//#define SD_MISO                       13 
-//#define SD_MOSI                       11 
-#define SD_CS                           10
 #endif
 
 #define ARC_SIGMENT_DEGREES             3
@@ -137,7 +132,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   audio.setVolume(audio_vol);
 #endif
 #ifdef USE_AUDIO_MEDIA
-  SD.begin(SD_CS);
   audio_media_num_dir = 0;
   File root = SD.open("/");
   File file = root.openNextFile();
@@ -149,6 +143,9 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   root.close();
 //  audio_media_cur_dir = 1;
 //  audio_media_cur_file = 1;
+#endif
+#ifdef USE_FTP
+  ftp.addFilesystem("SD", &SD);
 #endif
   audio_set_modus(Off);
   last_modus = Radio;
@@ -929,7 +926,6 @@ void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
     dir.close();
   }
   root.close();
-  audiodisplay.show_info1(fileName.c_str());
   audio.connecttoFS(SD,fileName.c_str());
 }
 
@@ -939,6 +935,9 @@ void AudioModul::audio_media_select_dir() {
   for(int i=0;i<5;i++) obj[i]="";
   File root;
   File dir;
+  File bmpFile;
+  size_t bmpFileSize;
+  uint16_t *bmp;
   root = SD.open("/");
   if (root.isDirectory()) {
     if (audio_media_cur_dir > 2) {
@@ -953,8 +952,53 @@ void AudioModul::audio_media_select_dir() {
     dir=root.openNextFile();
     if (dir) obj[1]=dir.name();
   }
+  Serial.println(obj[0]);
+  Serial.println(obj[1]);
   dir=root.openNextFile();
-  if (dir) obj[2]=dir.name();
+  if (dir) {
+    obj[2]=dir.name();
+    String bmpFileName = String("/")+obj[2]+String("/cover.bmp");
+  Serial.println(bmpFileName);
+    bmpFile = SD.open(bmpFileName.c_str(),"r");
+    if (bmpFile) {
+      bmpFileSize = bmpFile.size();
+  Serial.println("bmpFileName ok");
+  Serial.print("Size: ");
+  Serial.println(bmpFileSize);
+  bmp = (uint16_t*)malloc(bmpFileSize);
+      uint16_t c1;
+      uint16_t c2;
+      size_t i = (bmpFileSize>>1)-1;
+      size_t j = 0;
+      size_t start_data;
+      Serial.print(bmpFileName);
+      Serial.println(" found");
+      Serial.print("i = ");
+      Serial.println(i);
+      Serial.print("sizeof(*bmp): ");
+      Serial.println(sizeof(*bmp));
+      while (bmpFile.available()) {
+//        for (int i=0;i<65;i++) bmpFile.read();
+      Serial.println(i);
+      Serial.println(j);
+//        if (j == 0x0a ) {
+//          start_data = bmpFile.read() | bmpFile.read()<<8 | bmpFile.read()<<16 | bmpFile.read()<<24;
+//          j+=4;
+//        }
+        if ( j >= 66) {
+          c1=bmpFile.read();
+          c2=bmpFile.read();
+          if (i >= 0) bmp[i] = (c2<<8) | c1;
+        } else {
+          bmpFile.read();
+          bmpFile.read();
+        }
+        i--;
+        j++;
+      }
+    }
+    bmpFile.close();
+  }
   if (audio_media_cur_dir <= audio_media_num_dir -1) {
     dir=root.openNextFile();
     if (dir) obj[3]=dir.name();
@@ -963,10 +1007,12 @@ void AudioModul::audio_media_select_dir() {
     dir=root.openNextFile();
     if (dir) obj[4]=dir.name();
   }
-  albumpic = String("/")+String(dir.name())+String("/folder.jpg");
   dir.close();
   root.close();
-  audiodisplay.select(obj[1].c_str(),obj[2].c_str(),obj[3].c_str());
+//  audiodisplay.select(obj[1].c_str(),obj[2].c_str(),obj[3].c_str());
+  audiodisplay.select(obj[2].c_str(),bmp);
+  free(bmp);
+//  free(bmp_r);
 //  audiodisplay.show_jpg(albumpic);
 }
 
