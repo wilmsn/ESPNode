@@ -133,22 +133,6 @@ $(document).ready(function(){
       mqtt_active = 1;
     }
   });
-  $('#nwscan').on('click', function () {
-    $.getJSON( "wifiscan", function( data ) {
-    });
-    $("#wifinw2").html("Scanning ... please wait").show();
-    $("#wifinw1").hide();
-    window.setTimeout(function(){
-      $("#wifinw2").html("");
-      $.getJSON( "wifishow", function( data ) {
-        $.each( data, function( key, val ) {
-          $("#wifinw2").append(" "+val+"<br>");
-        });
-        $("#wifinw1").show();
-      });
-    }, 20000);
-  });
-
   $('#console_tab1').click(function () {
     show_tab1();
     $.get("/debugfile.txt", function(data) {
@@ -696,10 +680,10 @@ case "wifi_ssid":
     break;
     case "log_web":
       if ( val == 1 ) {
-        log_webcmd_old = true;
+        log_web_old = true;
         $('#log_web').prop('checked', true);
       } else {
-        log_webcmd_old = false;
+        log_web_old = false;
         $('#log_web').prop('checked', false);
       }
     break;
@@ -723,6 +707,9 @@ case "wifi_ssid":
     break;
 
 // Ab hier für Sysinfo
+    case "wifi_network":
+      $("#wifinw2").append(" "+val+"<br>");
+    break;
     case "Platform":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Host:</td></tr>"+
                        "<tr><td class='tab_left'> Platform: </td><td class='tab_right'>"+val+"</td></tr>");
@@ -883,7 +870,18 @@ case "wifi_ssid":
     case "sensorinfo5":
       const sensordata5 = val.split("#");
       $("#Tab").append("<tr><td class='tab_left'>"+sensordata5[0]+"</td><td class='tab_right'>"+sensordata5[1]+"</td></tr>");
-    break;  
+    break;
+    case "alert":
+      alert(val);
+    break;
+/*    default:
+      alert(key + " ??? ");
+
+      const json = JSON.parse(event.data, function (key, val) {
+          alert("#> " + key + " : " + val );
+      });
+
+    break; */
   }
 }
 
@@ -943,205 +941,163 @@ function switch_update() {
 
 function switch_sysinfo() {
   hide_all();
-//  $("#Tab").html("<tr><td colspan=2 class=\"tab_head\">WiFi Networks</td></tr><tr><td colspan=2><div id=\"wifinw2\"></div></td></tr><tr><td colspan=2 class=\"tab_right\"><div id=\"wifinw1\"><button id=\"nwscan\" class=\"button bg_gr\">Scan</button></div></td></tr>");
+  $("#Tab").html("<tr><td colspan=2 class=\"tab_head\">WiFi Networks</td></tr><tr><td colspan=2><div id=\"wifinw2\"></div></td></tr><tr><td colspan=2 class=\"tab_right\"><div id=\"wifinw1\"><button id=\"wifiscan\" class=\"button bg_gr\">Scan</button></div></td></tr>");
+  $('#wifiscan').on('click', function () {
+//    alert("Wifi Scan");
+    do_cmd("wifiscan","1");
+    $("#wifinw2").html("Scanning ... please wait").show();
+    $("#wifinw1").hide();
+    window.setTimeout(function(){
+      $("#wifinw2").html("");
+      $("#wifinw1").show();
+      do_cmd("wifishow","1");
+    }, 20000);
+  });
   $("#page_sysinfo").show();
   $("#but_main").show();
   $("#but_cons").show();
   $("#but_sett").show();
-//  $.getJSON( "sysinfo1", function( data ) {
-//    $.each( data, function( key, val ) {
-//      prozessJS( key, val );
-//    });
-//  });
-//  $.getJSON( "sysinfo2", function( data ) {
-//    $.each( data, function( key, val ) {
-//      prozessJS( key, val );
-//    });
-//  });
-//  $.getJSON( "sysinfo3", function( data ) {
-//    $.each( data, function( key, val ) {
-//      prozessJS( key, val );
-//    });
-//  });
+  do_cmd("ws_sysinfo", "1");
 }
 
 function store() {
-  var mycmd = "/cmd?";
   if ( $("#rf24gw").is(":checked") ) {
     if ( ! rf24gw_active_old ) {
-      mycmd = mycmd + "rf24gw_active=1";
+      do_cmd("rf24gw_active", "1");
       rf24gw_active_old = true;
     }
     if ( rf24hubname_old != $("#rf24hubname").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24hubname=";
-      mycmd = mycmd + $("#rf24hubname").val();
+      do_cmd("rf24hubname", $("#rf24hubname").val());
       rf24hubname_old = $("#rf24hubname").val();
     }
     if ( rf24hubport_old != $("#rf24hubport").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24hubport=";
-      mycmd = mycmd + $("#rf24hubport").val();
+      do_cmd("rf24hubport", $("#rf24hubport").val());
       rf24hubport_old = $("#rf24hubport").val();
     }
     if ( rf24gwport_old != $("#rf24gwport").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24gwport=";
-      mycmd = mycmd + $("#rf24gwport").val();
+      do_cmd("rf24gwport", $("#rf24gwport").val());
       rf24gwport_old = $("#rf24gwport").val();
     }
     if ( rf24gwno_old != $("#rf24gwno").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24gwno=";
-      mycmd = mycmd + $("#rf24gwno").val();
+      do_cmd("rf24gwno", $("#rf24gwno").val());
       rf24gwno_old = $("#rf24gwno").val();
     }
   } else {
     if ( rf24gw_active_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24gw_active=0";
+      do_cmd("rf24gw_active", "0");
     }
     rf24gw_active_old = false;
   }
   if ( $("#mqtt").is(":checked") ) {
     if ( ! mqtt_active_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqtt_active=1";
+      do_cmd("mqtt_active", "1");
     }
     if ( mqttclient_old != $("#mqttclient").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqttclient=";
-      mycmd = mycmd + $("#mqttclient").val();
+      do_cmd("mqttclient", $("#mqttclient").val());
       mqttclient_old = $("#mqttclient").val();
     }
     if ( mqttserver_old != $("#mqttserver").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqttserver=";
-      mycmd = mycmd + $("#mqttserver").val();
+      do_cmd("mqttserver", $("#mqttserver").val());
       mqttserver_old = $("#mqttserver").val();
     }
     if ( mqtttopicp2_old != $("#mqtttopicp2").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqtttopicp2=";  
-      mycmd = mycmd + $("#mqtttopicp2").val();
+      do_cmd("mqtttopic2", $("#mqtttopic2").val());
       mqtttopicp2_old = $("#mqtttopicp2").val();
     }
   } else {
     if ( mqtt_active_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqtt_active=0";
+      do_cmd("mqtt_active", "0");
     }
   }
   if ( $("#log_rf24").is(":checked") ) {
     if ( ! log_rf24_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_rf24=1";
+      do_cmd("log_rf24", "1");
       log_rf24_old = true;
     }
   } else {
     if ( log_rf24_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_rf24=0";
+      do_cmd("log_rf24", "0");
       log_rf24_old = false;
     }
   }
   if ( $("#log_module").is(":checked") ) {
     if ( ! log_module_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_module=1";
+      do_cmd("log_module", "1");
       log_module_old = true;
     }
   } else {
     if ( log_module_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_module=0";
+      do_cmd("log_module", "0");
       log_module_old = false;
     }
   }
   if ( $("#log_mqtt").is(":checked") ) {
     if ( ! log_mqtt_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_mqtt=1";
+      do_cmd("log_mqtt", "1");
       log_mqtt_old = true;
     }
   } else {
     if (   log_mqtt_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_mqtt=0";
+      do_cmd("log_mqtt", "0");
       log_mqtt_old = flase;
     }
   }
   if ( $("#log_web").is(":checked") ) {
-    if ( ! log_webcmd_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_web=1";
+    if ( ! log_web_old ) {
+      do_cmd("log_web", "1");
       log_web_old = true;
     }
   } else {
     if (   log_web_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_web=0";
+      do_cmd("log_web", "0");
       log_web_old = false;
     }
   }
   if ( $("#log_system").is(":checked") ) {
     if ( ! log_system_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_system=1";
+      do_cmd("log_system", "1");
       log_system_old = true;
     }
   } else {
     if (   log_system_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_system=0";
+      do_cmd("log_system", "0");
       log_system_old = false;
     }
   }
   if ( $("#log_critical").is(":checked") ) {
     if ( ! log_critical_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_critical=1";
+      do_cmd("log_critical", "1");
       log_critical_old = true;
     }
   } else {
     if (   log_critical_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_critical=0";
+      do_cmd("log_critical", "0");
       log_critical_old = false;
     }
   }
   if ( $("#wifi_ssid").val() != wifi_ssid_old && $("#wifi_ssid").val().length > 0 ) {
-    if (mycmd.length > 7) mycmd = mycmd + "&";
-    mycmd = mycmd + "wifi_ssid=" + $("#wifi_ssid").val();
+    do_cmd("wifi_ssid", $("#wifi_ssid").val());
   }
   if ( $("#wifi_pass").val() != wifi_pass_old && $("#wifi_pass").val().length > 0 ) {
-    if (mycmd.length > 7) mycmd = mycmd + "&";
-    mycmd = mycmd + "wifi_pass=" + $("#wifi_pass").val();
+    do_cmd("wifi_pass", $("#wifi_pass").val());
   }
-  alert(mycmd);
-  $.get(mycmd, function(data) {
-    alert(data);
-  });
+  alert("Werte gespeichert");
 }
 
 function do_restart() {
   var r = confirm("Wirklich neustarten?");
   if (r == true) {
-    $.get("/cmd?restart", function(data) {
-       alert(data);
-       setTimeout(function(){
-         window.location.reload();
-       }, 15000);
-    });
+    do_cmd("restart", "1");
+    setTimeout(function(){
+      window.location.reload();
+    }, 15000);
   }
 }
 
 function dellog() {
   var r = confirm("Logfile löschen?");
   if (r == true) {
-    $.get("/cmd?dellogfile", function(data) {
-      alert(data);
-    });
+    do_cmd("dellogfile", "1");
   }
 }
 
@@ -1185,21 +1141,6 @@ function audio_radio_stn_update() {
     .end()
   ;
 }
-
-/*
-function audio_radio_sel_change(val) {
-  alert(val);
-  do_cmd("audio_radio_set_stn",val);
-}
-
-function audio_radio_fill_sel() {
-  $('#audio_radio_sel')
-    .find('option')
-    .remove()
-    .end()
-  ;
-}
-*/
 
 </script>
 
@@ -1524,9 +1465,6 @@ function audio_radio_fill_sel() {
 
   <div id="page_sysinfo" class="div_content">
     <table style='width:100%;'' id='Tab'>
-    <tr><td colspan=2 class=\"tab_head\">WiFi Networks</td></tr>
-    <tr><td colspan=2><div id=\"wifinw2\"></div></td></tr>
-    <tr><td colspan=2 class=\"tab_right\"><div id=\"wifinw1\"><button id=\"nwscan\" class=\"button bg_gr\">Scan</button></div></td></tr>
     </table> 
 </div>
 

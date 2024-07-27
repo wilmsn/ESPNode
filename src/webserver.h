@@ -4,14 +4,12 @@
 #include "common.h"
 #include "secrets.h"
 
-int cmd_no = 0;
-
-/// @brief Create AsyncWebServer object on port 80
-AsyncWebServer httpServer(80);
-/// @brief Ein Server für die Websockets
-AsyncWebSocket ws("/ws");
 
 void setup_webserver();
+
+void prozess_sysinfo();
+
+void handleWebSocketInit(void *arg, uint8_t *data, size_t len);
 
 /// @brief Der Handler für Websocket Messages
 /// @param arg 
@@ -33,16 +31,13 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 void initWebSocket();
 
 /// @brief Startet einen Scan nach verfügbaren Wifi Netzwerken
-/// @return Ein Json zur Übergabe an die Webseite
-const char *mk_wifiscan(void);
+void prozess_wifiscan(void);
 
 /// @brief Erzeugt ein JSON zur Anzeige der gefundenen Netzwerke
-/// @return Ein Json zur Übergabe an die Webseite
-const char *mk_wifishow(void);
+void prozess_wifishow(void);
 
 /// @brief Verarbeitung der Webserveraufrufe "/cmd?[cmd]=[value]"
 /// @param request Der übergebene Datensatz
-/// @return Rückmeldung für die Webseite
-const char *mk_cmd(AsyncWebServerRequest *request);
+void mk_cmd(AsyncWebServerRequest *request);
 
 #endif

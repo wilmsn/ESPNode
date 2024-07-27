@@ -26,6 +26,8 @@ void console_help() {
 void prozess_cmd(const String cmd, const String value)  {
   write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
+  html_json = String("{\"alert\":\"") + cmd + String("-") + value + String("\"}");
+  ws.textAll(html_json);
   html_json = "{\"statclear\":1}";
   write2log(LOG_WEB,1,html_json.c_str());
   ws.textAll(html_json);

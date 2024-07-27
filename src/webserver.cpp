@@ -1,35 +1,40 @@
 #include "webserver.h"
 
-// Kommentiert in webserver.h
+/// @brief Create AsyncWebServer object on port 80
+AsyncWebServer httpServer(80);
+/// @brief Ein Server für die Websockets
+AsyncWebSocket ws("/ws");
+
+int cmd_no = 0;
+
 void initWebSocket() {
   ws.onEvent(ws_onEvent);
   httpServer.addHandler(&ws);
 }
 
-// Kommentiert in main.h
-const char *mk_wifishow() {
+void prozess_wifishow() {
 #if defined(DEBUG_SERIAL_WEB)
   Serial.print("Generiere wifishow ... ");
 #endif
-  html_json = "{";
   int numberOfNetworks = WiFi.scanComplete();
   if (numberOfNetworks < 0) {
     switch (numberOfNetworks) {
       case -1:
-        html_json += "\"Wifi\": \"Scan not finished\"";
-      break;
+        html_json = "{\"wifi_network\": \"Scan not finished\"}";
+        ws.textAll(html_json);
+     break;
       case -2:
-        html_json += "\"Wifi\": \"Scan not started\"";
+        html_json = "{\"wifi_network\": \"Scan not started\"}";
+        ws.textAll(html_json);
       break;
     }
   } else {
-    html_json += "\"Wifi\":\"";
+    html_json = "{\"wifi_network\":\"";
     html_json += numberOfNetworks;
-    html_json += " Networks\"";
+    html_json += " Networks:<br>\"}";
+    ws.textAll(html_json);
     for (int i = 0; i < numberOfNetworks; i++) {
-      html_json += ",\"Wifi";
-      html_json += String(i);
-      html_json += "\":\"";
+      html_json = "{\"wifi_network\":\"";
       html_json += WiFi.SSID(i);
       html_json += ", Ch:";
       html_json += String(WiFi.channel(i));
@@ -91,148 +96,34 @@ const char *mk_wifishow() {
         break;
       }
 #endif
-      html_json += ")\"";
+      html_json += ")\"}";
+      ws.textAll(html_json);
     }
 //#endif
   }
-  html_json += "}";
   WiFi.scanDelete();
 #if defined(DEBUG_SERIAL_WEB)
   Serial.print(" ok (");
-  Serial.print(html_json.length());
-  Serial.println(" byte)");
-  Serial.println(html_json);
 #endif
-  return html_json.c_str();
 }
 
-// Kommentiert in main.h
-const char *mk_wifiscan() {
+void prozess_wifiscan() {
 #if defined(DEBUG_SERIAL_WEB)
   Serial.print("Generiere wifiscan ... ");
 #endif
-  html_json = "{ \"Wifi\": \"Scan started\" }";
   WiFi.scanNetworks(true, false);
 #if defined(DEBUG_SERIAL_WEB)
   Serial.print(" ok (");
-  Serial.print(html_json.length());
-  Serial.println(" byte)");
 #endif
-  return html_json.c_str();
 }
 
-// Kommentiert in main.h
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
-  AwsFrameInfo *info = (AwsFrameInfo *)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-    data[len] = 0;
-    String mycmd = (char *)data;
-    int pos1 = mycmd.indexOf(":");
-    int pos2 = mycmd.indexOf("=");
-    int pos = pos1;
-    if (pos2 > 0) pos = pos2;
-    String cmd = mycmd.substring(0, pos);
-    String value = mycmd.substring(pos + 1);
-#if defined(DEBUG_SERIAL_WEB)
-    Serial.print("Websocket cmd: ");
-    Serial.print(cmd);
-    Serial.print(" value: ");
-    Serial.println(value); 
-#endif
-    prozess_cmd(cmd,value);
-  }
-}
-
-// Kommentiert in main.h
-void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-                void *arg, uint8_t *data, size_t len) {
-  switch (type) {
-    case WS_EVT_CONNECT: {
-      html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
-      html_json += ",\"wifi_ssid\":\"";
-      html_json += wifi_ssid;
-      html_json += "\",\"wifi_pass\":\"";
-      html_json += wifi_pass;
-      html_json += "\"";
-#if defined(HOST_DISCRIPTION)
-      html_json += ",\"titel2\":\"";
-      html_json += HOST_DISCRIPTION;
-      html_json += "\"";
-#endif
+void prozess_sysinfo() {
 #if defined(ESP8266)
-      html_json += ",\"platform\":\"esp8266\"";
+//      html_json += ",\"platform\":\"esp8266\"";
 #endif
 #if defined(ESP32)
-      html_json += ",\"platform\":\"esp32\"";
+//      html_json += ",\"platform\":\"esp32\"";
 #endif
-#if defined(MODULE1)
-      module1.html_create_json_part(html_json);
-#endif
-#if defined(MODULE2)
-      module2.html_create_json_part(html_json);
-#endif
-#if defined(MODULE3)
-      module3.html_create_json_part(html_json);
-#endif
-#if defined(MODULE4)
-      module4.html_create_json_part(html_json);
-#endif
-#if defined(MODULE5)
-      module5.html_create_json_part(html_json);
-#endif
-#if defined(MODULE6)
-      module6.html_create_json_part(html_json);
-#endif
-#if defined(MQTT)
-      html_json += ",\"set_mqtt_enable\":1";
-      html_json += ",\"set_mqtt_active\":";
-      html_json += do_mqtt?"1":"0";
-      html_json += ",\"set_mqttserver\":\"";
-      html_json += mqtt_server;
-      html_json += "\",\"set_mqttclient\":\"";
-      html_json += mqtt_client;
-      html_json += "\",\"set_mqtttopicp2\":\"";
-      html_json += mqtt_topicP2;
-      html_json += "\"";
-#else
-      html_json += ",\"set_mqtt_enable\":0";
-#endif
-// Setzen der Logging Flags 
-#if defined(RF24GW)
-      html_json += ",\"log_rf24\":";
-      html_json += do_log_rf24? "1": "0";
-#endif
-#if defined(MQTT)
-      html_json += ",\"log_mqtt\":";
-      html_json += do_log_mqtt? "1": "0";
-#endif
-      html_json += ",\"log_module\":";
-      html_json += do_log_module? "1": "0";
-      html_json += ",\"log_system\":";
-      html_json += do_log_system? "1": "0";
-      html_json += ",\"log_critical\":";
-      html_json += do_log_critical? "1": "0";
-      html_json += ",\"log_web\":";
-      html_json += do_log_web? "1": "0";
-// RF24 Gateway
-#if defined(RF24GW)
-      html_json += ",\"set_rf24gw_enable\":1";
-      html_json += ",\"set_rf24gw_active\":";
-      html_json += do_rf24gw? "1":"0";
-      html_json += ",\"set_RF24HUB-Server\":\"";
-      html_json += rf24gw_hub_server;
-      html_json += "\",\"set_RF24HUB-Port\":\"";
-      html_json += rf24gw_hub_port;
-      html_json += "\",\"set_RF24GW-Port\":\"";
-      html_json += rf24gw_gw_port;
-      html_json += "\",\"set_RF24GW-No\":";
-      html_json += rf24gw_gw_no;
-#else      
-      html_json += ",\"set_rf24gw_enable\":0";
-#endif      
-      html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
 // Daten für Sysinfo
 // Teil 1
       uint32_t free;
@@ -399,9 +290,120 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       html_json += "}";
       write2log(LOG_WEB,1,html_json.c_str());
       ws.textAll(html_json);
-    }
-    break;  //    case WS_EVT_CONNECT
+}
 
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  AwsFrameInfo *info = (AwsFrameInfo *)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+    data[len] = 0;
+    String mycmd = (char *)data;
+    int pos1 = mycmd.indexOf(":");
+    int pos2 = mycmd.indexOf("=");
+    int pos = pos1;
+    if (pos2 > 0) pos = pos2;
+    String cmd = mycmd.substring(0, pos);
+    String value = mycmd.substring(pos + 1);
+#if defined(DEBUG_SERIAL_WEB)
+    Serial.print("Websocket cmd: ");
+    Serial.print(cmd);
+    Serial.print(" value: ");
+    Serial.println(value); 
+#endif
+    if (cmd == String("ws_sysinfo")) prozess_sysinfo();
+    else if (cmd == String("wifiscan")) prozess_wifiscan();
+    else if (cmd == String("wifishow")) prozess_wifishow();
+    else prozess_cmd(cmd,value);
+  }
+}
+
+void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
+      html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
+      html_json += ",\"wifi_ssid\":\"";
+      html_json += wifi_ssid;
+      html_json += "\",\"wifi_pass\":\"";
+      html_json += wifi_pass;
+      html_json += "\"";
+#if defined(HOST_DISCRIPTION)
+      html_json += ",\"titel2\":\"";
+      html_json += HOST_DISCRIPTION;
+      html_json += "\"";
+#endif
+#if defined(MODULE1)
+      module1.html_create_json_part(html_json);
+#endif
+#if defined(MODULE2)
+      module2.html_create_json_part(html_json);
+#endif
+#if defined(MODULE3)
+      module3.html_create_json_part(html_json);
+#endif
+#if defined(MODULE4)
+      module4.html_create_json_part(html_json);
+#endif
+#if defined(MODULE5)
+      module5.html_create_json_part(html_json);
+#endif
+#if defined(MODULE6)
+      module6.html_create_json_part(html_json);
+#endif
+#if defined(MQTT)
+      html_json += ",\"set_mqtt_enable\":1";
+      html_json += ",\"set_mqtt_active\":";
+      html_json += do_mqtt?"1":"0";
+      html_json += ",\"set_mqttserver\":\"";
+      html_json += mqtt_server;
+      html_json += "\",\"set_mqttclient\":\"";
+      html_json += mqtt_client;
+      html_json += "\",\"set_mqtttopicp2\":\"";
+      html_json += mqtt_topicP2;
+      html_json += "\"";
+#else
+      html_json += ",\"set_mqtt_enable\":0";
+#endif
+// Setzen der Logging Flags 
+#if defined(RF24GW)
+      html_json += ",\"log_rf24\":";
+      html_json += do_log_rf24? "1": "0";
+#endif
+#if defined(MQTT)
+      html_json += ",\"log_mqtt\":";
+      html_json += do_log_mqtt? "1": "0";
+#endif
+      html_json += ",\"log_module\":";
+      html_json += do_log_module? "1": "0";
+      html_json += ",\"log_system\":";
+      html_json += do_log_system? "1": "0";
+      html_json += ",\"log_critical\":";
+      html_json += do_log_critical? "1": "0";
+      html_json += ",\"log_web\":";
+      html_json += do_log_web? "1": "0";
+// RF24 Gateway
+#if defined(RF24GW)
+      html_json += ",\"set_rf24gw_enable\":1";
+      html_json += ",\"set_rf24gw_active\":";
+      html_json += do_rf24gw? "1":"0";
+      html_json += ",\"set_RF24HUB-Server\":\"";
+      html_json += rf24gw_hub_server;
+      html_json += "\",\"set_RF24HUB-Port\":\"";
+      html_json += rf24gw_hub_port;
+      html_json += "\",\"set_RF24GW-Port\":\"";
+      html_json += rf24gw_gw_port;
+      html_json += "\",\"set_RF24GW-No\":";
+      html_json += rf24gw_gw_no;
+#else      
+      html_json += ",\"set_rf24gw_enable\":0";
+#endif      
+      html_json += "}";
+      write2log(LOG_WEB,1,html_json.c_str());
+      ws.textAll(html_json);
+}
+
+void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+                void *arg, uint8_t *data, size_t len) {
+  switch (type) {
+    case WS_EVT_CONNECT:
+      handleWebSocketInit(arg, data, len);
+    break;  //    case WS_EVT_CONNECT
     case WS_EVT_DISCONNECT:
 //      Serial.printf("WebSocket client #%u disconnected\n", client->id());
     break;
@@ -414,8 +416,8 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
   }
 }
 
-// Kommentiert in main.h
-const char *mk_cmd(AsyncWebServerRequest *request) {
+/*
+void mk_cmd(AsyncWebServerRequest *request) {
 //  bool prefs_change = false;
   int args = request->args();
   html_json = "";
@@ -431,37 +433,26 @@ const char *mk_cmd(AsyncWebServerRequest *request) {
   }
   if ( cmd_no > 0 ) {
     if ( rebootflag ) { 
-      html_json = "Reboot ok"; 
+      html_json = "{\"alert\":\"Reboot ok\"}"; 
+      ws.textAll(html_json);
     } else {
-      html_json = "ok";
-    }
+      html_json = "{\"alert\":\"ok\"}";
+      ws.textAll(html_json);
+   }
   } else {
-    html_json = "No change";
+    html_json = "{\"alert\":\"No change\"}";
+    ws.textAll(html_json);
   }
-  return html_json.c_str();
 }
-
+*/
 
 void setup_webserver() {
   initWebSocket();
   write2log(LOG_WEB,1, "initWebsocket ok");
-
-  httpServer.on("/wifiscan", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "application/json", mk_wifiscan()); });
-  httpServer.on("/wifishow", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "application/json", mk_wifishow()); });
-  httpServer.on("/cmd", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_cmd(request)); });
-/*  httpServer.on("/sysinfo1", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo1(html_json)); });
-  httpServer.on("/sysinfo2", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo2(html_json)); });
-  httpServer.on("/sysinfo3", HTTP_GET, [](AsyncWebServerRequest *request)
-                { request->send(200, "text/plain", mk_sysinfo3(html_json,false)); }); */
   // This serves all static web content
   httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
-  ElegantOTA.begin(&httpServer);    // Start AsyncElegantOTA
-
+  // Start Elegant OTA
+  ElegantOTA.begin(&httpServer);
   // Start server
   httpServer.begin();
 }
