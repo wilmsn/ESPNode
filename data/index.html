@@ -159,7 +159,7 @@ $(document).ready(function(){
     }
   });
 
-  /*  TEST */
+  /*  TEST 
 $("#fd_dir1").hide();
   $("#fd_dir2").hide();
   $("#fd_dir3").hide();
@@ -196,7 +196,7 @@ $("#fd_dir1").hide();
       $("#fd_dir3_play").attr("src","play.png");
     }
   });
-/* Ende Test */
+ Ende Test */
   $('#audio_radio_but').click(function () {
 //    alert("audio_radio click func");
     do_cmd("audio_radio","1");
@@ -474,18 +474,57 @@ function prozessJS( key, val ) {
       }
     break;
     case "audio_media_show":
+    // Zeigt den Mediaplayerbutton an wenn val = 1 sonst wird er ausgeblendet
       if ( val > 0.5 ) {
         $("#audio_media_txt").show();
         $("#audio_media_but").show();
       }
     break;
     case "audio_media":
+    // Schaltet den Mediaplayer ein
       if ( val > 0.5 ) {
         audio_mediaswitch();
         $("#audio_media_but").css("color","black").css("background-color","yellow");
         $("#audio_media_but").html("ein");
         $("#audio_media_settings").show();
+        $("#audio_media_alben").html(" ");
       }
+    break;
+    case "audio_media_add_album":
+// Syntax: Typ: A=Album, T=Titel; Albumnummer; Titelnummer (0 bei Album); Titel
+//      $("#audio_media_alben").append("<div>Test</div>");
+      const AlbumData = val.split("#");
+//alert(AlbumData[0] + " # " +AlbumData[1]+" # "+AlbumData[2]+" # "+AlbumData[3]);
+      if (AlbumData[0] == "A") {
+        $("#audio_media_alben").append("<img id='mp_album"+AlbumData[1]+"_play' src='play.png' height=#50px' width='50px'>"+
+                                   "<img id='mp_album"+AlbumData[1]+"_img' src='dir_close.png' height='50px' width='50px'>"+
+                                   "<div style='width: 200px;float: right;'>"+AlbumData[3]+"</div><br>"+
+                                   "<div id='mp_album"+AlbumData[1]+"'></div");
+        $("#mp_album"+AlbumData[1]).hide();
+        $("#mp_album"+AlbumData[1]+"_img").click(function() {
+          if ($("#mp_album"+AlbumData[1]).is(':hidden')) {
+            $("#mp_album"+AlbumData[1]).attr("src","dir_open.png");
+            $("#mp_album"+AlbumData[1]).show();
+            $("#mp_album"+AlbumData[1]+"_play").attr("src","leer.png");
+          } else {
+            $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_close.png");
+            $("#mp_album"+AlbumData[1]).hide();
+            $("#mp_album"+AlbumData[1]+"_play").attr("src","play.png");
+          }
+        });
+        $("#mp_album"+AlbumData[1]+"_play").click(function() {
+          alert("Play_dir:"+AlbumData[1]);
+        });
+        } else {
+        $("#mp_album"+AlbumData[1]).append("<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play' src='play.png' height='50px' width='50px'>"+
+                                  "<img src='leer.png' height='50px' width='50px'>"+
+                                  "<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_img' src='mp3file.png' height='50px' width='50px'>"+
+                                  "<div style='width: 150px;float: right;'>"+AlbumData[3]+"</div><br>");
+        $("#mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play").click(function() {
+          alert("Play_dir:"+AlbumData[1]+" File:"+AlbumData[2]);
+        });
+      }
+
     break;
     case "audio_speak_show":
       if ( val > 0.5 ) {
@@ -889,7 +928,6 @@ function hide_all() {
   $("#page_main").hide();
   $("#page_console").hide();
   $("#page_settings").hide();
-  $("#page_update").hide();
   $("#page_sysinfo").hide();
   $("#page_logfile").hide();
   $("#but_main").hide();
@@ -1298,70 +1336,9 @@ function audio_radio_stn_update() {
         <button id="audio_radio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
       </div>
       <div id="audio_media_settings">
-          Media Menu TBD.
-
-
-
-
-
-
-          <div id="filedir">
-            <p>Dir: SD Karte</p>
-            <img id="fd_dir1_play" src="play.png" height="60px" width="60px">
-            <img id="fd_dir1_img" src="dir_close.png" height="60px" width="60px">
-             dir 1<br>
-            <div id="fd_dir1">
-              <img id="fd_file1_play" src="play.png" height="60px" width="60px">
-              <img src="leer.png" height="60px" width="60px">
-              <img id="fd_file1_img" src="mp3file.png" height="60px" width="60px">
-              file 1 <br>
-              <img id="fd_file1_play" src="play.png" height="60px" width="60px">
-              <img src="leer.png" height="60px" width="60px">
-              <img id="fd_file1_img" src="mp3file.png" height="60px" width="60px">
-              file 2 <br>
-              <img id="fd_file1_play" src="play.png" height="60px" width="60px">
-              <img src="leer.png" height="60px" width="60px">
-              <img id="fd_file1_img" src="mp3file.png" height="60px" width="60px">
-              file 3 <br>
-            </div>
-            <img id="fd_dir2_play" src="play.png" height="60px" width="60px">
-            <img id="fd_dir2_img" src="dir_close.png" height="60px" width="60px">
-             dir 2<br>
-            <div id="fd_dir2">
-              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
-              <img src="leer.png" height="30px" width="30px">
-              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
-              file 1 <br>
-              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
-              <img src="leer.png" height="30px" width="30px">
-              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
-              file 2 <br>
-              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
-              <img src="leer.png" height="30px" width="30px">
-              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
-              file 3 <br>
-            </div>
-            <img id="fd_dir3_play" src="play.png" height="60px" width="60px">
-            <img id="fd_dir3_img" src="dir_close.png" height="60px" width="60px">
-             dir 3<br>
-            <div id="fd_dir3">
-              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
-              <img src="leer.png" height="30px" width="30px">
-              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
-              file 1 <br>
-              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
-              <img src="leer.png" height="30px" width="30px">
-              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
-              file 2 <br>
-              <img id="fd_file1_play" src="play.png" height="30px" width="30px">
-              <img src="leer.png" height="30px" width="30px">
-              <img id="fd_file1_img" src="mp3file.png" height="30px" width="30px">
-              file 3 <br>
-            </div>
-          </div>  
-
-
-
+        <div id="audio_media_alben">
+          Alben DIV
+        </div>
       </div>
       <div id="audio_speak_settings">
           Speaker Menu TBD.
@@ -1451,16 +1428,6 @@ function audio_radio_stn_update() {
       <label for="log_system">System</label><br>
     </fieldset>
     
-  </div>
-
-  <div id="page_update" class="div_content">
-    <div class="info"><button class="i_button">i</button></div>
-    <div class="uploadmsg" id="uploadmsg"></div>
-    <form enctype="multipart/form-data" id="fs_form">
-          <input name="file" type="file" id="fs_file" accept=".bin" style="width: 100%;font-size: medium;"/>
-          <progress style="width: 100%;" id="fs_progress"></progress>
-          <input type="button" value="Upload" id="fs_update" class="button bg_rt"/>
-    </form>
   </div>
 
   <div id="page_sysinfo" class="div_content">

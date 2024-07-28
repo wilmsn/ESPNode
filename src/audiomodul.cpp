@@ -134,12 +134,12 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 #ifdef USE_AUDIO_MEDIA
   audio_media_num_dir = 0;
   File root = SD.open("/");
-  File file = root.openNextFile();
-  while(file){
-    if(file.isDirectory()) audio_media_num_dir++;
-    file = root.openNextFile();
+  File dir = root.openNextFile();
+  while(dir){
+    if(dir.isDirectory()) audio_media_num_dir++;
+    dir = root.openNextFile();
   }
-  file.close();
+  dir.close();
   root.close();
 //  audio_media_cur_dir = 1;
 //  audio_media_cur_file = 1;
@@ -195,7 +195,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json = "{\"audio_vol\":";
       html_json += audio_vol;
       html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
 #if defined(USE_AUDIO_LIB)
       audio.setVolume(audio_vol);
@@ -214,7 +214,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json = "{\"audio_bas\":";
       html_json += audio_bas;
       html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
 #if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
@@ -229,7 +229,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       html_json = "{\"audio_tre\":";
       html_json += audio_tre;
       html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
 #if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
@@ -244,7 +244,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
     if ( keyword == String(AUDIO_RADIO) || keyword == String("audio_radio") ) {
       audio_set_modus(Radio);
       html_json = "{\"audio_radio\":\"1\"}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
       retval = true;
     }
@@ -279,9 +279,38 @@ bool AudioModul::set(const String& keyword, const String& value) {
     if ( keyword == String(AUDIO_MEDIA) || keyword == String("audio_media") ) {
       audio_set_modus(Media);
       html_json = "{\"audio_media\":1}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
       retval = true;
+      uint16_t dirNo = 0;
+      uint16_t fileNo;
+      File file;
+      File root = SD.open("/");
+      root.rewindDirectory();
+      File dir = root.openNextFile();
+      while (dir) {
+        if (dir.isDirectory()) {
+          html_json = "{\"audio_media_add_album\":\"A#" + String(dirNo) + "#0#" + String(dir.name()) + String("\"}");
+          write2log(LOG_MODULE,1,html_json.c_str());
+          ws.textAll(html_json);
+          fileNo = 0;
+          file = dir.openNextFile();
+          while (file) {
+            if (String(file.name()).endsWith(".mp3")) {
+              html_json = "{\"audio_media_add_album\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
+              write2log(LOG_MODULE,1,html_json.c_str());
+              ws.textAll(html_json);
+            }
+            file = dir.openNextFile();
+            fileNo++;
+          }
+        }
+        dir = root.openNextFile();
+        dirNo++;
+      }
+      file.close();
+      dir.close();
+      root.close();
     }
 #endif
 #ifdef USE_AUDIO_SPEAKER
@@ -289,7 +318,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
     if ( keyword == String(AUDIO_SPEAKER) || keyword == String("audio_speak") ) {
       audio_set_modus(Speaker);
       html_json = "{\"audio_speak\":1}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
       audio_speak_show();
       // TODO: Speaker einschalten, alles andere aus
@@ -739,7 +768,7 @@ void audio_bitrate(const char *info) {
     html_json = "{\"audiomsg4\":\"";
     html_json += bpsInfo;
     html_json += "\"}";
-    write2log(LOG_WEB,1,html_json.c_str());
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
 }
 
@@ -748,7 +777,7 @@ void audio_showstation(const char *info){
     html_json = "{\"audiomsg1\":\"";
     html_json += info;
     html_json += "\"}";
-    write2log(LOG_WEB,1,html_json.c_str());
+    write2log(LOG_MODULE,1,html_json.c_str());
     ws.textAll(html_json);
 }
 
@@ -876,7 +905,7 @@ void AudioModul::audio_radio_send_stn2web() {
     html_json += ";";
     html_json += station[i].name;
     html_json += "\"}";
-      write2log(LOG_WEB,1,html_json.c_str());
+      write2log(LOG_MODULE,1,html_json.c_str());
       ws.textAll(html_json);
   }
 }
