@@ -96,8 +96,7 @@ void Base_Generic::set_changed(bool val) {
 void Base_Generic::loop(time_t now) {
 }
 
-void Base_Generic::html_create_json_part(String& json) {
-  json += " ";
+void Base_Generic::html_create() {
 }
 
 String& Base_Generic::show_keyword() {

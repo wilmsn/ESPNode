@@ -466,8 +466,8 @@ function prozessJS( key, val ) {
       }
     break;
     case "audio_radio":
-    if ( val > 0.5 ) {
-        audio_mediaswitch();
+      audio_mediaswitch();
+      if ( val > 0.5 ) {
         $("#audio_radio_but").css("color","black").css("background-color","yellow");
         $("#audio_radio_but").html("ein");
         $("#audio_radio_settings").show();
@@ -482,8 +482,8 @@ function prozessJS( key, val ) {
     break;
     case "audio_media":
     // Schaltet den Mediaplayer ein
+      audio_mediaswitch();
       if ( val > 0.5 ) {
-        audio_mediaswitch();
         $("#audio_media_but").css("color","black").css("background-color","yellow");
         $("#audio_media_but").html("ein");
         $("#audio_media_settings").show();
@@ -533,8 +533,8 @@ function prozessJS( key, val ) {
       }
     break;
     case "audio_speak":
+      audio_mediaswitch();
       if ( val > 0.5 ) {
-        audio_mediaswitch();
         $("#audio_speak_but").css("color","black").css("background-color","yellow");
         $("#audio_speak_but").html("ein");
         $("#audio_speak_settings").show();

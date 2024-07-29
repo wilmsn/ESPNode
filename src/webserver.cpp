@@ -317,19 +317,23 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 }
 
 void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
-      html_json = "{\"titel1\":\"" + String(HOSTNAME) + "\"";
-      html_json += ",\"wifi_ssid\":\"";
-      html_json += wifi_ssid;
-      html_json += "\",\"wifi_pass\":\"";
-      html_json += wifi_pass;
-      html_json += "\"";
+#define TMPSTR_SIZE   50
+      char tmpstr[TMPSTR_SIZE+1];
+      snprintf(tmpstr,TMPSTR_SIZE,"{\"titel1\":\"%s\"}",HOSTNAME);
+      ws.textAll(tmpstr);
+      write2log(LOG_WEB,1,tmpstr);
+      snprintf(tmpstr,TMPSTR_SIZE,"{\"wifi_ssid\":\"%s\"}",wifi_ssid.c_str());
+      ws.textAll(tmpstr);
+      write2log(LOG_WEB,1,tmpstr);
+      snprintf(tmpstr,TMPSTR_SIZE,"{\"wifi_pass\":\"%s\"}",wifi_pass.c_str());
+      ws.textAll(tmpstr);
+      write2log(LOG_WEB,1,tmpstr);
 #if defined(HOST_DISCRIPTION)
-      html_json += ",\"titel2\":\"";
-      html_json += HOST_DISCRIPTION;
-      html_json += "\"";
+      snprintf(tmpstr,TMPSTR_SIZE,"{\"titel2\":\"%s\"}",HOST_DISCRIPTION);
+      ws.textAll(tmpstr);
 #endif
 #if defined(MODULE1)
-      module1.html_create_json_part(html_json);
+      module1.html_create();
 #endif
 #if defined(MODULE2)
       module2.html_create_json_part(html_json);
@@ -358,7 +362,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
       html_json += mqtt_topicP2;
       html_json += "\"";
 #else
-      html_json += ",\"set_mqtt_enable\":0";
+      ws.textAll("{\"set_mqtt_enable\":0}");
 #endif
 // Setzen der Logging Flags 
 #if defined(RF24GW)
@@ -369,14 +373,26 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
       html_json += ",\"log_mqtt\":";
       html_json += do_log_mqtt? "1": "0";
 #endif
-      html_json += ",\"log_module\":";
-      html_json += do_log_module? "1": "0";
-      html_json += ",\"log_system\":";
-      html_json += do_log_system? "1": "0";
-      html_json += ",\"log_critical\":";
-      html_json += do_log_critical? "1": "0";
-      html_json += ",\"log_web\":";
-      html_json += do_log_web? "1": "0";
+      if (do_log_module) {
+        ws.textAll("{\"log_module\":1}");
+      } else {
+        ws.textAll("{\"log_module\":0}");
+      }
+      if (do_log_system) {
+        ws.textAll("{\"log_system\":1}");
+      } else {
+        ws.textAll("{\"log_system\":0}");
+      }
+      if (do_log_critical) {
+        ws.textAll("{\"log_critical\":1}");
+      } else {
+        ws.textAll("{\"log_critical\":0}");
+      }
+      if (do_log_web) {
+        ws.textAll("{\"log_web\":1}");
+      } else {
+        ws.textAll("{\"log_web\":0}");
+      }
 // RF24 Gateway
 #if defined(RF24GW)
       html_json += ",\"set_rf24gw_enable\":1";
@@ -391,11 +407,8 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
       html_json += "\",\"set_RF24GW-No\":";
       html_json += rf24gw_gw_no;
 #else      
-      html_json += ",\"set_rf24gw_enable\":0";
+      ws.textAll("{\"set_rf24gw_enable\":0}");
 #endif      
-      html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
 }
 
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,

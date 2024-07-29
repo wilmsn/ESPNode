@@ -1,6 +1,7 @@
 #include "config.h"
 #ifdef USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+#include "common.h"
 
 // Startet als Schalter mit Regler der einen HW-Pin mittels PWM steuert
 // Fall 5
@@ -140,37 +141,26 @@ bool Switch_OnOff::set(const String& keyword, const String& value) {
   return retval;
 }
 
-void Switch_OnOff::html_create_json_part(String& json) {
-  json += ",\"";
-  json += String(obj_html_place);
-  json += "\":\"";
-  json += obj_value? "1" : "0"; 
-  json += "\",\"";
-  json += String(obj_html_place);
-  json += "_label\":\"";
-  json += obj_label;
-  json += "\",\"";
-  json += String(obj_html_place);
-  json += "_format\":\"x\"";
+void Switch_OnOff::html_create() {
+#define TMPSTR_SIZE    50
+  char tmpstr[TMPSTR_SIZE+1];
+  snprintf(tmpstr,TMPSTR_SIZE,"{\"%s\":%s}",obj_html_place.c_str(),obj_value? "1" : "0");
+  ws.textAll(tmpstr);
+  snprintf(tmpstr,TMPSTR_SIZE,"{\"%s_label\":\"%s\"}",obj_html_place.c_str(),obj_label.c_str());
+  ws.textAll(tmpstr);
+  snprintf(tmpstr,TMPSTR_SIZE,"{\"%s_format\":\"x\"}",obj_html_place.c_str());
+  ws.textAll(tmpstr);
   if (obj_slider_used) {
-    json += ",\"slider";
-    json += String(obj_slider_no);
-    json += "\":1,\"slider";
-    json += String(obj_slider_no);
-    json += "label\":\"";
-    json += obj_slider_label;
-    json += "\",\"slider";
-    json += String(obj_slider_no);
-    json += "name\":\"";
-    json += obj_keyword;
-    json += "\",\"slider";
-    json += String(obj_slider_no);
-    json += "val\":";
-    json += obj_slider_val;
-    json += ",\"slider";
-    json += String(obj_slider_no);
-    json += "max\":";
-    json += obj_slider_max_val;
+    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%u\":1}",obj_slider_no);
+    ws.textAll(tmpstr);
+    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%ulabel\":\"%s\"}",obj_slider_no,obj_slider_label.c_str());
+    ws.textAll(tmpstr);
+    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%uname\":\"%s\"}",obj_slider_no,obj_keyword.c_str());
+    ws.textAll(tmpstr);
+    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%uval\":%u}",obj_slider_no,obj_slider_val);
+    ws.textAll(tmpstr);
+    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%umax\":%u}",obj_slider_no,obj_slider_max_val);
+    ws.textAll(tmpstr);
   }
 }
 

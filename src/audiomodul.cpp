@@ -151,37 +151,50 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   last_modus = Radio;
 }
 
-void AudioModul::html_create_json_part(String& json) {
-  Switch_OnOff::html_create_json_part(json);
-  json += ",\"audio_show\":1";
-#ifdef USE_AUDIO_RADIO  
-  json += ",\"audio_radio_show\":1";
-  json += ",\"audio_radio\":";
-  if (obj_value) {
-    json += (modus == Radio)?1:0;
-  } else {
-    json += "1";
-  }
+void AudioModul::html_create() {
+  Switch_OnOff::html_create();
+  ws.textAll("{\"audio_show\":1}");
+#ifdef USE_AUDIO_RADIO
+      ws.textAll("{\"audio_radio_show\":1}");
 #endif
 #ifdef USE_AUDIO_MEDIA
-  json += ",\"audio_media_show\":1";
-  json += ",\"audio_media\":";
-  json += (modus == Media)?1:0;
+      ws.textAll("{\"audio_media_show\":1}");
+#endif
+  switch(modus) {
+#ifdef USE_AUDIO_RADIO
+    case Radio:  
+      // Radio ist vorhanden und wird im Web angezeigt
+      ws.textAll("{\"audio_radio\":1}");
+      audio_radio_web_init();
+    break;
+#endif
+#ifdef USE_AUDIO_MEDIA
+    case Media:
+      ws.textAll("{\"audio_media\":1}");
+      audio_media_web_init();
+    break;
 #endif
 #ifdef USE_AUDIO_SPEAKER
-  json += ",\"audio_speak_show\":1";
-  json += ",\"audio_speak\":";
-  json += (modus == Speaker)?1:0;
+    case Speaker:
+      ws.textAll("\"audio_speak_show\":1");
+      ws.textAll(",\"audio_speak\":1");
+      audio_speak_web_init();
+    break;
 #endif
-  json += ",\"audio_vol\":";
-  json += audio_vol;
-  json += ",\"audio_bas\":";
-  json += audio_bas;
-  json += ",\"audio_tre\":";
-  json += audio_tre;
-#ifdef USE_AUDIO_RADIO
-  audio_radio_send_stn2web();
-#endif
+    case Off:
+
+    break;
+    default:
+
+    break;
+  }
+  char tmpstr[20];
+  snprintf(tmpstr,19,"{\audio_vol\":%u}",audio_vol);
+  ws.textAll(tmpstr);
+  snprintf(tmpstr,19,"{\audio_bas\":%u}",audio_bas);
+  ws.textAll(tmpstr);
+  snprintf(tmpstr,19,"{\audio_tre\":%u}",audio_tre);
+  ws.textAll(tmpstr);
 }
 
 bool AudioModul::set(const String& keyword, const String& value) {
@@ -260,57 +273,26 @@ bool AudioModul::set(const String& keyword, const String& value) {
         if (String(station[i].name) == value) audio_radio_cur_station = i;  
       }
       audio_radio_on();
+      audio_radio_web_init();
     }
     // Radio: Sender Name speichern ueber Webinterface
     if ( keyword == String("audio_radio_save_stn_name") ) {
       snprintf(station[audio_radio_cur_station].name,STATION_NAME_LENGTH,"%s",value.c_str());
       audio_radio_save_stations();
-      audio_radio_send_stn2web();
+      audio_radio_web_init();
     }
     // Radio: Sender URL speichern ueber Webinterface
     if ( keyword == String("audio_radio_save_stn_url") ) {
       snprintf(station[audio_radio_cur_station].url,STATION_URL_LENGTH,"%s",value.c_str());
       audio_radio_save_stations();
-      audio_radio_send_stn2web();
+      audio_radio_web_init();
     }
 #endif
 #ifdef USE_AUDIO_MEDIA
     // Set for media
     if ( keyword == String(AUDIO_MEDIA) || keyword == String("audio_media") ) {
       audio_set_modus(Media);
-      html_json = "{\"audio_media\":1}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
       retval = true;
-      uint16_t dirNo = 0;
-      uint16_t fileNo;
-      File file;
-      File root = SD.open("/");
-      root.rewindDirectory();
-      File dir = root.openNextFile();
-      while (dir) {
-        if (dir.isDirectory()) {
-          html_json = "{\"audio_media_add_album\":\"A#" + String(dirNo) + "#0#" + String(dir.name()) + String("\"}");
-          write2log(LOG_MODULE,1,html_json.c_str());
-          ws.textAll(html_json);
-          fileNo = 0;
-          file = dir.openNextFile();
-          while (file) {
-            if (String(file.name()).endsWith(".mp3")) {
-              html_json = "{\"audio_media_add_album\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
-              write2log(LOG_MODULE,1,html_json.c_str());
-              ws.textAll(html_json);
-            }
-            file = dir.openNextFile();
-            fileNo++;
-          }
-        }
-        dir = root.openNextFile();
-        dirNo++;
-      }
-      file.close();
-      dir.close();
-      root.close();
     }
 #endif
 #ifdef USE_AUDIO_SPEAKER
@@ -349,7 +331,7 @@ void AudioModul::audio_all_apps_off() {
 void AudioModul::audio_set_modus(modus_t _modus) {
   switch (_modus) {
     case Off:
-      Serial.println("audio_set_modus: case Off");
+      write2log(LOG_MODULE,1,"audio_set_modus: case Off");
       rotarymodul.setMaxLevel(0);
       rotarymodul.initLevel(0, 0, 0, 100);
       rotarymodul.setLevel(0);
@@ -359,7 +341,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       audiodisplay.show_time(true);
     break;
     case Select:
-      Serial.println("audio_set_modus: case Select");
+      write2log(LOG_MODULE,1,"audio_set_modus: case Select");
       rotarymodul.setMaxLevel(1);
       rotarymodul.initLevel(1, 0, 0, 100);
       rotarymodul.initLevel(0, 0, (uint8_t)modus, modus_count-1);
@@ -370,7 +352,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
     break;
 #ifdef USE_AUDIO_RADIO
     case Radio:
-      Serial.println("audio_set_modus: case Radio");
+      write2log(LOG_MODULE,1,"audio_set_modus: case Radio");
       rotarymodul.setMaxLevel(1);
       rotarymodul.initLevel(0, 0, audio_vol, 100);
       rotarymodul.initLevel(1, 0, audio_radio_cur_station, MAXSTATIONS-1);
@@ -380,11 +362,13 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       last_modus = Radio;
       audio_all_apps_off();
       audio_radio_on();
+      audio_radio_disp_init();
+      audio_radio_web_init();
     break;
 #endif
 #ifdef USE_AUDIO_MEDIA
     case Media:
-      Serial.println("audio_set_modus: case Media");
+      write2log(LOG_MODULE,1,"audio_set_modus: case Media");
       rotarymodul.setMaxLevel(2);
       rotarymodul.initLevel(0, 0, audio_vol, 100);
       rotarymodul.initLevel(1, 0, audio_media_cur_dir, audio_media_num_dir-1);
@@ -395,11 +379,13 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       last_modus = Media;
       audio_all_apps_off();
       audio_media_on();
+      audio_media_disp_init();
+      audio_media_web_init();
     break;
 #endif
 #ifdef USE_AUDIO_SPEAKER
     case Speaker:
-      Serial.println("audio_set_modus: case Speaker");
+      write2log(LOG_MODULE,1,"audio_set_modus: case Speaker");
       modus = Speaker;
       last_modus = Speaker;
       all_apps_off();
@@ -407,7 +393,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
     break;
 #endif
     default:
-      Serial.println("audio_set_modus: case default");
+      write2log(LOG_MODULE,1,"audio_set_modus: case default");
       modus = Off;
       audio_all_apps_off();
       set_switch(0);
@@ -524,7 +510,7 @@ void AudioModul::loop(time_t now) {
           switch(rotarymodul.curLevel()) {
             case 0:
             // Modus: Ausgewählten Sender anzeigen
-              audio_radio_show();
+              audio_radio_disp_init();
             break;
             case 1:
             // Senderwahl anzeigen
@@ -550,7 +536,7 @@ void AudioModul::loop(time_t now) {
       if ( timeout_set && now - timeout_start > TIMEOUT) {
         rotarymodul.setLevel(0);
         timeout_set = false;
-        audio_media_show();
+        audio_media_disp_init();
       }
       switch (rotarymodul.changed()) {
         case 1:
@@ -579,7 +565,7 @@ void AudioModul::loop(time_t now) {
             case 0:
             // Wiedergabe aktuellen Song anzeigen
               audio_media_play(audio_media_cur_dir,audio_media_cur_file);
-              audio_media_show();
+              audio_media_disp_init();
               timeout_set = false;
             break;
             case 1:
@@ -810,6 +796,7 @@ void AudioModul::audio_radio_off() {
     file = NULL;
   }
 #endif
+  ws.textAll("{\"audio_radio\":0}");
 }
 
 void AudioModul::audio_radio_on() {
@@ -830,16 +817,29 @@ void AudioModul::audio_radio_on() {
     mp3->begin(buff, out);
 #endif
     write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
-    if (rotarymodul.curLevel() == 0) audio_radio_show();
   }
 }
 
-void AudioModul::audio_radio_show() {
+void AudioModul::audio_radio_disp_init() {
   audiodisplay.clear();
   audiodisplay.show_ip(WiFi.localIP().toString().c_str());
   audiodisplay.show_vol(audio_vol);
   audiodisplay.show_time(false);
   audiodisplay.show_info1(station[audio_radio_cur_station].name);
+}
+
+void AudioModul::audio_radio_web_init() {
+  String json;
+  ws.textAll("{\"audio_radio\":1}");
+  for (int i=0; i<MAXSTATIONS; i++) {
+    json = "{\"audio_radio_add_stn\":\"";
+    json += station[i].url;
+    json += ";";
+    json += station[i].name;
+    json += "\"}";
+    write2log(LOG_MODULE,1,json.c_str());
+    ws.textAll(json);
+  }
 }
 
 void AudioModul::audio_radio_select() {
@@ -898,18 +898,6 @@ void AudioModul::audio_radio_save_stations() {
   }
 }
 
-void AudioModul::audio_radio_send_stn2web() {
-  for (int i=0; i<MAXSTATIONS; i++) {
-    String html_json = "{\"audio_radio_add_stn\":\"";
-    html_json += station[i].url;
-    html_json += ";";
-    html_json += station[i].name;
-    html_json += "\"}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-  }
-}
-
 #endif
 /*********************************************************************************************************
  * 
@@ -921,10 +909,56 @@ void AudioModul::audio_radio_send_stn2web() {
 
 void AudioModul::audio_media_on() {
   audio_media_play(audio_media_cur_dir,audio_media_cur_file);
-  if (rotarymodul.curLevel() == 0) audio_media_show();
+  if (rotarymodul.curLevel() == 0) audio_media_disp_init();
+  ws.textAll("{\"audio_media\":1}");
 }
 
 void AudioModul::audio_media_off() {
+  ws.textAll("{\"audio_media\":0}");
+}
+
+void AudioModul::audio_media_disp_init() {
+  audiodisplay.clear();
+  audiodisplay.show_ip(WiFi.localIP().toString().c_str());
+  audiodisplay.show_vol(audio_vol);
+  audiodisplay.show_time(false);
+}
+
+void AudioModul::audio_media_web_init() {
+  String json;
+  uint16_t dirNo = 0;
+  uint16_t fileNo;
+  File file;
+  File root;
+  File dir;
+  write2log(LOG_MODULE,1,"Mediaplayer Web Init");
+  ws.textAll("{\"audio_media\":1}");
+  root = SD.open("/");
+  root.rewindDirectory();
+  dir = root.openNextFile();
+  while (dir) {
+    if (dir.isDirectory()) {
+      json = "{\"audio_media_add_album\":\"A#" + String(dirNo) + "#0#" + String(dir.name()) + String("\"}");
+      write2log(LOG_MODULE,1,json.c_str());
+      ws.textAll(json);
+      fileNo = 0;
+      file = dir.openNextFile();
+      while (file) {
+        if (String(file.name()).endsWith(".mp3")) {
+          json = "{\"audio_media_add_album\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
+          write2log(LOG_MODULE,1,json.c_str());
+          ws.textAll(json);
+        }
+        file = dir.openNextFile();
+        fileNo++;
+      }
+    }
+    dir = root.openNextFile();
+    dirNo++;
+  }
+  file.close();
+  dir.close();
+  root.close();
 }
 
 void AudioModul::audio_media_sel_file(File& dir, File& file, uint8_t count) {
@@ -1088,13 +1122,6 @@ void AudioModul::audio_media_select_file() {
   audiodisplay.select(obj[1].c_str(),obj[2].c_str(),obj[3].c_str());
 }
 
-void AudioModul::audio_media_show() {
-  audiodisplay.clear();
-  audiodisplay.show_ip(WiFi.localIP().toString().c_str());
-  audiodisplay.show_vol(audio_vol);
-  audiodisplay.show_time(false);
-}
-
 #endif
 /*********************************************************************************************************
  * 
@@ -1106,9 +1133,13 @@ void AudioModul::audio_media_show() {
 
 void AudioModul::audio_speak_on() {
   if (rotarymodul.curLevel() == 0) audio_speak_show();
+  html_json = "{\"audio_speak\":1}";
+  ws.textAll(html_json);
 }
 
 void AudioModul::audio_speak_off() {
+  html_json = "{\"audio_speak\":0}";
+  ws.textAll(html_json);
 }
 
 void AudioModul::audio_speak_show() {

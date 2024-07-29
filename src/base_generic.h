@@ -93,9 +93,8 @@ public:
     /// @return Ein JSON formatierter String
     String& mqtt_json_part();
     
-    /// @brief Dummy, erstellt ein Teil-JSON zur initialen Konfiguration der Webseite in einem abgeleiteten Objekt
-    /// @param json Ein übergebener String der erweitert wird
-    void html_create_json_part(String& json);
+    /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Wbinhalt initialisiert.
+    void html_create();
     
     /// @brief Erstellt einen JSON der den aktuellen Wert inklusive evtl. benötigter HTML-Syntax beinhaltet
     /// @return json Ein übergebener String der komplett mit json Syntax gefüllt wird

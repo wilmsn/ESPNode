@@ -96,45 +96,58 @@ public:
     /// @return "true" bei Übereinstimmung der Keywörter sonst false
     bool set(const String& keyword, const String& value);
  
-    void html_create_json_part(String& json);
+    void html_create();
 
     void loop(time_t now);
 
 private:
 
 #ifdef USE_AUDIO_RADIO
+    /// @brief Schaltet das Radio aus.
     void audio_radio_off();
- 
+
+    /// @brief Schaltet das Radio an.
     void audio_radio_on();
+
+    /// @brief Die gesamte Initialisierung des Radios auf dem Display.
+    void audio_radio_disp_init();
+
+    /// @brief Die gesamte Initialisierung dieser Anwendung auf der Weboberfläche.
+    void audio_radio_web_init();
 
     void audio_radio_select();
 
     void audio_radio_set_station();
 
-    void audio_radio_show();
+//    void audio_radio_show();
 
     void audio_radio_save_stations();
     
     void audio_radio_load_stations();
-
-    void audio_radio_send_stn2web();
 #endif
  //   void audio_radio_station_json(String& json);
 #ifdef USE_AUDIO_MEDIA
-
+    /// @brief Schaltet den Mediaplayer aus.
     void audio_media_off();
  
+    /// @brief Schaltet den Mediaplayer ein.
     void audio_media_on();
 
+    /// @brief Die gesamte Initialisierung des Mediaplayers auf dem Display.
+    void audio_media_disp_init();
+
+    /// @brief Die gesamte Initialisierung des Mediaplayers auf der Weboberfläche.
+    void audio_media_web_init();
+
     void audio_media_sel_file(File& dir, File& file, uint8_t count);
-//    void audio_media_file_from_dir(File mydir, File *myfile, uint8_t fileNo);
+
     File audio_media_file_from_dir(File mydir, uint8_t fileNo);
 
     void audio_media_select_dir();
 
     void audio_media_select_file();
 
-    void audio_media_show();
+ //   void audio_media_show();
 
     void audio_media_play(uint8_t _dirNo, uint8_t _fileNo);
 
@@ -146,7 +159,7 @@ private:
  
     void audio_speak_on();
 
-    void audio_speak_show();
+    void audio_speak_web_init();
 #endif
     void      audio_set_modus(modus_t _modus);
     void      audio_show_modus(modus_t _modus);

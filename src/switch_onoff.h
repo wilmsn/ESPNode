@@ -95,8 +95,7 @@ public:
     bool set(const String& keyword, const String& value);
 
     /// @brief Erstellt ein Teil-JSON zur initialen Konfiguration der Webseite
-    /// @param json Ein übergebener String der erweitert wird
-    void html_create_json_part(String& json);
+    void html_create();
 
     /// @brief Gibt die aktuellen Einstellungen des Sliders zurück 
     /// @return Der aktuelle Wert des Sliders
