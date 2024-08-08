@@ -45,8 +45,6 @@ int magicno;
 /// @brief Das reboot Flag, ist es auf "true" wird im nächsten Loop Durchgang der Node neu gestartet.
 bool rebootflag = false;
 
-/// @brief Variablen zur Nutzung im Umfeld der HTML Seite
-String html_json;
 // WiFi
 String wifi_ssid;
 String wifi_pass;

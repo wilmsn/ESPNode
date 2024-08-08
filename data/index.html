@@ -22,8 +22,10 @@ var slider1name;
 var slider1label;
 var slider2val;
 var slider2name;
+var slider2label;
 var slider3val;
 var slider3name;
+var slider3label;
 var temp;
 var mqtt_active_old;
 var mqttserver_old;
@@ -58,8 +60,8 @@ function initWebSocket() {
 
 function onOpen(event) {
     console.log('Connection opened');
+//    alert(JSON.stringify(event.data));
     const json = JSON.parse(event.data, function (key, val) {
-      console.log(key+" : "+val);
       prozessJS( key, val );
     });
 }
@@ -70,9 +72,11 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-   const json = JSON.parse(event.data, function (key, val) {
-      prozessJS( key, val );
-    });
+//  alert(JSON.stringify(event.data));
+  const json = JSON.parse(event.data, function (key, val) {
+//    if (key.startsWith("tab") ) alert(key+" : "+val);
+    prozessJS( key, val );
+  });
 }
 
 function onLoad(event) {
@@ -97,10 +101,10 @@ $(document).ready(function(){
   $("#sw2_div").hide();
   $("#sw3_div").hide();
   $("#sw4_div").hide();
-  $("#ledmatrix").hide();
   $("#slider1div").hide();
   $("#slider2div").hide();
   $("#slider3div").hide();
+  $("#ledmatrix").hide();
   $("#audio_div").hide();
   $("#audio_radio_txt").hide();
   $("#audio_radio_but").hide();
@@ -111,6 +115,7 @@ $(document).ready(function(){
   $("#audio_radio_settings").hide();
   $("#audio_media_settings").hide();
   $("#audio_speak_settings").hide();
+  $("#audio_menu").removeClass("change");
   $('#rf24gw').click(function() {
     if (!$(this).is(':checked')) {
       $("#rf24gw_div").hide();
@@ -159,44 +164,6 @@ $(document).ready(function(){
     }
   });
 
-  /*  TEST 
-$("#fd_dir1").hide();
-  $("#fd_dir2").hide();
-  $("#fd_dir3").hide();
-  $("#fd_dir1_img").click(function() {
-    if ($("#fd_dir1").is(':hidden')) {
-      $("#fd_dir1_img").attr("src","dir_open.png");
-      $("#fd_dir1").show();
-      $("#fd_dir1_play").attr("src","leer.png");
-    } else {
-      $("#fd_dir1_img").attr("src","dir_close.png");
-      $("#fd_dir1").hide();
-      $("#fd_dir1_play").attr("src","play.png");
-    }
-  });
-  $("#fd_dir2_img").click(function() {
-    if ($("#fd_dir2").is(':hidden')) {
-      $("#fd_dir2_img").attr("src","dir_open.png");
-      $("#fd_dir2").show();
-      $("#fd_dir2_play").attr("src","leer.png");
-    } else {
-      $("#fd_dir2_img").attr("src","dir_close.png");
-      $("#fd_dir2").hide();
-      $("#fd_dir2_play").attr("src","play.png");
-    }
-  });
-  $("#fd_dir3_img").click(function() {
-    if ($("#fd_dir3").is(':hidden')) {
-      $("#fd_dir3_img").attr("src","dir_open.png");
-      $("#fd_dir3").show();
-      $("#fd_dir3_play").attr("src","leer.png");
-    } else {
-      $("#fd_dir3_img").attr("src","dir_close.png");
-      $("#fd_dir3").hide();
-      $("#fd_dir3_play").attr("src","play.png");
-    }
-  });
- Ende Test */
   $('#audio_radio_but').click(function () {
 //    alert("audio_radio click func");
     do_cmd("audio_radio","1");
@@ -238,7 +205,6 @@ $("#fd_dir1").hide();
 
  });
 
-
 function show_tab1() {
   $("#console_tab1").removeClass("tab_passive").addClass("tab_active");
   $("#console_tab2").removeClass("tab_active").addClass("tab_passive");
@@ -261,6 +227,7 @@ function show_tab3() {
 }
 
 function prozessJS( key, val ) {
+//alert(key + " : " + JSON.stringify(val));
   switch(key) {
 // Alle Seiten    
     case "titel1":
@@ -361,13 +328,10 @@ function prozessJS( key, val ) {
     case "slider1":
       $("#slider1div").show();
       $("#slider1").change(function() {
-        var mycmd = "/cmd?";
-        mycmd = mycmd + slider1name;
+        var mycmd = slider1name;
         mycmd = mycmd + "=S:";
         mycmd = mycmd + $(this).val();
-        $.get(mycmd, function(data) {
-//          alert(data);
-        });
+        websocket.send(mycmd);
       });
     break;
     case "slider1name":
@@ -388,38 +352,50 @@ function prozessJS( key, val ) {
     case "slider2":
       $("#slider2div").show();
       $("#slider2").change(function() {
-        var mycmd = "/cmd?";
-        mycmd = mycmd + slider2name;
+        var mycmd = slider2name;
         mycmd = mycmd + "=S:";
         mycmd = mycmd + $(this).val();
-        $.get(mycmd, function(data) {
-//          alert(data);
-        });
+        websocket.send(mycmd);
       });
     break;
     case "slider2name":
       slider2name = val;
     break;
     case "slider2label":
+      slider2label = val;
       $("#slider2label").html(val);
+    break;
+    case "slider2max":
+      $("#slider2").attr('max', val);
+    break;
+    case "slider2val":
+      slider2val = val;
+      $("#slider2").val(val);
+      $("#slider2label").html(slider2label+": "+slider2val);
     break;
     case "slider3":
       $("#slider3div").show();
       $("#slider3").change(function() {
-        var mycmd = "/cmd?";
-        mycmd = mycmd + slider3name;
+        var mycmd = slider3name;
         mycmd = mycmd + "=S:";
         mycmd = mycmd + $(this).val();
-        $.get(mycmd, function(data) {
-//          alert(data);
-        });
+        websocket.send(mycmd);
       });
     break;
     case "slider3name":
       slider3name = val;
     break;
     case "slider3label":
+      slider3label = val;
       $("#slider3label").html(val);
+    break;
+    case "slider3max":
+      $("#slider3").attr('max', val);
+    break;
+    case "slider3val":
+      slider3val = val;
+      $("#slider3").val(val);
+      $("#slider3label").html(slider3label+": "+slider3val);
     break;
     case "matrix_x":
       ledmatrix_x = val;
@@ -798,7 +774,6 @@ case "wifi_ssid":
     case "UpTime":
       $("#Tab").append("<tr><td class='tab_left'> Uptime: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
-
     case "IP":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Network:</td></tr>"+
                        "<tr><td class='tab_left'> IP Address: </td><td class='tab_right'>"+val+"</td></tr>");
@@ -824,7 +799,6 @@ case "wifi_ssid":
     case "MAC":
       $("#Tab").append("<tr><td class='tab_left'> MAC Address: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
-
     case "IdeVer":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Build System:</td></tr>"+
                        "<tr><td class='tab_left'> IDE Version: </td><td class='tab_right'>"+val+"</td></tr>");
@@ -910,17 +884,36 @@ case "wifi_ssid":
       const sensordata5 = val.split("#");
       $("#Tab").append("<tr><td class='tab_left'>"+sensordata5[0]+"</td><td class='tab_right'>"+sensordata5[1]+"</td></tr>");
     break;
+    case "tab_head":
+//      alert(val);
+      $("#Tab tr:last").after("<tr><td colspan=2 class='tab_head'>"+val+"</td></tr>");
+    break;
+    case "tab_line1":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
+    case "tab_line2":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
+    case "tab_line3":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
+    case "tab_line4":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
+    case "tab_line5":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
     case "alert":
       alert(val);
     break;
-/*    default:
-      alert(key + " ??? ");
-
-      const json = JSON.parse(event.data, function (key, val) {
-          alert("#> " + key + " : " + val );
-      });
-
-    break; */
+    default:
+//      alert("nicht zugeordnet "+ JSON.stringify(key) + " : " + JSON.stringify(val));
+    break; 
   }
 }
 

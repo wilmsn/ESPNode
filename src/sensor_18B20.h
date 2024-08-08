@@ -23,6 +23,7 @@ public:
     /// @param now Die aktuelle Zeit in Unix Sekunden
     void loop(time_t now);
 
+    void html_create();
 private:
     /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
     void start_measure(time_t now);

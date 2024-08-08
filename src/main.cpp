@@ -611,7 +611,7 @@ void loop() {
     }
 #endif
 #if defined(MQTT)
-    mqtt_loop();
+    mqtt_loop(now);
 //    delay(0);
     yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
@@ -621,56 +621,26 @@ void loop() {
 #endif
 #if defined(MODULE1)
     module1.loop(now);
-    if (module1.webChange()) {
-      html_json = module1.html_stat_json();
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-    }
     yield();
 #endif
 #if defined(MODULE2)
     module2.loop(now);
-    if (module2.webChange()) {
-      html_json = module2.html_stat_json();
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-    }
     yield();
 #endif
 #if defined(MODULE3)
     module3.loop(now);
-    if (module3.webChange()) {
-      html_json = module3.html_stat_json();
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-    }
     yield();
 #endif
 #if defined(MODULE4)
     module4.loop(now);
-    if (module4.webChange()) {
-      html_json = module4.html_stat_json();
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-    }
     yield();
 #endif
 #if defined(MODULE5)
     module5.loop(now);
-    if (module5.webChange()) {
-      html_json = module5.html_stat_json();
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-    }
     yield();
 #endif
 #if defined(MODULE6)
     module6.loop(now);
-    if (module6.webChange()) {
-      html_json = module6.html_stat_json();
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
-    }
     yield();
 #endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
@@ -678,12 +648,6 @@ void loop() {
       write2log(LOG_CRITICAL,1,loopmsg);
     }
     yield();
-#if defined(MQTT)
-    if ( (millis() - mqtt_last_tele) > (TELEINTERVAL*1000) ) {
-      mqtt_last_tele = millis();
-      do_send_mqtt_tele = true;
-    }
-#endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
       write2log(LOG_CRITICAL,1,loopmsg);

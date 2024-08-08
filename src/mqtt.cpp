@@ -1,6 +1,29 @@
-#include "mqtt.h"
+#include "common.h"
 
-// dokumentiert in main.h
+/// @brief Ein Objekt für den MQTT Wifi Client
+WiFiClient mqtt_wifi_client;
+/// @brief Ein Objekt als MQTT Client
+/// @param   Der Wifi Client
+PubSubClient mqttClient(mqtt_wifi_client);
+/// @brief In diesem String wird der Topic der aktuellen MQTT Message gespeichert
+String mqtt_topic;
+/// @brief Ein Flag zur Triggerung der MQTT Status Daten
+bool do_send_mqtt_stat = false;
+/// @brief Ein Flag zur Triggerung der MQTT Telemetrie Daten
+bool do_send_mqtt_tele = false;
+
+time_t last_mqtt_tele = 0;
+
+time_t last_mqtt_stat = 0;
+
+
+bool do_mqtt;
+String mqtt_server;
+String mqtt_client;
+String mqtt_topicP2;
+bool do_log_mqtt;
+
+
 const char* mk_topic(const char* part1, const char* part3) {
   mqtt_topic = part1;
   mqtt_topic += "/";
@@ -10,7 +33,6 @@ const char* mk_topic(const char* part1, const char* part3) {
   return mqtt_topic.c_str();
 }
 
-// dokumentiert in main.h
 void reconnect_mqtt() {
   // Versuche zu verbinden. Die Funktion wird nur angesteuert wenn die mqtt Verbindung getrennt ist!!!
   // boolean PubSubClient::connect(const char *id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage)
@@ -29,86 +51,140 @@ void reconnect_mqtt() {
   }
 }
 
-// dokumentiert in main.h
+
 void send_mqtt_stat() {
+  String tmpstr;
   if (do_mqtt) {
     if (mqttClient.connected()) {
-      mqtt_json = "{";
-#if defined(SENSOR1)  
-      mqtt_json += sensor1.mqtt_json_part();
-#endif
-#if defined(SENSOR2)
-      if ( mqtt_json.length() > 3 ) mqtt_json += ",";
-      mqtt_json += sensor2.mqtt_json_part();
-#endif
-      mqtt_json += "}";
-      mqttClient.publish(mk_topic(MQTT_STATUS, "sensordata"), mqtt_json.c_str());
-      write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
-
-      mqtt_json = "{";
-      mqtt_json_length_old = mqtt_json.length();
-#if defined(SWITCH1)  
-      mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name().c_str()), switch1.show_value().c_str());
-      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch1.show_value());
-      mqtt_json += switch1.mqtt_json_part();
-#endif
-#if defined(SWITCH2)  
-      if ( mqtt_json.length() > mqtt_json_length_old ) {
-        mqtt_json += ",";
-        mqtt_json_length_old = mqtt_json.length();
+#ifdef MODULE1
+      if ( module1.mqtt_has_stat() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module1.mqtt_name().c_str()), module1.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module1.mqtt_stat());
       }
-      mqttClient.publish( mk_topic(MQTT_STATUS, switch2.show_mqtt_name().c_str()), switch2.show_value().c_str());
-      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch2.show_value());
-      mqtt_json += switch2.mqtt_json_part();
 #endif
-#if defined(SWITCH3)  
-      if ( mqtt_json.length() > mqtt_json_length_old ) {
-        mqtt_json += ",";
-        mqtt_json_length_old = mqtt_json.length();
+#ifdef MODULE2  
+      if ( module2.mqtt_has_stat() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module2.mqtt_name().c_str()), module2.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module2.mqtt_stat());
       }
-      mqttClient.publish( mk_topic(MQTT_STATUS, switch2.show_mqtt_name().c_str()), switch2.show_value().c_str());
-      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch3.show_value());
-      mqtt_json += switch3.mqtt_json_part();
 #endif
-#if defined(SWITCH4)  
-      if ( mqtt_json.length() > mqtt_json_length_old ) {
-        mqtt_json += ",";
-        mqtt_json_length_old = mqtt_json.length();
+#ifdef MODULE3
+      if ( module3.mqtt_has_stat() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module3.mqtt_name().c_str()), module3.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module3.mqtt_stat());
       }
-      mqttClient.publish( mk_topic(MQTT_STATUS, switch2.show_mqtt_name().c_str()), switch2.show_value().c_str());
-      write2log(LOG_MQTT,2, mqtt_topic.c_str(), switch4.show_value());
-      mqtt_json += switch4.mqtt_json_part();
 #endif
-      mqtt_json += "}";
-      mqttClient.publish(mk_topic(MQTT_STATUS, "switchdata"), mqtt_json.c_str());
-      write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
+#ifdef MODULE4
+      if ( module4.mqtt_has_stat() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module4.mqtt_name().c_str()), module4.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module4.mqtt_stat());
+      }
+#endif
+#ifdef MODULE5
+      if ( module5.mqtt_has_stat() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module5.mqtt_name().c_str()), module5.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module5.mqtt_stat());
+      }
+#endif
+#ifdef MODULE6
+      if ( module6.mqtt_has_stat() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module6.mqtt_name().c_str()), module6.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module6.mqtt_stat());
+      }
+#endif
     } else {
       reconnect_mqtt();
     }
   }
 }
 
-// dokumentiert in main.h
 void send_mqtt_tele() {
+  String tmpstr;
+  String teststr;
+  uint32_t free;
+  uint32_t max;
+  uint8_t frag;
+#ifdef ESP32
+  free = ESP.getFreeHeap();
+  max = ESP.getMaxAllocHeap();
+#else
+  ESP.getHeapStats(&free, &max, &frag);
+#endif
   if (do_mqtt) {
 #if defined(DEBUG_SERIAL)
     Serial.println("Sending Mqtt Tele");
 #endif
     if (mqttClient.connected()) {
-      mk_sysinfo1(mqtt_json); // Hier wird die Variable "info_str" gefüllt!
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info1"), mqtt_json.c_str());
-      if (do_log_mqtt) {
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
+      tmpstr = "{";
+      tmpstr += String("\"IP\":\"")+WiFi.localIP().toString()+String("\"");
+      tmpstr += String(",\"SSID\":\"")+WiFi.SSID()+String(" (")+String(rssi)+String("dBm / ")+String(rssi_quality)+String("%)\"");
+      tmpstr += String(",\"Channel\":\"")+String(WiFi.channel())+String("\"");
+#ifdef USE_SDCARD
+      tmpstr += String(",\"SDCard_size\":\"")+String(sd_cardsize/1024/1024)+String("\"");
+      tmpstr += String(",\"SDCard_used\":\"")+String(sd_usedbytes/1024/1024)+String("\"");
+#endif
+      tmpstr += String(",\"Vcc\":\""); getVcc(tmpstr); tmpstr += String("\"");
+      tmpstr += String(",\"CpuFreq\":\"") + String((int)(F_CPU / 1000000)) + String(" Mhz\"");
+      tmpstr += String(",\"FlashSize\":\"")+String((int)(ESP.getFlashChipSize() / 1024 / 1024))+String(" MB \"");
+      tmpstr += String(",\"FlashFreq\":\"")+String((int)(ESP.getFlashChipSpeed() / 1000000))+String(" Mhz\"");
+      tmpstr += String(",\"Sketchsize\":\"")+String(ESP.getSketchSize() / 1024.0)+String(" kB\"");
+      tmpstr += String(",\"Freespace\":\"")+String((float)ESP.getFreeSketchSpace() / 1024.0)+String(" kB\"");
+      tmpstr += String(",\"Heap_free\":\"")+String((float)free / 1024.0)+String(" kB\"");
+      tmpstr += String(",\"Heap_max\":\"")+String((float)max / 1024.0)+String(" kB\"");
+      tmpstr += String(",\"Heap_frag\":\"")+
+#ifdef ESP32
+                String("n.a.\"");
+#else
+                String((float)frag / 1024.0)+String("%\"");
+#endif
+      tmpstr += String(",\"ResetReason\":\"");
+#ifdef ESP32
+      char tmp1[20];
+      tmpstr += getResetReason(tmp1);
+#else
+      tmpstr += ESP.getResetReason();
+#endif
+      tmpstr += String("\"");
+#ifdef MODULE1
+      if (module1.mqtt_has_info()) {
+        tmpstr += ",";
+        tmpstr += module1.mqtt_info();
       }
-      mk_sysinfo2(mqtt_json);
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info2"), mqtt_json.c_str());
-      if (do_log_mqtt) {
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
+#endif
+#ifdef MODULE2  
+      if (module2.mqtt_has_info()) {
+        tmpstr += ",";
+        tmpstr += module2.mqtt_info();
       }
-      mk_sysinfo3(mqtt_json, true);
-      mqttClient.publish(mk_topic(MQTT_TELEMETRIE, "info3"), mqtt_json.c_str());
+#endif
+#ifdef MODULE3
+      if (module3.mqtt_has_info()) {
+        tmpstr += ",";
+        tmpstr += module3.mqtt_info();
+      }
+#endif
+#ifdef MODULE4
+      if (module4.mqtt_has_info()) {
+        tmpstr += ",";
+        tmpstr += module4.mqtt_info();
+      }
+#endif
+#ifdef MODULE5
+      if (module5.mqtt_has_info()) {
+        tmpstr += ",";
+        tmpstr += module5.mqtt_info();
+      }
+#endif
+#ifdef MODULE6
+      if (module6.mqtt_has_info()) {
+        tmpstr += ",";
+        tmpstr += module6.mqtt_info();
+      }
+#endif
+      tmpstr += "}";
+      mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"info"), tmpstr.c_str());
       if (do_log_mqtt) {
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), mqtt_json.c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
       }
     } else {
       reconnect_mqtt();
@@ -155,20 +231,54 @@ void mqtt_setup() {
   }
 }
 
-void mqtt_loop() {
+void mqtt_loop(time_t now) {
   if ( do_mqtt ) {
+    mqttClient.loop();
+    if ( (now - last_mqtt_stat) > STATINTERVAL ) {
+      send_mqtt_stat();
+      last_mqtt_stat = now;
+    }
+    if ( (now - last_mqtt_tele) > TELEINTERVAL ) {
+      send_mqtt_tele();
+      last_mqtt_tele = now;
+    }
     if (mqttClient.connected()) {
-      mqttClient.loop();
-      if ( do_send_mqtt_stat ) {
-        send_mqtt_stat();
-        do_send_mqtt_stat = false;
+#ifdef MODULE1
+      if ( module1.mqtt_stat_changed() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module1.mqtt_name().c_str()), module1.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module1.mqtt_stat().c_str());
       }
-      if ( do_send_mqtt_tele ) {
-        send_mqtt_tele();
-        do_send_mqtt_tele = false;
+#endif
+#ifdef MODULE2
+      if ( module2.mqtt_stat_changed() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module2.mqtt_name().c_str()), module2.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module2.mqtt_stat().c_str());
       }
-    } else {
-      reconnect_mqtt();
+#endif
+#ifdef MODULE3
+      if ( module3.mqtt_stat_changed() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module3.mqtt_name().c_str()), module3.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module3.mqtt_stat().c_str());
+      }
+#endif
+#ifdef MODULE4
+      if ( module4.mqtt_stat_changed() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module4.mqtt_name().c_str()), module4.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module4.mqtt_stat().c_str());
+      }
+#endif
+#ifdef MODULE5
+      if ( module5.mqtt_stat_changed() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module5.mqtt_name().c_str()), module5.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module5.mqtt_stat().c_str());
+      }
+#endif
+#ifdef MODULE6
+      if ( module6.mqtt_stat_changed() ) {
+        mqttClient.publish(mk_topic(MQTT_STATUS, module6.mqtt_name().c_str()), module6.mqtt_stat().c_str());
+        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module6.mqtt_stat().c_str());
+      }
+#endif
     }
   }
   delay(0);

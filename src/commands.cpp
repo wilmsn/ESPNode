@@ -2,105 +2,59 @@
 #include "commands.h"
 
 void show_settings() {
-  html_json = "{\"stat\":\"looptimealarm: ";
-  html_json += loop_time_alarm;
-  html_json += " ms\"}";
-  write2log(LOG_WEB,1,html_json.c_str());
-  ws.textAll(html_json);
-  html_json += "{\"stat\":\"ENDE\"}";
-  write2log(LOG_WEB,1,html_json.c_str());
-  ws.textAll(html_json);
+  String tmpstr;
+  tmpstr = String("{\"stat\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"");
+  tmpstr += ",\"stat\":\"ENDE\"}";
+  write2log(LOG_WEB,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str() );
 }
 
 
 void console_help() {
-  html_json = "{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"}";
-  write2log(LOG_WEB,1,html_json.c_str());
-  ws.textAll(html_json);
-  html_json = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
-  write2log(LOG_WEB,1,html_json.c_str());
-  ws.textAll(html_json);
+  String tmpstr;
+  tmpstr = String("{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"") +
+           String("{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}");
+  write2log(LOG_WEB,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
 }
 
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
+  String tmpstr;
   write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
-  html_json = String("{\"alert\":\"") + cmd + String("-") + value + String("\"}");
-  ws.textAll(html_json);
-  html_json = "{\"statclear\":1}";
-  write2log(LOG_WEB,1,html_json.c_str());
-  ws.textAll(html_json);
+//  tmpstr = String("{\"alert\":\"") + cmd + String("-") + value + String("\"");
+//  tmpstr = ",\"statclear\":1}";
+//  write2log(LOG_WEB,1,tmpstr.c_str());
+//  ws.textAll(tmpstr.c_str());
 #if defined(MODULE1)
   if ( module1.set( cmd, value ) ) {
-    html_json = module1.html_stat_json();
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, module1.show_mqtt_name().c_str()), module1.show_value().c_str());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
 #if defined(MODULE2)
   if ( module2.set( cmd, value ) ) {
-    html_json = module2.html_stat_json();
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, module2.show_mqtt_name().c_str()), module2.show_value().c_str());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
 #if defined(MODULE3)
   if ( module3.set( cmd, value ) ) {
-    html_json = module3.html_stat_json();
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, module3.show_mqtt_name().c_str()), module3.show_value().c_str());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
 #if defined(MODULE4)
   if ( module4.set( cmd, value ) ) {
-    html_json = module4.html_stat_json();
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, module4.show_mqtt_name().c_str()), module4.show_value().c_str());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
 #if defined(MODULE5)
   if ( module5.set( cmd, value ) ) {
-    html_json = module5.html_stat_json();
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, module5.show_mqtt_name().c_str()), module5.show_value().c_str());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
 #if defined(MODULE6)
   if ( module6.set( cmd, value ) ) {
-    html_json = module6.html_stat_json();
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, module6.show_mqtt_name().c_str()), module6.show_value().c_str());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
 #if defined(MQTT)
@@ -232,14 +186,10 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.begin("settings",false);
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
-    html_json = "{\"statclear\":1}"; 
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
-    html_json = "{\"stat\":\"looptimealarm: set to ";
-    html_json += loop_time_alarm;
-    html_json += "\"}";
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
+    tmpstr = "{\"statclear\":1"; 
+    tmpstr += String(",\"stat\":\"looptimealarm: set to ") + String(loop_time_alarm) + String("\"}");
+    write2log(LOG_MODULE,1,tmpstr.c_str());
+    ws.textAll(tmpstr);
     cmd_valid = true;
     cmd_no++;
   }
@@ -362,11 +312,9 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( ! cmd_valid ) {
-    html_json  = "{\"stat\":\"Ungültiges Kommando:";
-    html_json += cmd;
-    html_json += "\"}";
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
+    tmpstr  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String("\"}");
+    write2log(LOG_MODULE,1,tmpstr.c_str());
+    ws.textAll(tmpstr);
   }
 }
 

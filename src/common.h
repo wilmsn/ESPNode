@@ -70,12 +70,10 @@ extern String mqtt_client;
 extern String mqtt_topicP2;
 extern String mqtt_topic;
 extern bool do_mqtt;
-extern bool do_send_mqtt_stat;
-extern bool do_send_mqtt_tele;
 extern bool do_log_mqtt;
 extern String mqtt_json;
 extern unsigned int mqtt_json_length_old;
-void mqtt_loop();
+void mqtt_loop(time_t now);
 void mqtt_setup();
 
 // Modul: rf24gw
@@ -106,25 +104,6 @@ extern unsigned long loop_time_alarm;
 extern tm timeinfo;
 extern String mqtt_topicP2;
 
-/// @brief Erzeugt ein JSON mit Informationen über das System (Teil1)
-/// Es wird für die Webseite und für MQTT genutzt.
-/// @param Ein String zur Aufnahme der Informationen
-/// @return Ein Json zur Übergabe an die Webseite oder MQTT
-const char *mk_sysinfo1(String& info_str);
-
-/// @brief Erzeugt ein JSON mit Informationen über das System (Teil2)
-/// Es wird für die Webseite und für MQTT genutzt.
-/// @param Ein String zur Aufnahme der Informationen
-/// @return Ein Json zur Übergabe an die Webseite oder MQTT
-const char *mk_sysinfo2(String& info_str);
-
-/// @brief Erzeugt ein JSON mit Informationen über das System (Teil3)
-/// Es wird für die Webseite und für MQTT genutzt.
-/// @param Ein String zur Aufnahme der Informationen
-/// @return Ein Json zur Übergabe an die Webseite oder MQTT
-const char *mk_sysinfo3(String& info_str, bool format_mqtt);
-
-
 #if defined(MODULE1)
 extern MODULE1_DEFINITION
 #endif
@@ -153,9 +132,6 @@ extern MODULE6_DEFINITION
 /// @param cmd Das Komando, der bezeichner des Komandos
 /// @param value Der Wert für dieses Kommando
 void prozess_cmd(const String cmd, const String value);
-
-/// @brief Variablen zur Nutzung im Umfeld der HTML Seite
-extern String html_json;
 
 const char* mk_topic(const char* part1, const char* part3);
 

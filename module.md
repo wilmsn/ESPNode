@@ -1,15 +1,80 @@
 # Module
 In diesem Dokument wird die Programmierung der Module und ihre Einbindung ins Hauptprogramm beschrieben.
 ##Grundlagen
-Im Hauptprogramm ist die Einbindung von 6 Modulen vorgesehen. Die Modulnummer wird aufsteigend von 1 bis 6 verwendet.
+Ein Modul besteht aus einer Klasse, die direkt oder indirekt von der Klasse "Base_Generic" abgeleitet wurde. In der Klasse"Base_Generic" sind bereits alle benötigten Eigenschaften und Methoden vorhanden, teilweise müssen diese aber noch mit Inhalt gefüllt werden.
+
+Inhaltlich ist jedes Modul eigenständig und für sich verantwortlich. Es bestehen Schnittstellen um mit dem Rahmenprogramm zu kommunizieren. Diese müssen bedient werden und sind im weiteren Verlauf beschrieben.
+ 
+Im Hauptprogramm ist die Einbindung von 6 Modulen vorgesehen. Die Modulnummer wird aufsteigend und lückenlos von 1 bis 6 verwendet.
 
 Auf der Weboberfläche sind 4 Schalter vorgesehen. Diese Schalter haben den Namen "sw1" bis "sw4".
 
-Auf der Weboberfläche sind 3 Schieberegler vorgesehen. Diese Schieberegler werden idR. zusammen mit Schaltern verwendet. Siehe dazu "switch_onoff". Die Schieberegler haben die Nummern "1" bis "4".
+Auf der Weboberfläche sind 3 Schieberegler vorgesehen. Diese Schieberegler werden idR. zusammen mit Schaltern verwendet. Siehe dazu "switch_onoff". Die Schieberegler haben die Namen "slider1" bis "slider3".
 
 Auf der Weboberfläche sind 4 Ausgabezeilen vorgesehen. Diese Felder haben den Namen "out1" bis "out4".
 
 Daneben können auf der Webseite noch weitere Objekte angelegt werden, diese werden hier jedoch nicht beschrieben.
+
+**MQTT:**
+
+Für die Datenübertragung über MQTT sind 2 Nachrichten vorgesehen.
+
+* Sammelnachricht im JSON Format
+
+In dieser Nachricht werden alle zu übermittelnden Werte als JSON übermittelt. In jedem Modul wird ein Teil-JSON angelegt.
+
+* Statusnachricht
+
+ZUsätzlich kann ein Wert bestimmt werden, der den Status des Objektes (z.B. in FHEM) anzeigt. Es gibt nur einen Status für den kompletten Node!
+
+Zusätzlich gibt es Zulieferungen zur Systeminfo des Nodes.
+
+##Anforderungen an die Software
+Grundsätzlich ist das Modul dafür verantwortlich:
+1. Alle Inhalte selbst zu verwalten
+2. Sparsam mit der CPU Zeit umzugehen (kein delay()!)
+3. GPIOs selbst zu verwalten (initialisieren, setzen)
+4. Webinhalte sebst zu verwalten
+
+##Schnittstellen zum Hauptprogramm
+Die nachfolgenden Schnittstellen werden durch das Hauptprogramm aufgerufen und müssen vorhanden sein. Wenn ein Modul auf "Base_Generic" als Vaterobjekt aufbaut ist das gewährleistet.
+
+###Funktion "begin()"
+Hier wird das Objekt initialisiert dabei ist naturgemäß die Anzahl der Parameter variabel. Jedliche grundlegende Konfiguration muss hier erfolgen. Im weiteren Programm gibt es dazu keine Möglichkeit mehr.
+Der Einbau in den ESPNode mittels Precompilerdirektive siehe:
+**Einbindung eines Modules**
+
+###Funktion loop(time_t now)
+Wärend des Laufs wird die loop Funktion regelmäßig aufgerufen. Alle loop Funktionen aller Module und die im Hauptprogramm aufgerufenen periodischen Funktionen werden nach dem "round Robin" Prinzip nacheinander aufgerufen. Erst wenn wenn sie beendet ist folgt die nächtse. Es gibt keine zeitliche Begrenzung, dies liegt in der Verantwortung des Moduls! Durch Übergabe des Zeitstempels sind Zeitmessungen (z.B. für Wartezeit) möglich.
+
+###Funktion set( keyword, value)
+Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion der eingebauten Module geschleust. Die Module prüfen ob das Item für sie ein keyword ist und sie handeln müssen. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. 
+
+###Funktion html_create()
+Diese Funktion wird vom Hauptrogramm aus aufgerufen wenn ein neuer Webclient sich verbindet. In diesem Fall muss der Client mit aktuellen Daten (idR. mittels Websocket) versorgt werden.
+
+###Funktion html_sysinfo()
+Diese Funktion wird augerufen wenn im HTML Client die Systeminfo Seite aufgerufen wird. Hier werden nähere Infos zur Hardware angezeigt (falls gewünsscht). 
+
+###mqtt_json_part()
+Diese Funktion liefert einen Teil-JSON zurück der vom Hauptprogramm zu einer MQTT-Nachricht zusammengebaut wird:
+**stat/TOPIC2/data JSON-Statement**
+
+###mqtt_has_state()
+Ein Schalter der "WAHR" ist wenn das Modul den Statuswert beinhaltet.
+Der Satus ist in **obj_mqtt_has_state** gespeichert. Defaultwert wurde in "Base_Generic" auf "false" gesetzt.
+
+###mqtt_state()
+Gibt den Status für MQTT als String zurück. Der Wert wird aus **obj_mqtt_state** genommen. 
+
+##interne Funktionen
+
+###keyword_match()
+
+
+
+##Interne Variablen
+
 
 ##Einbindung eines Modules
 Module beschreiben bzw erzeugen eigene Objekte. Sie werden von der Klasse "Base_Generic" abgeletet, dort sind alle grundlegenden Funktionen bereits vorhanden, viele jedoch als Leerfunktionen. Diese müssen in der abgeleiteten Klasse mit Inhalt gefüllt werden.
@@ -169,53 +234,9 @@ Datei mymodul.cpp
 	#ifdef USE_MYMODUL
 
 
-##Methoden/Funktionen und Aufgaben
-
-####Funktion "begin()"####
-Hier wird das Objekt initialisiert dabei ist naturgemäß die Anzahl der Parameter variabel. Jedliche grundlegende Konfiguration muss ier erfolgen. Im weiteren Programm gibt es dazu keine Möglichkeit mehr.
-Der Einbau in den ESPNode mittels Precompilerdirektive wurde bereits behandelt.
-
-###Funktion "start_measure()"###
-
-Innerhalb dieser Funktion muss bei einem Sensor zwingend folgendes Programmiert werden:
-
-1) Alles nötige zum Auslesen des oder der Messwerte.
-
-2) Befüllung folgender Variablen (vordefiniert in "Sensor_Generic")
-
-2.a) **"obj_html_stat_json"**
-Hier muss ein kompletter gültiger JSON eingetragen mit dem/den aktuellen Messwert(en) eingetragen werden.
-
-Syntax: **{"Einbauplatz"  : "Anzuzeigender Schriftzug"}**
-
-Beispiel: **{"out1" : "Temperatur 21 °C"}**
-
-2.b) **"obj_mqtt_json"**
-Hier muss ein Teil-JSON für alle Messwerte zur Übertragung mittels MQTT eingetragen werden. **Achtung:** Sollen die Messwerte anschliessend in eine Datenbank eingetragen werden, dann sind Einheiten (z.B. °C) sehr hinderlich!
-
-Syntax: **{"Messwertlabel"  : "Wert"}**
-
-Beispiel: **{"Temperatur" : 21.2 }**
 
 
-###Funktion set( keyword, value)###
-Diese Funktion muss für jedes Modul gefüllt werden. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion der eingebauten Objekte geschleust. Die Objekte prüfen ob das Item für sie ein keyword ist und sie handeln müssen. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. Nach Beendigung der Funktion müssen auch hier die Variablen **"obj_html_stat_json"** und  **"obj_mqtt_json"** gefüllt sein.
 
-###Funktion "html_create_json_part(json)"###
-Stellt alle Konfigurationsdaten (als JSON Teilstring) bereit die für dieses Modul beim Aufruf der Webseite benötigt werden
-Ein Modul aktiviert seine Anzeige selbst indem der anzuzeigende Wert in das passende HTML Feld geschrieben wird. Dazu muss die Funktion "html_create_json_part" gefüllt werden. Durch das hier erzeugte JSON wird festgelgt was wie auf der HTML Seite angezeigt wird. Dabei gibt es folgende Möglichkeit:
-
-a) Reiner Ein-Aus Schalter
-
-Codesegment: **"sw1 : 0 , sw1_label : Lichtschalter , sw1_format : x"**
-
-b) Schalter mit Regler
-
-Codesegment: **"sw1 : 0 , sw1_label : Lichtschalter , sw1_format : x, slider1 : 1 , slider1label : Helligkeit , slider1val : 54"**
-
-c) Jede andere Kombination die nach Änderung der HTML Seite benötigt wird
-
-Beispiele dazu in der Datei switch_onoff.h/cpp
 
 
 

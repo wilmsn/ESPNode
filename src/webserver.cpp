@@ -12,7 +12,13 @@ void initWebSocket() {
   httpServer.addHandler(&ws);
 }
 
+void sendWsMessage(String& myMsg) {
+  ws.textAll(myMsg);
+  write2log(LOG_WEB,1,myMsg.c_str());
+}
+
 void prozess_wifishow() {
+  String tmpstr;
 #if defined(DEBUG_SERIAL_WEB)
   Serial.print("Generiere wifishow ... ");
 #endif
@@ -20,84 +26,77 @@ void prozess_wifishow() {
   if (numberOfNetworks < 0) {
     switch (numberOfNetworks) {
       case -1:
-        html_json = "{\"wifi_network\": \"Scan not finished\"}";
-        ws.textAll(html_json);
+        tmpstr = "{\"wifi_network\": \"Scan not finished\"}";
+        ws.textAll(tmpstr.c_str());
      break;
       case -2:
-        html_json = "{\"wifi_network\": \"Scan not started\"}";
-        ws.textAll(html_json);
+        tmpstr = "{\"wifi_network\": \"Scan not started\"}";
+        ws.textAll(tmpstr.c_str());
       break;
     }
   } else {
-    html_json = "{\"wifi_network\":\"";
-    html_json += numberOfNetworks;
-    html_json += " Networks:<br>\"}";
-    ws.textAll(html_json);
+    tmpstr = String("{\"wifi_network\":\"") + String(numberOfNetworks) + String(" Networks:<br>\"}");
+    ws.textAll(tmpstr.c_str());
     for (int i = 0; i < numberOfNetworks; i++) {
-      html_json = "{\"wifi_network\":\"";
-      html_json += WiFi.SSID(i);
-      html_json += ", Ch:";
-      html_json += String(WiFi.channel(i));
-      html_json += " (";
-      html_json += WiFi.RSSI(i);
-      html_json += " dBm ";
+      tmpstr = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(", Ch:") + String(WiFi.channel(i))
+               + String(" (") + String(WiFi.RSSI(i)) + String(" dBm ");
 #ifdef ESP32
       switch (WiFi.encryptionType(i)) {
       case  WIFI_AUTH_OPEN:
-          html_json += "open";
+          tmpstr += String("open");
         break;
       case WIFI_AUTH_WEP:
-          html_json += "WEP";
+          tmpstr += String("WEP");
         break;
       case WIFI_AUTH_WPA_PSK:
-          html_json += "WPA PSK";
+          tmpstr += String("WPA PSK");
         break;
       case WIFI_AUTH_WPA2_PSK:
-          html_json += "WPA2 PSK";
+          tmpstr += String("WPA2 PSK");
         break;
       case WIFI_AUTH_WPA_WPA2_PSK:
-          html_json += "WPA WPA2 PSK";
+          tmpstr += String("WPA WPA2 PSK");
         break;
       case WIFI_AUTH_WPA2_ENTERPRISE:
-          html_json += "WPA2 Enterprise";
+          tmpstr += String("WPA2 Enterprise");
         break;
       case WIFI_AUTH_WPA3_PSK:
-          html_json += "WPA3 PSK";
+          tmpstr += String("WPA3 PSK");
         break;
       case WIFI_AUTH_WPA2_WPA3_PSK:
-          html_json += "WPA2 WPA3 PSK";
+          tmpstr += String("WPA2 WPA3 PSK");
         break;
       case WIFI_AUTH_WAPI_PSK:
-          html_json += "WAPI PSK";
+          tmpstr += String("WAPI PSK");
         break;
       case WIFI_AUTH_MAX:
-          html_json += "MAX";
+          tmpstr += String("MAX");
         break;
       }
 #else
       switch (WiFi.encryptionType(i)) {
       case ENC_TYPE_WEP:
-          html_json += "WEP";
+          tmpstr += String("WEP");
         break;
       case ENC_TYPE_TKIP:
-          html_json += "TKIP";
+          tmpstr += String("TKIP");
         break;
       case ENC_TYPE_CCMP:
-          html_json += "CCMP";
+          tmpstr += String("CCMP");
         break;
       case ENC_TYPE_AUTO:
-          html_json += "Auto";
+          tmpstr += String("Auto");
         break;
       case ENC_TYPE_NONE:
-          html_json += "None";
+          tmpstr += String("None");
         break;
       default:
-          html_json += "unknown";
+          tmpstr += String("unknown");
         break;
       }
 #endif
-      html_json += ")\"}";
-      ws.textAll(html_json);
+      tmpstr += ")\"}";
+      ws.textAll(tmpstr.c_str());
     }
 //#endif
   }
@@ -118,12 +117,8 @@ void prozess_wifiscan() {
 }
 
 void prozess_sysinfo() {
-#if defined(ESP8266)
-//      html_json += ",\"platform\":\"esp8266\"";
-#endif
-#if defined(ESP32)
-//      html_json += ",\"platform\":\"esp32\"";
-#endif
+  String tmpstr;
+  bool need_komma = false;
 // Daten für Sysinfo
 // Teil 1
       uint32_t free;
@@ -135,161 +130,196 @@ void prozess_sysinfo() {
 #else
       ESP.getHeapStats(&free, &max, &frag);
 #endif
-      html_json = "{";
+      tmpstr = String("{");
 #ifdef ESP32
-      html_json +=  "\"Platform\":\"";
-      html_json +=  ESP.getChipModel();
-      html_json += "\"";
+      tmpstr += String("\"Platform\":\"");
+      tmpstr += String(ESP.getChipModel());
+      tmpstr += String("\"");
 #else
-      html_json += "\"Platform\":\"ESP8266\"";
+      tmpstr += String("\"Platform\":\"ESP8266\"");
 #endif
 #ifdef ESP32
-      html_json += ",\"Cores\":";
-      html_json += String(ESP.getChipCores());
-      html_json += ",\"PSRamSize\":\"";
-      html_json += String((float)ESP.getPsramSize()/1024.0);
-      html_json += " KB\"";
-      html_json += ",\"PsRamFree\":\"";
-      html_json += String((float)ESP.getFreePsram()/1024.0);
-      html_json += " KB\"";
+      tmpstr += String(",\"Cores\":");
+      tmpstr += String(ESP.getChipCores());
+      tmpstr += ",\"PSRamSize\":\"";
+      tmpstr += String((float)ESP.getPsramSize()/1024.0);
+      tmpstr += " KB\"";
+      tmpstr += ",\"PsRamFree\":\"";
+      tmpstr += String((float)ESP.getFreePsram()/1024.0);
+      tmpstr += " KB\"";
 #else
-      html_json += ",\"Cores\":\"1\"";
+      tmpstr += ",\"Cores\":\"1\"";
 #endif
-      html_json += ",\"Hostname\":\"";
+      tmpstr += ",\"Hostname\":\"";
 #ifdef ESP32
-      html_json += HOSTNAME;
+      tmpstr += HOSTNAME;
 #else
-      html_json += WiFi.hostname();
+      tmpstr += WiFi.hostname();
 #endif
-      html_json += "\"";
-      html_json += ",\"CpuFreq\":\"";
-      html_json += String((int)(F_CPU / 1000000));
-      html_json += " Mhz\"";
-      html_json += ",\"FlashSize\":\"";
-      html_json += String((int)(ESP.getFlashChipSize() / 1024 / 1024));
-      html_json += " MB \"";
-      html_json += ",\"FlashFreq\":\"";
-      html_json += String((int)(ESP.getFlashChipSpeed() / 1000000));
-      html_json += " Mhz\"";
-      html_json += ",\"Sketchsize\":\"";
-      html_json += String(ESP.getSketchSize() / 1024.0);
-      html_json += " kB\"";
-      html_json += ",\"Freespace\":\"";
-      html_json += String(ESP.getFreeSketchSpace() / 1024.0);
-      html_json += " kB\"";
-      html_json += ",\"Heap_free\":\"";
-      html_json += String((float)free / 1024.0);
-      html_json += " kB\"";
-      html_json += ",\"Heap_max\":\"";
-      html_json += String((float)max / 1024.0);
-      html_json += " kB\"";
-      html_json += ",\"Heap_frag\":\"";
+      tmpstr += "\"";
+      tmpstr += ",\"CpuFreq\":\"";
+      tmpstr += String((int)(F_CPU / 1000000));
+      tmpstr += " Mhz\"";
+      tmpstr += ",\"FlashSize\":\"";
+      tmpstr += String((int)(ESP.getFlashChipSize() / 1024 / 1024));
+      tmpstr += " MB \"";
+      tmpstr += ",\"FlashFreq\":\"";
+      tmpstr += String((int)(ESP.getFlashChipSpeed() / 1000000));
+      tmpstr += " Mhz\"";
+      tmpstr += ",\"Sketchsize\":\"";
+      tmpstr += String(ESP.getSketchSize() / 1024.0);
+      tmpstr += " kB\"";
+      tmpstr += ",\"Freespace\":\"";
+      tmpstr += String(ESP.getFreeSketchSpace() / 1024.0);
+      tmpstr += " kB\"";
+      tmpstr += ",\"Heap_free\":\"";
+      tmpstr += String((float)free / 1024.0);
+      tmpstr += " kB\"";
+      tmpstr += ",\"Heap_max\":\"";
+      tmpstr += String((float)max / 1024.0);
+      tmpstr += " kB\"";
+      tmpstr += ",\"Heap_frag\":\"";
 #ifdef ESP32
-      html_json += "n.a.\"";
+      tmpstr += "n.a.\"";
 #else
-      html_json += String((float)frag / 1024.0);
-      html_json += "%\"";
+      tmpstr += String((float)frag / 1024.0);
+      tmpstr += "%\"";
 #endif
-      html_json += ",\"ResetReason\":\"";
+      tmpstr += ",\"ResetReason\":\"";
 #ifdef ESP32
       char tmp1[20];
-      html_json += getResetReason(tmp1);
+      tmpstr += getResetReason(tmp1);
 #else
-      html_json += ESP.getResetReason();
+      tmpstr += ESP.getResetReason();
 #endif
-      html_json += "\"";
-      html_json += ",\"Vcc\":\"";
-      getVcc(html_json);
-      html_json += "\"";
-      html_json += ",\"UpTime\":\"";
-      html_json += uptime.uptimestr();
-      html_json += "\"";
-      html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr += "\"";
+      tmpstr += ",\"Vcc\":\"";
+      getVcc(tmpstr);
+      tmpstr += "\"";
+      tmpstr += ",\"UpTime\":\"";
+      tmpstr += uptime.uptimestr();
+      tmpstr += "\"";
+      tmpstr += "}";
+      write2log(LOG_WEB,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
 
 // Teil 2
-      html_json = "{";
-      html_json += "\"IP\":\"";
-      html_json += WiFi.localIP().toString();
-      html_json += "\"";
-      html_json += ",\"SubNetMask\":\"";
-      html_json += WiFi.subnetMask().toString();
-      html_json += "\"";
-      html_json += ",\"GW-IP\":\"";
-      html_json += WiFi.gatewayIP().toString();
-      html_json += "\"";
-      html_json += ",\"DnsIP\":\"";
-      html_json += WiFi.dnsIP().toString();
-      html_json += "\"";
-      html_json += ",\"SSID\":\"";
-      html_json += WiFi.SSID();
-      html_json += " (";
-      html_json += String(rssi);
-      html_json += "dBm / ";
-      html_json += String(rssi_quality);
-      html_json += "%)\"";
-      html_json += ",\"Channel\":\"";
-      html_json += String(WiFi.channel());
-      html_json += "\"";
-      html_json += ",\"BSSID\":\"";
-      html_json += WiFi.BSSIDstr();
-      html_json += "\"";
-      html_json += ",\"MAC\":\"";
-      html_json += WiFi.macAddress();
-      html_json += "\"";
-      html_json += ",\"IdeVer\":\"";
-      html_json += String(ARDUINO);
-      html_json += "\"";
+      tmpstr = "{";
+      tmpstr += "\"IP\":\"";
+      tmpstr += WiFi.localIP().toString();
+      tmpstr += "\"";
+      tmpstr += ",\"SubNetMask\":\"";
+      tmpstr += WiFi.subnetMask().toString();
+      tmpstr += "\"";
+      tmpstr += ",\"GW-IP\":\"";
+      tmpstr += WiFi.gatewayIP().toString();
+      tmpstr += "\"";
+      tmpstr += ",\"DnsIP\":\"";
+      tmpstr += WiFi.dnsIP().toString();
+      tmpstr += "\"";
+      tmpstr += ",\"SSID\":\"";
+      tmpstr += WiFi.SSID();
+      tmpstr += " (";
+      tmpstr += String(rssi);
+      tmpstr += "dBm / ";
+      tmpstr += String(rssi_quality);
+      tmpstr += "%)\"";
+      tmpstr += ",\"Channel\":\"";
+      tmpstr += String(WiFi.channel());
+      tmpstr += "\"";
+      tmpstr += ",\"BSSID\":\"";
+      tmpstr += WiFi.BSSIDstr();
+      tmpstr += "\"";
+      tmpstr += ",\"MAC\":\"";
+      tmpstr += WiFi.macAddress();
+      tmpstr += "\"";
+      tmpstr += ",\"IdeVer\":\"";
+      tmpstr += String(ARDUINO);
+      tmpstr += "\"";
 #ifdef ESP32
-      html_json += ",\"CoreVer\":\"unknown\"";
+      tmpstr += ",\"CoreVer\":\"unknown\"";
 #else
-      html_json += ",\"CoreVer\":\"";
-      html_json += ESP.getCoreVersion();
-      html_json += "\"";
+      tmpstr += ",\"CoreVer\":\"";
+      tmpstr += ESP.getCoreVersion();
+      tmpstr += "\"";
 #endif
-      html_json += ",\"SdkVer\":\"";
-      html_json += ESP.getSdkVersion();
-      html_json += "\"";
-      html_json += ",\"SW\":\"";
-      html_json += SWVERSION;
-      html_json += " (";
-      html_json += __DATE__;
-      html_json += ")\"";
-      html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr += ",\"SdkVer\":\"";
+      tmpstr += ESP.getSdkVersion();
+      tmpstr += "\"";
+      tmpstr += ",\"SW\":\"";
+      tmpstr += SWVERSION;
+      tmpstr += " (";
+      tmpstr += __DATE__;
+      tmpstr += ")\"";
+      tmpstr += "}";
+      write2log(LOG_WEB,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
 // Teil 3
-      html_json = "{";
+      tmpstr = "{";
 #ifdef USE_SDCARD
-      html_json += "\"sdcard_enable\":1";
-      html_json += ",\"sdcard_size\":"+String(sd_cardsize);
-      html_json += ",\"sdcard_used\":"+String(sd_usedbytes);
+      tmpstr += "\"sdcard_enable\":1";
+      tmpstr += ",\"sdcard_size\":"+String(sd_cardsize);
+      tmpstr += ",\"sdcard_used\":"+String(sd_usedbytes);
 #else
-      html_json += "\"sdcard_enable\":0";
+      tmpstr += "\"sdcard_enable\":0";
 #endif
 #if defined(MQTT)  
-      html_json += ",\"mqttserver\":\"";
-      html_json += mqtt_server;
-      html_json += "\",\"mqttclient\":\"";
-      html_json += mqtt_client;
-      html_json += "\",\"mqtttopicp2\":\"";
-      html_json += mqtt_topicP2;
-      html_json += "\"";
+      tmpstr += ",\"mqttserver\":\"";
+      tmpstr += mqtt_server;
+      tmpstr += "\",\"mqttclient\":\"";
+      tmpstr += mqtt_client;
+      tmpstr += "\",\"mqtttopicp2\":\"";
+      tmpstr += mqtt_topicP2;
+      tmpstr += "\"";
 #endif
 #if defined(RF24GW)  
-      html_json += ",\"RF24HUB-Server\":\"";
-      html_json += RF24GW_HUB_SERVER;
-      html_json += "\",\"RF24HUB-Port\":";
-      html_json += String(RF24GW_HUB_UDP_PORTNO);
-      html_json += ",\"RF24GW-Port\":";
-      html_json += String(RF24GW_GW_UDP_PORTNO);
-      html_json += ",\"RF24GW-No\":";
-      html_json += String(RF24GW_NO);  
+      tmpstr += ",\"RF24HUB-Server\":\"";
+      tmpstr += RF24GW_HUB_SERVER;
+      tmpstr += "\",\"RF24HUB-Port\":";
+      tmpstr += String(RF24GW_HUB_UDP_PORTNO);
+      tmpstr += ",\"RF24GW-Port\":";
+      tmpstr += String(RF24GW_GW_UDP_PORTNO);
+      tmpstr += ",\"RF24GW-No\":";
+      tmpstr += String(RF24GW_NO);  
 #endif
-      html_json += "}";
-      write2log(LOG_WEB,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr += "}";
+      write2log(LOG_WEB,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
+//      tmpstr = "{";
+#ifdef MODULE1
+Serial.println("Module 1");
+  sendWsMessage(module1.html_info());
+#endif
+#ifdef MODULE2
+Serial.println("Module 2");
+  sendWsMessage(module2.html_info());
+#endif
+#ifdef MODULE3
+Serial.println("Module 3");
+  sendWsMessage(module3.html_info());
+#endif
+#ifdef MODULE4
+Serial.println("Module 4");
+  sendWsMessage(module4.html_info());
+#endif
+#ifdef MODULE5
+  if ( module5.html_has_info() ) {
+    if ( need_komma ) tmpstr += ",";
+    module5.html_info(tmpstr);
+    need_komma=true;
+  }
+#endif
+#ifdef MODULE6
+  if ( module6.html_has_info() ) {
+    if ( need_komma ) tmpstr += ",";
+    module6.html_info(tmpstr);
+    need_komma=true;
+  }
+#endif
+Serial.println("--Ende--");
+//  tmpstr += "}";
+//  write2log(LOG_MODULE,1,tmpstr.c_str());
+//  ws.textAll(tmpstr.c_str());
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -317,98 +347,79 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 }
 
 void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
-#define TMPSTR_SIZE   50
-      char tmpstr[TMPSTR_SIZE+1];
-      snprintf(tmpstr,TMPSTR_SIZE,"{\"titel1\":\"%s\"}",HOSTNAME);
-      ws.textAll(tmpstr);
-      write2log(LOG_WEB,1,tmpstr);
-      snprintf(tmpstr,TMPSTR_SIZE,"{\"wifi_ssid\":\"%s\"}",wifi_ssid.c_str());
-      ws.textAll(tmpstr);
-      write2log(LOG_WEB,1,tmpstr);
-      snprintf(tmpstr,TMPSTR_SIZE,"{\"wifi_pass\":\"%s\"}",wifi_pass.c_str());
-      ws.textAll(tmpstr);
-      write2log(LOG_WEB,1,tmpstr);
+  String tmpstr;
+  tmpstr = String("{\"titel1\":\"") + String(HOSTNAME) + String("\"");
+  tmpstr += String(",\"wifi_ssid\":\"") + wifi_ssid + String("\"");
+  tmpstr += String(",\"wifi_pass\":\"") + wifi_pass + String("\"");
 #if defined(HOST_DISCRIPTION)
-      snprintf(tmpstr,TMPSTR_SIZE,"{\"titel2\":\"%s\"}",HOST_DISCRIPTION);
-      ws.textAll(tmpstr);
-#endif
-#if defined(MODULE1)
-      module1.html_create();
-#endif
-#if defined(MODULE2)
-      module2.html_create_json_part(html_json);
-#endif
-#if defined(MODULE3)
-      module3.html_create_json_part(html_json);
-#endif
-#if defined(MODULE4)
-      module4.html_create_json_part(html_json);
-#endif
-#if defined(MODULE5)
-      module5.html_create_json_part(html_json);
-#endif
-#if defined(MODULE6)
-      module6.html_create_json_part(html_json);
+  tmpstr += String(",\"titel2\":\"") + String(HOST_DISCRIPTION) + String("\"");
 #endif
 #if defined(MQTT)
-      html_json += ",\"set_mqtt_enable\":1";
-      html_json += ",\"set_mqtt_active\":";
-      html_json += do_mqtt?"1":"0";
-      html_json += ",\"set_mqttserver\":\"";
-      html_json += mqtt_server;
-      html_json += "\",\"set_mqttclient\":\"";
-      html_json += mqtt_client;
-      html_json += "\",\"set_mqtttopicp2\":\"";
-      html_json += mqtt_topicP2;
-      html_json += "\"";
+      tmpstr += ",\"set_mqtt_enable\":1";
+      tmpstr += ",\"set_mqtt_active\":";
+      tmpstr += do_mqtt?"1":"0";
+      tmpstr += ",\"set_mqttserver\":\"";
+      tmpstr += mqtt_server;
+      tmpstr += "\",\"set_mqttclient\":\"";
+      tmpstr += mqtt_client;
+      tmpstr += "\",\"set_mqtttopicp2\":\"";
+      tmpstr += mqtt_topicP2;
+      tmpstr += "\"";
 #else
-      ws.textAll("{\"set_mqtt_enable\":0}");
+  tmpstr += String(",\"set_mqtt_enable\":0");
 #endif
 // Setzen der Logging Flags 
 #if defined(RF24GW)
-      html_json += ",\"log_rf24\":";
-      html_json += do_log_rf24? "1": "0";
+      tmpstr += String(",\"log_rf24\":") + String(do_log_rf24? "1": "0");
 #endif
 #if defined(MQTT)
-      html_json += ",\"log_mqtt\":";
-      html_json += do_log_mqtt? "1": "0";
+      tmpstr += String(",\"log_mqtt\":") + String(do_log_mqtt? "1": "0");
 #endif
-      if (do_log_module) {
-        ws.textAll("{\"log_module\":1}");
-      } else {
-        ws.textAll("{\"log_module\":0}");
-      }
-      if (do_log_system) {
-        ws.textAll("{\"log_system\":1}");
-      } else {
-        ws.textAll("{\"log_system\":0}");
-      }
-      if (do_log_critical) {
-        ws.textAll("{\"log_critical\":1}");
-      } else {
-        ws.textAll("{\"log_critical\":0}");
-      }
-      if (do_log_web) {
-        ws.textAll("{\"log_web\":1}");
-      } else {
-        ws.textAll("{\"log_web\":0}");
-      }
+  tmpstr += String(",\"log_module\":") + String(do_log_module?"1":"0");
+  tmpstr += String(",\"log_system\":") + String(do_log_system?"1":"0");
+  tmpstr += String(",\"log_critical\":") + String(do_log_critical?"1":"0");
+  tmpstr += String(",\"log_web\":") + String(do_log_web?"1":"0");
 // RF24 Gateway
 #if defined(RF24GW)
-      html_json += ",\"set_rf24gw_enable\":1";
-      html_json += ",\"set_rf24gw_active\":";
-      html_json += do_rf24gw? "1":"0";
-      html_json += ",\"set_RF24HUB-Server\":\"";
-      html_json += rf24gw_hub_server;
-      html_json += "\",\"set_RF24HUB-Port\":\"";
-      html_json += rf24gw_hub_port;
-      html_json += "\",\"set_RF24GW-Port\":\"";
-      html_json += rf24gw_gw_port;
-      html_json += "\",\"set_RF24GW-No\":";
-      html_json += rf24gw_gw_no;
+  tmpstr += String(",\"set_rf24gw_enable\":1");
+  tmpstr += String(",\"set_rf24gw_active\":") + String(do_rf24gw?"1":"0");
+  tmpstr += String(",\"set_RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"");
+  tmpstr += String(",\"set_RF24HUB-Port\":\"") + String(rf24gw_hub_port) + String("\"");
+  tmpstr += String(",\"set_RF24GW-Port\":\"") + String(rf24gw_gw_port) + String("\"");
+  tmpstr += String(",\"set_RF24HUB-No\":\"") + String(rf24gw_gw_no) + String("\"");
 #else      
-      ws.textAll("{\"set_rf24gw_enable\":0}");
-#endif      
+  tmpstr += String(",\"set_rf24gw_enable\":0");
+#endif
+  tmpstr += String("}");
+  ws.textAll(tmpstr.c_str());
+  write2log(LOG_WEB,1,tmpstr.c_str());
+  tmpstr = "{";
+#ifdef MODULE1
+      module1.html_create(tmpstr);
+#endif
+#ifdef MODULE2
+      tmpstr += ",";
+      module2.html_create(tmpstr);
+#endif
+#ifdef MODULE3
+      tmpstr += ",";
+      module3.html_create(tmpstr);
+#endif
+#ifdef MODULE4
+      tmpstr += ",";
+      module4.html_create(tmpstr);
+#endif
+#ifdef MODULE5
+      tmpstr += ",";
+      module5.html_create(tmpstr);
+#endif
+#ifdef MODULE6
+      tmpstr += ",";
+      module6.html_create();
+#endif
+  tmpstr += "}";
+  write2log(LOG_WEB,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
 }
 
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,

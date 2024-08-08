@@ -205,24 +205,37 @@ RF24 Gateway:
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
 
-##define DEBUG_SERIAL_WEB
+#define MQTT_CLIENT            "WittyNode"
+#define MQTT_TOPICP2           "wittynode"
+
+#define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
+#define DEBUG_SERIAL_SYSTEM
+
+#define DO_LOG_MQTT              true
+#define DO_LOG_MODULE            true
+#define DO_LOG_WEB               true
+#define DO_LOG_SYSTEM            true
 
 #define MODULE1_DEFINITION      Switch_OnOff module1;
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, WITTY_LED_PIN);
 
+//void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
+//                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
+//                         const char* slider_mqtt_name, const char* slider_label) {
+
 #define MODULE2_DEFINITION      Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT);
+#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT, 100, 100, 1, "rot-hell", "Rot-Helligkeit");
 
 #define MODULE3_DEFINITION      Switch_OnOff module3;
-#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN);
+#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN, 100, 100, 2, "gn-hell", "Grün Helligkeit");
 
 #define MODULE4_DEFINITION      Switch_OnOff module4;
-#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL);
+#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL, 100, 100, 3, "bl-hell", "Blau Helligkeit");
 
-#define MODULE5_DEFINITION      Sensor_LDR module5;
-#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "ldr");
+//#define MODULE5_DEFINITION      Sensor_LDR module5;
+//#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", 30);
 
 #endif
 //-----------------------------------------------------

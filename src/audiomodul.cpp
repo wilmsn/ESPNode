@@ -153,31 +153,34 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 
 void AudioModul::html_create() {
   Switch_OnOff::html_create();
-  ws.textAll("{\"audio_show\":1}");
+  String tmpstr;
+  tmpstr = String("{\"audio_show\":1");
 #ifdef USE_AUDIO_RADIO
-      ws.textAll("{\"audio_radio_show\":1}");
+  tmpstr += String(",\"audio_radio_show\":1");
 #endif
 #ifdef USE_AUDIO_MEDIA
-      ws.textAll("{\"audio_media_show\":1}");
+  tmpstr += String(",\"audio_media_show\":1");
+#endif
+#ifdef USE_AUDIO_SPEAKER
+  tmpstr = String(",\"audio_speak_show\":1");
 #endif
   switch(modus) {
 #ifdef USE_AUDIO_RADIO
     case Radio:  
       // Radio ist vorhanden und wird im Web angezeigt
-      ws.textAll("{\"audio_radio\":1}");
+      tmpstr += String(",\"audio_radio\":1");
       audio_radio_web_init();
     break;
 #endif
 #ifdef USE_AUDIO_MEDIA
     case Media:
-      ws.textAll("{\"audio_media\":1}");
+      tmpstr += String(",\"audio_media\":1");
       audio_media_web_init();
     break;
 #endif
 #ifdef USE_AUDIO_SPEAKER
     case Speaker:
-      ws.textAll("\"audio_speak_show\":1");
-      ws.textAll(",\"audio_speak\":1");
+      tmpstr += String(",\"audio_speak\":1");
       audio_speak_web_init();
     break;
 #endif
@@ -188,28 +191,27 @@ void AudioModul::html_create() {
 
     break;
   }
-  char tmpstr[20];
-  snprintf(tmpstr,19,"{\audio_vol\":%u}",audio_vol);
-  ws.textAll(tmpstr);
-  snprintf(tmpstr,19,"{\audio_bas\":%u}",audio_bas);
-  ws.textAll(tmpstr);
-  snprintf(tmpstr,19,"{\audio_tre\":%u}",audio_tre);
-  ws.textAll(tmpstr);
+  tmpstr += String(",\"audio_vol\":") + String(audio_vol);
+  tmpstr += String(",\"audio_bas\":") + String(audio_bas);
+  tmpstr += String(",\"audio_tre\":") + String(audio_tre) + String("}");
+  ws.textAll(tmpstr.c_str());
+  write2log(LOG_MODULE,1,tmpstr.c_str());
 }
 
 bool AudioModul::set(const String& keyword, const String& value) {
   bool retval = false;
+  String tmpstr;
   String myvalue = value;
   write2log(LOG_MODULE,2,keyword.c_str(),value.c_str());
   if ( ! Switch_OnOff::set(keyword, value) ) {
     std::replace(myvalue.begin(),myvalue.end(),'\n',' ');
     if ( keyword == String("audio_vol") ) {
       audio_vol = value.toInt();
-      html_json = "{\"audio_vol\":";
-      html_json += audio_vol;
-      html_json += "}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr = "{\"audio_vol\":";
+      tmpstr += audio_vol;
+      tmpstr += "}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
 #if defined(USE_AUDIO_LIB)
       audio.setVolume(audio_vol);
 #elif defined(USE_ESP8266AUDIO_LIB)
@@ -224,11 +226,11 @@ bool AudioModul::set(const String& keyword, const String& value) {
     if ( keyword == String("audio_bas") ) {
       // Bass kann nur über die Weboberfläche eingestellt werden
       audio_bas = value.toInt();
-      html_json = "{\"audio_bas\":";
-      html_json += audio_bas;
-      html_json += "}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr = "{\"audio_bas\":";
+      tmpstr += audio_bas;
+      tmpstr += "}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
 #if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
 #elif defined(USE_ESP8266AUDIO_LIB)
@@ -239,11 +241,11 @@ bool AudioModul::set(const String& keyword, const String& value) {
     if ( keyword == String("audio_tre") ) {
       // Höhen können nur über die Weboberfläche eingestellt werden
       audio_tre = value.toInt();
-      html_json = "{\"audio_tre\":";
-      html_json += audio_tre;
-      html_json += "}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr = "{\"audio_tre\":";
+      tmpstr += audio_tre;
+      tmpstr += "}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
 #if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
 #elif defined(USE_ESP8266AUDIO_LIB)
@@ -256,9 +258,9 @@ bool AudioModul::set(const String& keyword, const String& value) {
     // Radio einschalten
     if ( keyword == String(AUDIO_RADIO) || keyword == String("audio_radio") ) {
       audio_set_modus(Radio);
-      html_json = "{\"audio_radio\":\"1\"}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr = "{\"audio_radio\":\"1\"}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
       retval = true;
     }
     // Radio: Sender einstellen hier ueber command "station 2"
@@ -299,9 +301,9 @@ bool AudioModul::set(const String& keyword, const String& value) {
     // Set for speaker
     if ( keyword == String(AUDIO_SPEAKER) || keyword == String("audio_speak") ) {
       audio_set_modus(Speaker);
-      html_json = "{\"audio_speak\":1}";
-      write2log(LOG_MODULE,1,html_json.c_str());
-      ws.textAll(html_json);
+      tmpstr = "{\"audio_speak\":1}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
       audio_speak_show();
       // TODO: Speaker einschalten, alles andere aus
       retval = true;
@@ -729,42 +731,36 @@ void audio_id3data(const char *info){
 }
 
 void audio_showstreamtitle(const char *info){
-    write2log(LOG_MODULE,2,"Titel:", info);
-    if (radioPlayMode) audiodisplay.show_info2(info);
-    html_json = "{\"audiomsg2\":\"";
-    html_json += info;
-    html_json += "\"}";
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
+  String tmpstr;
+  if (radioPlayMode) audiodisplay.show_info2(info);
+  tmpstr = String("{\"audiomsg2\":\"") + String(info) + "\"}";
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
 }
 
 void audio_bitrate(const char *info) {
-    char bpsInfo[9];
-    bpsInfo[0] = info[0];
-    bpsInfo[1] = info[1];
-    bpsInfo[2] = info[2];
-    bpsInfo[3] = ' ';
-    bpsInfo[4] = 'K';
-    bpsInfo[5] = 'B';
-    bpsInfo[6] = 'p';
-    bpsInfo[7] = 's';
-    bpsInfo[8] = 0;
-    write2log(LOG_MODULE,2,"Bitrate:", info);
-    if (radioPlayMode || mediaPlayMode) audiodisplay.show_bps(bpsInfo);
-    html_json = "{\"audiomsg4\":\"";
-    html_json += bpsInfo;
-    html_json += "\"}";
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
+  String tmpstr;
+  char bpsInfo[9];
+  bpsInfo[0] = info[0];
+  bpsInfo[1] = info[1];
+  bpsInfo[2] = info[2];
+  bpsInfo[3] = ' ';
+  bpsInfo[4] = 'K';
+  bpsInfo[5] = 'B';
+  bpsInfo[6] = 'p';
+  bpsInfo[7] = 's';
+  bpsInfo[8] = 0;
+  if (radioPlayMode || mediaPlayMode) audiodisplay.show_bps(bpsInfo);
+  tmpstr = String("{\"audiomsg4\":\"") + String(bpsInfo) + String("\"}");
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
 }
 
 void audio_showstation(const char *info){
-    write2log(LOG_MODULE,2,"Station:", info);
-    html_json = "{\"audiomsg1\":\"";
-    html_json += info;
-    html_json += "\"}";
-    write2log(LOG_MODULE,1,html_json.c_str());
-    ws.textAll(html_json);
+  String tmpstr;
+  tmpstr = String("{\"audiomsg1\":\"") + String(info) + String("\"}");
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
 }
 
 /*********************************************************************************************************
@@ -829,16 +825,16 @@ void AudioModul::audio_radio_disp_init() {
 }
 
 void AudioModul::audio_radio_web_init() {
-  String json;
+  String tmpstr;
   ws.textAll("{\"audio_radio\":1}");
   for (int i=0; i<MAXSTATIONS; i++) {
-    json = "{\"audio_radio_add_stn\":\"";
-    json += station[i].url;
-    json += ";";
-    json += station[i].name;
-    json += "\"}";
-    write2log(LOG_MODULE,1,json.c_str());
-    ws.textAll(json);
+    tmpstr = "{\"audio_radio_add_stn\":\"";
+    tmpstr += station[i].url;
+    tmpstr += ";";
+    tmpstr += station[i].name;
+    tmpstr += "\"}";
+    write2log(LOG_MODULE,1,tmpstr.c_str());
+    ws.textAll(tmpstr.c_str());
   }
 }
 
@@ -925,7 +921,7 @@ void AudioModul::audio_media_disp_init() {
 }
 
 void AudioModul::audio_media_web_init() {
-  String json;
+  String tmpstr;
   uint16_t dirNo = 0;
   uint16_t fileNo;
   File file;
@@ -938,16 +934,16 @@ void AudioModul::audio_media_web_init() {
   dir = root.openNextFile();
   while (dir) {
     if (dir.isDirectory()) {
-      json = "{\"audio_media_add_album\":\"A#" + String(dirNo) + "#0#" + String(dir.name()) + String("\"}");
-      write2log(LOG_MODULE,1,json.c_str());
-      ws.textAll(json);
+      tmpstr = "{\"audio_media_add_album\":\"A#" + String(dirNo) + "#0#" + String(dir.name()) + String("\"}");
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
       fileNo = 0;
       file = dir.openNextFile();
       while (file) {
         if (String(file.name()).endsWith(".mp3")) {
-          json = "{\"audio_media_add_album\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
-          write2log(LOG_MODULE,1,json.c_str());
-          ws.textAll(json);
+          tmpstr = "{\"audio_media_add_album\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
+          write2log(LOG_MODULE,1,tmpstr.c_str());
+          ws.textAll(tmpstr.c_str());
         }
         file = dir.openNextFile();
         fileNo++;

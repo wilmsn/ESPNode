@@ -1,11 +1,8 @@
 #include "base_generic.h"
+#include "common.h"
 
 Base_Generic::Base_Generic(){
   obj_keyword = "";
-  obj_hw_pin1 = 0;
-  obj_hw_pin2 = 0;
-  obj_hw_pin1_used = false;
-  obj_hw_pin2_used = false;
 }
 
 void Base_Generic::begin(const char* html_place, const char* label) {
@@ -29,96 +26,56 @@ void Base_Generic::begin(const char* html_place, const char* label, const char* 
   obj_mqtt_name = mqtt_name;
 }
 
-void Base_Generic::set_label(const char* label) {
-  obj_label = label;
-}
-
-void Base_Generic::set_keyword(const char* keyword) {
-  obj_keyword = keyword;
-}
-
-void Base_Generic::set_mqtt_name(const char* mqtt_name) {
-  obj_mqtt_name = mqtt_name;
-}
-
-void Base_Generic::set_hw_pin(uint8_t pin1) {
-  obj_hw_pin1 = pin1;
-  obj_hw_pin1_used = true;
-}
-
-void Base_Generic::set_hw_pin(uint8_t pin1, uint8_t pin2) {
-  obj_hw_pin1 = pin1;
-  obj_hw_pin1_used = true;
-  obj_hw_pin2 = pin2;
-  obj_hw_pin2_used = true;
-}
-
-bool Base_Generic::keyword_match(const String& keyword) {
-  bool retval = false;
-  if ( keyword == obj_keyword || keyword == obj_html_place || keyword == obj_mqtt_name ) {
-    retval = true;
-  }
-  return retval;
-}
-
-String& Base_Generic::mqtt_json_part(void) {
-  return obj_mqtt_json;
-}
-
-String& Base_Generic::html_stat_json(void) {
-  obj_changed_w = false;
-  return obj_html_stat_json;
-}
-
-bool Base_Generic::changed() {
-//  if ( obj_changed_a ) Serial.println("Base_Generic::changed => true");
-  bool retval = obj_changed_a;
-  obj_changed_a = false;
-  return retval;
-}
-
-bool Base_Generic::webChange() {
-//  if ( obj_changed_w ) Serial.println("Base_Generic::webChange => true");
-  bool retval = obj_changed_w;
-  obj_changed_w = false;
-  return retval;
+void Base_Generic::loop(time_t now) {
 }
 
 bool Base_Generic::set(const String& keyword, const String& value) {
   return false;
 }
 
-void Base_Generic::set_changed(bool val) {
-  obj_changed_w = val;
-  obj_changed_a = val;
+bool Base_Generic::keyword_match(const String& keyword) {
+  bool retval = false;
+  if ( keyword == obj_keyword || keyword == obj_html_place || keyword == obj_mqtt_name  || keyword == obj_label ) {
+    retval = true;
+  }
+  return retval;
 }
 
-void Base_Generic::loop(time_t now) {
+void Base_Generic::html_create(String& tmpstr) {
+  tmpstr += obj_html_stat;
 }
 
-void Base_Generic::html_create() {
+bool Base_Generic::html_has_info() {
+  return obj_html_has_info;
 }
 
-String& Base_Generic::show_keyword() {
-  return obj_keyword;
+String& Base_Generic::html_info() {
+  return obj_html_info;
+//  ws.textAll(obj_html_info);
+//  write2log(LOG_MODULE,1,obj_html_info.c_str());
 }
 
-String& Base_Generic::show_label() {
-  return obj_label;
-}
-
-String& Base_Generic::show_mqtt_name() {
+String& Base_Generic::mqtt_name() {
   return obj_mqtt_name;
 }
 
-String& Base_Generic::show_value() {
-  return obj_values_str;
+String& Base_Generic::mqtt_stat() {
+  obj_mqtt_stat_changed = false;
+  return obj_mqtt_stat;
 }
-/*
-String& Base_Generic::info_html() {
-  return obj_info_html;
+
+bool Base_Generic::mqtt_has_stat() {
+  return obj_mqtt_has_stat;
 }
-*/
-String& Base_Generic::info_mqtt() {
-  return obj_info_mqtt;
+
+bool Base_Generic::mqtt_stat_changed() {
+  return obj_mqtt_stat_changed;
+}
+
+bool Base_Generic::mqtt_has_info() {
+  return obj_mqtt_has_info;
+}
+
+String& Base_Generic::mqtt_info() {
+  return obj_mqtt_info;
 }

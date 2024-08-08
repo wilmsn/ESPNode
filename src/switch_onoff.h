@@ -18,6 +18,9 @@
 class Switch_OnOff : public Base_Generic {
 
 public:
+
+    Switch_OnOff();
+
     /// @brief Die Initialisierung des Schalters als logischer Schalter ohne HW-Pin
     /// @param html_place Der Einbauort in der Webseite
     /// @param label Ein Bezeichner für diesen Schalter
@@ -95,7 +98,7 @@ public:
     bool set(const String& keyword, const String& value);
 
     /// @brief Erstellt ein Teil-JSON zur initialen Konfiguration der Webseite
-    void html_create();
+    void html_create(String& tmpstr);
 
     /// @brief Gibt die aktuellen Einstellungen des Sliders zurück 
     /// @return Der aktuelle Wert des Sliders
@@ -125,6 +128,10 @@ public:
     /// @param state Der neue Zustand des Schalters ("true" = Ein, "false" = Aus).
     void do_switch(bool state);
 
+    void set_hw_pin(uint8_t pin1);
+
+    void set_hw_pin(uint8_t pin1, uint8_t pin2);
+
     /// @brief Der hardwareseitige Einschaltwert des Schalters.
     bool obj_on_value;
     /// @brief Der zu setzende Wert beim Boot Vorgang
@@ -143,6 +150,14 @@ public:
     uint8_t obj_slider_max_val;
     /// @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
     uint8_t obj_slider_no;
+    /// @brief Flag das festlegt ob HW-Pin1 genutzt wird (true = wird genutzt)
+    bool       obj_hw_pin1_used = false;
+    /// @brief Flag das festlegt ob HW-Pin2 genutzt wird (true = wird genutzt)
+    bool       obj_hw_pin2_used = false;
+    /// @brief Optional: Der Hardwarepin1 für diesen Sensor.
+    uint8_t    obj_hw_pin1;
+    /// @brief Optional: Der Hardwarepin2 für diesen Sensor.
+    uint8_t    obj_hw_pin2;
 //private:
 
 };

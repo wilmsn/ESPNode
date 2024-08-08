@@ -7,21 +7,8 @@
  * Jedes spezialisierte Objekt wird als Ableitung dieses Objektes erstellt.
  ***************************************************************************************/
 
-/// @brief Ein generisches Objekt für einen Sensor. Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.\n
-/// Hier werden Grundfähigkeiten für jeden Sensor oder Switch erstellt.\n \n
-/// Funktionsfähig sind folgende Funktionen:\n 
-/// **begin**: zum Einbau ins "setup" des Hauptprogrammes. Diese ist ggf. in einem abgeleiteten Objekt um zusätzliche Parameter zu erweitern.\n 
-/// **set_label** zum nachträglichen setzen oder verändern eines Labels.\n 
-/// **set_keyword** zum nachträglichen setzen oder verändern eines Keywords.\n 
-/// **set_mqtt_name** um den Namen für die Übertragung im JSON String festzulegen.\n 
-/// **set_hw_pin** um bis zu 2 Hardwareanschlüsse festzulegen.\n 
-/// **changed** um eine Statusveränderung zu erkennen.\n
-/// **keyword_match** um zu prüfen ob der Sensor durch das übergebene Keyword angesprochen wird.\n 
-/// **[*]_json** Funktionen um (Teil)Stücke eines JSON Statements zu erzeugen.\n 
-/// **show_[*]** Gibt jeweils einen Zeiger auf die gespeicherte Inhalte aus.\n \n 
-/// Als folgende Funktionen sind aus Gründen der Kompatibilität leer (als Dummy) implementiert:\n
-/// **loop** Zum Aufruf in der Hauptschleife des Hauptprogrammes. Hier können in einem abgeleitetem Objekt regelmäßige Tätigkeiten implementiert werden.\n 
-/// **web_create_json** Hier wird durch das abgeleitete Objekt das JSON zur Erzeugung des Sensors/Actors auf der Webseite erstellt.\n 
+/// @brief Ein generisches Objekt für einen Sensor/Actor. Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.\n
+/// Hier werden Grundfähigkeiten für jeden Sensor oder Actor erstellt.\n \n
 
 class Base_Generic {
 public:
@@ -47,129 +34,96 @@ public:
     /// @param keyword wird in obj_keyword gespeichert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
 
+    /// @brief Eine Funktion die im Hauptprogramm im loop regelmäßig aufgerufen wird. Hier können in den abgeleiteten Modulen regelmäßige Aufrufe hinterlegt werden.
+    void loop(time_t now);
+
     bool set(const String& keyword, const String& value);
-
-    /// @brief Hier kann das Label separat gesetzt/geändert werden.
-    void set_label(const char* label);
-    
-    /// @brief Hier kann das Keyword separat gesetzt/geändert werden.
-    void set_keyword(const char* keyword);
-
-    /// @brief Setzt den Namen für die MQTT Übertragung
-    /// @param mqtt_name Der Name fürs json
-    void set_mqtt_name(const char* mqtt_name);
-    
-    /// @brief Zeigt den gesetzten MQTT Namen
-    /// @return den MQTT Namen als Zeiger auf einen String
-    String& show_mqtt_name();
-
-    /// @brief Setzt den Hardware Pin
-    /// @param pin1 Der Hardware Pin
-    void set_hw_pin(uint8_t pin1);
-
-    /// @brief Setzt zwei Hardware Pins
-    /// @param pin1 Der erste Hardware Pin
-    /// @param pin2 Der zweite Hardware Pin
-    void set_hw_pin(uint8_t pin1, uint8_t pin2);
-    
-    /// @brief Eine Kontrollfunktion ob sich ein Wechsel eingestellt hat.
-    /// @brief Beim Sensor: Neue Werte sind erstellt worden
-    /// @brief Beim Actor: Ein Ereignis hat den Zustand geändert
-    /// @return true: geändert; false unverändert
-    bool changed();
-
-    /// @brief Eine Kontrollfunktion ob geänderte Werte für die Webseiteein vorliegen.
-    /// @brief Beim Sensor: Neue Werte sind erstellt worden
-    /// @brief Beim Actor: Ein Ereignis hat den Zustand geändert
-    /// @return true: geändert; false unverändert
-    bool webChange();
 
     /// @brief Prüft ob das übergebene keyword dem hinterlegten keyword entspricht
     /// @param keyword Das zu prüfende keyword
     /// @return true bei Übereinstimmung sonst false
     bool keyword_match(const String& keyword);
 
-    /// @brief Dummy, Erstelle ein Teil json für die MQTT Übertragung in einem abgeleiteten Objekt
-    /// @return Ein JSON formatierter String
-    String& mqtt_json_part();
+    /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Webinhalt initialisiert.
+    void html_create(String& tmpstr);
     
-    /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Wbinhalt initialisiert.
-    void html_create();
+    bool html_has_info();
+
+    /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Inhalt für die Systeminfoseite geliefert.
+    String& html_info();
+
+    // MQTT Support
+
+    /// @brief Der mqtt_name wird im Topic3 für die Statusdaten genutzt.
+    /// @return Inhalt der Variablen "obj_mqtt_name"
+    String& mqtt_name();
+
+    /// @brief Aktuelle Statuswerte werden hier für die MQTT Übertragung zurückgegeben.
+    /// @brief Die Befüllung der zugrundeliegenden Variablen "obj_mqtt_state" erfolgt in dem abgeleiteten Script.
+    /// @brief Der Eintrag erfolgt als JSON String.
+    /// @brief Eine Übertragung per MQTT erfolgt nach jeder Änderung.
+    /// @return 
+    String& mqtt_stat();
+
+    bool mqtt_has_stat();
+
+    /// @brief Sobald sich ein Wert innerhalb von mqtt_state() verändert muss die abgeleitete Klasse "obj_mqtt_state_changed" entsprechend setzen.
+    /// @return true wenn sich mqtt_state geändert hat sonst false
+    bool mqtt_stat_changed();
+
+    /// @brief Hier wird alles übertragen was keine aktuelen Statuswerte sind.
+    /// @return 
+    String& mqtt_info();
+
+    /// @brief Hier wird alles übertragen was keine aktuelen Statuswerte sind.
+    /// @return 
+    bool mqtt_has_info();
+
+ //----------------Variablen---------------   
+ 
+    /// @brief Das Schlüsselword für diesen Sensor/Actor.
+    String     obj_keyword;  //ok
     
-    /// @brief Erstellt einen JSON der den aktuellen Wert inklusive evtl. benötigter HTML-Syntax beinhaltet
-    /// @return json Ein übergebener String der komplett mit json Syntax gefüllt wird
-    String& html_stat_json(void);
+    /// @brief Der Einbauort für diesen Sensor/Actor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
+    String     obj_html_place; //ok
+    
+    /// @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt. 
+    String     obj_label; //ok
+    
+    /// @brief Schalter ob dieses Modul Daten für die Systeminfo Seite bereitstellt oder nicht.
+    bool       obj_html_has_info; //ok
 
-    /// @brief Zeigt das gesetzte keyword
-    /// @return das keyword als Zeiger auf einen String
-    String& show_keyword();
-
-    /// @brief Zeigt das gesetzte label
-    /// @return das label als Zeiger auf einen String
-    String& show_label();
-
-    /// @brief Gibt den aktuellen Wert des Objektes aus. Wird hauptsächlich für den Wert von Schaltern benötigt.
-    /// @return den Wert des Objektes als Zeiger auf einen String
-    String& show_value();
-
-    /// @brief Gibt json formatierte Informationen für die Webseite aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
-    /// @brief Im Gegensatz zu ""
-    /// @return Einen json Teilstring als String.
-    //String& info_html();
-
-    /// @brief Gibt json formatierte Informationen für MQTT Übertragung aus. Diese Funktion muss innerhalb des abgeleiteten Objektes befüllt werden.
-    /// @return Einen json Teilstring als String.
-    String& info_mqtt();
-
-    /// @brief Setzt die changed Variablen auf einen Wert.
-    /// @param val Der zu setztende Wert.
-    void set_changed(bool val);
-
-
-    /// @brief Eine Funktion die im Hauptprogramm im loop regelmäßig aufgerufen wird. Hier können in den abgeleiteten Modulen regelmäßige Aufrufe hinterlegt werden.
-    void loop(time_t now);
-
-    /// @brief Das Schlüsselword für diesen Sensor.
-    String     obj_keyword;
-    /// @brief Der Einbauort für diesen Sensor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
-    String     obj_html_place;
-    /// @brief Eine Beschriftung für die Webseite. Wird sie nicht gesetzt, wird hier das Schlüsselwort genutzt. 
-    String     obj_label;
     /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
-    String     obj_info_html;
-    /// @brief Informationen zum Sensor für MQTT als json abgespeichert;
-    String     obj_info_mqtt;
-    /// @brief Der MQTT Name für diesen Sensor. Wird er nicht gesetzt wird hier das Schlüsselwort übertragen.
-    String     obj_mqtt_name;
+    String     obj_html_info; //ok
+
+    /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
-    /// @brief "{"+"obj_html_placeX"+":"+"obj_labelX"+"MesswertX"+"EinheitX", ... +"}"
-    /// @brief Hier muss immer ein komplettes, gültiges JSON stehen.
-    String     obj_html_stat_json;
+    /// @brief ""obj_html_placeX"+":"+"obj_labelX"+"MesswertX"+"EinheitX", ... "
+    /// @brief Hier muss immer ein komplettes, gültiges Teil-JSON stehen.
+    String     obj_html_stat;
+
+    // MQTT Support
+
+    /// @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
+    bool       obj_mqtt_has_info; //ok
+
+    /// @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
+    String     obj_mqtt_info;
+
+    /// @brief Schalter ob "obj_mqtt_state" verändert worden ist und neu (=true) übertragen werden soll.
+    bool       obj_mqtt_stat_changed;
+
+    /// @brief Schalter ob dieses Modul einen "mqtt_state" liefert(=true).
+    bool       obj_mqtt_has_stat;
+
+    /// @brief Der MQTT Status (Einzelwert oder mehrere als JSON).
+    String     obj_mqtt_stat;
+
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
     /// @brief "mqtt_nameX"+":"+"MesswertX",...
     /// @brief Hier steht immer nur ein abgeschlossenes Teil-JSON ohne Klammern.
-    String     obj_mqtt_json;
-    /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
-    /// @brief "mqtt_nameX"+":"+"MesswertX",...
-    String     obj_values_str;
-    /// @brief Flag das festlegt ob HW-Pin1 genutzt wird (true = wird genutzt)
-    bool       obj_hw_pin1_used = false;
-    /// @brief Flag das festlegt ob HW-Pin2 genutzt wird (true = wird genutzt)
-    bool       obj_hw_pin2_used = false;
-    /// @brief Optional: Der Hardwarepin1 für diesen Sensor.
-    uint8_t    obj_hw_pin1;
-    /// @brief Optional: Der Hardwarepin2 für diesen Sensor.
-    uint8_t    obj_hw_pin2;
-    /// @brief Ein Changed Flag für das Webinterface, wird durch das abgeleitete Objekt gefüllt.
-    bool       obj_changed_w;
-    /// @brief Ein Changed Flag für die Aplikation, wird durch das abgeleitete Objekt gefüllt.
-    bool       obj_changed_a;
-    /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
-    String     obj_sensorinfo_html;
-    /// @brief Informationen zum Sensor für MQTT als json abgespeichert;
-    String     obj_sensorinfo_mqtt;
+    String     obj_mqtt_name;
 
 };
 
 #endif
-// _GEN_SENSOR_H_

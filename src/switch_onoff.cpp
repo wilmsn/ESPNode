@@ -3,6 +3,13 @@
 #include "switch_onoff.h"
 #include "common.h"
 
+Switch_OnOff::Switch_OnOff(){
+  obj_hw_pin1 = 0;
+  obj_hw_pin2 = 0;
+  obj_hw_pin1_used = false;
+  obj_hw_pin2_used = false;
+}
+
 // Startet als Schalter mit Regler der einen HW-Pin mittels PWM steuert
 // Fall 5
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
@@ -61,8 +68,8 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   Base_Generic::begin(html_place, label, mqtt_name, keyword);
   obj_on_value = on_value;
   obj_value = start_value;
+  obj_html_has_info = true;
   do_switch(start_value);
-  set_changed(false);
 }
 
 void Switch_OnOff::do_switch(bool state) {
@@ -89,79 +96,101 @@ void Switch_OnOff::do_switch(bool state) {
   }
   obj_value = state;
 
-  obj_html_stat_json = "{\"";
-  obj_html_stat_json += obj_html_place;
-  obj_html_stat_json += "\":";
-  obj_html_stat_json += state? "1":"0";
-
+  obj_html_stat = "{\"";
+  obj_html_stat += obj_html_place;
+  obj_html_stat += "\":";
+  obj_html_stat += state? "1":"0";
   if (obj_slider_used) {
-    obj_html_stat_json += ",\"slider";
-    obj_html_stat_json += String(obj_slider_no);
-    obj_html_stat_json += "val\":";
-    obj_html_stat_json += String(obj_slider_val);
+    obj_html_stat += ",\"slider";
+    obj_html_stat += String(obj_slider_no);
+    obj_html_stat += "val\":";
+    obj_html_stat += String(obj_slider_val);
+  }
+  obj_html_stat += "}";
+  ws.textAll(obj_html_stat.c_str());
+  write2log(LOG_MODULE,1,obj_html_stat.c_str());
+
+  obj_mqtt_stat = String("\"")+obj_mqtt_name+String("\":\"");
+  if (obj_slider_used) {
+    if (state) {
+      obj_mqtt_stat += String("Ein (")+String(obj_slider_val)+String(")\"");
+    } else {
+      obj_mqtt_stat += String("Aus (0)\"");
+    }
+  } else {
+    if (state) {
+      obj_mqtt_stat += String("Ein\"");
+    } else {
+      obj_mqtt_stat += String("Aus\"");
+    }
   }
 
-  obj_html_stat_json += "}";
-
-  if (obj_slider_used) {
-    obj_mqtt_json = "\"";
-    obj_mqtt_json += obj_slider_mqtt_name;
-    obj_mqtt_json += "\":";
-    obj_mqtt_json += String(obj_slider_val);
+  if (obj_hw_pin1_used && obj_hw_pin2_used ) {
+    obj_html_info = String("{\"tab_head\":\"Switch on Off\"")+
+                    String(",\"tab_line1\":\"")+obj_label+String(":#GPIO: ")+String(obj_hw_pin1)+String("\"")+
+                    String(",\"tab_line2\":\"")+obj_label+String(":#GPIO: ")+String(obj_hw_pin2)+String("\"")+
+                    String(",\"tab_line3\":\"")+obj_label+String(":#Zustand: ")+String(obj_value?"ein ":"aus ")+String("\"}");
+  } else {
+    if (obj_hw_pin1_used ) {
+      obj_html_info = String("{\"tab_head\":\"Switch on Off\"")+
+                            String(",\"tab_line1\":\"")+obj_label+String(":#GPIO:")+String(obj_hw_pin1)+String("\"}");
+//                            String(",\"tab_line2\":\"")+obj_label+String(":#Zustand: ")+String(obj_value?1:0);
+      if (obj_slider_used) {
+//        obj_html_info += String("(")+String(obj_slider_val)+String("%)");
+      }                      
+//      obj_html_info += String("\"");
+    }
   }
-
-  obj_values_str = state? "1":"0";
 }
 
 bool Switch_OnOff::set(const String& keyword, const String& value) {
+  Serial.println(keyword+String(" :mod-set: ")+value);
   bool retval = false;
   if ( keyword_match(keyword) ) {
     if ( (value == "0") || (value == "aus") || (value == "Aus") || (value == "off") | (value == "Off") ) {
       do_switch(false);
-      set_changed(true);
       retval = true;
     }
     if ( (value == "1") || (value == "ein") || (value == "Ein") || (value == "on") | (value == "On") ) {
       do_switch(true);
-      set_changed(true);
       retval = true;
     }
     if ( (value == "2") || (value == "umschalten") || (value == "Umschalten") || (value == "toggle") | (value == "Toggle") ) {
       do_switch(! obj_value);
-      set_changed(true);
       retval = true;
     }
     if ( value.startsWith("S:") ) {
       obj_slider_val = value.substring(2,value.length()).toInt();
       do_switch(obj_value); 
-      set_changed(true);
       retval = true;
     }
   }
   return retval;
 }
 
-void Switch_OnOff::html_create() {
-#define TMPSTR_SIZE    50
-  char tmpstr[TMPSTR_SIZE+1];
-  snprintf(tmpstr,TMPSTR_SIZE,"{\"%s\":%s}",obj_html_place.c_str(),obj_value? "1" : "0");
-  ws.textAll(tmpstr);
-  snprintf(tmpstr,TMPSTR_SIZE,"{\"%s_label\":\"%s\"}",obj_html_place.c_str(),obj_label.c_str());
-  ws.textAll(tmpstr);
-  snprintf(tmpstr,TMPSTR_SIZE,"{\"%s_format\":\"x\"}",obj_html_place.c_str());
-  ws.textAll(tmpstr);
+void Switch_OnOff::html_create(String& tmpstr) {
+  tmpstr += String("\"") + obj_html_place + String("\":") + String(obj_value?"1":"0");
+  tmpstr += String(",\"") + obj_html_place + String("_label\":\"") + obj_label + String("\"");
+  tmpstr += String(",\"") + obj_html_place + String("_format\":\"x\"");
   if (obj_slider_used) {
-    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%u\":1}",obj_slider_no);
-    ws.textAll(tmpstr);
-    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%ulabel\":\"%s\"}",obj_slider_no,obj_slider_label.c_str());
-    ws.textAll(tmpstr);
-    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%uname\":\"%s\"}",obj_slider_no,obj_keyword.c_str());
-    ws.textAll(tmpstr);
-    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%uval\":%u}",obj_slider_no,obj_slider_val);
-    ws.textAll(tmpstr);
-    snprintf(tmpstr,TMPSTR_SIZE,"{\"slider%umax\":%u}",obj_slider_no,obj_slider_max_val);
-    ws.textAll(tmpstr);
+    tmpstr += String(",\"slider") + String(obj_slider_no) + String("\":1");
+    tmpstr += String(",\"slider") + String(obj_slider_no) + String("label\":\"") + obj_slider_label + String("\"");
+    tmpstr += String(",\"slider") + String(obj_slider_no) + String("name\":\"") + obj_keyword + String("\"");
+    tmpstr += String(",\"slider") + String(obj_slider_no) + String("val\":\"") + String(obj_slider_val) + String("\"");
+    tmpstr += String(",\"slider") + String(obj_slider_no) + String("max\":\"") + String(obj_slider_max_val) + String("\"");
   }
+}
+
+void Switch_OnOff::set_hw_pin(uint8_t pin1) {
+  obj_hw_pin1 = pin1;
+  obj_hw_pin1_used = true;
+}
+
+void Switch_OnOff::set_hw_pin(uint8_t pin1, uint8_t pin2) {
+  obj_hw_pin1 = pin1;
+  obj_hw_pin1_used = true;
+  obj_hw_pin2 = pin2;
+  obj_hw_pin2_used = true;
 }
 
 uint8_t Switch_OnOff::get_slider_val() {
@@ -183,7 +212,6 @@ void Switch_OnOff::set_slider_label(const char* label) {
 void Switch_OnOff::set_slider(uint8_t val) {
   obj_slider_val = val;
   do_switch(obj_value);
-  set_changed(true);
 }
 
 void Switch_OnOff::set_slider_max_value(uint8_t val) {
