@@ -45,10 +45,6 @@ void Base_Generic::html_create(String& tmpstr) {
   tmpstr += obj_html_stat;
 }
 
-bool Base_Generic::html_has_info() {
-  return obj_html_has_info;
-}
-
 String& Base_Generic::html_info() {
   return obj_html_info;
 }

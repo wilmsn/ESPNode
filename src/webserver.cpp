@@ -119,7 +119,6 @@ void prozess_wifiscan() {
 
 void prozess_sysinfo() {
   String tmpstr;
-  bool need_komma = false;
 // Daten für Sysinfo
 // Teil 1
       uint32_t free;

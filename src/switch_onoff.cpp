@@ -68,7 +68,6 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   Base_Generic::begin(html_place, label, mqtt_name, keyword);
   obj_on_value = on_value;
   obj_value = start_value;
-  obj_html_has_info = true;
   do_switch(start_value);
 }
 

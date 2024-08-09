@@ -47,8 +47,6 @@ public:
     /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Webinhalt initialisiert.
     void html_create(String& tmpstr);
     
-    bool html_has_info();
-
     /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Inhalt für die Systeminfoseite geliefert.
     String& html_info();
 
@@ -90,9 +88,6 @@ public:
     /// @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt. 
     String     obj_label; //ok
     
-    /// @brief Schalter ob dieses Modul Daten für die Systeminfo Seite bereitstellt oder nicht.
-    bool       obj_html_has_info; //ok
-
     /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
     String     obj_html_info; //ok
 
