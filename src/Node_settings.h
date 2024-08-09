@@ -234,8 +234,8 @@ RF24 Gateway:
 #define MODULE4_DEFINITION      Switch_OnOff module4;
 #define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL, 100, 100, 3, "bl-hell", "Blau Helligkeit");
 
-//#define MODULE5_DEFINITION      Sensor_LDR module5;
-//#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", 30);
+#define MODULE5_DEFINITION      Sensor_LDR module5;
+#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", 30);
 
 #endif
 //-----------------------------------------------------

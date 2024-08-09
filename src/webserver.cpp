@@ -12,9 +12,10 @@ void initWebSocket() {
   httpServer.addHandler(&ws);
 }
 
-void sendWsMessage(String& myMsg) {
+void sendWsMessage(String& _myMsg) {
+  String myMsg = _myMsg;
   ws.textAll(myMsg);
-  write2log(LOG_WEB,1,myMsg.c_str());
+  write2log(LOG_WEB,2,"[WEB]",myMsg.c_str());
 }
 
 void prozess_wifishow() {
@@ -27,16 +28,16 @@ void prozess_wifishow() {
     switch (numberOfNetworks) {
       case -1:
         tmpstr = "{\"wifi_network\": \"Scan not finished\"}";
-        ws.textAll(tmpstr.c_str());
+        sendWsMessage(tmpstr);
      break;
       case -2:
         tmpstr = "{\"wifi_network\": \"Scan not started\"}";
-        ws.textAll(tmpstr.c_str());
+        sendWsMessage(tmpstr);
       break;
     }
   } else {
     tmpstr = String("{\"wifi_network\":\"") + String(numberOfNetworks) + String(" Networks:<br>\"}");
-    ws.textAll(tmpstr.c_str());
+    sendWsMessage(tmpstr);
     for (int i = 0; i < numberOfNetworks; i++) {
       tmpstr = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(", Ch:") + String(WiFi.channel(i))
                + String(" (") + String(WiFi.RSSI(i)) + String(" dBm ");
@@ -96,7 +97,7 @@ void prozess_wifishow() {
       }
 #endif
       tmpstr += ")\"}";
-      ws.textAll(tmpstr.c_str());
+      sendWsMessage(tmpstr);
     }
 //#endif
   }
@@ -200,8 +201,7 @@ void prozess_sysinfo() {
       tmpstr += uptime.uptimestr();
       tmpstr += "\"";
       tmpstr += "}";
-      write2log(LOG_WEB,1,tmpstr.c_str());
-      ws.textAll(tmpstr.c_str());
+      sendWsMessage(tmpstr);
 
 // Teil 2
       tmpstr = "{";
@@ -252,8 +252,7 @@ void prozess_sysinfo() {
       tmpstr += __DATE__;
       tmpstr += ")\"";
       tmpstr += "}";
-      write2log(LOG_WEB,1,tmpstr.c_str());
-      ws.textAll(tmpstr.c_str());
+      sendWsMessage(tmpstr);
 // Teil 3
       tmpstr = "{";
 #ifdef USE_SDCARD
@@ -283,43 +282,28 @@ void prozess_sysinfo() {
       tmpstr += String(RF24GW_NO);  
 #endif
       tmpstr += "}";
-      write2log(LOG_WEB,1,tmpstr.c_str());
-      ws.textAll(tmpstr.c_str());
-//      tmpstr = "{";
+      sendWsMessage(tmpstr);
+      tmpstr = "{\"x\":0";
 #ifdef MODULE1
-Serial.println("Module 1");
-  sendWsMessage(module1.html_info());
+  tmpstr += module1.html_info();
 #endif
 #ifdef MODULE2
-Serial.println("Module 2");
-  sendWsMessage(module2.html_info());
+  tmpstr += module2.html_info();
 #endif
 #ifdef MODULE3
-Serial.println("Module 3");
-  sendWsMessage(module3.html_info());
+  tmpstr += module3.html_info();
 #endif
 #ifdef MODULE4
-Serial.println("Module 4");
-  sendWsMessage(module4.html_info());
+  tmpstr += module4.html_info();
 #endif
 #ifdef MODULE5
-  if ( module5.html_has_info() ) {
-    if ( need_komma ) tmpstr += ",";
-    module5.html_info(tmpstr);
-    need_komma=true;
-  }
+  tmpstr += module5.html_info();
 #endif
 #ifdef MODULE6
-  if ( module6.html_has_info() ) {
-    if ( need_komma ) tmpstr += ",";
-    module6.html_info(tmpstr);
-    need_komma=true;
-  }
+  tmpstr += module6.html_info();
 #endif
-Serial.println("--Ende--");
-//  tmpstr += "}";
-//  write2log(LOG_MODULE,1,tmpstr.c_str());
-//  ws.textAll(tmpstr.c_str());
+  tmpstr += "}";
+  sendWsMessage(tmpstr);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -391,8 +375,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
   tmpstr += String(",\"set_rf24gw_enable\":0");
 #endif
   tmpstr += String("}");
-  ws.textAll(tmpstr.c_str());
-  write2log(LOG_WEB,1,tmpstr.c_str());
+  sendWsMessage(tmpstr);
   tmpstr = "{";
 #ifdef MODULE1
       module1.html_create(tmpstr);
@@ -418,8 +401,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
       module6.html_create();
 #endif
   tmpstr += "}";
-  write2log(LOG_WEB,1,tmpstr.c_str());
-  ws.textAll(tmpstr.c_str());
+  sendWsMessage(tmpstr);
 }
 
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
@@ -439,36 +421,6 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
     break;
   }
 }
-
-/*
-void mk_cmd(AsyncWebServerRequest *request) {
-//  bool prefs_change = false;
-  int args = request->args();
-  html_json = "";
-  cmd_no = 0;
-  for (int argNo = 0; argNo < args; argNo++) {
-#if defined(DEBUG_SERIAL_WEB)
-    Serial.print("prozess_cmd: ");
-    Serial.print(request->argName(argNo));
-    Serial.print(": ");
-    Serial.println(request->arg(argNo));
-#endif
-    prozess_cmd(request->argName(argNo), request->arg(argNo) );
-  }
-  if ( cmd_no > 0 ) {
-    if ( rebootflag ) { 
-      html_json = "{\"alert\":\"Reboot ok\"}"; 
-      ws.textAll(html_json);
-    } else {
-      html_json = "{\"alert\":\"ok\"}";
-      ws.textAll(html_json);
-   }
-  } else {
-    html_json = "{\"alert\":\"No change\"}";
-    ws.textAll(html_json);
-  }
-}
-*/
 
 void setup_webserver() {
   initWebSocket();

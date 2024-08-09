@@ -50,6 +50,7 @@ extern bool do_log_critical;
 extern bool do_log_web;
 extern time_t now;
 extern FTPServer        ftp;
+extern void sendWsMessage(String& _myMsg);
 
 
 // Modul: webserver

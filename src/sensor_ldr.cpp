@@ -7,8 +7,7 @@
 void Sensor_LDR::begin(const char* html_place, const char* label, uint32_t messinterval) {
   Base_Generic::begin(html_place, label);
   obj_measure_interval = messinterval;
-  obj_html_has_info = true;
-  obj_html_info = String("\"tab_head\":\"Sensor\"")+String(",\"tab_line1\":\"")+obj_label+String(":#GPIO: A0\"");
+  obj_html_info = String(",\"tab_head_ldr\":\"Sensor\",\"tab_line1_ldr\":\"LDR:#GPIO: A0\"");
 }
 
 void Sensor_LDR::loop(time_t now) {

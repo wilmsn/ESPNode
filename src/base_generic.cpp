@@ -51,8 +51,6 @@ bool Base_Generic::html_has_info() {
 
 String& Base_Generic::html_info() {
   return obj_html_info;
-//  ws.textAll(obj_html_info);
-//  write2log(LOG_MODULE,1,obj_html_info.c_str());
 }
 
 String& Base_Generic::mqtt_name() {

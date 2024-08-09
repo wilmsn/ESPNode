@@ -126,14 +126,14 @@ void Switch_OnOff::do_switch(bool state) {
   }
 
   if (obj_hw_pin1_used && obj_hw_pin2_used ) {
-    obj_html_info = String("{\"tab_head\":\"Switch on Off\"")+
+    obj_html_info = String("{\"tab_head_")+obj_html_place+String("\":\"Switch on Off\"")+
                     String(",\"tab_line1\":\"")+obj_label+String(":#GPIO: ")+String(obj_hw_pin1)+String("\"")+
-                    String(",\"tab_line2\":\"")+obj_label+String(":#GPIO: ")+String(obj_hw_pin2)+String("\"")+
+                    String(",\"tab_line2\":\"")+obj_label+String(":#GPIO: ")+String(obj_hw_pin2)+String("\"");
                     String(",\"tab_line3\":\"")+obj_label+String(":#Zustand: ")+String(obj_value?"ein ":"aus ")+String("\"}");
   } else {
     if (obj_hw_pin1_used ) {
-      obj_html_info = String("{\"tab_head\":\"Switch on Off\"")+
-                            String(",\"tab_line1\":\"")+obj_label+String(":#GPIO:")+String(obj_hw_pin1)+String("\"}");
+      obj_html_info = String(",\"tab_head_")+obj_html_place+String("\":\"Switch on Off\"")+
+                            String(",\"tab_line1_")+obj_html_place+String("\":\"")+obj_label+String(":#GPIO:")+String(obj_hw_pin1)+String("\"");
 //                            String(",\"tab_line2\":\"")+obj_label+String(":#Zustand: ")+String(obj_value?1:0);
       if (obj_slider_used) {
 //        obj_html_info += String("(")+String(obj_slider_val)+String("%)");
@@ -144,7 +144,7 @@ void Switch_OnOff::do_switch(bool state) {
 }
 
 bool Switch_OnOff::set(const String& keyword, const String& value) {
-  Serial.println(keyword+String(" :mod-set: ")+value);
+//  Serial.println(keyword+String(" :mod-set: ")+value);
   bool retval = false;
   if ( keyword_match(keyword) ) {
     if ( (value == "0") || (value == "aus") || (value == "Aus") || (value == "off") | (value == "Off") ) {

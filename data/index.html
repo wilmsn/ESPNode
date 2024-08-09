@@ -74,8 +74,24 @@ function onClose(event) {
 function onMessage(event) {
 //  alert(JSON.stringify(event.data));
   const json = JSON.parse(event.data, function (key, val) {
-//    if (key.startsWith("tab") ) alert(key+" : "+val);
-    prozessJS( key, val );
+    if (key.startsWith("tab_head") ) {
+      prozessJS( "tab_head", val);
+    } else
+    if (key.startsWith("tab_line1") ) {
+      prozessJS( "tab_line1", val);
+    } else
+    if (key.startsWith("tab_line2") ) {
+      prozessJS( "tab_line2", val);
+    } else
+    if (key.startsWith("tab_line3") ) {
+      prozessJS( "tab_line3", val);
+    } else
+    if (key.startsWith("tab_line4") ) {
+      prozessJS( "tab_line4", val);
+    } else
+    if (key.startsWith("tab_line5") ) {
+      prozessJS( "tab_line5", val);
+    } else prozessJS( key, val );
   });
 }
 
