@@ -23,20 +23,13 @@ public:
     /// @param now Die aktuelle Zeit in Unix Sekunden
     void loop(time_t now);
 
-    void html_create();
 private:
     /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
     void start_measure(time_t now);
-    /// @brief Die Auflösung des Sensors
-    uint8_t    obj_resolution = 12;
     /// @brief Ein Flag ob die Messung gestartet wurde
     bool       obj_measure_started = false;
     /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
     time_t     obj_measure_starttime = 0;
-    /// @brief Das Intervall zwischen zwei Messungen in Sekunden
-    time_t     obj_measure_interval = 300;
-    /// @brief Der Abstand zwischen dem Start der Messung und dem Auslesen der Werte
-    time_t     obj_measure_delay = 2;
 
 };
 

@@ -16,9 +16,9 @@
 //#define ESP32SIMPLE
 //#define NODE_ROTARYTEST
 //#define NODESLIDER
-//#define NODE_18B20_TEST
-//#define NODEBOSCH
-#define WITTYNODE
+//#define NODE_18B20
+#define NODEBOSCH
+//#define WITTYNODE
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER

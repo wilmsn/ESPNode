@@ -77,20 +77,8 @@ function onMessage(event) {
     if (key.startsWith("tab_head") ) {
       prozessJS( "tab_head", val);
     } else
-    if (key.startsWith("tab_line1") ) {
-      prozessJS( "tab_line1", val);
-    } else
-    if (key.startsWith("tab_line2") ) {
-      prozessJS( "tab_line2", val);
-    } else
-    if (key.startsWith("tab_line3") ) {
-      prozessJS( "tab_line3", val);
-    } else
-    if (key.startsWith("tab_line4") ) {
-      prozessJS( "tab_line4", val);
-    } else
-    if (key.startsWith("tab_line5") ) {
-      prozessJS( "tab_line5", val);
+    if (key.startsWith("tab_line") ) {
+      prozessJS( "tab_line", val);
     } else prozessJS( key, val );
   });
 }
@@ -879,48 +867,10 @@ case "wifi_ssid":
       let n2 = val/1000/1000/1000;
       $("#Tab").append("<tr><td class='tab_left'> Belegt: </td><td class='tab_right'>"+n2.toFixed(2)+" GB</td></tr>");
     break;
-    case "sensorinfo1":
-      const sensordata1 = val.split("#");
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensoren:</td></tr>");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata1[0]+"</td><td class='tab_right'>"+sensordata1[1]+"</td></tr>");
-    break;  
-    case "sensorinfo2":
-      const sensordata2 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata2[0]+"</td><td class='tab_right'>"+sensordata2[1]+"</td></tr>");
-    break;  
-    case "sensorinfo3":
-      const sensordata3 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata3[0]+"</td><td class='tab_right'>"+sensordata3[1]+"</td></tr>");
-    break;  
-    case "sensorinfo4":
-      const sensordata4 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata4[0]+"</td><td class='tab_right'>"+sensordata4[1]+"</td></tr>");
-    break;  
-    case "sensorinfo5":
-      const sensordata5 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata5[0]+"</td><td class='tab_right'>"+sensordata5[1]+"</td></tr>");
-    break;
     case "tab_head":
-//      alert(val);
       $("#Tab tr:last").after("<tr><td colspan=2 class='tab_head'>"+val+"</td></tr>");
     break;
-    case "tab_line1":
-      tabline = val.split("#");
-      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
-    break;
-    case "tab_line2":
-      tabline = val.split("#");
-      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
-    break;
-    case "tab_line3":
-      tabline = val.split("#");
-      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
-    break;
-    case "tab_line4":
-      tabline = val.split("#");
-      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
-    break;
-    case "tab_line5":
+    case "tab_line":
       tabline = val.split("#");
       $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
     break;

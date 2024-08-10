@@ -3,6 +3,9 @@
 #include "sensor_18B20.h"
 #include "common.h"
 #define PIN_18B20      4
+#define REFRESHTIME    300
+#define RESOLUTION     12
+#define MEASUREDELAY   2
 
 const int oneWireBus = PIN_18B20;   
 OneWire oneWire(oneWireBus);
@@ -12,24 +15,25 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   obj_label = label;
   obj_html_place = html_place;
   obj_mqtt_name = mqtt_name;
-  obj_resolution = 12;
-  obj_html_has_info = true;
   sensors.begin();
-  sensors.setResolution(obj_resolution);
+  sensors.setResolution(RESOLUTION);
 
-  obj_mqtt_info = "\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":";
-  obj_mqtt_info += String(obj_resolution);
-  obj_mqtt_info += ",\"Sensor-Refreshtime\":";
-  obj_mqtt_info += String(obj_measure_interval);
-  obj_mqtt_info += " Sek.\"";
+  obj_mqtt_info =  String("\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":");
+  obj_mqtt_info += String(RESOLUTION);
+  obj_mqtt_info += String(",\"Sensor-Refreshtime\":");
+  obj_mqtt_info += String(REFRESHTIME);
+  obj_mqtt_info += String(" Sek.\"");
 
-  obj_html_info =  "{\"sensorinfo1\":\"Hardware:#18B20\"";
-  obj_html_info += ",\"sensorinfo2\":\"Resolution:#";
-  obj_html_info += String(obj_resolution);
-  obj_html_info += "\"";
-  obj_html_info += ",\"sensorinfo3\":\"Refreshtime:#";
-  obj_html_info += String(obj_measure_interval);
-  obj_html_info += " Sek.\"}";
+  obj_html_info =  String(",\"tab_head_18b20\":\"Sensor\"")+
+  obj_html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
+  obj_html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")+
+  obj_html_info += String(",\"tab_line3_18b20\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"");
+
+  obj_html_stat =  String("\"");
+  obj_html_stat += obj_html_place;
+  obj_html_stat += String("\":\"");
+  obj_html_stat += obj_label;
+  obj_html_stat += String(": --- \"");
 }
 
 void Sensor_18B20::start_measure(time_t now) {
@@ -38,15 +42,10 @@ void Sensor_18B20::start_measure(time_t now) {
   sensors.requestTemperatures(); 
 }
 
-void Sensor_18B20::html_create() {
-  write2log(LOG_MODULE,1,obj_html_stat.c_str());
-  ws.textAll(obj_html_stat.c_str());
-}
-
 void Sensor_18B20::loop(time_t now) {
   if (obj_measure_starttime == 0) {start_measure(now); }
   if (obj_measure_started) {
-    if ((now - obj_measure_starttime) > obj_measure_delay) {
+    if ((now - obj_measure_starttime) > MEASUREDELAY) {
       char tempstr[6];
       float tempC = -99;
       tempC = sensors.getTempCByIndex(0);
@@ -58,26 +57,25 @@ void Sensor_18B20::loop(time_t now) {
 
       snprintf(tempstr,5,"%.1f",tempC);
 
-      obj_html_stat ="{\"";
+      obj_html_stat =  String("\"");
       obj_html_stat += obj_html_place;
-      obj_html_stat += "\":\"";
+      obj_html_stat += String("\":\"");
       obj_html_stat += obj_label;
-      obj_html_stat += ": ";
+      obj_html_stat += String(": ");
       obj_html_stat += String(tempstr);
-      obj_html_stat += " °C\"}";
+      obj_html_stat += String(" °C\"");
+      ws.textAll(String("{")+obj_html_stat+String("}"));
       write2log(LOG_MODULE,1,obj_html_stat.c_str());
-      ws.textAll(obj_html_stat.c_str());
 
       obj_mqtt_stat = String(tempstr);
 
       obj_measure_started = false;
     }
   } else {
-    if ((now - obj_measure_starttime) > obj_measure_interval) {
+    if ((now - obj_measure_starttime) > REFRESHTIME) {
       start_measure(now);
     }
   }
-
 }
 
 #endif

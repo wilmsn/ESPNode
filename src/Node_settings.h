@@ -164,7 +164,7 @@ RF24 Gateway:
 //****************************************************
 // Hier ein Node mit Temperatursensor 18B20.
 // Der Temperatursensor MUSS an GPIO 4 angeschlossen sein oder die Datei "sensor_18B20.cpp" muss abgeändert werden!
-#ifdef NODE_18B20_TEST
+#ifdef NODE_18B20
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 #define USE_SENSOR_18B20
@@ -174,7 +174,7 @@ RF24 Gateway:
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
 
-#define HOSTNAME                 "Node 18B20 Test"
+#define HOSTNAME                 "Node 18B20"
 #define HOST_DISCRIPTION         "Ein Testnode für den Temperatursensor 18B20"
 #define MAGICNO                  0
 

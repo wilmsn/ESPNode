@@ -1,10 +1,12 @@
 #include "config.h"
 #ifdef USE_SENSOR_BOSCH
-#include "config.h"
-#include "sensor_bosch.h"
 #include "BMX_sensor.h"
-//#include <twi.h>
 #include <Wire.h>
+#include "sensor_bosch.h"
+#include "common.h"
+
+#define REFRESHTIME    300
+#define MEASUREDELAY   2
 
 
 BMX_SENSOR bmx_sensor;
@@ -60,94 +62,30 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
     Serial.println("Sensor unterstützt diese Messung nicht");
   }
 #endif
-  obj_info_mqtt = "\"Sensor-HW\":";
-  if (bmx_sensor.isBMP180()) {
-     obj_info_mqtt += "\"BMP180\"";
-     obj_info_html = "\"sensorinfo1\":\"Hardware:#BMP180\"";
-  }
-  if (bmx_sensor.isBMP280()) {
-    obj_info_mqtt += "\"BMP280\"";
-    obj_info_html = "\"sensorinfo1\":\"Hardware:#BMP280\"";
-  }
-  if (bmx_sensor.isBME280()) {
-    obj_info_mqtt += "\"BME280\"";
-    obj_info_html = "\"sensorinfo1\":\"Hardware:#BME280\"";
-  }
+  obj_mqtt_info = "\"Sensor-HW\":";
+  if (bmx_sensor.isBMP180()) obj_mqtt_info += "\"BMP180\"";
+  if (bmx_sensor.isBMP280()) obj_mqtt_info += "\"BMP280\"";
+  if (bmx_sensor.isBME280()) obj_mqtt_info += "\"BME280\"";
+
+  obj_html_stat = String("\"")+String(obj_html_place)+String("\":\"")+obj_label+String(": --- °C\"")+
+                  String(",\"")+obj_html_place2+String("\":\"")+obj_label2+String(": --- hPa\"");
+
+  obj_html_info =  String(",\"tab_head_bosch\":\"Sensor\"")+
+  obj_html_info += String(",\"tab_line1_bosch\":\"HW: ");
+  if (bmx_sensor.isBMP180()) obj_html_info += String("BMP180");
+  if (bmx_sensor.isBMP280()) obj_html_info += String("BMP280");
+  if (bmx_sensor.isBME280()) obj_html_info += String("BME280");
+  obj_html_info += String(":#GPIO: ");
+#ifdef ESP8266
+  obj_html_info += String("D1/D2 SDA/SCL\"");
+#endif
+//  obj_html_info += String("\"")+
+  obj_html_info += String(",\"tab_line2_bosch\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"")+
+  obj_html_info += String(",\"tab_line3_bosch\":\"Chip ID:# ")+String(bmx_sensor.getChipId())+String("\"")+
+  obj_html_info += String(",\"tab_line4_bosch\":\"I2C Addr:# ")+String(bmx_sensor.getI2Cadr())+String("\"");
+
+  start_measure(0);
 }
-
-/*
-void Sensor_Bosch::start_measure(time_t now) {
-  char tempstr[6];
-  bmx_sensor.startSingleMeasure();
-  obj_html_stat_json ="{\"";
-  obj_html_stat_json += obj_html_place;
-  obj_html_stat_json += "\":\"";
-  obj_html_stat_json += obj_label;
-  obj_html_stat_json += ": ";
-  snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-  obj_html_stat_json += String(tempstr);
-  obj_html_stat_json += " °C\",\"";
-  obj_html_stat_json += obj_html_place2;
-  obj_html_stat_json += "\":\"";
-  obj_html_stat_json += obj_label2;
-  obj_html_stat_json += ": ";
-  snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-  obj_html_stat_json += String(tempstr);
-  obj_html_stat_json += " hPa\"";
-  if ( bmx_sensor.hasHumidity() ) {
-    obj_html_stat_json += ",\"";
-    obj_html_stat_json += obj_html_place3;
-    obj_html_stat_json += "\":\"";
-    obj_html_stat_json += obj_label3;
-    obj_html_stat_json += ": ";
-    snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-    obj_html_stat_json += String(tempstr);
-    obj_html_stat_json += " %\"";
-  }
-  obj_html_stat_json += "}";
-
-  obj_mqtt_json ="\"";
-  obj_mqtt_json += obj_mqtt_name;
-  obj_mqtt_json += "\":\"";
-  snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-  obj_mqtt_json += String(tempstr);
-  obj_mqtt_json += "\",\"";
-  obj_mqtt_json += obj_mqtt_name2;
-  obj_mqtt_json += "\":\"";
-  snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-  obj_mqtt_json += String(tempstr);
-  obj_mqtt_json += "\"";
-  if ( bmx_sensor.hasHumidity() ) {
-    obj_mqtt_json += ",\"";
-    obj_mqtt_json += obj_mqtt_name3;
-    obj_mqtt_json += "\":\"";
-    snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-    obj_mqtt_json += String(tempstr);
-    obj_mqtt_json += " %\"";
-  }
-
-  obj_values_str = obj_mqtt_name;
-  obj_values_str += ":";
-  snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-  obj_values_str += String(tempstr);
-  obj_values_str += "; ";
-  obj_values_str += obj_mqtt_name2;
-  obj_values_str += ":";
-  snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-  obj_values_str += String(tempstr);
-  //obj_values_str += " hPa";
-  if ( bmx_sensor.hasHumidity() ) {
-    obj_values_str += "; ";
-    obj_values_str += obj_mqtt_name3;
-    obj_values_str += ":";
-    snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-    obj_values_str += String(tempstr);
-  //  obj_values_str += " %";
-  }
-
-  set_changed(true);
-}
-*/
 
 void Sensor_Bosch::start_measure(time_t now) {
   obj_measure_starttime = now;
@@ -157,77 +95,32 @@ void Sensor_Bosch::start_measure(time_t now) {
 
 void Sensor_Bosch::loop(time_t now) {
  if (obj_measure_started) {
-    if ((now - obj_measure_starttime) > obj_measure_delay) {
+    if ((now - obj_measure_starttime) > REFRESHTIME) {
       char tempstr[6];
-      obj_html_stat_json ="{\"";
-      obj_html_stat_json += obj_html_place;
-      obj_html_stat_json += "\":\"";
-      obj_html_stat_json += obj_label;
-      obj_html_stat_json += ": ";
+      obj_html_stat =  String("\"")+String(obj_html_place)+String("\":\"")+obj_label+String(": ");
       snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-      obj_html_stat_json += String(tempstr);
-      obj_html_stat_json += " °C\",\"";
-      obj_html_stat_json += obj_html_place2;
-      obj_html_stat_json += "\":\"";
-      obj_html_stat_json += obj_label2;
-      obj_html_stat_json += ": ";
+      obj_html_stat += String(tempstr)+String(" °C\",\"")+obj_html_place2+String("\":\"")+obj_label2+String(": ");
       snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-      obj_html_stat_json += String(tempstr);
-      obj_html_stat_json += " hPa\"";
+      obj_html_stat += String(tempstr)+String(" hPa\"");
       if ( bmx_sensor.hasHumidity() ) {
-        obj_html_stat_json += ",\"";
-        obj_html_stat_json += obj_html_place3;
-        obj_html_stat_json += "\":\"";
-        obj_html_stat_json += obj_label3;
-        obj_html_stat_json += ": ";
+        obj_html_stat += String(",\"")+obj_html_place3+String("\":\"")+obj_label3+String(": ");
         snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-        obj_html_stat_json += String(tempstr);
-        obj_html_stat_json += " %\"";
-      }
-      obj_html_stat_json += "}";
-
-      obj_mqtt_json ="\"";
-      obj_mqtt_json += obj_mqtt_name;
-      obj_mqtt_json += "\":\"";
-      snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-      obj_mqtt_json += String(tempstr);
-      obj_mqtt_json += "\",\"";
-      obj_mqtt_json += obj_mqtt_name2;
-      obj_mqtt_json += "\":\"";
-      snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-      obj_mqtt_json += String(tempstr);
-      obj_mqtt_json += "\"";
-      if ( bmx_sensor.hasHumidity() ) {
-        obj_mqtt_json += ",\"";
-        obj_mqtt_json += obj_mqtt_name3;
-        obj_mqtt_json += "\":\"";
-        snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-        obj_mqtt_json += String(tempstr);
-        obj_mqtt_json += " %\"";
+        obj_html_stat += String(tempstr)+String(" %\"");
       }
 
-      obj_values_str = obj_mqtt_name;
-      obj_values_str += ":";
+      obj_mqtt_stat =  String("\"")+obj_mqtt_name+String("\":\"");
       snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-      obj_values_str += String(tempstr);
-      obj_values_str += "; ";
-      obj_values_str += obj_mqtt_name2;
-      obj_values_str += ":";
+      obj_mqtt_stat += String(tempstr)+String("\",\"")+obj_mqtt_name2+String("\":\"");
       snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-      obj_values_str += String(tempstr);
+      obj_mqtt_stat += String(tempstr)+String("\"");
       if ( bmx_sensor.hasHumidity() ) {
-        obj_values_str += "; ";
-        obj_values_str += obj_mqtt_name3;
-        obj_values_str += ":";
+        obj_mqtt_stat += String(",\"")+obj_mqtt_name3+String("\":\"");
         snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-        obj_values_str += String(tempstr);
+        obj_mqtt_stat += String(tempstr)+String(" %\"");
       }
-
-      set_changed(true);
-      obj_measure_started = false;
     }
   } else {
-    if ((now - obj_measure_starttime) > obj_measure_interval) {
+    if ((now - obj_measure_starttime) > REFRESHTIME) {
       start_measure(now);
     }
   }
