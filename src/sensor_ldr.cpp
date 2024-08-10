@@ -21,8 +21,7 @@ void Sensor_LDR::loop(time_t now) {
     obj_html_stat += ": ";
     obj_html_stat += String(obj_value);
     obj_html_stat += "\"";
-    ws.textAll(String("{")+obj_html_stat+String("}"));
-    write2log(LOG_MODULE,1,obj_html_stat.c_str());
+    sendWsMessage(String("{")+obj_html_stat+String("}",LOG_MODULE));
                     
 //    obj_mqtt_info = "\"";
 //    obj_mqtt_info += obj_mqtt_name;

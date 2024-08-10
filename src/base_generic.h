@@ -58,11 +58,13 @@ public:
 
     /// @brief Aktuelle Statuswerte werden hier für die MQTT Übertragung zurückgegeben.
     /// @brief Die Befüllung der zugrundeliegenden Variablen "obj_mqtt_state" erfolgt in dem abgeleiteten Script.
-    /// @brief Der Eintrag erfolgt als JSON String.
-    /// @brief Eine Übertragung per MQTT erfolgt nach jeder Änderung.
-    /// @return 
+    /// @brief Der Eintrag erfolgt entweder als Einzelwert oder als JSON formatierter String.
+    /// @brief Eine Übertragung per MQTT erfolgt nach jeder Änderung getriggert durch mqtt_stat_changed()
+    /// @return Ein String
     String& mqtt_stat();
 
+    /// @brief Ein Schalter ob ein MQTT Status vorhanden ist
+    /// @return MQTT Status: true vorhanden; false nicht vorhanden
     bool mqtt_has_stat();
 
     /// @brief Sobald sich ein Wert innerhalb von mqtt_state() verändert muss die abgeleitete Klasse "obj_mqtt_state_changed" entsprechend setzen.
@@ -70,26 +72,26 @@ public:
     bool mqtt_stat_changed();
 
     /// @brief Hier wird alles übertragen was keine aktuelen Statuswerte sind.
-    /// @return 
+    /// @return Ein Teil-JSON als String ohne Klammern
     String& mqtt_info();
 
-    /// @brief Hier wird alles übertragen was keine aktuelen Statuswerte sind.
-    /// @return 
+    /// @brief Ein Schalter ob mqtt_info vorhanden ist.
+    /// @return MQTT Info: true vorhanden; false nicht vorhanden
     bool mqtt_has_info();
 
  //----------------Variablen---------------   
  
     /// @brief Das Schlüsselword für diesen Sensor/Actor.
-    String     obj_keyword;  //ok
+    String     obj_keyword;
     
     /// @brief Der Einbauort für diesen Sensor/Actor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
-    String     obj_html_place; //ok
+    String     obj_html_place;
     
     /// @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt. 
-    String     obj_label; //ok
+    String     obj_label;
     
     /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
-    String     obj_html_info; //ok
+    String     obj_html_info;
 
     /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
@@ -100,7 +102,7 @@ public:
     // MQTT Support
 
     /// @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
-    bool       obj_mqtt_has_info; //ok
+    bool       obj_mqtt_has_info;
 
     /// @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
     String     obj_mqtt_info;

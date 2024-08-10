@@ -74,6 +74,9 @@ function onClose(event) {
 function onMessage(event) {
 //  alert(JSON.stringify(event.data));
   const json = JSON.parse(event.data, function (key, val) {
+    if (key.startsWith("stat") ) {
+      prozessJS( "stat", val);
+    } else
     if (key.startsWith("tab_head") ) {
       prozessJS( "tab_head", val);
     } else
@@ -581,7 +584,7 @@ function prozessJS( key, val ) {
         $('#console').html(stats.join("\r\n"));
       }
     break;
-    case "statclear":
+    case "clear_stat":
       if ( tab_active == 3 ) {
         $('#console').html(" ");
       }

@@ -45,6 +45,8 @@ private:
 
     /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
     void start_measure(time_t now);
+    /// @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert1
+    String     obj_mqtt_name1;
     /// @brief Eine Beschriftung des zweiten Meßwertes für die Webseite. Wird sie nicht gesetzt, wird hier das Schlüsselwort genutzt. 
     String     obj_label2;
     /// @brief Der Einbauort des zweiten Meßwertes für diesen Sensor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.

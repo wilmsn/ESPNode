@@ -72,6 +72,9 @@ String log_str;
 /// @brief Ein fixes Array zur Aufnahme des Zeitstempels
 char timeStr[16];
 
+/// @brief Ein fixes Array zur Aufnahme des Log-Kategorie
+char katStr[7];
+
 // Schleifensteuerung
 
 /// @brief Zeitpunkt der letzten Statusdatenerstellung 

@@ -3,16 +3,16 @@
 
 void show_settings() {
   String tmpstr;
-  tmpstr = String("{\"stat\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"");
-  tmpstr += ",\"stat\":\"ENDE\"}";
-  sendWsMessage(tmpstr);
+  tmpstr = String("{\"stat_1\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"");
+  tmpstr += ",\"stat_2\":\"ENDE\"}";
+  sendWsMessage(tmpstr,LOG_SYSTEM);
 }
 
 void console_help() {
   String tmpstr;
-  tmpstr = String("{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"") +
-           String("{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}");
-  sendWsMessage(tmpstr);
+  tmpstr = String("{\"stat_1\":\"settings >>> Zeigt aktuelle Einstellungen\"") +
+           String(",\"stat_2\":\"looptimealarm=<Maximalzeit in ms>\"}");
+  sendWsMessage(tmpstr,LOG_SYSTEM);
 }
 
 // Kommentiert in main.h
@@ -179,9 +179,9 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.begin("settings",false);
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
-    tmpstr = "{\"statclear\":1"; 
+    tmpstr = "{\"clear_stat\":1"; 
     tmpstr += String(",\"stat\":\"looptimealarm: set to ") + String(loop_time_alarm) + String("\"}");
-    sendWsMessage(tmpstr);
+    sendWsMessage(tmpstr,LOG_SYSTEM);
     cmd_valid = true;
     cmd_no++;
   }
@@ -305,7 +305,7 @@ void prozess_cmd(const String cmd, const String value)  {
   }
   if ( ! cmd_valid ) {
     tmpstr  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String("\"}");
-    sendWsMessage(tmpstr);
+    sendWsMessage(tmpstr,LOG_SYSTEM);
   }
 }
 

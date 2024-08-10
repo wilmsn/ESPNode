@@ -51,6 +51,7 @@ extern bool do_log_web;
 extern time_t now;
 extern FTPServer        ftp;
 extern void sendWsMessage(String& _myMsg);
+extern void sendWsMessage(String& _myMsg, uint8_t kat);
 
 
 // Modul: webserver

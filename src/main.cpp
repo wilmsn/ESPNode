@@ -57,9 +57,6 @@ void getVcc(String& json) {
 #endif
 }
 
-
-
-// Kommentiert in main.h
 void write2log(uint8_t kat, int count, ...) {
   va_list args;
   int n = 0;
@@ -75,6 +72,15 @@ void write2log(uint8_t kat, int count, ...) {
   // Im AP-Mode wird nichts gelogged !!!
   if ( ! ap_mode ) {
     snprintf(timeStr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
+    switch(kat) {
+      case LOG_WEB: snprintf(katStr,6,"[ WEB]"); break;
+      case LOG_SYSTEM: snprintf(katStr,6,"[ SYS]"); break;
+      case LOG_MQTT: snprintf(katStr,6,"[MQTT]"); break;
+      case LOG_RF24: snprintf(katStr,6,"[RF24]"); break;
+      case LOG_MODULE: snprintf(katStr,6,"[ MOD]"); break;
+      case LOG_CRITICAL: snprintf(katStr,6,"[CRIT]"); break;
+      default: snprintf(katStr,6,"[----]"); break;
+    }
     if ( do_log_critical && kat == LOG_DAYBREAK ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
@@ -107,6 +113,7 @@ void write2log(uint8_t kat, int count, ...) {
           (do_log_critical && ( kat == LOG_CRITICAL )) ) {
       log_str = "{\"log\":\"";
       log_str += timeStr;
+      log_str += katStr;
       n = 0;
       while (n < count) {
         log_str += " ";

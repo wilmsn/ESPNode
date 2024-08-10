@@ -151,10 +151,10 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   last_modus = Radio;
 }
 
-void AudioModul::html_create() {
-  Switch_OnOff::html_create();
-  String tmpstr;
-  tmpstr = String("{\"audio_show\":1");
+void AudioModul::html_create(String& tmpstr) {
+  Switch_OnOff::html_create(tmpstr);
+//  String tmpstr;
+  tmpstr = String("\"audio_show\":1");
 #ifdef USE_AUDIO_RADIO
   tmpstr += String(",\"audio_radio_show\":1");
 #endif
@@ -193,7 +193,7 @@ void AudioModul::html_create() {
   }
   tmpstr += String(",\"audio_vol\":") + String(audio_vol);
   tmpstr += String(",\"audio_bas\":") + String(audio_bas);
-  tmpstr += String(",\"audio_tre\":") + String(audio_tre) + String("}");
+  tmpstr += String(",\"audio_tre\":") + String(audio_tre);
   ws.textAll(tmpstr.c_str());
   write2log(LOG_MODULE,1,tmpstr.c_str());
 }

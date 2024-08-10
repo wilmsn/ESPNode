@@ -96,7 +96,7 @@ public:
     /// @return "true" bei Übereinstimmung der Keywörter sonst false
     bool set(const String& keyword, const String& value);
  
-    void html_create();
+    void html_create(String& tmpstr);
 
     void loop(time_t now);
 

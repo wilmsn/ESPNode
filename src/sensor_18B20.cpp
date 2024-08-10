@@ -23,6 +23,7 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   obj_mqtt_info += String(",\"Sensor-Refreshtime\":");
   obj_mqtt_info += String(REFRESHTIME);
   obj_mqtt_info += String(" Sek.\"");
+  obj_mqtt_has_info = true;
 
   obj_html_info =  String(",\"tab_head_18b20\":\"Sensor\"")+
   obj_html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
@@ -64,8 +65,7 @@ void Sensor_18B20::loop(time_t now) {
       obj_html_stat += String(": ");
       obj_html_stat += String(tempstr);
       obj_html_stat += String(" °C\"");
-      ws.textAll(String("{")+obj_html_stat+String("}"));
-      write2log(LOG_MODULE,1,obj_html_stat.c_str());
+      sendWsMessage(String("{")+obj_html_stat+String("}",LOG_MODULE));
 
       obj_mqtt_stat = String(tempstr);
 

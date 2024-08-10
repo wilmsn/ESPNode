@@ -254,7 +254,7 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Ein Bosch Sensor Testnode mit RF24 Gatway"
 
 #define MODULE1_DEFINITION       Sensor_Bosch module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("out1","Temperatur","Temp","out2","Luftdruck","Pres","out3","Luftfeuchte","Humi");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("out1","Temperatur","Temperatur","out2","Luftdruck","Luftdruck","out3","Luftfeuchte","Luftfeuchte");
 
 #define MODULE2_DEFINITION       Switch_OnOff module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("sw1", "interne LED", "led1", "led1", false, false, 2);
