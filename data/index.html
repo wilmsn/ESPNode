@@ -8,7 +8,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.998audio V2 (07/2024)";
+var htmlversion = "0.998audio V3 (08/2024)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -74,6 +74,9 @@ function onClose(event) {
 function onMessage(event) {
 //  alert(JSON.stringify(event.data));
   const json = JSON.parse(event.data, function (key, val) {
+    if (key.startsWith("audio_media_add_album") ) {
+      prozessJS( "audio_media_add_album", val);
+    } else
     if (key.startsWith("stat") ) {
       prozessJS( "stat", val);
     } else
@@ -122,6 +125,7 @@ $(document).ready(function(){
   $("#audio_radio_settings").hide();
   $("#audio_media_settings").hide();
   $("#audio_speak_settings").hide();
+  $("#audio_trebas").removeClass("change");
   $("#audio_menu").removeClass("change");
   $('#rf24gw').click(function() {
     if (!$(this).is(':checked')) {
@@ -435,6 +439,13 @@ function prozessJS( key, val ) {
     case "audio_show":
       $("#audio_div").show();
     break;
+    case "audio_trebas_settings":
+      if ( val > 0.5 ) {
+        $("#audio_settings").show();
+      } else {
+        $("#audio_settings").hide();
+      }
+    break;
     case "audio_settings":
       if ( val > 0.5 ) {
         $("#audio_settings").show();
@@ -473,11 +484,29 @@ function prozessJS( key, val ) {
         $("#audio_media_alben").html(" ");
       }
     break;
+    case "audio_media_active":
+    // Schaltet den Mediaplayer ein
+      if ( val > 0.5 ) {
+        $("#audio_media_but").css("color","black").css("background-color","yellow");
+        $("#audio_media_but").html("ein");
+        $("#audio_media_alben").html(" ");
+        $("#audio_trebas").removeClass("change");
+        $("#audio_menu").removeClass("change");
+        $("#audiomsg1div").hide();
+        $("#audiomsg2div").hide();
+        $("#audiomsg3div").hide();
+        $("#audiomsg4div").hide();
+        $("#audio_trebas_settings").hide();
+        $("#audio_settings").hide();
+        $("#audio_radio_settings").hide();
+        $("#audio_media_settings").show();
+        $("#audio_speak_settings").hide();
+      }
+    break;
     case "audio_media_add_album":
 // Syntax: Typ: A=Album, T=Titel; Albumnummer; Titelnummer (0 bei Album); Titel
-//      $("#audio_media_alben").append("<div>Test</div>");
+//      $("#audio_media_alben").append("...");
       const AlbumData = val.split("#");
-//alert(AlbumData[0] + " # " +AlbumData[1]+" # "+AlbumData[2]+" # "+AlbumData[3]);
       if (AlbumData[0] == "A") {
         $("#audio_media_alben").append("<img id='mp_album"+AlbumData[1]+"_play' src='play.png' height=#50px' width='50px'>"+
                                    "<img id='mp_album"+AlbumData[1]+"_img' src='dir_close.png' height='50px' width='50px'>"+
@@ -486,9 +515,11 @@ function prozessJS( key, val ) {
         $("#mp_album"+AlbumData[1]).hide();
         $("#mp_album"+AlbumData[1]+"_img").click(function() {
           if ($("#mp_album"+AlbumData[1]).is(':hidden')) {
-            $("#mp_album"+AlbumData[1]).attr("src","dir_open.png");
+            $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_open.png");
             $("#mp_album"+AlbumData[1]).show();
             $("#mp_album"+AlbumData[1]+"_play").attr("src","leer.png");
+//            alert("Now request Albumdata");
+            do_cmd("audio_media_get_album",AlbumData[1]);
           } else {
             $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_close.png");
             $("#mp_album"+AlbumData[1]).hide();
@@ -496,7 +527,8 @@ function prozessJS( key, val ) {
           }
         });
         $("#mp_album"+AlbumData[1]+"_play").click(function() {
-          alert("Play_dir:"+AlbumData[1]);
+          //alert("Play_dir:"+AlbumData[1]);
+          do_cmd("audio_media_play_album",AlbumData[1]);
         });
         } else {
         $("#mp_album"+AlbumData[1]).append("<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play' src='play.png' height='50px' width='50px'>"+
@@ -504,7 +536,8 @@ function prozessJS( key, val ) {
                                   "<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_img' src='mp3file.png' height='50px' width='50px'>"+
                                   "<div style='width: 150px;float: right;'>"+AlbumData[3]+"</div><br>");
         $("#mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play").click(function() {
-          alert("Play_dir:"+AlbumData[1]+" File:"+AlbumData[2]);
+          //alert("Play_dir:"+AlbumData[1]+" File:"+AlbumData[2]);
+          do_cmd("audio_media_play_song",AlbumData[1]+"#"+AlbumData[2]);
         });
       }
 
@@ -1102,6 +1135,16 @@ function dellog() {
 }
 
 // Ab hier Funktionen fuer das Audio Modul
+function audio_trebas() {
+  if ($("#audio_trebas").hasClass("change")) {
+    $("#audio_trebas").removeClass("change");
+    $("#audio_trebas_settings").hide();
+  } else {
+    $("#audio_trebas").addClass("change");
+    $("#audio_trebas_settings").show();
+  }
+}
+
 function audio_menu() {
   if ($("#audio_menu").hasClass("change")) {
     $("#audio_menu").removeClass("change");
@@ -1109,15 +1152,19 @@ function audio_menu() {
   } else {
     $("#audio_menu").addClass("change");
     $("#audio_settings").show();
+    $("#audio_media_alben").html(" ");
+    do_cmd("allAlbum2Web","1");
   }
 }
 
 function audio_mediaswitch() {
+  $("#audio_trebas").removeClass("change");
   $("#audio_menu").removeClass("change");
   $("#audiomsg1div").hide();
   $("#audiomsg2div").hide();
   $("#audiomsg3div").hide();
   $("#audiomsg4div").hide();
+  $("#audio_trebas_settings").hide();
   $("#audio_settings").hide();
   $("#audio_radio_settings").hide();
   $("#audio_media_settings").hide();
@@ -1267,14 +1314,14 @@ function audio_radio_stn_update() {
       <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
       </div>
       <div style="height: 50px;">
-      <div id="audio_menu" class="menu" onclick="audio_menu()">
-        <div class="bar1"></div>
-        <div class="bar2"></div>
-        <div class="bar3"></div>
+        <div id="audio_trebas" class="menu" onclick="audio_trebas()">
+          <div class="bar1"></div>
+          <div class="bar2"></div>
+          <div class="bar3"></div>
+        </div>
+        <div class="menu_text">Höhen und Bässe</div>
       </div>
-      <div class="menu_text">Erweiterte Einstellungen</div>
-      </div>
-      <div id="audio_settings">
+      <div id="audio_trebas_settings">
         <div class="slidecontainer">
           <p>Bass</p>
           <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
@@ -1284,29 +1331,37 @@ function audio_radio_stn_update() {
           <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
         </div>
       </div>
-      <div id="audio_radio_settings">
-        <p id="audio_radio_sel_div">Senderwahl:</p>
-        <select id="audio_radio_sel" class="custom-select" size="5">
-        </select>
-        <table><tr>
-          <td>Sendername:</td>
-          <td><input name="Sendername" id="audio_radio_stn_name" size="30" maxlength="30"></td>
-        </tr><tr>
-          <td>URL:</td>
-          <td><input name="SenderURL" id="audio_radio_stn_url" size="30" maxlength="125"></td>
-        </tr></table>  
-        <button id="audio_radio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
+      <div style="height: 50px;">
+        <div id="audio_menu" class="menu" onclick="audio_menu()">
+          <div class="bar1"></div>
+          <div class="bar2"></div>
+          <div class="bar3"></div>
+        </div>
+        <div class="menu_text">Erweiterte Einstellungen</div>
       </div>
-      <div id="audio_media_settings">
-        <div id="audio_media_alben">
-          Alben DIV
+      <div id="audio_settings">
+        <div id="audio_radio_settings">
+          <p id="audio_radio_sel_div">Senderwahl:</p>
+          <select id="audio_radio_sel" class="custom-select" size="5"></select>
+          <table><tr>
+            <td>Sendername:</td>
+            <td><input name="Sendername" id="audio_radio_stn_name" size="30" maxlength="30"></td>
+            </tr><tr>
+            <td>URL:</td>
+            <td><input name="SenderURL" id="audio_radio_stn_url" size="30" maxlength="125"></td></tr>
+          </table>  
+          <button id="audio_radio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
+        </div>
+        <div id="audio_media_settings">
+          <div id="audio_media_alben">
+            Alben DIV
+          </div>
+        </div>
+        <div id="audio_speak_settings">
+          Speaker Menu TBD.
         </div>
       </div>
-      <div id="audio_speak_settings">
-          Speaker Menu TBD.
-      </div>
     </div>
-    
   </div>
 
   <div id="page_console" class="div_content">

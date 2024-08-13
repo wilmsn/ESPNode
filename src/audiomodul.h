@@ -80,28 +80,45 @@ typedef enum Modus { Off = 0,
 
 class AudioModul : public Switch_OnOff {
 
-public:
-    /// @brief Die Initialisierung als logischer Schalter ohne HW-Pin
-    /// @param html_place Der Einbauort in der Webseite
-    /// @param label Ein Bezeichner für diesen Schalter
-    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
-    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
- 
-    /// @brief Die normale Set Funktion aus de Grundmodul erweitert um feste Schlüsselwörter 
-    /// @brief zur Einspeicherung von Radiostationen und zur Senderwahl.
-    /// @brief station[0..9]_url; station[0..9]_name; play;
-    /// @param keyword Das zu testende "keyword"
-    /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
-    /// @return "true" bei Übereinstimmung der Keywörter sonst false
-    bool set(const String& keyword, const String& value);
- 
-    void html_create(String& tmpstr);
-
-    void loop(time_t now);
-
 private:
 
+    modus_t   modus;
+    modus_t   last_modus;
+    bool      time_update = false;
+    uint8_t   audio_vol;
+    uint8_t   audio_bas;
+    uint8_t   audio_tre;
+    bool      timeout_set = false;
+    time_t    timeout_start;
+    time_t    song_started;
+// Radio
+#ifdef USE_AUDIO_RADIO
+    station_t station[MAXSTATIONS];
+    uint8_t   audio_radio_cur_station;
+#endif
+// Mediaplayer
+#ifdef USE_AUDIO_MEDIA
+    uint16_t   audio_media_cur_dir  = 0;
+    uint16_t   audio_media_cur_file = 0;
+    uint32_t   audio_media_num_file = 0;
+
+struct  music_t {
+        uint16_t        dirNo;
+        uint16_t        fileNo;
+        char            dirName[50];
+        char            fileName[50];
+        music_t*        p_next;
+};
+music_t*                p_initial = NULL;
+
+
+#endif
+// Bluetoothspeaker
+#ifdef USE_AUDIO_SPEAKER
+
+#endif
+// Generic use
+    int       old_min = 0;
 #ifdef USE_AUDIO_RADIO
     /// @brief Schaltet das Radio aus.
     void audio_radio_off();
@@ -139,7 +156,13 @@ private:
     /// @brief Die gesamte Initialisierung des Mediaplayers auf der Weboberfläche.
     void audio_media_web_init();
 
-    void audio_media_sel_file(File& dir, File& file, uint8_t count);
+    bool audio_media_sel_dir(File& root, File& dir, uint8_t count);
+    
+    bool audio_media_sel_file(File& dir, File& file, uint8_t count);
+
+    void audio_media_get_album(uint16_t reqDirNo);
+
+//    void audio_media_sel_file(File& dir, File& file, uint8_t count);
 
     File audio_media_file_from_dir(File mydir, uint8_t fileNo);
 
@@ -151,7 +174,16 @@ private:
 
     void audio_media_play(uint8_t _dirNo, uint8_t _fileNo);
 
+    void newEntry(music_t* p_new);
+    void addMusic(uint16_t dirNo, uint16_t fileNo, const char* dirName, const char* fileName);
+    void allAlbum2Web();
+    uint32_t countSongs();
+    bool validSong(uint16_t dirNo, uint16_t fileNo);
+    void nextSong();
+
     uint16_t audio_media_num_dir = 0;
+
+    uint32_t audio_media_read_all();
 #endif
 #ifdef USE_AUDIO_SPEAKER
 
@@ -164,31 +196,28 @@ private:
     void      audio_set_modus(modus_t _modus);
     void      audio_show_modus(modus_t _modus);
     void      audio_all_apps_off();
-    modus_t   modus;
-    modus_t   last_modus;
-    bool      time_update = false;
-    uint8_t   audio_vol;
-    uint8_t   audio_bas;
-    uint8_t   audio_tre;
-    bool      timeout_set = false;
-    time_t    timeout_start;
-// Radio
-#ifdef USE_AUDIO_RADIO
-    station_t station[MAXSTATIONS];
-    uint8_t   audio_radio_cur_station;
-#endif
-// Mediaplayer
-#ifdef USE_AUDIO_MEDIA
-    uint8_t   audio_media_cur_dir  = 0;
-    uint8_t   audio_media_cur_file = 0;
-    uint8_t   audio_media_num_file = 0;
-#endif
-// Bluetoothspeaker
-#ifdef USE_AUDIO_SPEAKER
 
-#endif
-// Generic use
-    int       old_min = 0;
+
+public:
+    /// @brief Die Initialisierung als logischer Schalter ohne HW-Pin
+    /// @param html_place Der Einbauort in der Webseite
+    /// @param label Ein Bezeichner für diesen Schalter
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
+    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
+ 
+    /// @brief Die normale Set Funktion aus de Grundmodul erweitert um feste Schlüsselwörter 
+    /// @brief zur Einspeicherung von Radiostationen und zur Senderwahl.
+    /// @brief station[0..9]_url; station[0..9]_name; play;
+    /// @param keyword Das zu testende "keyword"
+    /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
+    /// @return "true" bei Übereinstimmung der Keywörter sonst false
+    bool set(const String& keyword, const String& value);
+ 
+    void html_create(String& tmpstr);
+
+    void loop(time_t now);
+
 };
 
 

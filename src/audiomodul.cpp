@@ -10,17 +10,6 @@
 Audio            audio;
 #endif
 
-#ifdef USE_ESP8266AUDIO_LIB
-#include "AudioFileSourceICYStream.h"
-#include "AudioFileSourceBuffer.h"
-#include "AudioGeneratorMP3.h"
-#include "AudioOutputI2S.h"
-AudioGeneratorMP3 *mp3 = NULL;
-AudioFileSourceICYStream *file = NULL;
-AudioFileSourceBuffer *buff = NULL;
-AudioOutputI2S *out = NULL;
-#endif
-
 #if defined(CONFIG_IDF_TARGET_ESP32) 
 #warning "Compiling Audiomodule with Settings for ESP32"
 // Config für das Audiomodul
@@ -74,6 +63,11 @@ Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
 /// @brief Variable zur Steuerung der Anzeige Steaminhalte im Display
 bool radioPlayMode = false;
 bool mediaPlayMode = false;
+String     audiomsg1;
+String     audiomsg2;
+String     audiomsg3;
+String     audiomsg4;
+String     audiomsg5;
 
 
 void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
@@ -114,47 +108,30 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
     Serial.println(I2S_DOUT);
 #endif
   }
-#elif defined(USE_ESP8266AUDIO_LIB)
-//  if (out->SetPinout(I2S_BCLK, I2S_LRC, I2S_DOUT))  {
-#if defined(DEBUG_SERIAL_MODULE)
-    Serial.print("Set PinOut: BCLK:");
-    Serial.print(I2S_BCLK);
-    Serial.print(" LRC:");
-    Serial.print(I2S_LRC);
-    Serial.print(" DOUT:");
-    Serial.println(I2S_DOUT);
-#endif
-//  }
 #endif
 #if defined(USE_AUDIO_LIB)
   //audio.setBufsize(30000,600000);
   audio.setVolumeSteps(100);
   audio.setVolume(audio_vol);
 #endif
-#ifdef USE_AUDIO_MEDIA
-  audio_media_num_dir = 0;
-  File root = SD.open("/");
-  File dir = root.openNextFile();
-  while(dir){
-    if(dir.isDirectory()) audio_media_num_dir++;
-    dir = root.openNextFile();
-  }
-  dir.close();
-  root.close();
-//  audio_media_cur_dir = 1;
-//  audio_media_cur_file = 1;
-#endif
 #ifdef USE_FTP
   ftp.addFilesystem("SD", &SD);
 #endif
   audio_set_modus(Off);
   last_modus = Radio;
+
+#ifdef USE_AUDIO_MEDIA
+  uint32_t numFiles = audio_media_read_all();
+  char tmpstr[20];
+  sprintf(tmpstr,"%u",numFiles);
+  write2log(LOG_CRITICAL,2,"Anzahl Files von SD: ",tmpstr);
+#endif
 }
 
 void AudioModul::html_create(String& tmpstr) {
   Switch_OnOff::html_create(tmpstr);
 //  String tmpstr;
-  tmpstr = String("\"audio_show\":1");
+  tmpstr += String(",\"audio_show\":1");
 #ifdef USE_AUDIO_RADIO
   tmpstr += String(",\"audio_radio_show\":1");
 #endif
@@ -174,8 +151,7 @@ void AudioModul::html_create(String& tmpstr) {
 #endif
 #ifdef USE_AUDIO_MEDIA
     case Media:
-      tmpstr += String(",\"audio_media\":1");
-      audio_media_web_init();
+      tmpstr += String(",\"audio_media_active\":1");
     break;
 #endif
 #ifdef USE_AUDIO_SPEAKER
@@ -185,7 +161,8 @@ void AudioModul::html_create(String& tmpstr) {
     break;
 #endif
     case Off:
-
+      tmpstr += String(",\"audio_radio\":0");
+      tmpstr += String(",\"audio_media\":0");
     break;
     default:
 
@@ -194,8 +171,16 @@ void AudioModul::html_create(String& tmpstr) {
   tmpstr += String(",\"audio_vol\":") + String(audio_vol);
   tmpstr += String(",\"audio_bas\":") + String(audio_bas);
   tmpstr += String(",\"audio_tre\":") + String(audio_tre);
-  ws.textAll(tmpstr.c_str());
-  write2log(LOG_MODULE,1,tmpstr.c_str());
+  if (audiomsg1.length() >2) tmpstr += String(",\"audiomsg1\":\"")+audiomsg1+String("\"");
+  if (audiomsg2.length() >2) tmpstr += String(",\"audiomsg2\":\"")+audiomsg2+String("\"");
+  if (audiomsg3.length() >2) tmpstr += String(",\"audiomsg3\":\"")+audiomsg3+String("\"");
+  if (audiomsg4.length() >2) tmpstr += String(",\"audiomsg4\":\"")+audiomsg4+String("\"");
+  if (audiomsg5.length() >2) tmpstr += String(",\"audiomsg5\":\"")+audiomsg5+String("\"");
+//  ws.textAll(tmpstr.c_str());
+//  write2log(LOG_MODULE,1,tmpstr.c_str());
+#ifdef USE_AUDIO_MEDIA
+//  if (modus == Media) allAlbum2Web();
+#endif
 }
 
 bool AudioModul::set(const String& keyword, const String& value) {
@@ -214,8 +199,6 @@ bool AudioModul::set(const String& keyword, const String& value) {
       ws.textAll(tmpstr.c_str());
 #if defined(USE_AUDIO_LIB)
       audio.setVolume(audio_vol);
-#elif defined(USE_ESP8266AUDIO_LIB)
-      out->SetGain(((float)audio_vol)/100.0);
 #endif
       audiodisplay.show_vol(audio_vol);
       if (audio_vol == 0) {
@@ -233,8 +216,6 @@ bool AudioModul::set(const String& keyword, const String& value) {
       ws.textAll(tmpstr.c_str());
 #if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
-#elif defined(USE_ESP8266AUDIO_LIB)
-//      out->SetGain(((float)audio_vol)/100.0);
 #endif
       retval = true;
     }
@@ -248,8 +229,6 @@ bool AudioModul::set(const String& keyword, const String& value) {
       ws.textAll(tmpstr.c_str());
 #if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
-#elif defined(USE_ESP8266AUDIO_LIB)
-//      out->SetGain(((float)audio_vol)/100.0);
 #endif
       retval = true;
     }
@@ -257,10 +236,10 @@ bool AudioModul::set(const String& keyword, const String& value) {
     // Set for radio
     // Radio einschalten
     if ( keyword == String(AUDIO_RADIO) || keyword == String("audio_radio") ) {
-      audio_set_modus(Radio);
-      tmpstr = "{\"audio_radio\":\"1\"}";
-      write2log(LOG_MODULE,1,tmpstr.c_str());
-      ws.textAll(tmpstr.c_str());
+      if (modus != Off) audio_set_modus(Radio);
+//      tmpstr = "{\"audio_radio\":\"1\"}";
+//      write2log(LOG_MODULE,1,tmpstr.c_str());
+//      ws.textAll(tmpstr.c_str());
       retval = true;
     }
     // Radio: Sender einstellen hier ueber command "station 2"
@@ -293,14 +272,52 @@ bool AudioModul::set(const String& keyword, const String& value) {
 #ifdef USE_AUDIO_MEDIA
     // Set for media
     if ( keyword == String(AUDIO_MEDIA) || keyword == String("audio_media") ) {
-      audio_set_modus(Media);
+      if (modus != Off) audio_set_modus(Media);
+      retval = true;
+    }
+    if ( keyword == "allAlbum2Web" ) {
+      allAlbum2Web();
+      retval = true;
+    }
+    if ( keyword == "audio_media_get_album" ) {
+      audio_media_get_album(value.toInt());
+      retval = true;
+    }
+    if ( keyword == "audio_media_play_album" ) {
+      audio_media_cur_dir = value.toInt();
+      audio_media_cur_file = 0;
+      audio_media_play(audio_media_cur_dir,audio_media_cur_file);
+      retval = true;
+    }
+    if ( keyword == "audio_media_play_song" ) {
+      char tmpstr[10];
+      audio_media_cur_dir = 0;
+      audio_media_cur_file = 0;
+      bool dirMode = true;
+      snprintf(tmpstr,10,"%s",value.c_str());
+      int i =0;
+      do {
+        if (tmpstr[i] == '#') {
+          dirMode = false;
+        } else {
+          if (dirMode) {
+            audio_media_cur_dir=10*audio_media_cur_dir+(tmpstr[i]-'0');
+          } else {
+            audio_media_cur_file=10*audio_media_cur_file+(tmpstr[i]-'0');
+          }
+        }
+        i++;
+      } while(i<strlen(tmpstr));
+      Serial.print("set playsong: ");
+      Serial.println(String(audio_media_cur_dir)+String(":")+String(audio_media_cur_file));
+      audio_media_play(audio_media_cur_dir,audio_media_cur_file);
       retval = true;
     }
 #endif
 #ifdef USE_AUDIO_SPEAKER
     // Set for speaker
     if ( keyword == String(AUDIO_SPEAKER) || keyword == String("audio_speak") ) {
-      audio_set_modus(Speaker);
+      if ( modus != Off) audio_set_modus(Speaker);
       tmpstr = "{\"audio_speak\":1}";
       write2log(LOG_MODULE,1,tmpstr.c_str());
       ws.textAll(tmpstr.c_str());
@@ -382,7 +399,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       audio_all_apps_off();
       audio_media_on();
       audio_media_disp_init();
-      audio_media_web_init();
+//      audio_media_web_init();
     break;
 #endif
 #ifdef USE_AUDIO_SPEAKER
@@ -445,18 +462,25 @@ void AudioModul::loop(time_t now) {
 #endif
 #ifdef USE_AUDIO_MEDIA
       if (modus == Media) {
-        if (audio_media_cur_file < audio_media_num_file) {
-          audio_media_cur_file++;
-        } else {
-          audio_media_cur_file = 0;
+        if ( song_started > 0) {
+          if (now - song_started > 2) {
+            audio_media_cur_file++;
+            if (! validSong(audio_media_cur_dir, audio_media_cur_file)) {
+              audio_media_cur_dir++;
+              audio_media_cur_file=0;
+              if (! validSong(audio_media_cur_dir, audio_media_cur_file)) {
+                audio_media_cur_dir=0;
+                audio_media_cur_file=0;
+              }
+            } 
+            audio_media_play(audio_media_cur_dir, audio_media_cur_file);
+            song_started = now;
+          }
         }
-        audio_media_play(audio_media_cur_dir, audio_media_cur_file);
+        song_started = now;
       }
 #endif
     }
-#elif defined(USE_ESP8266AUDIO_LIB)
-    if (!mp3->loop()) mp3->stop();
-    // ToDo wieder neu starten
 #endif
   }
   rotarymodul.loop(now);
@@ -552,12 +576,12 @@ void AudioModul::loop(time_t now) {
             case 1:
             // Albumauswahl
               audio_media_cur_dir = rotarymodul.curValue();
-              audio_media_select_dir();
+//              audio_media_select_dir();
             break;
             case 2:
             // Songauswahl
               audio_media_cur_file = rotarymodul.curValue();
-              audio_media_select_file();
+//              audio_media_select_file();
             break;
           }
         break;
@@ -572,11 +596,11 @@ void AudioModul::loop(time_t now) {
             break;
             case 1:
             // Albumauswahl initiieren und anzeigen
-              audio_media_select_dir();
+//              audio_media_select_dir();
             break;
             case 2:
             // Songauswahl initiieren und anzeigen
-              audio_media_select_file();
+//              audio_media_select_file();
             break;
           }
 
@@ -704,11 +728,12 @@ void audio_info(const char *info){
 }
 
 void audio_id3data(const char *info){
-  char str2[30];
+  size_t infoSize = strlen(info);
+  char str2[infoSize];
   int j=0;
   bool tz_found = false;
   write2log(LOG_MODULE,2,"MP3 data:", info);
-  for (int i=0; i<strlen(info) && i<40; i++) {
+  for (int i=0; i<strlen(info); i++) {
     if (! tz_found) {
       if (info[i] == ':') {
         tz_found = true;
@@ -716,24 +741,34 @@ void audio_id3data(const char *info){
         i++;
       }
     }
-    if(tz_found && j<30) {
+    if(tz_found) {
       str2[j] = info[i];
       j++;
     }
   }
   str2[j]=0;
+  String tmpstr = "{";
   if (info[0] == 'A' && info[1] == 'r' && info[2] == 't') {
     if (mediaPlayMode) audiodisplay.show_info1(str2);
+    audiomsg1 = String(str2);
+    tmpstr += String("\"audiomsg1\":\"")+audiomsg1+String("\"");
   }
   if (info[0] == 'T' && info[1] == 'i' && info[2] == 't') {
     if (mediaPlayMode) audiodisplay.show_info2(str2);
+    if (tmpstr.length() > 5) tmpstr += ",";
+    audiomsg2 = String(str2);
+    tmpstr += String("\"audiomsg2\":\"")+audiomsg2+String("\"");
   }
+  tmpstr += "}";
+  ws.textAll(tmpstr);
+  write2log(LOG_MODULE,1,tmpstr.c_str());
 }
 
 void audio_showstreamtitle(const char *info){
   String tmpstr;
+  audiomsg2 = info;
   if (radioPlayMode) audiodisplay.show_info2(info);
-  tmpstr = String("{\"audiomsg2\":\"") + String(info) + "\"}";
+  tmpstr = String("{\"audiomsg2\":\"") + audiomsg2 + "\"}";
   write2log(LOG_MODULE,1,tmpstr.c_str());
   ws.textAll(tmpstr.c_str());
 }
@@ -758,7 +793,8 @@ void audio_bitrate(const char *info) {
 
 void audio_showstation(const char *info){
   String tmpstr;
-  tmpstr = String("{\"audiomsg1\":\"") + String(info) + String("\"}");
+  audiomsg1 = info;
+  tmpstr = String("{\"audiomsg1\":\"") + audiomsg1 + String("\"}");
   write2log(LOG_MODULE,1,tmpstr.c_str());
   ws.textAll(tmpstr.c_str());
 }
@@ -775,22 +811,6 @@ void AudioModul::audio_radio_off() {
   write2log(LOG_MODULE,1,"Radio off");
 #if defined(USE_AUDIO_LIB)
   audio.stopSong();
-#elif defined(USE_ESP8266AUDIO_LIB)
-  if (mp3) {
-    mp3->stop();
-    delete mp3;
-    mp3 = NULL;
-  }
-  if (buff) {
-    buff->close();
-    delete buff;
-    buff = NULL;
-  }
-  if (file) {
-    file->close();
-    delete file;
-    file = NULL;
-  }
 #endif
   ws.textAll("{\"audio_radio\":0}");
 }
@@ -800,17 +820,6 @@ void AudioModul::audio_radio_on() {
   if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
 #if defined(USE_AUDIO_LIB)
     audio.connecttohost(station[audio_radio_cur_station].url);
-#elif defined(USE_ESP8266AUDIO_LIB)
-    file = new AudioFileSourceICYStream(station[audio_radio_cur_station].url);
-//  file->RegisterMetadataCB(MDCallback, (void*)"ICY");
-    buff = new AudioFileSourceBuffer(file, 2048);
-//  buff->RegisterStatusCB(StatusCallback, (void*)"buffer");
-    out = new AudioOutputI2S();
-    out->SetPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-    out->SetGain(((float)audio_vol)/100.0);
-    mp3 = new AudioGeneratorMP3();
-//  mp3->RegisterStatusCB(StatusCallback, (void*)"mp3");
-    mp3->begin(buff, out);
 #endif
     write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
   }
@@ -853,17 +862,6 @@ void AudioModul::audio_radio_set_station() {
   if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
 #if defined(USE_AUDIO_LIB)
     audio.connecttohost(station[audio_radio_cur_station].url);
-#elif defined(USE_ESP8266AUDIO_LIB)
-//  file = new AudioFileSourceICYStream(station[audio_radio_cur_station].url);
-//  file->RegisterMetadataCB(MDCallback, (void*)"ICY");
-//  buff = new AudioFileSourceBuffer(file, 2048);
-//  buff->RegisterStatusCB(StatusCallback, (void*)"buffer");
-//  out = new AudioOutputI2S();
-//  out->SetPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-//  out->SetGain(((float)audio_vol)/100.0);
-//  mp3 = new AudioGeneratorMP3();
-//  mp3->RegisterStatusCB(StatusCallback, (void*)"mp3");
-//  mp3->begin(buff, out);
 #endif
     write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
   }
@@ -907,6 +905,9 @@ void AudioModul::audio_media_on() {
   audio_media_play(audio_media_cur_dir,audio_media_cur_file);
   if (rotarymodul.curLevel() == 0) audio_media_disp_init();
   ws.textAll("{\"audio_media\":1}");
+//  audio_media_read_all();
+  write2log(LOG_MODULE,2,"Anzahl Songs: ",String(countSongs()).c_str());
+//  allAlbum2Web();
 }
 
 void AudioModul::audio_media_off() {
@@ -920,74 +921,242 @@ void AudioModul::audio_media_disp_init() {
   audiodisplay.show_time(false);
 }
 
-void AudioModul::audio_media_web_init() {
-  String tmpstr;
-  uint16_t dirNo = 0;
-  uint16_t fileNo;
-  File file;
+uint32_t AudioModul::countSongs() {
+  uint32_t retval = 0;
+  music_t *p_search;
+  if (p_initial) {
+    p_search = p_initial;
+    while (p_search->p_next) {
+      retval++;;
+      p_search = p_search->p_next;
+    }
+  }
+  Serial.print("Count Songs: ");
+  Serial.println(retval);
+  return retval;
+}
+
+bool AudioModul::validSong(uint16_t dirNo, uint16_t fileNo) {
+  bool retval = false;
+  music_t *p_search;
+  if (p_initial) {
+    p_search = p_initial;
+    while (p_search) {
+      if ( p_search->dirNo == dirNo && p_search->fileNo == fileNo ) retval = true;
+      p_search = p_search->p_next;
+    }
+  }
+  return retval;
+}
+
+void AudioModul::nextSong() {
+  audio_media_cur_file++;
+  if ( ! validSong(audio_media_cur_dir,audio_media_cur_file)) {
+    audio_media_cur_dir++;
+    audio_media_cur_file = 0;
+  }
+  if ( ! validSong(audio_media_cur_dir,audio_media_cur_file)) {
+    audio_media_cur_dir = 0;
+    audio_media_cur_file = 0;
+  }
+}
+
+void AudioModul::newEntry(AudioModul::music_t* p_new) {
+    music_t *p_search;
+    p_new->p_next = NULL;
+    if (p_initial) {
+        p_search = p_initial;
+        while (p_search->p_next) {
+            p_search = p_search->p_next;
+        }
+        p_search->p_next = p_new;
+    } else {
+        p_initial = p_new;
+    }
+}
+
+void AudioModul::addMusic(uint16_t dirNo, uint16_t fileNo, const char* dirName, const char* fileName) {
+  music_t* p_new = (music_t*) ps_malloc(sizeof(AudioModul::music_t));
+  p_new->dirNo = dirNo;
+  p_new->fileNo = fileNo;
+  snprintf(p_new->dirName,50,"%s", dirName);
+  snprintf(p_new->fileName,50,"%s", fileName);
+  newEntry(p_new);
+  yield();
+}
+
+void AudioModul::allAlbum2Web() {
+  String tmpstr = "{\"x\":0";
+  music_t *p_search;
+  uint16_t last_dirNo = 9999;
+  if (p_initial) {
+    p_search = p_initial;
+    while (p_search) {
+      if (p_search->dirNo != last_dirNo) {
+        tmpstr += String(",\"audio_media_add_album_d")+String(p_search->dirNo)+String("f0")
+                + String("\":\"A#")+String(p_search->dirNo)+String("#0#")+String(p_search->dirName)+String("\"");
+        last_dirNo = p_search->dirNo;
+      }
+      p_search = p_search->p_next;
+    }
+  }
+  tmpstr += "}";
+  ws.textAll(tmpstr);
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+}
+
+void AudioModul::audio_media_get_album(uint16_t reqDirNo) {
+  String tmpstr = "{\"x\":0";
+  music_t *p_search;
+  if (p_initial) {
+    p_search = p_initial;
+    while (p_search) {
+      if (p_search->dirNo == reqDirNo) {
+        tmpstr += ",\"audio_media_add_album_d"+String(p_search->dirNo)+String("f")+String(p_search->fileNo)+String("\":\"T#")
+            +String(p_search->dirNo)+String("#")+String(p_search->fileNo)+String("#")+String(p_search->fileName)+String("\"");
+      }
+      p_search = p_search->p_next;
+    }
+  }
+  tmpstr += "}";
+  ws.textAll(tmpstr);
+}
+
+uint32_t AudioModul::audio_media_read_all() {
   File root;
   File dir;
-  write2log(LOG_MODULE,1,"Mediaplayer Web Init");
-  ws.textAll("{\"audio_media\":1}");
+  File file;
+  uint16_t dirNo = 0;
+  uint16_t fileNo = 0;
+  music_t* p_tmp;
+  uint32_t retval = 0;
+  Serial.println("Read_All 1");
+  while (p_initial) {
+    p_tmp = p_initial->p_next;
+    free(p_initial);
+    p_initial = p_tmp;
+  }
+  yield();
+  Serial.println("Read_All 2");
   root = SD.open("/");
   root.rewindDirectory();
   dir = root.openNextFile();
   while (dir) {
     if (dir.isDirectory()) {
-      tmpstr = "{\"audio_media_add_album\":\"A#" + String(dirNo) + "#0#" + String(dir.name()) + String("\"}");
-      write2log(LOG_MODULE,1,tmpstr.c_str());
-      ws.textAll(tmpstr.c_str());
-      fileNo = 0;
       file = dir.openNextFile();
       while (file) {
         if (String(file.name()).endsWith(".mp3")) {
-          tmpstr = "{\"audio_media_add_album\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
+          addMusic(dirNo, fileNo, dir.name(), file.name());
+          retval++;
+        }
+        fileNo++;
+        file = dir.openNextFile();
+      }
+      dirNo++;
+      fileNo = 0;
+      Serial.println("Read_All Dir");
+    }
+    dir = root.openNextFile();
+  }
+  Serial.println("Read_All 3");
+  file.close();
+  dir.close();
+  root.close();
+  countSongs();
+  return retval;
+}
+
+/*
+void AudioModul::audio_media_web_init() {
+  String tmpstr;
+  uint16_t dirNo = 0;
+//  uint16_t fileNo = 0;
+  File root;
+  File dir;
+//  File file;
+  write2log(LOG_MODULE,1,"Mediaplayer Web Init");
+  ws.textAll("{\"audio_media\":1}");
+  tmpstr = String("{\"x\":0");
+  root = SD.open("/");
+  root.rewindDirectory();
+  dir = root.openNextFile();
+  while (dir) {
+    if (dir.isDirectory()) {
+ //     tmpstr += String(",\"audio_media_add_album_d")+String(dirNo)+String("f0")+String("\":\"A#")+String(dirNo)+String("#0#")+String(dir.name())+String("\"");
+//      fileNo = 0;
+      file = dir.openNextFile();
+      while (file) {
+        if (String(file.name()).endsWith(".mp3")) {
+          tmpstr = "{\"audio_media_add_album_d"+String(dirNo)+String("f")+String(fileNo)+"\":\"T#" + String(dirNo) + "#" + String(fileNo) + "#" + String(file.name()) + String("\"}");
           write2log(LOG_MODULE,1,tmpstr.c_str());
           ws.textAll(tmpstr.c_str());
         }
-        file = dir.openNextFile();
         fileNo++;
+        file = dir.openNextFile();
       }
     }
     dir = root.openNextFile();
     dirNo++;
   }
-  file.close();
+  tmpstr += "}";
+  ws.textAll(tmpstr);
+//  file.close();
   dir.close();
   root.close();
-}
-
-void AudioModul::audio_media_sel_file(File& dir, File& file, uint8_t count) {
-  for (int i=0; i<=count; i++) {
-        file = dir.openNextFile();
-        if (file) {
-          Serial.print("audio_media_sel_file: ");
-          Serial.println(file.name());
-        }
+}*/
+/*
+bool AudioModul::audio_media_sel_file(File& dir, File& file, uint8_t count) {
+  bool retval = false;
+  int i = 0;
+  dir.rewindDirectory();
+  do {
+    file = dir.openNextFile();
+    while ( file && ! String(file.name()).endsWith(".mp3") ) dir.openNextFile();
+    i++;
+  } while (i < count);
+  if (file) {
+    retval = true;;
   }
+  return retval;
 }
 
+bool AudioModul::audio_media_sel_dir(File& root, File& dir, uint8_t count) {
+  bool retval = false;
+  int i = 0;
+  root.rewindDirectory();
+  do {
+    dir = root.openNextFile();
+    while ( dir && ! dir.isDirectory() ) dir.openNextFile();
+    i++;
+  } while (i < count);
+  if (dir) {
+    retval = true;;
+  }
+  return retval;
+}
+*/
 void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
-  String fileName;
-  File root;
-  File dir;
-  File file;
-  root = SD.open("/");
-  if (root) {
-    audio_media_sel_file(root, dir, _dirNo);
-    if (dir) {
-      audio_media_sel_file(dir, file, _fileNo);
-      if (file) {
-        fileName = String(dir.name()) + String("/") + String(file.name());
+        Serial.println("audio_media_play: Start");
+  String fileName = "";
+  music_t *p_search;
+  if (p_initial) {
+    p_search = p_initial;
+    while (p_search) {
+      Serial.println(String("media_play search: ")+String(p_search->dirName)+String("/")+String(p_search->fileName));
+      if (p_search->dirNo == _dirNo && p_search->fileNo == _fileNo) {
+        fileName = String("/")+String(p_search->dirName)+String("/")+String(p_search->fileName);
+        Serial.print("Now playing: ");
+        Serial.println(fileName);
+        p_search = NULL;
+      } else {
+        p_search = p_search->p_next;
       }
-      file.close();
     }
-    dir.close();
   }
-  root.close();
-  audio.connecttoFS(SD,fileName.c_str());
+  if (fileName.length() > 5) audio.connecttoFS(SD,fileName.c_str());
+//  nextSong();
 }
-
+/*
 void AudioModul::audio_media_select_dir() {
   String albumpic;
   String obj[5];
@@ -1074,7 +1243,8 @@ void AudioModul::audio_media_select_dir() {
 //  free(bmp_r);
 //  audiodisplay.show_jpg(albumpic);
 }
-
+*/
+/*
 void AudioModul::audio_media_select_file() {
   String obj[5];
   for(int i=0;i<5;i++) obj[i]="";
@@ -1117,7 +1287,7 @@ void AudioModul::audio_media_select_file() {
   root.close();
   audiodisplay.select(obj[1].c_str(),obj[2].c_str(),obj[3].c_str());
 }
-
+*/
 #endif
 /*********************************************************************************************************
  * 

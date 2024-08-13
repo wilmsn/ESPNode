@@ -73,13 +73,13 @@ void write2log(uint8_t kat, int count, ...) {
   if ( ! ap_mode ) {
     snprintf(timeStr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
     switch(kat) {
-      case LOG_WEB: snprintf(katStr,6,"[ WEB]"); break;
-      case LOG_SYSTEM: snprintf(katStr,6,"[ SYS]"); break;
-      case LOG_MQTT: snprintf(katStr,6,"[MQTT]"); break;
-      case LOG_RF24: snprintf(katStr,6,"[RF24]"); break;
-      case LOG_MODULE: snprintf(katStr,6,"[ MOD]"); break;
-      case LOG_CRITICAL: snprintf(katStr,6,"[CRIT]"); break;
-      default: snprintf(katStr,6,"[----]"); break;
+      case LOG_WEB: snprintf(katStr,7,"[ WEB]"); break;
+      case LOG_SYSTEM: snprintf(katStr,7,"[ SYS]"); break;
+      case LOG_MQTT: snprintf(katStr,7,"[MQTT]"); break;
+      case LOG_RF24: snprintf(katStr,7,"[RF24]"); break;
+      case LOG_MODULE: snprintf(katStr,7,"[ MOD]"); break;
+      case LOG_CRITICAL: snprintf(katStr,7,"[CRIT]"); break;
+      default: snprintf(katStr,7,"[----]"); break;
     }
     if ( do_log_critical && kat == LOG_DAYBREAK ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
@@ -504,24 +504,6 @@ void setup() {
   ftp.addUser("ftp", "ftp");
   ftp.addFilesystem("LittleFS", &LittleFS);
 #endif
-#if defined(MODULE1)
-  MODULE1_BEGIN_STATEMENT
-#endif
-#if defined(MODULE2)
-  MODULE2_BEGIN_STATEMENT
-#endif
-#if defined(MODULE3)
-  MODULE3_BEGIN_STATEMENT
-#endif
-#if defined(MODULE4)
-  MODULE4_BEGIN_STATEMENT
-#endif
-#if defined(MODULE5)
-  MODULE5_BEGIN_STATEMENT
-#endif
-#if defined(MODULE6)
-  MODULE6_BEGIN_STATEMENT
-#endif
 #if defined(RF24GW)
   rf24gw_setup(); 
 #endif
@@ -552,6 +534,24 @@ void setup() {
   sd_cardsize = SD.cardSize();
   sd_cardType = SD.cardType();
   sd_usedbytes = SD.usedBytes();
+#endif
+#if defined(MODULE1)
+  MODULE1_BEGIN_STATEMENT
+#endif
+#if defined(MODULE2)
+  MODULE2_BEGIN_STATEMENT
+#endif
+#if defined(MODULE3)
+  MODULE3_BEGIN_STATEMENT
+#endif
+#if defined(MODULE4)
+  MODULE4_BEGIN_STATEMENT
+#endif
+#if defined(MODULE5)
+  MODULE5_BEGIN_STATEMENT
+#endif
+#if defined(MODULE6)
+  MODULE6_BEGIN_STATEMENT
 #endif
   write2log(LOG_SYSTEM,1, "Setup Ende");
 }

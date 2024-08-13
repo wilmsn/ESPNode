@@ -303,7 +303,7 @@ RF24 Gateway:
 #define USE_WIFIMULTI
 
 #include "audiomodul.h"
-#define MAGICNO                  0
+#define MAGICNO                  76
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
