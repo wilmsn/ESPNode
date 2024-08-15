@@ -166,9 +166,11 @@ music_t*                p_initial = NULL;
 
     File audio_media_file_from_dir(File mydir, uint8_t fileNo);
 
-    void audio_media_select_dir();
+    void audio_media_select_album();
+//    void audio_media_select_dir();
 
-    void audio_media_select_file();
+    void audio_media_select_song();
+//    void audio_media_select_file();
 
  //   void audio_media_show();
 
@@ -195,7 +197,6 @@ music_t*                p_initial = NULL;
 #endif
     void      audio_set_modus(modus_t _modus);
     void      audio_show_modus(modus_t _modus);
-    void      audio_all_apps_off();
 
 
 public:

@@ -29,7 +29,7 @@ void AudioDisplay::show_ip(const char* myip) {
 
 void AudioDisplay::show_bps(const char* mybps) {
   tft->setTextColor(COLOR_RED);  
-  tft->setTextSize(2);
+  tft->setTextSize(1);
   tft->setCursor(75, 205);
   tft->println(mybps);
 }
@@ -143,10 +143,6 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
   int chars_per_line;
   int pixel_to_next_line;
   tft->setTextColor(color);
-  Serial.print("In Text: ");
-  Serial.println(in_text);
-  Serial.print("Stringlength: ");
-  Serial.println(strlen(in_text));
   if (strlen(in_text) > 20) {
     chars_per_line = 18;
     tft->setTextSize(2);
@@ -159,9 +155,6 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
   char result_str[chars_per_line+3];
   do {
     start_pos = splitStr(in_text,start_pos,chars_per_line,result_str);
-    Serial.print("StartPos: ");
-    Serial.println(start_pos);
-    Serial.println(result_str);
     if (start_pos >= 0) {
       tft->setCursor(posx, posy);
       tft->println(result_str);
@@ -244,19 +237,18 @@ int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* re
   return retval;
 }
 
-void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour)
-{
+void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour) {
 
   byte seg = ARC_SIGMENT_DEGREES; // Segments are 3 degrees wide = 120 segments for 360 degrees
   byte inc = ARC_SIGMENT_DEGREES; // Draw segments every 3 degrees, increase to 6 for segmented ring
 
-    // Calculate first pair of coordinates for segment start
-    float sx = cos((start_angle - 90) * DEG_TO_RAD);
-    float sy = sin((start_angle - 90) * DEG_TO_RAD);
-    uint16_t x0 = sx * (rx - w) + x;
-    uint16_t y0 = sy * (ry - w) + y;
-    uint16_t x1 = sx * rx + x;
-    uint16_t y1 = sy * ry + y;
+  // Calculate first pair of coordinates for segment start
+  float sx = cos((start_angle - 90) * DEG_TO_RAD);
+  float sy = sin((start_angle - 90) * DEG_TO_RAD);
+  uint16_t x0 = sx * (rx - w) + x;
+  uint16_t y0 = sy * (ry - w) + y;
+  uint16_t x1 = sx * rx + x;
+  uint16_t y1 = sy * ry + y;
 
   // Draw colour blocks every inc degrees
   for (int i = start_angle; i < start_angle + degree; i += inc) {
@@ -279,7 +271,5 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
     y1 = y3;
   }
 }
-
-
 
 #endif

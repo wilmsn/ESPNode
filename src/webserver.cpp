@@ -209,8 +209,7 @@ void prozess_sysinfo() {
       sendWsMessage(tmpstr, LOG_WEB);
 
 // Teil 2
-      tmpstr = "{";
-      tmpstr += "\"IP\":\"";
+      tmpstr = "{\"IP\":\"";
       tmpstr += WiFi.localIP().toString();
       tmpstr += "\"";
       tmpstr += ",\"SubNetMask\":\"";
@@ -259,7 +258,7 @@ void prozess_sysinfo() {
       tmpstr += "}";
       sendWsMessage(tmpstr, LOG_WEB);
 // Teil 3
-      tmpstr = "{";
+      tmpstr = "{\"ws_teil2\":2,";
 #ifdef USE_SDCARD
       tmpstr += "\"sdcard_enable\":1";
       tmpstr += ",\"sdcard_size\":"+String(sd_cardsize);
@@ -381,7 +380,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
 #endif
   tmpstr += String("}");
   sendWsMessage(tmpstr, LOG_WEB);
-  tmpstr = "{";
+  tmpstr = "{\"a\":5,";
 #ifdef MODULE1
       module1.html_create(tmpstr);
 #endif
