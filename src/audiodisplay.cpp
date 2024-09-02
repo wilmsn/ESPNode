@@ -142,6 +142,7 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
   int start_pos = 0;
   int chars_per_line;
   int pixel_to_next_line;
+  int linecnt = 0;
   tft->setTextColor(color);
   if (strlen(in_text) > 20) {
     chars_per_line = 18;
@@ -152,13 +153,15 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
     tft->setTextSize(3);
     pixel_to_next_line = 30;
   }
+  tft->setCursor(posx, posy);
   char result_str[chars_per_line+3];
   do {
     start_pos = splitStr(in_text,start_pos,chars_per_line,result_str);
     if (start_pos >= 0) {
       tft->setCursor(posx, posy);
-      tft->println(result_str);
+      if (linecnt < 2) tft->println(result_str);
       posy += pixel_to_next_line;
+      linecnt++;
     }
   } while (start_pos < strlen(in_text));
 }

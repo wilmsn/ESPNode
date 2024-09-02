@@ -114,9 +114,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   audio.setVolumeSteps(100);
   audio.setVolume(audio_vol);
 #endif
-#ifdef USE_FTP
-  ftp.addFilesystem("SD", &SD);
-#endif
   audio_set_modus(Off);
   last_modus = Radio;
 
@@ -130,7 +127,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 
 void AudioModul::html_create(String& tmpstr) {
   Switch_OnOff::html_create(tmpstr);
-//  String tmpstr;
   tmpstr += String(",\"audio_show\":1");
 #ifdef USE_AUDIO_RADIO
   tmpstr += String(",\"audio_radio_show\":1");
@@ -356,6 +352,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       rotarymodul.setLevel(0);
       rotarymodul.setValue(audio_vol);
       modus = Radio;
+      do_switch(true);
       switch (last_modus) {
 #ifdef USE_AUDIO_MEDIA
         case Media:
@@ -383,6 +380,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       rotarymodul.setLevel(0);
       rotarymodul.setValue(audio_vol);
       modus = Media;
+      do_switch(true);
       switch (last_modus) {
 #ifdef USE_AUDIO_RADIO
         case Radio:
@@ -403,6 +401,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
     case Speaker:
       write2log(LOG_MODULE,1,"audio_set_modus: case Speaker");
       modus = Speaker;
+      do_switch(true);
       switch (last_modus) {
 #ifdef USE_AUDIO_RADIO
         case Radio:

@@ -526,14 +526,14 @@ void setup() {
   Serial.println(ESP.getCycleCount());
 #endif
 #endif
-#ifdef USE_FTP
-  ftp.begin();
-#endif
 #ifdef USE_SDCARD
   SD.begin(SD_CS);
   sd_cardsize = SD.cardSize();
   sd_cardType = SD.cardType();
   sd_usedbytes = SD.usedBytes();
+#ifdef USE_FTP
+  ftp.addFilesystem("SD", &SD);
+#endif
 #endif
 #if defined(MODULE1)
   MODULE1_BEGIN_STATEMENT
@@ -552,6 +552,9 @@ void setup() {
 #endif
 #if defined(MODULE6)
   MODULE6_BEGIN_STATEMENT
+#endif
+#ifdef USE_FTP
+  ftp.begin();
 #endif
   write2log(LOG_SYSTEM,1, "Setup Ende");
 }
