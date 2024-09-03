@@ -8,7 +8,7 @@ WiFiMulti wifiMulti;
 #endif
 
 #ifdef USE_FTP
-FTPServer        ftp;
+FtpServer        ftp;
 #endif
 
 #if defined(MODULE1)
@@ -500,10 +500,6 @@ void setup() {
 #endif
   }
   setup_webserver();
-#ifdef USE_FTP
-  ftp.addUser("ftp", "ftp");
-  ftp.addFilesystem("LittleFS", &LittleFS);
-#endif
 #if defined(RF24GW)
   rf24gw_setup(); 
 #endif
@@ -531,9 +527,6 @@ void setup() {
   sd_cardsize = SD.cardSize();
   sd_cardType = SD.cardType();
   sd_usedbytes = SD.usedBytes();
-#ifdef USE_FTP
-  ftp.addFilesystem("SD", &SD);
-#endif
 #endif
 #if defined(MODULE1)
   MODULE1_BEGIN_STATEMENT
@@ -554,7 +547,7 @@ void setup() {
   MODULE6_BEGIN_STATEMENT
 #endif
 #ifdef USE_FTP
-  ftp.begin();
+  ftp.begin("ftp","ftp");    //username, password for ftp.   (default 21, 50009 for PASV)
 #endif
   write2log(LOG_SYSTEM,1, "Setup Ende");
 }
@@ -565,7 +558,7 @@ void setup() {
 void loop() {
   ElegantOTA.loop();
 #ifdef USE_FTP
-  ftp.handle();
+  ftp.handleFTP();
 #endif
   if ( rebootflag ) {
     preferences.end();

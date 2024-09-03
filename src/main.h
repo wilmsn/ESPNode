@@ -6,6 +6,20 @@ On Branch: main@github  !!!!!
 #include "common.h"
 #include "secrets.h"
 
+#ifdef USE_FTP
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifdef ESP32
+#warning "ESP32 is defined"
+#else
+#define ESP32
+#endif
+//#define DEFAULT_FTP_SERVER_NETWORK_TYPE_ESP32 		NETWORK_ESP32
+//#define DEFAULT_STORAGE_TYPE_ESP32 					STORAGE_SD
+//#define DEFAULT_STORAGE_TYPE_ESP32 					STORAGE_LITTLEFS
+#endif
+#include <FtpServer.h>
+#endif
+
 #ifdef ESP32
 //ToDo
 #else
