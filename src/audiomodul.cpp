@@ -4,11 +4,9 @@
 #include "audiomodul.h"
 #include "common.h"
 
-#ifdef USE_AUDIO_LIB
 #include "Audio.h"
 /// @brief Instance for audio (I2S and decoder) device
 Audio            audio;
-#endif
 
 #if defined(CONFIG_IDF_TARGET_ESP32) 
 #warning "Compiling Audiomodule with Settings for ESP32"
@@ -97,7 +95,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 //  rotarymodul.initLevel(0,0,audio_vol,100);
 //  rotarymodul.initLevel(1,0,audio_radio_cur_station,10);
 //  rotarymodul.initLevel(2,0,0,2);
-#if defined(USE_AUDIO_LIB)
   if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
 #if defined(DEBUG_SERIAL_MODULE)
     Serial.print("Set PinOut: BCLK:");
@@ -108,12 +105,9 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
     Serial.println(I2S_DOUT);
 #endif
   }
-#endif
-#if defined(USE_AUDIO_LIB)
   //audio.setBufsize(30000,600000);
   audio.setVolumeSteps(100);
   audio.setVolume(audio_vol);
-#endif
   audio_set_modus(Off);
   last_modus = Radio;
 
@@ -190,9 +184,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       audio_vol = value.toInt();
       tmpstr = "{\"audio_vol\":";
       tmpstr += audio_vol;
-#if defined(USE_AUDIO_LIB)
       audio.setVolume(audio_vol);
-#endif
       rotarymodul.setValue(audio_vol);
       audiodisplay.show_vol(audio_vol);
       if (audio_vol == 0) {
@@ -211,9 +203,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       tmpstr += "}";
       write2log(LOG_MODULE,1,tmpstr.c_str());
       ws.textAll(tmpstr.c_str());
-#if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
-#endif
       retval = true;
     }
     if ( keyword == String("audio_tre") ) {
@@ -224,9 +214,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       tmpstr += "}";
       write2log(LOG_MODULE,1,tmpstr.c_str());
       ws.textAll(tmpstr.c_str());
-#if defined(USE_AUDIO_LIB)
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
-#endif
       retval = true;
     }
 #ifdef USE_AUDIO_RADIO
@@ -470,7 +458,6 @@ void AudioModul::loop(time_t now) {
 #endif
 
   if (modus != Off) {
-#if defined(USE_AUDIO_LIB)
     audio.loop();
     if (!audio.isRunning()) {
 #ifdef USE_AUDIO_RADIO
@@ -498,7 +485,6 @@ void AudioModul::loop(time_t now) {
       }
 #endif
     }
-#endif
   }
   rotarymodul.loop(now);
 // Hier wird der Klickstream definiert
@@ -828,18 +814,14 @@ void audio_showstation(const char *info){
 
 void AudioModul::audio_radio_off() {
   write2log(LOG_MODULE,1,"Radio off");
-#if defined(USE_AUDIO_LIB)
   audio.stopSong();
-#endif
   ws.textAll("{\"audio_radio\":0}");
 }
 
 void AudioModul::audio_radio_on() {
   write2log(LOG_MODULE,1,"Radio on");
   if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
-#if defined(USE_AUDIO_LIB)
     audio.connecttohost(station[audio_radio_cur_station].url);
-#endif
     write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
   }
 }
@@ -879,9 +861,7 @@ void AudioModul::audio_radio_select() {
 void AudioModul::audio_radio_set_station() {
   audio_radio_select();
   if ( strlen(station[audio_radio_cur_station].url) > 10 ) {
-#if defined(USE_AUDIO_LIB)
     audio.connecttohost(station[audio_radio_cur_station].url);
-#endif
     write2log(LOG_MODULE,2,"Switch to ",station[audio_radio_cur_station].url);
   }
 }
