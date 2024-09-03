@@ -5,6 +5,7 @@
  ****************************************************************/
 #ifndef _COMMON_H_
 #define _COMMON_H_
+#include "config.h"
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,12 +34,7 @@ typedef unsigned char uint8_t;
 #include "ESPAsyncTCP.h"
 #endif
 
-//#ifdef USE_FTP
-#include "ESP-FTP-Server-Lib.h"
-#include "FTPFilesystem.h"
-//#endif
 
-#include "config.h"
 
 // externe Referenzen
 
@@ -49,7 +45,7 @@ extern bool do_log_system;
 extern bool do_log_critical;
 extern bool do_log_web;
 extern time_t now;
-extern FTPServer        ftp;
+
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
 
