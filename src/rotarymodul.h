@@ -6,9 +6,9 @@
  ***************************************************************************************/
 
 typedef struct {
-    uint8_t min;
-    uint8_t max;
-    uint8_t cur;
+    uint16_t min;
+    uint16_t max;
+    uint16_t cur;
 } level_t;
 
 #define LONG_PRESSED_AFTER_MS     1000
@@ -22,14 +22,15 @@ public:
     /// @brief Die Initialisierung des Rotary Modules
     /// @brief Alle Werte werden innerhalb des Modules gesetzt.
     void begin();
-    void initLevel(uint8_t _level, uint8_t _minVal, uint8_t _curVal, uint8_t _maxVal);
+    void initLevel(uint8_t _level, uint16_t _minVal, uint16_t _curVal, uint16_t _maxVal);
     uint8_t changed();
     uint8_t curLevel();
-    uint8_t curValue();
-    uint8_t curValue(uint8_t _level);
-    void setMaxLevel(uint8_t _level);
+    uint16_t curValue();
+    uint16_t curValue(uint8_t _level);
+    void setMaxLevel(uint8_t _Maxlevel);
     void setLevel(uint8_t _level);
-    void setValue(uint8_t _value);
+    void setMaxValue(uint16_t _maxValue);
+    void setValue(uint16_t _value);
     void setIsChanged(uint8_t _changed);
     void loop(time_t now);
 

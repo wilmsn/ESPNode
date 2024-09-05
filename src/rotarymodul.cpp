@@ -55,7 +55,7 @@ void RotaryModul::begin() {
   rotary.setup(readRotaryISR); //register interrupt service routine
 }
 
-void RotaryModul::initLevel(uint8_t _level, uint8_t _minVal, uint8_t _curVal, uint8_t _maxVal) {
+void RotaryModul::initLevel(uint8_t _level, uint16_t _minVal, uint16_t _curVal, uint16_t _maxVal) {
   if ( _level <= ROTARY_MAXLEVEL) {
     level[_level].min = _minVal;
     level[_level].cur = _curVal;
@@ -80,16 +80,21 @@ uint8_t RotaryModul::curLevel() {
   return cur_level;
 }
 
-uint8_t RotaryModul::curValue() {
+uint16_t RotaryModul::curValue() {
   return level[cur_level].cur;
 }
 
-uint8_t RotaryModul::curValue(uint8_t _level) {
+uint16_t RotaryModul::curValue(uint8_t _level) {
   return level[_level].cur;
 }
 
-void RotaryModul::setMaxLevel(uint8_t _level) {
-  max_level = _level;
+void RotaryModul::setMaxValue(uint16_t _maxValue) {
+  level[cur_level].max = _maxValue;
+  rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false);
+}
+
+void RotaryModul::setMaxLevel(uint8_t _maxLevel) {
+  max_level = _maxLevel;
 }
 
 void RotaryModul::setLevel(uint8_t _level) {
@@ -102,7 +107,7 @@ void RotaryModul::setLevel(uint8_t _level) {
   rotary.setEncoderValue(level[cur_level].cur);
 }
 
-void RotaryModul::setValue(uint8_t _value) {
+void RotaryModul::setValue(uint16_t _value) {
   level[cur_level].cur = _value;
   rotary.setEncoderValue(level[cur_level].cur); //preset the value to current gain
 }

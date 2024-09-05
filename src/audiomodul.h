@@ -179,13 +179,13 @@ music_t*                p_initial = NULL;
     void newEntry(music_t* p_new);
     void addMusic(uint16_t dirNo, uint16_t fileNo, const char* dirName, const char* fileName);
     void allAlbum2Web();
-    uint32_t countSongs();
     bool validSong(uint16_t dirNo, uint16_t fileNo);
     void nextSong();
 
-    uint16_t audio_media_num_dir = 0;
-
-    uint32_t audio_media_read_all();
+    void readSD();
+    void countAlbum();
+    void countSongs();
+    uint16_t countSong4Album(uint16_t dir);
 #endif
 #ifdef USE_AUDIO_SPEAKER
 

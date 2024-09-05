@@ -67,9 +67,6 @@ String     audiomsg3;
 String     audiomsg4;
 String     audiomsg5;
 
-uint32_t   allSongs;
-uint16_t   allAlbum;
-
 
 void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true);
@@ -115,10 +112,10 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   last_modus = Radio;
 
 #ifdef USE_AUDIO_MEDIA
-  readSD();
-  char tmpstr[40];
-  snprintf(tmpstr,40,"Anzahl Alben: %u Files: %u",allAlbum, allSongs);
-  write2log(LOG_CRITICAL,1,tmpstr);
+  uint32_t numFiles = audio_media_read_all();
+  char tmpstr[20];
+  sprintf(tmpstr,"%u",numFiles);
+  write2log(LOG_CRITICAL,2,"Anzahl Files von SD: ",tmpstr);
 #endif
 }
 
@@ -366,7 +363,7 @@ void AudioModul::audio_set_modus(modus_t _modus) {
       write2log(LOG_MODULE,1,"audio_set_modus: case Media");
       rotarymodul.setMaxLevel(2);
       rotarymodul.initLevel(0, 0, audio_vol, 100);
-      rotarymodul.initLevel(1, 0, audio_media_cur_dir, allAlbum-1);
+      rotarymodul.initLevel(1, 0, audio_media_cur_dir, audio_media_num_dir-1);
       rotarymodul.initLevel(2, 0, audio_media_cur_file, 100);
       rotarymodul.setLevel(0);
       rotarymodul.setValue(audio_vol);
@@ -411,12 +408,11 @@ void AudioModul::audio_set_modus(modus_t _modus) {
     case Off: 
     default:
       write2log(LOG_MODULE,1,"audio_set_modus: case Off");
-      ws.textAll("{\"audio_vol\":0}");
       rotarymodul.setMaxLevel(0);
       rotarymodul.initLevel(0, 0, 0, 100);
       rotarymodul.setLevel(0);
       rotarymodul.setValue(0);
-      audio_vol=0;
+      set("audio_vol","0");
       do_switch(false);
       modus = Off;
 #ifdef USE_AUDIO_RADIO
@@ -464,6 +460,7 @@ void AudioModul::loop(time_t now) {
 
   if (modus != Off) {
     audio.loop();
+    if ((obj_value && audio_vol < 5) || !obj_value ) audio_set_modus(Off);
     if (!audio.isRunning()) {
 #ifdef USE_AUDIO_RADIO
       if (modus == Radio) {
@@ -498,12 +495,19 @@ void AudioModul::loop(time_t now) {
       if ( time_update ) audiodisplay.show_time(true);
       switch (rotarymodul.changed()) {
         case 1:
-        default:
         // Der Rotary wurde gedreht => Anwendung ändern
         if (rotarymodul.curValue() > 5) {
           // Anlage einschalten
           audio_set_modus(last_modus);
         }
+        break;
+        case 2:
+        // Der Rotary wurde kurz gedrückt => Anwendung bestätigen
+        // Keine Aktion
+        break;
+        case 3:
+        // Der Rotary wurde lang gedrückt => Anwendungsauswahl starten
+        // Keine Aktion
         break;
       }
     break;
@@ -576,15 +580,12 @@ void AudioModul::loop(time_t now) {
             break;
             case 1:
             // Albumauswahl
-              rotarymodul.setMaxValue(allAlbum-1);
-Serial.println(String("#Alben: ")+String(allAlbum)+String(" Dir: ")+String(audio_media_cur_dir)+String(" File: ")+String(audio_media_cur_file));
               audio_media_cur_dir = rotarymodul.curValue();
               audio_media_select_album();
               audio_media_cur_file = 0;
             break;
             case 2:
             // Songauswahl
-              rotarymodul.setMaxValue(countSong4Album(audio_media_cur_dir)-1);
               audio_media_cur_file = rotarymodul.curValue();
               audio_media_select_song();
             break;
@@ -905,7 +906,7 @@ void AudioModul::audio_media_on() {
   audio_media_play(audio_media_cur_dir,audio_media_cur_file);
   if (rotarymodul.curLevel() == 0) audio_media_disp_init();
   ws.textAll("{\"audio_media\":1}");
-  write2log(LOG_MODULE,2,"Anzahl Songs: ",String(allSongs).c_str());
+  write2log(LOG_MODULE,2,"Anzahl Songs: ",String(countSongs()).c_str());
 }
 
 void AudioModul::audio_media_off() {
@@ -919,47 +920,17 @@ void AudioModul::audio_media_disp_init() {
   audiodisplay.show_time(false);
 }
 
-void AudioModul::countSongs() {
+uint32_t AudioModul::countSongs() {
+  uint32_t retval = 0;
   music_t *p_search;
-  allSongs = 0;
   if (p_initial) {
     p_search = p_initial;
     while (p_search->p_next) {
-      allSongs++;;
-      p_search = p_search->p_next;
-    }
-  }
-}
-
-uint16_t AudioModul::countSong4Album(uint16_t dir) {
-  music_t *p_search;
-  uint16_t retval = 0;
-  if (p_initial) {
-    p_search = p_initial;
-    while (p_search->p_next) {
-      if (p_search->dirNo == dir) retval++;
+      retval++;;
       p_search = p_search->p_next;
     }
   }
   return retval;
-}
-
-void AudioModul::countAlbum() {
-  music_t *p_search;
-  uint16_t last_dirNo;
-  allAlbum = 0;
-  if (p_initial) {
-    p_search = p_initial;
-    last_dirNo = p_search->dirNo;
-    allAlbum = 1;
-    while (p_search->p_next) {
-      if (p_search->dirNo != last_dirNo) {
-        allAlbum++;
-        last_dirNo = p_search->dirNo;
-      }
-      p_search = p_search->p_next;
-    }
-  }
 }
 
 bool AudioModul::validSong(uint16_t dirNo, uint16_t fileNo) {
@@ -1048,13 +1019,14 @@ void AudioModul::audio_media_get_album(uint16_t reqDirNo) {
   ws.textAll(tmpstr);
 }
 
-void AudioModul::readSD() {
+uint32_t AudioModul::audio_media_read_all() {
   File root;
   File dir;
   File file;
   uint16_t dirNo = 0;
   uint16_t fileNo = 0;
   music_t* p_tmp;
+  uint32_t retval = 0;
   while (p_initial) {
     p_tmp = p_initial->p_next;
     free(p_initial);
@@ -1070,6 +1042,7 @@ void AudioModul::readSD() {
       while (file) {
         if (String(file.name()).endsWith(".mp3")) {
           addMusic(dirNo, fileNo, dir.name(), file.name());
+          retval++;
         }
         fileNo++;
         file = dir.openNextFile();
@@ -1083,7 +1056,7 @@ void AudioModul::readSD() {
   dir.close();
   root.close();
   countSongs();
-  countAlbum();
+  return retval;
 }
 
 void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
@@ -1109,9 +1082,6 @@ void AudioModul::audio_media_select_album() {
   music_t *p_search;
   uint16_t act_dir;
   int idx = 0;
-  album[0] = " ";
-  album[1] = " ";
-  album[2] = " ";
   if (audio_media_cur_dir > 0) {
     act_dir= audio_media_cur_dir -1;
   } else {
@@ -1139,9 +1109,6 @@ void AudioModul::audio_media_select_song() {
   music_t *p_search;
   uint16_t act_file;
   int idx = 0;
-  song[0] = " ";
-  song[1] = " ";
-  song[2] = " ";
   if (audio_media_cur_file > 0) {
     act_file= audio_media_cur_file -1;
   } else {
