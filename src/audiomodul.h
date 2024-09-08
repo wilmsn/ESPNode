@@ -98,18 +98,38 @@ private:
 #endif
 // Mediaplayer
 #ifdef USE_AUDIO_MEDIA
+    uint16_t   audio_media_tmp_dir  = 0;
+    uint16_t   audio_media_tmp_file = 0;
     uint16_t   audio_media_cur_dir  = 0;
     uint16_t   audio_media_cur_file = 0;
     uint32_t   audio_media_num_file = 0;
-
+// Zeitsteueruntg
+    time_t     old_now;
+/*
 struct  music_t {
         uint16_t        dirNo;
         uint16_t        fileNo;
-        char            dirName[50];
-        char            fileName[50];
+        char*           dirName;
+        char*           fileName;
         music_t*        p_next;
 };
 music_t*                p_initial = NULL;
+*/
+struct  music_dir_t {
+        uint16_t        dirNo;
+        char*           dirName;
+        music_dir_t*    p_next;
+};
+music_dir_t*            p_music_dir_initial = NULL;
+
+struct  music_file_t {
+        uint16_t        dirNo;
+        uint16_t        fileNo;
+        char*           fileName;
+        music_file_t*   p_next;
+};
+music_file_t*           p_music_file_initial = NULL;
+
 
 
 #endif
@@ -176,7 +196,7 @@ music_t*                p_initial = NULL;
 
     void audio_media_play(uint8_t _dirNo, uint8_t _fileNo);
 
-    void newEntry(music_t* p_new);
+//    void newEntry(music_t* p_new);
     void addMusic(uint16_t dirNo, uint16_t fileNo, const char* dirName, const char* fileName);
     void allAlbum2Web();
     bool validSong(uint16_t dirNo, uint16_t fileNo);
@@ -186,6 +206,9 @@ music_t*                p_initial = NULL;
     void countAlbum();
     void countSongs();
     uint16_t countSong4Album(uint16_t dir);
+    void newEntry_dir(AudioModul::music_dir_t* p_new);
+    void newEntry_file(AudioModul::music_file_t* p_new);
+//    void read_SD_dir();
 #endif
 #ifdef USE_AUDIO_SPEAKER
 
