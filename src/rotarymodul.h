@@ -9,6 +9,7 @@ typedef struct {
     uint16_t min;
     uint16_t max;
     uint16_t cur;
+    uint16_t cur_old;
 } level_t;
 
 #define LONG_PRESSED_AFTER_MS     1000

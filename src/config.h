@@ -11,7 +11,7 @@
 */
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
-#define NODE_AUDIO
+//#define NODE_AUDIO
 //#define ESP8266SIMPLE
 //#define ESP32SIMPLE
 //#define NODE_ROTARYTEST
@@ -25,6 +25,7 @@
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
+#define NODE_KUECHENRADIO
 //---------------------------
 
 #include "Node_settings.h"

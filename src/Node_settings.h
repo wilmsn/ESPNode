@@ -127,6 +127,37 @@ RF24 Gateway:
 #define DO_LOG_RF24              true
 
 #endif
+
+//-----------------------------------------------------
+
+#if defined(NODE_KUECHENRADIO)
+
+#define USE_AUDIOMODUL
+#define DISPLAY_GC9A01A
+//#define USE_SDCARD
+#define USE_AUDIO_RADIO
+//#define USE_AUDIO_MEDIA
+//#define USE_FTP
+//#define USE_WIFIMULTI
+
+#include "audiomodul.h"
+#define MAGICNO                  76
+
+//#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_WEB
+
+#define HOSTNAME                 "Kuechenradio"
+#define HOST_DISCRIPTION         "Radio in der Kueche"
+
+#define MODULE1_DEFINITION       AudioModul module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
+
+#define DO_LOG_WEB               false
+#define DO_LOG_MODULE            false
+#define DO_LOG_SYSTEM            false
+
+#endif
+
 //*****************************************************
 //    Testnodes
 //-----------------------------------------------------

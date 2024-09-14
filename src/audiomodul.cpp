@@ -565,8 +565,10 @@ void AudioModul::loop(time_t now) {
     case Media:
       if ( time_update && rotarymodul.curLevel() == 0) audiodisplay.show_time(false);
       if ( timeout_set && now - timeout_start > TIMEOUT) {
-        audio_media_cur_dir = audio_media_tmp_dir;
-        audio_media_cur_file = audio_media_tmp_file;
+        audio_media_cur_dir   = audio_media_tmp_dir;
+        audio_media_cur_album = audio_media_tmp_album;
+        audio_media_cur_file  = audio_media_tmp_file;
+        audio_media_cur_song  = audio_media_tmp_song;
         rotarymodul.setLevel(0);
         timeout_set = false;
         audio_media_disp_init();
@@ -583,9 +585,9 @@ void AudioModul::loop(time_t now) {
             case 1:
             // Albumauswahl
               rotarymodul.setMaxValue(allAlbum-1);
-              audio_media_cur_dir = rotarymodul.curValue();
+              audio_media_cur_album = rotarymodul.curValue();
               audio_media_select_album();
-              audio_media_cur_file = 0;
+              audio_media_cur_song = 0;
               timeout_start = now;
             break;
             case 2:
@@ -608,8 +610,10 @@ void AudioModul::loop(time_t now) {
             break;
             case 1:
             // Albumauswahl initiieren und anzeigen
-              audio_media_tmp_dir = audio_media_cur_dir;
-              audio_media_tmp_file = audio_media_cur_file;
+              audio_media_tmp_dir   = audio_media_cur_dir;
+              audio_media_tmp_album = audio_media_cur_album;
+              audio_media_tmp_song  = audio_media_cur_song;
+              audio_media_tmp_file  = audio_media_cur_file;
               audio_media_select_album();
               timeout_start = now;
               timeout_set = true;
@@ -936,17 +940,49 @@ void AudioModul::audio_media_disp_init() {
 }
 
 void AudioModul::newEntry_dir(AudioModul::music_dir_t* p_new) {
-    music_dir_t *p_search;
-    p_new->p_next = NULL;
-    if (p_music_dir_initial) {
-        p_search = p_music_dir_initial;
-        while (p_search->p_next) {
-            p_search = p_search->p_next;
-        }
-        p_search->p_next = p_new;
+  music_dir_t *p_search;
+  music_dir_t *p_tmp;
+  bool inserted = false;
+  int result;
+//  Serial.println("New Entry Dir");
+  p_new->p_next = NULL;
+  if (p_music_dir_initial) {
+// 1. Einsortieren vor p_initial
+    if (strcmp(p_music_dir_initial->dirName,p_new->dirName)>0) {
+//      Serial.println(String(p_music_dir_initial->dirName)+String(" p_init ist groesser als ")+String(p_new->dirName));
+      p_new->p_next = p_music_dir_initial;
+      p_music_dir_initial = p_new;
+      inserted = true;
     } else {
-        p_music_dir_initial = p_new;
+// 2. Einsortieren in der Mitte
+      p_search = p_music_dir_initial;
+      while (p_search->p_next && ! inserted) {
+        p_tmp = p_search->p_next;
+        if (strcmp(p_tmp->dirName, p_new->dirName)>0) {
+//          Serial.println(String(p_tmp->dirName)+String(" p_tmp ist groesser als ")+String(p_new->dirName));
+          p_search->p_next = p_new;
+          p_new->p_next = p_tmp;
+          inserted = true;
+        } else {
+          p_search = p_search->p_next;
+        }
+      }
+// 3. Einsortieren am Ende
+      if ( ! inserted) {
+//        Serial.println(String(p_search->dirName)+String(" letzte ist kleiner als ")+String(p_new->dirName));
+        p_search->p_next = p_new;
+      }
     }
+  } else {
+    p_music_dir_initial = p_new;
+  }
+/*  Serial.println("-----Status-----");
+  p_search = p_music_dir_initial;
+  while (p_search) {
+    Serial.println(p_search->dirName);
+    p_search = p_search->p_next;
+  }
+  Serial.println("----------------");*/
 }
 
 void AudioModul::newEntry_file(AudioModul::music_file_t* p_new) {
@@ -1146,18 +1182,28 @@ void AudioModul::readSD() {
   file.close();
   dir.close();
   root.close();
+// Songnummern setzen
+  music_dir_t* p_search = p_music_dir_initial;
+  uint16_t albumNo = 0;
+  while (p_search) {
+    p_search->albumNo = albumNo;
+    albumNo++;
+    p_search = p_search->p_next;
+  }
   countSongs();
   countAlbum();
 #if defined(DEBUG_SERIAL_MODULE)
-  music_dir_t* p_search = p_music_dir_initial;
+  Serial.println("===Chain Dir===");
+  p_search = p_music_dir_initial;
   while (p_search) {
-    Serial.println(p_search->dirName);
+    Serial.println(String(p_search->albumNo)+String(" : ")+String(p_search->dirNo)+String(" : ")+String(p_search->dirName));
     p_search = p_search->p_next;
   }
+  Serial.println("===============");
 #endif
 }
 
-void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
+void AudioModul::audio_media_play(uint16_t _albumNo, uint16_t _songNo) {
   String sdName = "";
   char* dirName;
   char* fileName;
@@ -1168,7 +1214,7 @@ void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
   if (p_music_dir_initial) {
     p_dir_search = p_music_dir_initial;
     while (p_dir_search) {
-      if (p_dir_search->dirNo == _dirNo) {
+      if (p_dir_search->albumNo == _albumNo) {
         dirName = p_dir_search->dirName;
         dir_found = true;
         p_dir_search = NULL;
@@ -1180,7 +1226,7 @@ void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
   if (p_music_file_initial) {
     p_file_search = p_music_file_initial;
     while (p_file_search) {
-      if (p_file_search->fileNo == _fileNo && p_file_search->dirNo == _dirNo) {
+      if (p_file_search->songNo == _songNo && p_file_search->albumNo == _albumNo) {
         fileName = p_file_search->fileName;
         file_found = true;
         p_file_search = NULL;
@@ -1199,30 +1245,24 @@ void AudioModul::audio_media_play(uint8_t _dirNo, uint8_t _fileNo) {
 void AudioModul::audio_media_select_album() {
   String album[3];
   music_dir_t *p_search;
-  uint16_t act_dir;
-  int idx = 0;
+  music_dir_t *p_last = NULL;
+  bool finished = false;
   album[0] = " ";
   album[1] = " ";
   album[2] = " ";
-  if (audio_media_cur_dir > 0) {
-    act_dir= audio_media_cur_dir -1;
-  } else {
-    act_dir = 0;
-    idx = 1;
-  }
   if (p_music_dir_initial) {
     p_search = p_music_dir_initial;
-    while (p_search) {
-      if (p_search->dirNo == act_dir) {
-        if (idx < 3) {
-          album[idx] = p_search->dirName;
-          act_dir++;
-          idx++;
-        }
+    while (p_search && ! finished) {
+      if (p_search->albumNo == audio_media_cur_album) {
+        if (p_last) album[0] = p_last->dirName;
+        album[1] = p_search->dirName;
+        if (p_search->p_next) album[2] = (p_search->p_next)->dirName;
       }
+      p_last = p_search;
       p_search = p_search->p_next;
     }
   }
+  Serial.println(String("Display-select:")+album[0]+String(" ")+album[1]+String(" ")+album[2]);
   audiodisplay.select(album[0].c_str(),album[1].c_str(),album[2].c_str());
 }
 

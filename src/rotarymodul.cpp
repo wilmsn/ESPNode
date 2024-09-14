@@ -113,16 +113,12 @@ void RotaryModul::setValue(uint16_t _value) {
 }
 
 void RotaryModul::loop(time_t now) {
-  // 0. Check reset of level
-//  if (cur_level != 0) {
-//    if (now - timeout_cnt > 60) {
-//      setLevel(0);
-//      isChanged = 2;
-//    }
-//  }
   // 1. Position changed
   if (rotary.encoderChanged()) {
+    level[cur_level].cur_old = level[cur_level].cur;
     level[cur_level].cur = rotary.readEncoder();
+    if ( level[cur_level].cur > level[cur_level].cur_old +2) level[cur_level].cur = level[cur_level].cur_old+2;
+    if ( (level[cur_level].cur < level[cur_level].cur_old -2) && (level[cur_level].cur_old > 1) ) level[cur_level].cur = level[cur_level].cur_old-2;
     isChanged = 1;
   }
   /// 2. Button is pressed
@@ -144,7 +140,6 @@ void RotaryModul::loop(time_t now) {
 //      short click => Change Level
         if ( cur_level < ROTARY_MAXLEVEL) {
           setLevel(cur_level+1);
-//          if (cur_level != 0) timeout_cnt = now;
         } else {
           setLevel(0);
         }

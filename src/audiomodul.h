@@ -91,6 +91,7 @@ private:
     bool      timeout_set = false;
     time_t    timeout_start;
     time_t    song_started;
+    time_t    old_now;
 // Radio
 #ifdef USE_AUDIO_RADIO
     station_t station[MAXSTATIONS];
@@ -98,13 +99,16 @@ private:
 #endif
 // Mediaplayer
 #ifdef USE_AUDIO_MEDIA
-    uint16_t   audio_media_tmp_dir  = 0;
-    uint16_t   audio_media_tmp_file = 0;
-    uint16_t   audio_media_cur_dir  = 0;
-    uint16_t   audio_media_cur_file = 0;
-    uint32_t   audio_media_num_file = 0;
+    uint16_t   audio_media_tmp_album  = 0;
+    uint16_t   audio_media_tmp_dir    = 0;
+    uint16_t   audio_media_tmp_song   = 0;
+    uint16_t   audio_media_tmp_file   = 0;
+    uint16_t   audio_media_cur_album  = 0;
+    uint16_t   audio_media_cur_dir    = 0;
+    uint16_t   audio_media_cur_song   = 0;
+    uint16_t   audio_media_cur_file   = 0;
+    uint32_t   audio_media_num_file   = 0;
 // Zeitsteueruntg
-    time_t     old_now;
 /*
 struct  music_t {
         uint16_t        dirNo;
@@ -116,19 +120,21 @@ struct  music_t {
 music_t*                p_initial = NULL;
 */
 struct  music_dir_t {
-        uint16_t        dirNo;
-        char*           dirName;
-        music_dir_t*    p_next;
+    uint16_t        albumNo;
+    uint16_t        dirNo;
+    char*           dirName;
+    music_dir_t*    p_next;
 };
-music_dir_t*            p_music_dir_initial = NULL;
+music_dir_t*        p_music_dir_initial = NULL;
 
 struct  music_file_t {
-        uint16_t        dirNo;
-        uint16_t        fileNo;
-        char*           fileName;
-        music_file_t*   p_next;
+    uint16_t        songNo;
+    uint16_t        dirNo;
+    uint16_t        fileNo;
+    char*           fileName;
+    music_file_t*   p_next;
 };
-music_file_t*           p_music_file_initial = NULL;
+music_file_t*       p_music_file_initial = NULL;
 
 
 
