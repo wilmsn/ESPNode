@@ -46,9 +46,12 @@ public:
 
     /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Webinhalt initialisiert.
     void html_create(String& tmpstr);
+
+    /// @brief Sendet den Inhalt der Variablen "obj_htm_stat" als Websocketmessage.
+    void html_refresh();
     
     /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Inhalt für die Systeminfoseite geliefert.
-    String& html_info();
+    void html_info(String& tmpstr);
 
     // MQTT Support
 
@@ -90,14 +93,17 @@ public:
     /// @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt. 
     String     obj_label;
     
-    /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
-    String     obj_html_info;
+    /// @brief Systeminformationen zum Sensor für die Webseite als json abgespeichert;
+    /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Systeminfowert:
+    /// @brief ""obj_html_placeX"+":"+"obj_labelX"+"MesswertX"+"EinheitX", ... "
+    /// @brief Hier muss immer ein komplettes, gültiges Teil-JSON stehen dazu wird als default ein Dummy eingetragen.
+    String     obj_html_info = "\"x\":0";
 
     /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
     /// @brief ""obj_html_placeX"+":"+"obj_labelX"+"MesswertX"+"EinheitX", ... "
-    /// @brief Hier muss immer ein komplettes, gültiges Teil-JSON stehen.
-    String     obj_html_stat;
+    /// @brief Hier muss immer ein komplettes, gültiges Teil-JSON stehen dazu wird als default ein Dummy eingetragen.
+    String     obj_html_stat = "\"x\":0";
 
     // MQTT Support
 

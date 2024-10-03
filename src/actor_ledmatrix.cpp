@@ -9,7 +9,9 @@ void Actor_LEDMatrix::begin(const char* html_place, const char* label, const cha
                             bool start_value, bool on_value, 
                             uint8_t slider_val, uint8_t slider_no, const char* slider_mqtt_name, const char* slider_label,
                             const char* mqtt_line , const char* mqtt_graph) {
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_no, slider_mqtt_name, slider_label);
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, 
+                      start_value, on_value, slider_val, 15, slider_no, 
+                      slider_mqtt_name, slider_label);
   obj_mqtt_line = mqtt_line;
   obj_mqtt_graph = mqtt_graph;
   matrix.begin();
@@ -56,11 +58,12 @@ bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
     retval = true;
   }
   if ( ! json_extern ) {
-    obj_html_stat_json = "{ \"matrix\":\"";
-    getMatrixFB(obj_html_stat_json);
-    obj_html_stat_json += "\"}";
+    obj_html_stat = "\"matrix\":\"";
+    getMatrixFB(obj_html_stat);
+    obj_html_stat += "\"";
   }
   matrix.display();
+  html_refresh();
   return retval;
 }
 
@@ -141,8 +144,8 @@ void Actor_LEDMatrix::getMatrixFB(String& fb_cont) {
   }
 }
 
-void Actor_LEDMatrix::html_create_json_part(String& json) {
-  Switch_OnOff::html_create_json_part(json);
+void Actor_LEDMatrix::html_create(String& json) {
+  Switch_OnOff::html_create(json);
   json += ",\"slider1max\":15,\"matrix_x\":";
   json += matrix.getNumDevicesX() * 8;
   json += ",\"matrix_y\":";

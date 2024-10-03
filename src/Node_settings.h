@@ -35,7 +35,7 @@ RF24 Gateway:
 #define MAGICNO                  480
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 1, "intensity", "Helligkeit");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 255, 1, "intensity", "Helligkeit");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
@@ -110,7 +110,7 @@ RF24 Gateway:
 
 #define HOSTNAME                 "wohnzimmernode"
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
-#define MAGICNO                  103
+#define MAGICNO                  105
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;

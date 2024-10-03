@@ -45,8 +45,12 @@ void Base_Generic::html_create(String& tmpstr) {
   tmpstr += obj_html_stat;
 }
 
-String& Base_Generic::html_info() {
-  return obj_html_info;
+void Base_Generic::html_refresh() {
+  ws.textAll( String("{") + obj_html_stat + String("}") );
+}
+
+void Base_Generic::html_info(String& tmpstr) {
+  tmpstr += obj_html_info;
 }
 
 String& Base_Generic::mqtt_name() {

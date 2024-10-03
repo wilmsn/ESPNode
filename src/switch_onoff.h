@@ -141,6 +141,8 @@ public:
     /// @brief "true" wenn der Slider genutzt wird, sonst "false"
     bool obj_slider_used = false;
     /// @brief Nimmt den MQTT Namen für den Slider auf
+    String obj_switch_mqtt_name;
+    /// @brief Nimmt den MQTT Namen für den Slider auf
     String obj_slider_mqtt_name;
     /// @brief Nimmt das Label für den Slider auf
     String obj_slider_label;

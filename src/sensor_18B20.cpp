@@ -20,12 +20,12 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
 
   obj_mqtt_info =  String("\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":");
   obj_mqtt_info += String(RESOLUTION);
-  obj_mqtt_info += String(",\"Sensor-Refreshtime\":");
+  obj_mqtt_info += String(",\"Sensor-Refreshtime\":\"");
   obj_mqtt_info += String(REFRESHTIME);
   obj_mqtt_info += String(" Sek.\"");
   obj_mqtt_has_info = true;
 
-  obj_html_info =  String(",\"tab_head_18b20\":\"Sensor\"")+
+  obj_html_info =  String("\"tab_head_18b20\":\"Sensor\"")+
   obj_html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
   obj_html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")+
   obj_html_info += String(",\"tab_line3_18b20\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"");
@@ -35,6 +35,16 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   obj_html_stat += String("\":\"");
   obj_html_stat += obj_label;
   obj_html_stat += String(": --- \"");
+
+  sensors.requestTemperatures();
+  delay(500); 
+  if (sensors.getTempCByIndex(0) < -20.0) {
+    delay(500); 
+    sensors.begin();
+    sensors.setResolution(RESOLUTION);
+    sensors.requestTemperatures();
+    delay(500); 
+  }
 }
 
 void Sensor_18B20::start_measure(time_t now) {
@@ -44,7 +54,9 @@ void Sensor_18B20::start_measure(time_t now) {
 }
 
 void Sensor_18B20::loop(time_t now) {
-  if (obj_measure_starttime == 0) {start_measure(now); }
+  if (obj_measure_starttime == 0) {
+    start_measure(now); 
+  }
   if (obj_measure_started) {
     if ((now - obj_measure_starttime) > MEASUREDELAY) {
       char tempstr[6];
@@ -65,9 +77,10 @@ void Sensor_18B20::loop(time_t now) {
       obj_html_stat += String(": ");
       obj_html_stat += String(tempstr);
       obj_html_stat += String(" °C\"");
-      sendWsMessage(String("{")+obj_html_stat+String("}",LOG_MODULE));
-
+      html_refresh();
+      
       obj_mqtt_stat = String(tempstr);
+      obj_mqtt_stat_changed = true;
 
       obj_measure_started = false;
     }

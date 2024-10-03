@@ -21,11 +21,11 @@
 //#define WITTYNODE
 
 // meine produktiven Nodes
-//#define NODE_WOHNZIMMER
+#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
-#define NODE_KUECHENRADIO
+//#define NODE_KUECHENRADIO
 //---------------------------
 
 #include "Node_settings.h"
@@ -97,7 +97,7 @@
 /// Statusinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Messungen mit anschliessendem Versand der Daten über MQTT (falls aktiviert).
 /// In diesem Zeitinterval werden auch die Schalterzustände übertragen.
-#define STATINTERVAL                 300
+#define STATINTERVAL                 60  // 300
 
 /// Messinterval:
 /// Definiert den Abstand zwischen dem Start der Messung und dem gesicherten Vorliegen der Ergebnisse in Sekunden.
@@ -106,7 +106,7 @@
 /// Telemetrieinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Telemetrieübertragungen.
 /// Hierzu gehören: Serverdaten, Netzwerkdaten, ...
-#define TELEINTERVAL                 1200
+#define TELEINTERVAL                 300 // 1200
 
 /// Loop Time Alarm
 /// Definiert das Zeitintervall (in Millisekunden) für einen Loop Durchgang das nicht überschritten werden sollte.

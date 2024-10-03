@@ -287,24 +287,29 @@ void prozess_sysinfo() {
 #endif
       tmpstr += "}";
       sendWsMessage(tmpstr, LOG_WEB);
-      tmpstr = "{\"x\":0";
+      tmpstr = "{";
 #ifdef MODULE1
-  tmpstr += module1.html_info();
+      module1.html_info(tmpstr);
 #endif
 #ifdef MODULE2
-  tmpstr += module2.html_info();
+      tmpstr += ",";
+      module2.html_info(tmpstr);
 #endif
 #ifdef MODULE3
-  tmpstr += module3.html_info();
+      tmpstr += ",";
+      module3.html_info(tmpstr);
 #endif
 #ifdef MODULE4
-  tmpstr += module4.html_info();
+      tmpstr += ",";
+      module4.html_info(tmpstr);
 #endif
 #ifdef MODULE5
-  tmpstr += module5.html_info();
+      tmpstr += ",";
+      module5.html_info(tmpstr);
 #endif
 #ifdef MODULE6
-  tmpstr += module6.html_info();
+      tmpstr += ",";
+      module6.html_info(tmpstr);
 #endif
   tmpstr += "}";
   sendWsMessage(tmpstr, LOG_WEB);
@@ -380,7 +385,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
 #endif
   tmpstr += String("}");
   sendWsMessage(tmpstr, LOG_WEB);
-  tmpstr = "{\"a\":5,";
+  tmpstr = "{";
 #ifdef MODULE1
       module1.html_create(tmpstr);
 #endif

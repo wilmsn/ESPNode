@@ -15,6 +15,22 @@ Auf der Weboberfläche sind 4 Ausgabezeilen vorgesehen. Diese Felder haben den N
 
 Daneben können auf der Webseite noch weitere Objekte angelegt werden, diese werden hier jedoch nicht beschrieben.
 
+**Nutzungsszenarien**
+
+**Web**
+
+Alle Datenübertragungen wurden als Websockets realisiert.
+
+In der HTML Oberfläche gibt es folgende Nutzungsszenarien:
+
+- Aufbau der Webseite durch Aufruf der URL bzw. Reresh der Seite:
+
+Diese Funktion wird durch das Hauptprogramm umgesetzt, das Modul unterstützt durch die Funktion "html_create()".
+
+- Änderung von Inhalten der Webseite
+
+Hier ist das Modul eigenverantwortlich für seine Inhalte. Nach jeder Veränderung, die eine Änderung auf der Webseite veranlasst, wird aus den Modul heraus eine Websocketnachricht gesendet.
+
 **MQTT:**
 
 Für die Datenübertragung über MQTT sind 2 Nachrichten vorgesehen.
@@ -25,16 +41,20 @@ In dieser Nachricht werden alle zu übermittelnden Werte als JSON übermittelt. 
 
 * Statusnachricht
 
-ZUsätzlich kann ein Wert bestimmt werden, der den Status des Objektes (z.B. in FHEM) anzeigt. Es gibt nur einen Status für den kompletten Node!
+Zusätzlich kann ein Wert bestimmt werden, der den Status des Objektes (z.B. in FHEM) anzeigt. Es gibt nur einen Status für den kompletten Node!
 
 Zusätzlich gibt es Zulieferungen zur Systeminfo des Nodes.
 
 ##Anforderungen an die Software
 Grundsätzlich ist das Modul dafür verantwortlich:
-1. Alle Inhalte selbst zu verwalten
-2. Sparsam mit der CPU Zeit umzugehen (kein delay()!)
-3. GPIOs selbst zu verwalten (initialisieren, setzen)
-4. Webinhalte sebst zu verwalten
+
+- Alle Inhalte selbst zu verwalten
+
+- Sparsam mit der CPU Zeit umzugehen (kein delay()!)
+
+- GPIOs selbst zu verwalten (initialisieren, setzen)
+
+- Webinhalte sebst zu verwalten
 
 ##Schnittstellen zum Hauptprogramm
 Die nachfolgenden Schnittstellen werden durch das Hauptprogramm aufgerufen und müssen vorhanden sein. Wenn ein Modul auf "Base_Generic" als Vaterobjekt aufbaut ist das gewährleistet.
@@ -42,20 +62,68 @@ Die nachfolgenden Schnittstellen werden durch das Hauptprogramm aufgerufen und m
 ###Funktion "begin()"
 Hier wird das Objekt initialisiert dabei ist naturgemäß die Anzahl der Parameter variabel. Jedliche grundlegende Konfiguration muss hier erfolgen. Im weiteren Programm gibt es dazu keine Möglichkeit mehr.
 Der Einbau in den ESPNode mittels Precompilerdirektive siehe:
+
 **Einbindung eines Modules**
 
 ###Funktion loop(time_t now)
 Wärend des Laufs wird die loop Funktion regelmäßig aufgerufen. Alle loop Funktionen aller Module und die im Hauptprogramm aufgerufenen periodischen Funktionen werden nach dem "round Robin" Prinzip nacheinander aufgerufen. Erst wenn wenn sie beendet ist folgt die nächtse. Es gibt keine zeitliche Begrenzung, dies liegt in der Verantwortung des Moduls! Durch Übergabe des Zeitstempels sind Zeitmessungen (z.B. für Wartezeit) möglich.
 
 ###Funktion set( keyword, value)
-Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion der eingebauten Module geschleust. Die Module prüfen ob das Item für sie ein keyword ist und sie handeln müssen. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. 
+Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion aller eingebauten Module geschleust. Jedes Module prüft eigenverantwortlich ob das Item für dieses Modul ein Keyword ist und das Modul handeln muss. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. 
 
-###Funktion html_create()
+**Rückgabewert:**
+
+"false" wenn das "item" nicht in diesem Modul ausgewertet wird, sonst "true"
+
+###Funktion html_create(String&)
 Diese Funktion wird vom Hauptrogramm aus aufgerufen wenn ein neuer Webclient sich verbindet. In diesem Fall muss der Client mit aktuellen Daten (idR. mittels Websocket) versorgt werden.
 
-###Funktion html_sysinfo()
-Diese Funktion wird augerufen wenn im HTML Client die Systeminfo Seite aufgerufen wird. Hier werden nähere Infos zur Hardware angezeigt (falls gewünsscht). 
+**Umsetzung**
 
+Innerhalb des Modues muss zu jedem Zeitpunkt die Variable "obj_html_stat" mit gültigem Inhalt gefüllt sein.
+Dies geschieht grundlegend in der Funktion begin() und wird dann bei jeder Änderung überarbeitet.
+Sollte kein Inhalt geliefert werden bleibt die Variable unangetastet. In der KLasse "Base_Generic" wurde für diesen Fall ein Dummy eingetragen. 
+
+**Rückgabewert:**
+
+Der übergebene String wird erweitert. Es muss um mindestens ein Wertepaar erweitert werden. Wird programmtechnisch kein Wert benötigt muss ein Dummy eingefügt werden (z.B "x"=1)
+
+**sonstige Infos**
+
+Auszug aus der KLasse "Base_Generic"
+
+	void Base_Generic::html_create(String& tmpstr) {
+	  tmpstr += obj_html_stat;
+	}
+
+Auszug aus dem Hauptprogramm:
+
+	tmpstr = "{";
+	#ifdef MODULE1
+	      module1.html_create(tmpstr);
+	#endif
+	#ifdef MODULE2
+	      tmpstr += ",";
+	      module2.html_create(tmpstr);
+	#endif
+
+Hier wird ersichtlich das die Funktion html_create() immer midestens ein Wertepaar liefern muss, da sonst durch die Kommatrennung das gesamte Statement ungültig wird.
+
+###Funktion html_sysinfo(String&)
+Diese Funktion wird augerufen wenn im HTML Client die Systeminfo Seite aufgerufen wird. Hier werden nähere Infos zur Hardware angezeigt (falls gewünscht). 
+
+**Umsetzung**
+
+Die Systeminfoseite wird dynamisch mittels Javascript erstellt. Um für ein Modul einen oder mehrere Eintäge auszugeben muss zunächst eine Headerzeile erzeugt werden. Dies geschieht durch das item "tab_head_xyz" (wobei xyz durch einen modulspeziefischen Ausdruck ersetzt wird) und einen value der in der Systeminfotabelle angezeigt wird.
+
+Danach folgt für jede Zeile ein item "tab_lineX_xyz" (Dabei ist "X" durch die Zeilennummer zu ersetzen und "xyz" durch den modulspeziefischen Ausdruck) und ein value. Das Value besteht aus einem Tabellenlabel (linke Spalte), dem Trennzeichen "#" und einem dazugehörigen Wert (rechte Spalte)
+
+Beispiel:
+
+	obj_html_info =  String("\"tab_head_18b20\":\"Sensor\"")+
+	obj_html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
+	obj_html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")
+  	
 ###mqtt_json_part()
 Diese Funktion liefert einen Teil-JSON zurück der vom Hauptprogramm zu einer MQTT-Nachricht zusammengebaut wird:
 **stat/TOPIC2/data JSON-Statement**

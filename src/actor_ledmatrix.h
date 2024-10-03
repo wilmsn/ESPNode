@@ -60,7 +60,7 @@ public:
 
     /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
     /// @param json Nimmt den JSON String zur Initialisierung auf
-    void html_create_json_part(String& json);
+    void html_create(String& json);
  
 private:
     /// @brief Gibt eine Zeile im Display aus
