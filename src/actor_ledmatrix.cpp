@@ -1,6 +1,6 @@
 #include "config.h"
 #ifdef USE_ACTOR_LEDMATRIX
-#include "config.h"
+#include "common.h"
 #include "actor_ledmatrix.h"
 
 LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
@@ -37,8 +37,6 @@ void Actor_LEDMatrix::begin(const char* html_place, const char* label, const cha
 
 bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
   bool retval = false;
-  // Wird true gesetzt wenn das JSON von einem untergeordnetem Objekt (hier Switch_OnOff) gefüllt wird
-  bool json_extern = false;
   if (Switch_OnOff::set(keyword, value)) {
     if (get_switch_val()) {
         matrix.on();
@@ -47,24 +45,31 @@ bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
     }
     matrix.setIntensity(get_slider_val());
     retval = true;
-    json_extern = true;
+    html_refresh();
+  } else {
+    if ( keyword == obj_mqtt_line ) {
+      print_line(value.c_str());
+      graph_change_time = now;
+      retval = true;
+    }
+    if ( keyword == obj_mqtt_graph ) {
+      print_graph(value.c_str());
+      graph_change_time = now;
+      retval = true;
+    }
   }
-  if ( keyword == obj_mqtt_line ) {
-    print_line(value.c_str());
-    retval = true;
-  }
-  if ( keyword == obj_mqtt_graph ) {
-    print_graph(value.c_str());
-    retval = true;
-  }
-  if ( ! json_extern ) {
+  return retval;
+}
+
+void Actor_LEDMatrix::loop(time_t now) {
+  if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
     obj_html_stat = "\"matrix\":\"";
     getMatrixFB(obj_html_stat);
     obj_html_stat += "\"";
+    matrix.display();
+    html_refresh();
+    graph_change_time = 0;
   }
-  matrix.display();
-  html_refresh();
-  return retval;
 }
 
 void Actor_LEDMatrix::print_line(const char* rohtext ) {
@@ -121,17 +126,17 @@ void Actor_LEDMatrix::print_line(const char* rohtext ) {
     matrix.setCursor(cursor_x,cursor_y);
   }
   matrix.print(linetext); 
-  matrix.display();
+//  matrix.display();
 }
 
 void Actor_LEDMatrix::print_graph(const char* rohtext ) {
-    unsigned int length = strlen(rohtext);
-    for (unsigned int pos = 0; pos + 5 <= length; pos += 5) {
-        unsigned int cur_x = (rohtext[pos] - '0') * 10 + (rohtext[pos + 1] - '0');
-        unsigned int cur_y = (rohtext[pos + 2] - '0') * 10 + (rohtext[pos + 3] - '0');
-        matrix.setPixel(cur_x, cur_y, rohtext[pos + 4] - '0');
-    }
-    matrix.display();
+  unsigned int length = strlen(rohtext);
+  for (unsigned int pos = 0; pos + 5 <= length; pos += 5) {
+    unsigned int cur_x = (rohtext[pos] - '0') * 10 + (rohtext[pos + 1] - '0');
+    unsigned int cur_y = (rohtext[pos + 2] - '0') * 10 + (rohtext[pos + 3] - '0');
+    matrix.setPixel(cur_x, cur_y, rohtext[pos + 4] - '0');
+  }
+//  matrix.display();
 }
 
 void Actor_LEDMatrix::getMatrixFB(String& fb_cont) {
@@ -151,5 +156,8 @@ void Actor_LEDMatrix::html_create(String& json) {
   json += ",\"matrix_y\":";
   json += matrix.getNumDevicesY() * 8;
   json += ",\"show_matrix\":1";
+  json += ",\"matrix\":\"";
+  getMatrixFB(json);
+  json += "\"";
 }
 #endif

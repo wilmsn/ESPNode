@@ -61,7 +61,9 @@ public:
     /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
     /// @param json Nimmt den JSON String zur Initialisierung auf
     void html_create(String& json);
- 
+
+    void loop(time_t now);
+
 private:
     /// @brief Gibt eine Zeile im Display aus
     /// Dabei haben die ersten 6 Zeichen im übergebenen Zeichenarray eine besondere Bedeutung:
@@ -87,6 +89,8 @@ private:
     String obj_mqtt_line;
     /// @brief Nimmt das Schlüsselwort für den Grafiktext auf
     String obj_mqtt_graph;
+    /// @brief
+    time_t graph_change_time;
 };
 
 #endif
