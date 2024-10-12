@@ -17,7 +17,7 @@ public:
     /// @param html_place Der Einbauort der HTML Seite
     /// @param label Ein Bezeichner für den Messwert
     /// @param mqtt_name Der MQTT Bezeichner für den Messwert
-    void begin(const char* html_place, const char* label, const char* mqtt_name);
+    void begin(const char* html_place, const char* label, const char* mqtt_name, const int gpio);
 
     /// @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
     /// @param now Die aktuelle Zeit in Unix Sekunden

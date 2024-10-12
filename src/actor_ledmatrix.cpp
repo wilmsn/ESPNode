@@ -6,12 +6,12 @@
 LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
 
 void Actor_LEDMatrix::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-                            bool start_value, bool on_value, 
-                            uint8_t slider_val, uint8_t slider_no, const char* slider_mqtt_name, const char* slider_label,
-                            const char* mqtt_line , const char* mqtt_graph) {
+               bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no, 
+               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword,
+               const char* mqtt_line, const char* mqtt_graph) {
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, 
                       start_value, on_value, slider_val, 15, slider_no, 
-                      slider_mqtt_name, slider_label);
+                      slider_label, slider_mqtt_name, slider_keyword);
   obj_mqtt_line = mqtt_line;
   obj_mqtt_graph = mqtt_graph;
   matrix.begin();

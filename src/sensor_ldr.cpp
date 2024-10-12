@@ -8,6 +8,8 @@ void Sensor_LDR::begin(const char* html_place, const char* label, uint32_t messi
   Base_Generic::begin(html_place, label);
   obj_measure_interval = messinterval;
   obj_html_info = String(",\"tab_head_ldr\":\"Sensor\",\"tab_line1_ldr\":\"LDR:#GPIO: A0\"");
+  obj_mqtt_info = String("\"GPIO_LDR\":\"A0\"");
+  obj_mqtt_has_info = true; 
 }
 
 void Sensor_LDR::loop(time_t now) {
@@ -21,13 +23,8 @@ void Sensor_LDR::loop(time_t now) {
     obj_html_stat += ": ";
     obj_html_stat += String(obj_value);
     obj_html_stat += "\"";
-    sendWsMessage(String("{")+obj_html_stat+String("}",LOG_MODULE));
-                    
-//    obj_mqtt_info = "\"";
-//    obj_mqtt_info += obj_mqtt_name;
-//    obj_mqtt_info += "\": ";
-//    obj_mqtt_info += String(obj_value);
-
+    html_refresh();
+                     
   }
 }
 

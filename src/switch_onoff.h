@@ -64,14 +64,16 @@ public:
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
     /// @param slider_max_val Der maximale Wert des Schiebereglers (maximal zulässig: 255)
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
+    /// @param slider_label Die Beschriftung für den Schieberegler
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
+    /// @param slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
-               const char* slider_mqtt_name, const char* slider_label);
+               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword);
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin und PWM Steuerung
     /// @param html_place Der Einbauort in der Webseite
-    /// @param label Ein Bezeichner für diesen Schalter
+    /// @param label Die Beschritung für diesen Schalter
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param hw_pin Der Hardware Pin
@@ -80,14 +82,15 @@ public:
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
     /// @param slider_max_val Der maximale Wert des Schiebereglers (maximal zulässig: 255)
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
-    /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     /// @param slider_label Die Beschriftung für den Schieberegler
+    /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
+    /// @param slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
                bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
-               const char* slider_mqtt_name, const char* slider_label);
+               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword);
 
     /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "obj_keyword" übereinstimmt.
-    /// @param keyword Das zu testende "keyword"
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
     ///**0** **aus** **Aus** **off** **Off**\n 
     ///Folgende Strings als **value** übergeben schalten **ein**:\n 
@@ -140,10 +143,12 @@ public:
     bool obj_value;
     /// @brief "true" wenn der Slider genutzt wird, sonst "false"
     bool obj_slider_used = false;
-    /// @brief Nimmt den MQTT Namen für den Slider auf
+    /// @brief Nimmt den MQTT Namen für den Switch auf
     String obj_switch_mqtt_name;
     /// @brief Nimmt den MQTT Namen für den Slider auf
     String obj_slider_mqtt_name;
+    /// @brief Nimmt das Keyword für den Slider auf
+    String obj_slider_keyword;
     /// @brief Nimmt das Label für den Slider auf
     String obj_slider_label;
     /// @brief Nimmt den aktuellen Wert des Sliders auf

@@ -53,54 +53,32 @@ void reconnect_mqtt() {
 
 
 void send_mqtt_stat() {
-  String tmpstr;
-  if (do_mqtt) {
-    if (mqttClient.connected()) {
+  String tmpstr = "{";
 #ifdef MODULE1
-      if ( module1.mqtt_has_stat() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module1.mqtt_name().c_str()), module1.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module1.mqtt_stat());
-      }
-#endif
-#ifdef MODULE2  
-      if ( module2.mqtt_has_stat() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module2.mqtt_name().c_str()), module2.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module2.mqtt_stat());
-      }
+  tmpstr += module1.mqtt_stat();
+#endif      
+#ifdef MODULE2
+  tmpstr += String(",") + module2.mqtt_stat();
 #endif
 #ifdef MODULE3
-      if ( module3.mqtt_has_stat() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module3.mqtt_name().c_str()), module3.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module3.mqtt_stat());
-      }
+  tmpstr += String(",") + module3.mqtt_stat();
 #endif
 #ifdef MODULE4
-      if ( module4.mqtt_has_stat() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module4.mqtt_name().c_str()), module4.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module4.mqtt_stat());
-      }
+  tmpstr += String(",") + module4.mqtt_stat();
 #endif
 #ifdef MODULE5
-      if ( module5.mqtt_has_stat() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module5.mqtt_name().c_str()), module5.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module5.mqtt_stat());
-      }
+  tmpstr += String(",") + module5.mqtt_stat();
 #endif
 #ifdef MODULE6
-      if ( module6.mqtt_has_stat() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module6.mqtt_name().c_str()), module6.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module6.mqtt_stat());
-      }
+  tmpstr += String(",") + module6.mqtt_stat();
 #endif
-    } else {
-      reconnect_mqtt();
-    }
-  }
+  tmpstr += "}";
+  mqttClient.publish(mk_topic(MQTT_STATUS, "stat"), tmpstr.c_str());
+  write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
 }
 
 void send_mqtt_tele() {
   String tmpstr;
-  String teststr;
   uint32_t free;
   uint32_t max;
   uint8_t frag;
@@ -299,52 +277,38 @@ void mqtt_setup() {
 
 void mqtt_loop(time_t now) {
   if ( do_mqtt ) {
-    mqttClient.loop();
-    if ( (now - last_mqtt_stat) > STATINTERVAL ) {
-      send_mqtt_stat();
-      last_mqtt_stat = now;
-    }
-    if ( (now - last_mqtt_tele) > TELEINTERVAL ) {
-      send_mqtt_tele();
-      last_mqtt_tele = now;
-    }
     if (mqttClient.connected()) {
+      mqttClient.loop();
+      if ( (now - last_mqtt_stat) > STATINTERVAL ) {
+        send_mqtt_stat();
+        last_mqtt_stat = now;
+      }
+      if ( (now - last_mqtt_tele) > TELEINTERVAL ) {
+        send_mqtt_tele();
+        last_mqtt_tele = now;
+      }
+      if ( 
 #ifdef MODULE1
-      if ( module1.mqtt_stat_changed() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module1.mqtt_name().c_str()), module1.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module1.mqtt_stat().c_str());
-      }
-#endif
+           module1.mqtt_stat_changed()
+#endif           
 #ifdef MODULE2
-      if ( module2.mqtt_stat_changed() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module2.mqtt_name().c_str()), module2.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module2.mqtt_stat().c_str());
-      }
-#endif
+           || module2.mqtt_stat_changed()
+#endif           
 #ifdef MODULE3
-      if ( module3.mqtt_stat_changed() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module3.mqtt_name().c_str()), module3.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module3.mqtt_stat().c_str());
-      }
-#endif
+           || module3.mqtt_stat_changed()
+#endif           
 #ifdef MODULE4
-      if ( module4.mqtt_stat_changed() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module4.mqtt_name().c_str()), module4.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module4.mqtt_stat().c_str());
-      }
-#endif
+           || module4.mqtt_stat_changed()
+#endif           
 #ifdef MODULE5
-      if ( module5.mqtt_stat_changed() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module5.mqtt_name().c_str()), module5.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module5.mqtt_stat().c_str());
-      }
-#endif
+           || module5.mqtt_stat_changed()
+#endif           
 #ifdef MODULE6
-      if ( module6.mqtt_stat_changed() ) {
-        mqttClient.publish(mk_topic(MQTT_STATUS, module6.mqtt_name().c_str()), module6.mqtt_stat().c_str());
-        write2log(LOG_MQTT,2, mqtt_topic.c_str(), module6.mqtt_stat().c_str());
+           || module6.mqtt_stat_changed()
+#endif                     
+               ) {
+        send_mqtt_stat();
       }
-#endif
     }
   }
   delay(0);

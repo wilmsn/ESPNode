@@ -62,10 +62,6 @@ String& Base_Generic::mqtt_stat() {
   return obj_mqtt_stat;
 }
 
-bool Base_Generic::mqtt_has_stat() {
-  return obj_mqtt_has_stat;
-}
-
 bool Base_Generic::mqtt_stat_changed() {
   return obj_mqtt_stat_changed;
 }

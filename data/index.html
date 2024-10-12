@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <link rel='stylesheet' type='text/css' href='style.css' />
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
 var htmlversion = "0.998audio V3 (08/2024)";
@@ -340,7 +340,7 @@ function prozessJS( key, val ) {
       $("#slider1div").show();
       $("#slider1").change(function() {
         var mycmd = slider1name;
-        mycmd = mycmd + "=S:";
+        mycmd = mycmd + "=";
         mycmd = mycmd + $(this).val();
         websocket.send(mycmd);
       });
@@ -364,7 +364,7 @@ function prozessJS( key, val ) {
       $("#slider2div").show();
       $("#slider2").change(function() {
         var mycmd = slider2name;
-        mycmd = mycmd + "=S:";
+        mycmd = mycmd + "=";
         mycmd = mycmd + $(this).val();
         websocket.send(mycmd);
       });
@@ -388,7 +388,7 @@ function prozessJS( key, val ) {
       $("#slider3div").show();
       $("#slider3").change(function() {
         var mycmd = slider3name;
-        mycmd = mycmd + "=S:";
+        mycmd = mycmd + "=";
         mycmd = mycmd + $(this).val();
         websocket.send(mycmd);
       });

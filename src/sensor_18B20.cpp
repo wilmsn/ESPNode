@@ -7,14 +7,14 @@
 #define RESOLUTION     12
 #define MEASUREDELAY   2
 
-const int oneWireBus = PIN_18B20;   
-OneWire oneWire(oneWireBus);
+OneWire oneWire;
 DallasTemperature sensors(&oneWire);
 
-void Sensor_18B20::begin(const char* html_place, const char* label, const char* mqtt_name) {
+void Sensor_18B20::begin(const char* html_place, const char* label, const char* mqtt_name, const int gpio) {
   obj_label = label;
   obj_html_place = html_place;
   obj_mqtt_name = mqtt_name;
+  oneWire.begin(gpio);
   sensors.begin();
   sensors.setResolution(RESOLUTION);
 
@@ -79,7 +79,7 @@ void Sensor_18B20::loop(time_t now) {
       obj_html_stat += String(" °C\"");
       html_refresh();
       
-      obj_mqtt_stat = String(tempstr);
+      obj_mqtt_stat = String("\"") + obj_mqtt_name + String("\":") + String(tempstr);
       obj_mqtt_stat_changed = true;
 
       obj_measure_started = false;

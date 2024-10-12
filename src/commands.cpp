@@ -304,7 +304,7 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( ! cmd_valid ) {
-    tmpstr  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String("\"}");
+    tmpstr  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String(":") + value + String("\"}");
     sendWsMessage(tmpstr,LOG_SYSTEM);
   }
 }

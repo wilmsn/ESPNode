@@ -66,10 +66,6 @@ public:
     /// @return Ein String
     String& mqtt_stat();
 
-    /// @brief Ein Schalter ob ein MQTT Status vorhanden ist
-    /// @return MQTT Status: true vorhanden; false nicht vorhanden
-    bool mqtt_has_stat();
-
     /// @brief Sobald sich ein Wert innerhalb von mqtt_state() verändert muss die abgeleitete Klasse "obj_mqtt_state_changed" entsprechend setzen.
     /// @return true wenn sich mqtt_state geändert hat sonst false
     bool mqtt_stat_changed();
@@ -116,15 +112,13 @@ public:
     /// @brief Schalter ob "obj_mqtt_state" verändert worden ist und neu (=true) übertragen werden soll.
     bool       obj_mqtt_stat_changed;
 
-    /// @brief Schalter ob dieses Modul einen "mqtt_state" liefert(=true).
-    bool       obj_mqtt_has_stat;
-
-    /// @brief Der MQTT Status (Einzelwert oder mehrere als JSON).
-    String     obj_mqtt_stat;
-
+    /// @brief Der MQTT Status
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
     /// @brief "mqtt_nameX"+":"+"MesswertX",...
-    /// @brief Hier steht immer nur ein abgeschlossenes Teil-JSON ohne Klammern.
+    /// @brief Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+    String     obj_mqtt_stat;
+
+    /// @brief Die Bezeichnung für den ersten Wert
     String     obj_mqtt_name;
 
 };

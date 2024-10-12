@@ -35,10 +35,10 @@ RF24 Gateway:
 #define MAGICNO                  480
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 255, 1, "intensity", "Helligkeit");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur", 4);
 
 #define MQTT_CLIENT              "flurnode"
 #define MQTT_TOPICP2             "flurnode"
@@ -114,10 +114,10 @@ RF24 Gateway:
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", false, true, 3, 1, "intensity", "Helligkeit", "mx_line", "mx_graph");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", false, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur",4);
 
 #define MQTT_CLIENT              "wohnzimmernode"
 #define MQTT_TOPICP2             "wohnzimmernode"
@@ -257,13 +257,17 @@ RF24 Gateway:
 //                         const char* slider_mqtt_name, const char* slider_label) {
 
 #define MODULE2_DEFINITION      Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT, 100, 100, 1, "rot-hell", "Rot-Helligkeit");
+/*    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
+               bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
+               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword); */
+
+#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, WITTY_RGB_RT, 100, 100, 1, "Rot-Helligkeit", "rot_sl", "rot_sl");
 
 #define MODULE3_DEFINITION      Switch_OnOff module3;
-#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN, 100, 100, 2, "gn-hell", "Grün Helligkeit");
+#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, WITTY_RGB_GN, 100, 100, 2, "Grün Helligkeit", "gruen_sl", "gruen_sl");
 
 #define MODULE4_DEFINITION      Switch_OnOff module4;
-#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL, 100, 100, 3, "bl-hell", "Blau Helligkeit");
+#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, WITTY_RGB_BL, 100, 100, 3, "Blau Helligkeit", "blau_sl", "blau_sl");
 
 #define MODULE5_DEFINITION      Sensor_LDR module5;
 #define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", 30);
