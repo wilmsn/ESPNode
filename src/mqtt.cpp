@@ -309,6 +309,8 @@ void mqtt_loop(time_t now) {
                ) {
         send_mqtt_stat();
       }
+    } else {
+      reconnect_mqtt();
     }
   }
   delay(0);
