@@ -379,7 +379,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
   tmpstr += String(",\"set_RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"");
   tmpstr += String(",\"set_RF24HUB-Port\":\"") + String(rf24gw_hub_port) + String("\"");
   tmpstr += String(",\"set_RF24GW-Port\":\"") + String(rf24gw_gw_port) + String("\"");
-  tmpstr += String(",\"set_RF24HUB-No\":\"") + String(rf24gw_gw_no) + String("\"");
+  tmpstr += String(",\"set_RF24GW-No\":\"") + String(rf24gw_gw_no) + String("\"");
 #else      
   tmpstr += String(",\"set_rf24gw_enable\":0");
 #endif

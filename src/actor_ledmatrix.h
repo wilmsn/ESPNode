@@ -36,6 +36,7 @@ public:
     /// @param keyword Das Schlüsselwort für den Schalter
     /// @param start_value Der Wert nach dem Einschalten (false = aus; true = ein)
     /// @param on_value Der logische Wert des IO Pins im eingeschalteten Zustand (false = aus; true = ein)
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
     /// @param slider_val Der Wert des Schiebereglers (Steuert die Helligkeit des Displays)
     /// @param slider_no Die Nummer des Schiebereglers (Einbauplatz)
     /// @param slider_label Eine Beschriftung für den Schieberegler
@@ -44,7 +45,7 @@ public:
     /// @param mqtt_line Der MQTT Bezeichner für Zeilendaten
     /// @param mqtt_graph Der MQTT Bezeichner für Grafikdaten
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_no, 
+               bool start_value, bool on_value, bool is_state, uint8_t slider_val, uint8_t slider_no, 
                const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword,
                const char* mqtt_line, const char* mqtt_graph);
 

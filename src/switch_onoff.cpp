@@ -13,19 +13,19 @@ Switch_OnOff::Switch_OnOff(){
 // Startet als Schalter mit Regler der einen HW-Pin mittels PWM steuert
 // Fall 5
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
+                         bool start_value, bool on_value, bool is_state, uint8_t hw_pin1, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                          const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword) {
   set_hw_pin(hw_pin1);                    
   pinMode(hw_pin1, OUTPUT);
   // Imitialisierung über  Fall 4
-  begin(html_place, label, mqtt_name, keyword, start_value, on_value, slider_val, slider_max_val, slider_no,
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value, is_state, slider_val, slider_max_val, slider_no,
         slider_label, slider_mqtt_name, slider_keyword);
 }
 
 // Startet als Schalter mit Regler ohne HW Bezug
 // Fall 4
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
+                         bool start_value, bool on_value, bool is_state, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                          const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword) {
   obj_slider_used = true;
   obj_slider_val = slider_val;
@@ -35,16 +35,16 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   obj_slider_mqtt_name = slider_mqtt_name;
   obj_slider_keyword = slider_keyword;
   // Initialisierung über Fall 1
-  begin(html_place, label, mqtt_name, keyword, start_value, on_value);
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value, is_state);
 }
 
 // Startet als Schalter der zwei HW-Pins steuert
 // Fall 3
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         bool start_value, bool on_value, uint8_t hw_pin1, uint8_t hw_pin2) {
+                         bool start_value, bool on_value, bool is_state, uint8_t hw_pin1, uint8_t hw_pin2) {
   set_hw_pin(hw_pin1,hw_pin2);
   // Initialisierung über Fall 2
-  begin(html_place, label, mqtt_name, keyword, start_value, on_value, hw_pin1);
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value, is_state, hw_pin1);
   obj_hw_pin2_used = true;
   pinMode(hw_pin2, OUTPUT);
 }
@@ -52,17 +52,17 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
 // Startet als Schalter der einen HW-Pin steuert
 // Fall 2
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name,  const char* keyword,
-                         bool start_value, bool on_value, uint8_t hw_pin1) {
+                         bool start_value, bool on_value, bool is_state, uint8_t hw_pin1) {
   set_hw_pin(hw_pin1);                    
   pinMode(hw_pin1, OUTPUT);
   // Initialisierung über Fall 1
-  begin(html_place, label, mqtt_name, keyword, start_value, on_value);
+  begin(html_place, label, mqtt_name, keyword, start_value, on_value, is_state);
 }
 
 // Startet als Schalter ohne HW-Pin
 // Fall 1
 void Switch_OnOff::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-                         bool start_value, bool on_value) {
+                         bool start_value, bool on_value, bool is_state) {
   if ( obj_slider_used ) {
     Base_Generic::begin(html_place, label, mqtt_name, keyword);
     obj_switch_mqtt_name = mqtt_name;
@@ -71,6 +71,7 @@ void Switch_OnOff::begin(const char* html_place, const char* label, const char* 
   }
   obj_on_value = on_value;
   obj_value = start_value;
+  obj_is_state = is_state;
   do_switch(start_value);
   if (obj_hw_pin1_used && obj_hw_pin2_used ) {
     obj_html_info = String("\"tab_head_")+obj_html_place+String("\":\"Switch on Off\"")+
@@ -140,11 +141,11 @@ void Switch_OnOff::do_switch(bool state) {
   html_refresh();
   write2log(LOG_MODULE,1,obj_html_stat.c_str());
 
-  obj_mqtt_stat = String("\"")+obj_switch_mqtt_name+String("\":\"");
+  obj_mqtt_stat = String("\"")+obj_switch_mqtt_name+String("\":");
   if (state) {
-    obj_mqtt_stat += String("Ein\"");
+    obj_mqtt_stat += String("1");
   } else {
-    obj_mqtt_stat += String("Aus\"");
+    obj_mqtt_stat += String("0");
   }
   if (obj_slider_used) {
     obj_mqtt_stat += String(",\"") + obj_slider_mqtt_name + String("\":") + String(obj_slider_val);

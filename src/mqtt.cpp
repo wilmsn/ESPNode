@@ -51,6 +51,15 @@ void reconnect_mqtt() {
   }
 }
 
+void send_mqtt_dev_state() {
+#ifdef MODULE1
+  if (module1.obj_is_state) {
+    mqttClient.publish(mk_topic(MQTT_STATUS, "state"), String(module1.obj_value?"1":"0").c_str());
+    write2log(LOG_MQTT,2, mqtt_topic.c_str(), String(module1.obj_value?"1":"0").c_str());
+  }
+#endif
+
+}
 
 void send_mqtt_stat() {
   String tmpstr = "{";
@@ -75,6 +84,7 @@ void send_mqtt_stat() {
   tmpstr += "}";
   mqttClient.publish(mk_topic(MQTT_STATUS, "stat"), tmpstr.c_str());
   write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
+  send_mqtt_dev_state();
 }
 
 void send_mqtt_tele() {
@@ -260,6 +270,8 @@ void callback_mqtt(char* topic, byte* payload, unsigned int length) {
     }
     // Free the memory
     free(cmd);
+    // Send new device state
+    send_mqtt_dev_state();
   }
 }
 

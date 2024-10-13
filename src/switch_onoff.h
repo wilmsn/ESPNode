@@ -28,31 +28,34 @@ public:
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value);
+               bool start_value, bool on_value, bool is_state);
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin
     /// @param html_place Der Einbauort in der Webseite
     /// @param label Ein Bezeichner für diesen Schalter
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
-    /// @param hw_pin Der Hardware Pin
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
+    /// @param hw_pin Der Hardware Pin
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t hw_pin);
+               bool start_value, bool on_value, bool is_state, uint8_t hw_pin);
 
     /// @brief Die Initialisierung des Schalters für zwei HW-Pins
     /// @param html_place Der Einbauort in der Webseite
     /// @param label Ein Bezeichner für diesen Schalter
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
-    /// @param hw_pin1 Der erste Hardware Pin
-    /// @param hw_pin2 Der zweite Hardware Pin
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
+    /// @param hw_pin1 Der erste Hardware Pin
+    /// @param hw_pin2 Der zweite Hardware Pin
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t hw_pin1, uint8_t hw_pin2);
+               bool start_value, bool on_value, bool is_state, uint8_t hw_pin1, uint8_t hw_pin2);
 
     /// @brief Die Initialisierung des Schalters mit Regler ohne HW-Pin
     /// @param html_place Der Einbauort in der Webseite
@@ -61,6 +64,7 @@ public:
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
     /// @param slider_max_val Der maximale Wert des Schiebereglers (maximal zulässig: 255)
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
@@ -68,7 +72,7 @@ public:
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     /// @param slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
+               bool start_value, bool on_value, bool is_state, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword);
 
     /// @brief Die Initialisierung des Schalters für einen HW-Pin und PWM Steuerung
@@ -79,6 +83,7 @@ public:
     /// @param hw_pin Der Hardware Pin
     /// @param start_value Die initiale Schaltposition des Schalters
     /// @param on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
     /// @param slider_val Der Wert des Schiebereglers zum Programmstart
     /// @param slider_max_val Der maximale Wert des Schiebereglers (maximal zulässig: 255)
     /// @param slider_no Die Nummer des Einbauortes des Schiebereglers
@@ -86,7 +91,7 @@ public:
     /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
     /// @param slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
+               bool start_value, bool on_value, bool is_state, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword);
 
     /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "obj_keyword" übereinstimmt.
@@ -157,6 +162,8 @@ public:
     uint8_t obj_slider_max_val;
     /// @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
     uint8_t obj_slider_no;
+    /// @brief Flag der festlegt ob dieser Schalter den Status des Nodes darstellt (true) sonst (false)
+    bool       obj_is_state = false;
     /// @brief Flag das festlegt ob HW-Pin1 genutzt wird (true = wird genutzt)
     bool       obj_hw_pin1_used = false;
     /// @brief Flag das festlegt ob HW-Pin2 genutzt wird (true = wird genutzt)

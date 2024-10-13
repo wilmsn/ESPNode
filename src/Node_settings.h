@@ -32,10 +32,10 @@ RF24 Gateway:
 
 #define HOSTNAME                 "FlurNode"
 #define HOST_DISCRIPTION         "Der Node im Flur: Hintergrundbeleuchtung"
-#define MAGICNO                  480
+#define MAGICNO                  482
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur", 4);
@@ -114,10 +114,10 @@ RF24 Gateway:
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", false, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", false, true, false, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur",4);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur", 4);
 
 #define MQTT_CLIENT              "wohnzimmernode"
 #define MQTT_TOPICP2             "wohnzimmernode"
