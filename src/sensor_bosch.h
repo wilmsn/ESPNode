@@ -1,15 +1,16 @@
+#ifdef USE_SENSOR_BOSCH
 #ifndef _SENSOR_BOSCH_H_
 #define _SENSOR_BOSCH_H_
-#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_MODULE
 
-#include "sensor_generic.h"
+#include "base_generic.h"
 
 /// @brief Ein abgeleitetes Objekt für einen Bosch Sensor.\n 
 /// Benötigt: https://github.com/wilmsn/BMX_sensor als Gerätetreiber.\n 
 /// Das Objekt kann entweder für 2 Meßwerte (Temperatur und Luftdruck) beim BMP180/BMP280 \n
 /// oder für 3 Meßwerte (+ Luftfeuchte) beim BME280 initialisiert werden.\n 
 
-class Sensor_Bosch : public Sensor_Generic {
+class Sensor_Bosch : public Base_Generic {
 
 public:
     /// @brief Initialisierung für 2 Messwerte (inkl. Luftfeuchte)
@@ -36,11 +37,16 @@ public:
                const char* html_place2, const char* label2, const char* mqtt_name2,
                const char* html_place3, const char* label3, const char* mqtt_name3);
 
-    /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
-    void start_measure();
+    /// @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
+    /// @param now Die aktuelle Zeit in Unix Sekunden
+    void loop(time_t now);
 
 private:
 
+    /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
+    void start_measure(time_t now);
+    /// @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert1
+    String     obj_mqtt_name1;
     /// @brief Eine Beschriftung des zweiten Meßwertes für die Webseite. Wird sie nicht gesetzt, wird hier das Schlüsselwort genutzt. 
     String     obj_label2;
     /// @brief Der Einbauort des zweiten Meßwertes für diesen Sensor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
@@ -53,7 +59,12 @@ private:
     String     obj_html_place3;
     /// @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert3
     String     obj_mqtt_name3;
+    /// @brief Ein Flag ob die Messung gestartet wurde
+    bool       obj_measure_started = false;
+    /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
+    time_t     obj_measure_starttime = 0;
 
 };
 
+#endif
 #endif

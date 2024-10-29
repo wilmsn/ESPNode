@@ -12,26 +12,27 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
-#define ESP32SIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
-//#define NODESLIDER
-//#define NODEMATRIX
-//#define NODEGWTEST
-//#define WITTYNODE1
-//#define NODE_GASZAEHLER
+//#define WITTYNODE
+//#define NODE_AUDIO
+
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-//#define NODE_TEICH
-#define NODE_FLUR
+#define NODE_TEICH
+//#define NODE_FLUR
+//#define NODE_KUECHENRADIO
 //---------------------------
 
 #include "Node_settings.h"
 
-#define SWVERSION   "0.997"
+#define SWVERSION   "0.999 beta1"
 #define NTP_SERVER  "de.pool.ntp.org"
-#define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
+#define TZ_INFO     "CET-1CEST,M3.5.0/03,M10.5.0/03"
+//#define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
+//#define NTP_SERVER  "th.pool.ntp.org"
+//#define TZ_INFO     "WIB-7"
 // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
 // Hier werden die allgemeinen Parameter für den Einsatz festgelegt
@@ -51,24 +52,34 @@
 #define RF24GW_GW_UDP_PORTNO           7003
 #endif
 
+//Setting for Components
+#ifdef USE_AUDIO_MEDIA
+#define USE_SDCARD
+#endif
+
+//Set a default hostname
+#ifndef HOSTNAME
+#define HOSTNAME                       "ESPNode"
+#endif
+
 //Settings for Logging
-#ifndef LOG_WEB
-#define LOG_WEB                      false
+#ifndef DO_LOG_WEB
+#define DO_LOG_WEB                      false
 #endif
-#ifndef LOG_SENSOR
-#define LOG_SENSOR                   false
+#ifndef DO_LOG_MODULE
+#define DO_LOG_MODULE                   false
 #endif
-#ifndef LOG_SYS
-#define LOG_SYS                      false
+#ifndef DO_LOG_SYSTEM
+#define DO_LOG_SYSTEM                   false
 #endif
-#ifndef LOG_MQTT
-#define LOG_MQTT                     false
+#ifndef DO_LOG_MQTT
+#define DO_LOG_MQTT                     false
 #endif
-#ifndef LOG_RF24
-#define LOG_RF24                     false
+#ifndef DO_LOG_RF24
+#define DO_LOG_RF24                     false
 #endif
-#ifndef LOG_CRITICAL
-#define LOG_CRITICAL                 false
+#ifndef DO_LOG_CRITICAL
+#define DO_LOG_CRITICAL                 false
 #endif
 
 ///@brief Settings for mqtt topic
@@ -87,7 +98,7 @@
 /// Statusinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Messungen mit anschliessendem Versand der Daten über MQTT (falls aktiviert).
 /// In diesem Zeitinterval werden auch die Schalterzustände übertragen.
-#define STATINTERVAL                 300
+#define STATINTERVAL                 60  // 300
 
 /// Messinterval:
 /// Definiert den Abstand zwischen dem Start der Messung und dem gesicherten Vorliegen der Ergebnisse in Sekunden.
@@ -96,7 +107,7 @@
 /// Telemetrieinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Telemetrieübertragungen.
 /// Hierzu gehören: Serverdaten, Netzwerkdaten, ...
-#define TELEINTERVAL                 1200
+#define TELEINTERVAL                 300 // 1200
 
 /// Loop Time Alarm
 /// Definiert das Zeitintervall (in Millisekunden) für einen Loop Durchgang das nicht überschritten werden sollte.
@@ -195,14 +206,14 @@ typedef struct {
 #ifndef LOG_RF24
 #define  LOG_RF24      0
 #endif
-#ifndef LOG_SYS
-#define  LOG_SYS       1
+#ifndef LOG_SYSTEM
+#define  LOG_SYSTEM    1
 #endif
 #ifndef LOG_MQTT
 #define  LOG_MQTT      2
 #endif
-#ifndef LOG_SENSOR
-#define  LOG_SENSOR    3
+#ifndef LOG_MODULE
+#define  LOG_MODULE    3
 #endif
 #ifndef LOG_WEB
 #define  LOG_WEB       4
@@ -213,59 +224,6 @@ typedef struct {
 #ifndef LOG_DAYBREAK
 #define  LOG_DAYBREAK  6
 #endif
-
-extern void write2log(uint8_t kat, int count, ...);
-
-// Config für das Webradio
-// Definitions for ESP32 Board
-#ifdef CONFIG_ESP32
-//#warning "Settings for ESP32"
-// I2S Settings
-#define LRCLK 26
-#define BCLK 27
-#define DOUT 25
-// Rotary Encoder Settings
-#define ROTARY_ENCODER_A_PIN 32
-#define ROTARY_ENCODER_B_PIN 33
-#define ROTARY_ENCODER_BUTTON_PIN 4
-#define ROTARY_ENCODER_VCC_PIN -1
-//depending on your encoder - try 1,2 or 4 to get expected behaviour
-//#define ROTARY_ENCODER_STEPS 1
-//#define ROTARY_ENCODER_STEPS 2
-#define ROTARY_ENCODER_STEPS 4
-//TFT Settings
-#define GC9A01A_TFT_DC 5
-#define GC9A01A_TFT_CS 21
-#define ARC_SIGMENT_DEGREES 3
-#define ARC_WIDTH 5
-#endif
-
-#ifdef CONFIG_ESP32S3
-//#warning "Settings for ESP32-S3"
-#define I2S_DOUT     6
-#define I2S_BCLK     5
-#define I2S_LRC      4
-#define ROTARY_ENCODER_A_PIN      37
-#define ROTARY_ENCODER_B_PIN      36
-#define ROTARY_ENCODER_BUTTON_PIN 35
-#define ROTARY_ENCODER_VCC_PIN    -1
-#define ROTARY_ENCODER_STEPS      4
-#define LONG_PRESSED_AFTER_MS     1000
-#define SHORT_PRESSED_AFTER_MS    20
-// Display
-// SCL (Display) => SCK  12
-// SDA (Display) => MOSI 11
-#define GC9A01A_TFT_CS        10
-#define GC9A01A_TFT_DC        9
-#endif
-
-// Settings for Webradio-Stations definitions
-#define MAXSTATION            10
-#define STATION_NAME_LENGTH   30
-#define STATION_URL_LENGTH    128
-
-// Setting or the Levels of the Rotaryencoder
-#define MAXLEVEL              3
 
 
 #endif

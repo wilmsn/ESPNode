@@ -1,11 +1,8 @@
 #include "base_generic.h"
+#include "common.h"
 
 Base_Generic::Base_Generic(){
   obj_keyword = "";
-  obj_hw_pin1 = 0;
-  obj_hw_pin2 = 0;
-  obj_hw_pin1_used = false;
-  obj_hw_pin2_used = false;
 }
 
 void Base_Generic::begin(const char* html_place, const char* label) {
@@ -29,62 +26,50 @@ void Base_Generic::begin(const char* html_place, const char* label, const char* 
   obj_mqtt_name = mqtt_name;
 }
 
-void Base_Generic::set_label(const char* label) {
-  obj_label = label;
+void Base_Generic::loop(time_t now) {
 }
 
-void Base_Generic::set_keyword(const char* keyword) {
-  obj_keyword = keyword;
-}
-
-void Base_Generic::set_mqtt_name(const char* mqtt_name) {
-  obj_mqtt_name = mqtt_name;
-}
-
-void Base_Generic::set_hw_pin(uint8_t pin1) {
-  obj_hw_pin1 = pin1;
-  obj_hw_pin1_used = true;
-}
-
-void Base_Generic::set_hw_pin(uint8_t pin1, uint8_t pin2) {
-  obj_hw_pin1 = pin1;
-  obj_hw_pin1_used = true;
-  obj_hw_pin2 = pin2;
-  obj_hw_pin2_used = true;
+bool Base_Generic::set(const String& keyword, const String& value) {
+  return false;
 }
 
 bool Base_Generic::keyword_match(const String& keyword) {
   bool retval = false;
-  if ( keyword == obj_keyword || keyword == obj_html_place || keyword == obj_mqtt_name ) {
+  if ( keyword == obj_keyword || keyword == obj_html_place || keyword == obj_mqtt_name  || keyword == obj_label ) {
     retval = true;
   }
   return retval;
 }
 
-String& Base_Generic::mqtt_json_part(void) {
-  return obj_mqtt_json;
+void Base_Generic::html_create(String& tmpstr) {
+  tmpstr += obj_html_stat;
 }
 
-String& Base_Generic::html_stat_json(void) {
-  obj_changed = false;
-  return obj_html_stat_json;
+void Base_Generic::html_refresh() {
+  ws.textAll( String("{") + obj_html_stat + String("}") );
 }
 
-bool Base_Generic::changed() {
-  return obj_changed;
+void Base_Generic::html_info(String& tmpstr) {
+  tmpstr += obj_html_info;
 }
 
-void Base_Generic::loop() {
+String& Base_Generic::mqtt_name() {
+  return obj_mqtt_name;
 }
 
-void Base_Generic::html_create_json_part(String& json) {
-  json += " ";
+String& Base_Generic::mqtt_stat() {
+  obj_mqtt_stat_changed = false;
+  return obj_mqtt_stat;
 }
 
-String& Base_Generic::show_keyword() {
-  return obj_keyword;
+bool Base_Generic::mqtt_stat_changed() {
+  return obj_mqtt_stat_changed;
 }
 
-String& Base_Generic::show_label() {
-  return obj_label;
+bool Base_Generic::mqtt_has_info() {
+  return obj_mqtt_has_info;
+}
+
+String& Base_Generic::mqtt_info() {
+  return obj_mqtt_info;
 }

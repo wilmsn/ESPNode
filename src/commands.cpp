@@ -2,75 +2,52 @@
 #include "commands.h"
 
 void show_settings() {
-  cons_str = "{\"stat\":\"looptimealarm: ";
-  cons_str += loop_time_alarm;
-  cons_str += " ms\"}";
-  ws.textAll(cons_str);
+  String tmpstr;
+  tmpstr = String("{\"stat_1\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"");
+  tmpstr += ",\"stat_2\":\"ENDE\"}";
+  sendWsMessage(tmpstr,LOG_SYSTEM);
 }
 
-
 void console_help() {
-  cons_str = "{\"stat\":\"settings >>> Zeigt aktuelle Einstellungen\"}";
-  ws.textAll(cons_str);
-  cons_str = "{\"stat\":\"looptimealarm=<Maximalzeit in ms>\"}";
-  ws.textAll(cons_str);
-//  cons_str = "{\"stat\":\"help6\"}";
-//  ws.textAll(cons_str);
-//  cons_str = "{\"stat\":\"help7\"}";
-//  ws.textAll(cons_str);
+  String tmpstr;
+  tmpstr = String("{\"stat_1\":\"settings >>> Zeigt aktuelle Einstellungen\"") +
+           String(",\"stat_2\":\"looptimealarm=<Maximalzeit in ms>\"}");
+  sendWsMessage(tmpstr,LOG_SYSTEM);
 }
 
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
-  write2log(LOG_SYS,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
+  String tmpstr;
+  write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
-  cons_str = "{\"statclear\":1}";
-  ws.textAll(cons_str);
-#if defined(SWITCH1)
-  if ( switch1.set( cmd, value ) ) {
-    html_json = switch1.html_stat_json();
-    write2log(LOG_SENSOR,1,html_json.c_str());
-    ws.textAll(html_json);
+#if defined(MODULE1)
+  if ( module1.set( cmd, value ) ) {
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch1.show_mqtt_name()), switch1.show_value());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
-#if defined(SWITCH2)
-  if ( switch2.set( cmd, value ) ) {
-    html_json = switch2.html_stat_json();
-    write2log(LOG_SENSOR,1,html_json.c_str());
-    ws.textAll(html_json);
+#if defined(MODULE2)
+  if ( module2.set( cmd, value ) ) {
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch2.show_mqtt_name()), switch2.show_value());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
-#if defined(SWITCH3)
-  if ( switch3.set( cmd, value ) ) {
-    html_json = switch3.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
+#if defined(MODULE3)
+  if ( module3.set( cmd, value ) ) {
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch3.show_mqtt_name()), switch3.show_value());
-    do_send_mqtt_stat = true;
-#endif
   }
 #endif
-#if defined(SWITCH4)
-  if ( switch4.set( cmd, value ) ) {
-    html_json = switch4.html_stat_json();
-    write2log(log_sensor,1,html_json.c_str());
-    ws.textAll(html_json);
+#if defined(MODULE4)
+  if ( module4.set( cmd, value ) ) {
     cmd_valid = true;
-#if defined(MQTT)
-    mqttClient.publish(mk_topic(MQTT_STATUS, switch4.show_mqtt_name()), switch4.show_value());
+  }
 #endif
+#if defined(MODULE5)
+  if ( module5.set( cmd, value ) ) {
+    cmd_valid = true;
+  }
+#endif
+#if defined(MODULE6)
+  if ( module6.set( cmd, value ) ) {
+    cmd_valid = true;
   }
 #endif
 #if defined(MQTT)
@@ -202,11 +179,9 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.begin("settings",false);
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
-    ws.textAll("{\"statclear\":1}");
-    tmp_str = "{\"stat\":\"looptimealarm: set to ";
-    tmp_str += loop_time_alarm;
-    tmp_str += "\"}";
-    ws.textAll(tmp_str);
+    tmpstr = "{\"clear_stat\":1"; 
+    tmpstr += String(",\"stat\":\"looptimealarm: set to ") + String(loop_time_alarm) + String("\"}");
+    sendWsMessage(tmpstr,LOG_SYSTEM);
     cmd_valid = true;
     cmd_no++;
   }
@@ -230,13 +205,55 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_valid = true;
     cmd_no++;
   }
-  if ( cmd == "log_sensor" ) {
-    if ( do_log_sensor != ( value == "1" ) ) {
-      do_log_sensor = ( value == "1" );
+#ifdef ESP32
+  if ( cmd == "wifi_ssid1" ) {
+    if ( wifi_ssid1 != value ) {
       preferences.begin("settings",false);
-      preferences.putBool("do_log_sensor", do_log_sensor);
+      preferences.putString("wifi_ssid1", value);
       preferences.end();
-      write2log(LOG_SYS,2,"do_log_sensor:",do_log_sensor?"1":"0");
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "wifi_pass1" ) {
+    if ( wifi_pass1 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_pass1", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "wifi_ssid2" ) {
+    if ( wifi_ssid2 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_ssid2", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+  if ( cmd == "wifi_pass2" ) {
+    if ( wifi_pass2 != value ) {
+      preferences.begin("settings",false);
+      preferences.putString("wifi_pass2", value);
+      preferences.end();
+      rebootflag = true;
+    }
+    cmd_valid = true;
+    cmd_no++;
+  }
+#endif
+  if ( cmd == "log_module" ) {
+    if ( do_log_module != ( value == "1" ) ) {
+      do_log_module = ( value == "1" );
+      preferences.begin("settings",false);
+      preferences.putBool("do_log_module", do_log_module);
+      preferences.end();
+      write2log(LOG_SYSTEM,2,"do_log_module:",do_log_module?"1":"0");
     }
     cmd_valid = true;
     cmd_no++;
@@ -251,11 +268,11 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_valid = true;
     cmd_no++;
   }
-  if ( cmd == "log_sys" ) {
-    if ( do_log_sys != ( value == "1" ) ) {
-      do_log_sys = ( value == "1" );
+  if ( cmd == "log_system" ) {
+    if ( do_log_system != ( value == "1" ) ) {
+      do_log_system = ( value == "1" );
       preferences.begin("settings",false);
-      preferences.putBool("do_log_sys", do_log_sys);
+      preferences.putBool("do_log_system", do_log_system);
       preferences.end();
     }
     cmd_valid = true;
@@ -287,10 +304,8 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( ! cmd_valid ) {
-    tmp_str  = "{\"stat\":\"Ungültiges Komando:";
-    tmp_str += cmd;
-    tmp_str += "\"}";
-    ws.textAll(tmp_str);
+    tmpstr  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String(":") + value + String("\"}");
+    sendWsMessage(tmpstr,LOG_SYSTEM);
   }
 }
 

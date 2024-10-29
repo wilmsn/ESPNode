@@ -1,0 +1,20 @@
+Radio Kiepenkerl
+http://stream.lokalradio.nrw/4459m27
+Radio 21 NRW
+http://streams.radio21.de/nrw/mp3-192/web
+N-Joy
+http://icecast.ndr.de/ndr/njoy/live/mp3/128/stream.mp3
+SWR 3
+https://liveradio.swr.de/sw282p3/swr3/play.mp3
+FFH
+http://mp3.ffh.de/radioffh/hqlivestream-nordhessen.mp3
+Antenne Bayern
+http://stream.antenne.de/antenne/stream/mp3
+Antenne NRW
+http://stream.antenne.de/antenne-nrw/stream/mp3
+Antenne Coffee Music
+http://stream.antenne.de/coffee/stream/mp3
+Antenne Oldie
+http://stream.antenne.de/oldie-antenne/stream/mp3
+Antenne Rock
+http://stream.antenne.de/rockantenne-bayern/stream/mp3

@@ -237,9 +237,9 @@ label {
   background:#FFFF08;
   color:#111111;
 }
-/* Schieberegler */
+/* Schieberegler 
 input[type="range"]{
-    width: 85%;
+    width: 95%;
     -webkit-appearance: none;
     -moz-apperance: none;
     height: 5px;
@@ -250,7 +250,7 @@ input[type="range"]{
         color-stop(0, black),
         color-stop(0, gray)
     );
-}
+} */
 /* Die Schalter */
 .sw_button {
   border:2px solid black;
@@ -259,6 +259,8 @@ input[type="range"]{
   font-size:1.2rem;
   width:60px;
   height:60px;
+  color: white;
+  background-color:black;
 }
 /* Label für die Schalter */
 .sw_label {
@@ -299,4 +301,125 @@ input[type="range"]{
   height:60px;
   color: black; 
   background-color: yellow;
+}
+
+.audio_sw_div {
+  padding-top: 2%;
+  padding-bottom: 2%;
+  float: left;
+  text-align: center;
+  width: 33%;
+  height: 120px;
+}
+
+.slidecontainer {
+  width: 100%;
+}
+
+.slider {
+/*  -webkit-appearance: none;*/
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #A80329;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #A80329;
+  cursor: pointer;
+}
+
+.custom-select {
+  min-width: 350px;
+  position: relative;
+}
+
+.custom-select::before,
+.custom-select::after {
+  --size: 0.3rem;
+  position: absolute;
+  content: "";
+  right: 1rem;
+  pointer-events: none;
+}
+
+.custom-select::before {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-bottom: var(--size) solid black;
+  top: 40%;
+}
+
+.custom-select::after {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-top: var(--size) solid black;
+  top: 55%;
+}
+
+select {
+  appearance: none;
+  /* safari */
+  -webkit-appearance: none;
+  /* other styles for aesthetics */
+  width: 100%;
+  font-size: 1.15rem;
+  padding: 0.675em 6em 0.675em 1em;
+  background-color: #fff;
+  border: 1px solid #caced1;
+  border-radius: 0.25rem;
+  color: #000;
+  cursor: pointer;
+}
+
+/* Menu amimated*/
+.menu {
+/*  display: inline-block; */
+  cursor: pointer;
+  float: left;
+}
+
+.bar1, .bar2, .bar3 {
+  width: 35px;
+  height: 5px;
+  background-color: #333;
+  margin: 6px 0;
+  transition: 0.4s;
+}
+
+.change .bar1 {
+  transform: translate(0, 11px) rotate(-45deg);
+}
+
+.change .bar2 {opacity: 0;}
+
+.change .bar3 {
+  transform: translate(0, -11px) rotate(45deg);
+}
+/* ENDE Menu amimated*/
+
+.menu_text {
+  float: left;
+  text-align: center;
+  height: 20px;
+  width: 80%;
+  margin-top: 10px;
 }

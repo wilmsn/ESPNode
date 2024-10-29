@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <link rel='stylesheet' type='text/css' href='style.css' />
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.997 (12/2023)";
+var htmlversion = "0.999 beta1 (10/2024)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -21,16 +22,18 @@ var slider1name;
 var slider1label;
 var slider2val;
 var slider2name;
+var slider2label;
 var slider3val;
 var slider3name;
+var slider3label;
 var temp;
 var mqtt_active_old;
 var mqttserver_old;
 var mqttclient_old;
 var mqtttopicp2_old;
-var log_sensor_old;
+var log_module_old;
 var log_web_old;
-var log_sys_old;
+var log_system_old;
 var log_critical_old;
 var log_mqtt_old;
 var rf24hubname_old;
@@ -57,8 +60,8 @@ function initWebSocket() {
 
 function onOpen(event) {
     console.log('Connection opened');
+//    alert(JSON.stringify(event.data));
     const json = JSON.parse(event.data, function (key, val) {
-      console.log(key+" : "+val);
       prozessJS( key, val );
     });
 }
@@ -69,9 +72,21 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-   const json = JSON.parse(event.data, function (key, val) {
-      prozessJS( key, val );
-    });
+//  alert(JSON.stringify(event.data));
+  const json = JSON.parse(event.data, function (key, val) {
+    if (key.startsWith("audio_media_add_album") ) {
+      prozessJS( "audio_media_add_album", val);
+    } else
+    if (key.startsWith("stat") ) {
+      prozessJS( "stat", val);
+    } else
+    if (key.startsWith("tab_head") ) {
+      prozessJS( "tab_head", val);
+    } else
+    if (key.startsWith("tab_line") ) {
+      prozessJS( "tab_line", val);
+    } else prozessJS( key, val );
+  });
 }
 
 function onLoad(event) {
@@ -88,18 +103,30 @@ $(document).ready(function(){
   $("#titel2").hide();
   $("#rf24div").hide();
   $("#rf24log_div").hide();
-  $("#sens1div").hide();
-  $("#sens2div").hide();
-  $("#sens3div").hide();
-  $("#sens4div").hide();
+  $("#out1div").hide();
+  $("#out2div").hide();
+  $("#out3div").hide();
+  $("#out4div").hide();
   $("#sw1_div").hide();
   $("#sw2_div").hide();
   $("#sw3_div").hide();
   $("#sw4_div").hide();
-  $("#ledmatrix").hide();
   $("#slider1div").hide();
   $("#slider2div").hide();
   $("#slider3div").hide();
+  $("#ledmatrix").hide();
+  $("#audio_div").hide();
+  $("#audio_radio_txt").hide();
+  $("#audio_radio_but").hide();
+  $("#audio_media_txt").hide();
+  $("#audio_media_but").hide();
+  $("#audio_speak_txt").hide();
+  $("#audio_speak_but").hide();
+  $("#audio_radio_settings").hide();
+  $("#audio_media_settings").hide();
+  $("#audio_speak_settings").hide();
+  $("#audio_trebas").removeClass("change");
+  $("#audio_menu").removeClass("change");
   $('#rf24gw').click(function() {
     if (!$(this).is(':checked')) {
       $("#rf24gw_div").hide();
@@ -122,23 +149,6 @@ $(document).ready(function(){
       mqtt_active = 1;
     }
   });
-
-  $('#nwscan').on('click', function () {
-    $.getJSON( "wifiscan", function( data ) {
-    });
-    $("#wifinw2").html("Scanning ... please wait").show();
-    $("#wifinw1").hide();
-    window.setTimeout(function(){
-      $("#wifinw2").html("");
-      $.getJSON( "wifishow", function( data ) {
-        $.each( data, function( key, val ) {
-          $("#wifinw2").append(" "+val+"<br>");
-        });
-        $("#wifinw1").show();
-      });
-    }, 20000);
-  });
-
   $('#console_tab1').click(function () {
     show_tab1();
     $.get("/debugfile.txt", function(data) {
@@ -165,80 +175,46 @@ $(document).ready(function(){
     }
   });
 
-  $('#uploadmsg').html("Update von<br>Firmware oder Filesystem<br><br>Bitte Datei auswählen.");
+  $('#audio_radio_but').click(function () {
+//    alert("audio_radio click func");
+    do_cmd("audio_radio","1");
+  });
 
-  $('#fs_file').on('change', function () {
-    var file = this.files[0];
-    filesize = file.size;
-    if (filesize > 200000 && filesize < 512000) {
-      $('#uploadmsg').html("Firmware Image<br>ausgewählt.");
-      myurl = "update_fw";
-    } else {
-      if ( filesize >= 1024000 ) {
-        $('#uploadmsg').html("Filesystem Image<br>ausgewählt.");
-        myurl = "update_fs";
-      } else {
-        $('#uploadmsg').html("Fehler!<br>Datei: "+file.name+"<br>ist weder Firware noch Filesystem Image!");
-      }
-    }
+  $('#audio_radio_but').change(function () {
+    alert("audio_radio change func");
+    $("#audio_radio_sel").empty();
+    do_cmd("audio_radio_fill","1");
   });
-  $('#fs_update').on('click', function () {
-    if ( filesize == 0) {
-      $('#uploadmsg').html("No file selected");
-    } else { 
-      if ( filesize > 0 && filesize < 200000 ) {
-        $('#uploadmsg').html("File to small!<br>Not the right image?");
-      } else {
-        if (filesize > 200000 && filesize < 512000) {
-          $('#uploadmsg').html("Firmware update läuft<br>bitte warten!");
-          fileOK = true;
-        } else {
-          if ( filesize >= 1024000 ) {
-            $('#uploadmsg').html("Filesystem update läuft<br>bitte warten!");
-            fileOK = true;
-          } else {
-            $('#uploadmsg').html("File überprüfen!");
-          }
-        }
-      }
-    }
-    if (fileOK) {
-      $.ajax({
-        url: myurl,
-        type: 'POST',
-        // Form data
-        data: new FormData($('#fs_form')[0]),
-        // Tell jQuery not to process data or worry about content-type
-        // You *must* include these options!
-        cache: false,
-        contentType: false,
-        processData: false,
-        complete: function(){
-          $('#uploadmsg').html("Update durchgeführt!<br><br>Bitte warten bis das System neu gestartet wurde");
-          window.setTimeout(function(){
-              window.location.reload();
-          }, 15000);
-        },
-        // Custom XMLHttpRequest
-        xhr: function () {
-          var myXhr = $.ajaxSettings.xhr();
-          if (myXhr.upload) {
-            // For handling the progress of the upload
-            myXhr.upload.addEventListener('progress', function (e) {
-              if (e.lengthComputable) {
-                $('#fs_progress').attr({
-                  value: e.loaded,
-                  max: e.total,
-                });
-              }
-            }, false);
-          }
-          return myXhr;
-        }
-      });
-    }
+
+  $('#audio_radio_sel').click(function() {
+    $("#audio_radio_stn_name").val($('#audio_radio_sel option:selected').text());
+    $("#audio_radio_stn_url").val($('#audio_radio_sel option:selected').val());
+    do_cmd("audio_radio_set_stn",$('#audio_radio_sel option:selected').text());
   });
-});
+  $('#audio_media_but').click(function () {
+    do_cmd("audio_media","1");
+  });
+
+  $('#audio_speak_but').click(function () {
+    do_cmd("audio_speak","1");
+  });
+
+  $("#audio_vol").change(function() {
+    do_cmd("audio_vol",$(this).val());
+//    alert("audio_vol");
+  });
+
+  $("#audio_tre").change(function() {
+    do_cmd("audio_tre",$(this).val());
+//    alert("audio_tre");
+  });
+
+  $("#audio_bas").change(function() {
+    do_cmd("audio_bas",$(this).val());
+//    alert("audio_bas"+$(this).val());
+  });
+
+ });
 
 function show_tab1() {
   $("#console_tab1").removeClass("tab_passive").addClass("tab_active");
@@ -262,6 +238,7 @@ function show_tab3() {
 }
 
 function prozessJS( key, val ) {
+//alert(key + " : " + JSON.stringify(val));
   switch(key) {
 // Alle Seiten    
     case "titel1":
@@ -273,21 +250,21 @@ function prozessJS( key, val ) {
       $("#titel2").show();
     break;
 // Hauptseite 
-    case "sens1":
-      $("#sens1").html(val);
-      $("#sens1div").show();
+    case "out1":
+      $("#out1").html(val);
+      $("#out1div").show();
     break;
-    case "sens2":
-      $("#sens2").html(val);
-      $("#sens2div").show();
+    case "out2":
+      $("#out2").html(val);
+      $("#out2div").show();
     break;
-    case "sens3":
-      $("#sens3").html(val);
-      $("#sens3div").show();
+    case "out3":
+      $("#out3").html(val);
+      $("#out3div").show();
     break;
-    case "sens4":
-      $("#sens4").html(val);
-      $("#sens4div").show();
+    case "out4":
+      $("#out4").html(val);
+      $("#out4div").show();
     break;
     case "sw1":
       if ( val > 0.5 ) {
@@ -362,13 +339,10 @@ function prozessJS( key, val ) {
     case "slider1":
       $("#slider1div").show();
       $("#slider1").change(function() {
-        var mycmd = "/cmd?";
-        mycmd = mycmd + slider1name;
-        mycmd = mycmd + "=S:";
+        var mycmd = slider1name;
+        mycmd = mycmd + "=";
         mycmd = mycmd + $(this).val();
-        $.get(mycmd, function(data) {
-//          alert(data);
-        });
+        websocket.send(mycmd);
       });
     break;
     case "slider1name":
@@ -389,38 +363,50 @@ function prozessJS( key, val ) {
     case "slider2":
       $("#slider2div").show();
       $("#slider2").change(function() {
-        var mycmd = "/cmd?";
-        mycmd = mycmd + slider2name;
-        mycmd = mycmd + "=S:";
+        var mycmd = slider2name;
+        mycmd = mycmd + "=";
         mycmd = mycmd + $(this).val();
-        $.get(mycmd, function(data) {
-//          alert(data);
-        });
+        websocket.send(mycmd);
       });
     break;
     case "slider2name":
       slider2name = val;
     break;
     case "slider2label":
+      slider2label = val;
       $("#slider2label").html(val);
+    break;
+    case "slider2max":
+      $("#slider2").attr('max', val);
+    break;
+    case "slider2val":
+      slider2val = val;
+      $("#slider2").val(val);
+      $("#slider2label").html(slider2label+": "+slider2val);
     break;
     case "slider3":
       $("#slider3div").show();
       $("#slider3").change(function() {
-        var mycmd = "/cmd?";
-        mycmd = mycmd + slider3name;
-        mycmd = mycmd + "=S:";
+        var mycmd = slider3name;
+        mycmd = mycmd + "=";
         mycmd = mycmd + $(this).val();
-        $.get(mycmd, function(data) {
-//          alert(data);
-        });
+        websocket.send(mycmd);
       });
     break;
     case "slider3name":
       slider3name = val;
     break;
     case "slider3label":
+      slider3label = val;
       $("#slider3label").html(val);
+    break;
+    case "slider3max":
+      $("#slider3").attr('max', val);
+    break;
+    case "slider3val":
+      slider3val = val;
+      $("#slider3").val(val);
+      $("#slider3label").html(slider3label+": "+slider3val);
     break;
     case "matrix_x":
       ledmatrix_x = val;
@@ -449,7 +435,168 @@ function prozessJS( key, val ) {
       }
       $("#ledmatrix").show();
     break;
+// Ab hier Audiomodul    
+    case "audio_show":
+      $("#audio_div").show();
+    break;
+    case "audio_trebas_settings":
+      if ( val > 0.5 ) {
+        $("#audio_settings").show();
+      } else {
+        $("#audio_settings").hide();
+      }
+    break;
+    case "audio_settings":
+      if ( val > 0.5 ) {
+        $("#audio_settings").show();
+      } else {
+        $("#audio_settings").hide();
+      }
+    break;
+    case "audio_radio_show":
+      if ( val > 0.5 ) {
+        $("#audio_radio_txt").show();
+        $("#audio_radio_but").show();
+      }
+    break;
+    case "audio_radio":
+      audio_mediaswitch();
+      if ( val > 0.5 ) {
+        $("#audio_radio_but").css("color","black").css("background-color","yellow");
+        $("#audio_radio_but").html("ein");
+        $("#audio_radio_settings").show();
+      }
+    break;
+    case "audio_media_show":
+    // Zeigt den Mediaplayerbutton an wenn val = 1 sonst wird er ausgeblendet
+      if ( val > 0.5 ) {
+        $("#audio_media_txt").show();
+        $("#audio_media_but").show();
+      }
+    break;
+    case "audio_media":
+    // Schaltet den Mediaplayer ein
+      audio_mediaswitch();
+      if ( val > 0.5 ) {
+        $("#audio_media_but").css("color","black").css("background-color","yellow");
+        $("#audio_media_but").html("ein");
+        $("#audio_media_settings").show();
+        $("#audio_media_alben").html(" ");
+      }
+    break;
+    case "audio_media_active":
+    // Schaltet den Mediaplayer ein
+      if ( val > 0.5 ) {
+        $("#audio_media_but").css("color","black").css("background-color","yellow");
+        $("#audio_media_but").html("ein");
+        $("#audio_media_alben").html(" ");
+        $("#audio_trebas").removeClass("change");
+        $("#audio_menu").removeClass("change");
+        $("#audiomsg1div").hide();
+        $("#audiomsg2div").hide();
+        $("#audiomsg3div").hide();
+        $("#audiomsg4div").hide();
+        $("#audio_trebas_settings").hide();
+        $("#audio_settings").hide();
+        $("#audio_radio_settings").hide();
+        $("#audio_media_settings").show();
+        $("#audio_speak_settings").hide();
+      }
+    break;
+    case "audio_media_add_album":
+// Syntax: Typ: A=Album, T=Titel; Albumnummer; Titelnummer (0 bei Album); Titel
+//      $("#audio_media_alben").append("...");
+      const AlbumData = val.split("#");
+      if (AlbumData[0] == "A") {
+        $("#audio_media_alben").append("<img id='mp_album"+AlbumData[1]+"_play' src='play.png' height=#50px' width='50px'>"+
+                                   "<img id='mp_album"+AlbumData[1]+"_img' src='dir_close.png' height='50px' width='50px'>"+
+                                   "<div style='width: 200px;float: right;'>"+AlbumData[3]+"</div><br>"+
+                                   "<div id='mp_album"+AlbumData[1]+"'></div");
+        $("#mp_album"+AlbumData[1]).hide();
+        $("#mp_album"+AlbumData[1]+"_img").click(function() {
+          if ($("#mp_album"+AlbumData[1]).is(':hidden')) {
+            $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_open.png");
+            $("#mp_album"+AlbumData[1]).show();
+            $("#mp_album"+AlbumData[1]+"_play").attr("src","leer.png");
+//            alert("Now request Albumdata");
+            do_cmd("audio_media_get_album",AlbumData[1]);
+          } else {
+            $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_close.png");
+            $("#mp_album"+AlbumData[1]).hide();
+            $("#mp_album"+AlbumData[1]+"_play").attr("src","play.png");
+          }
+        });
+        $("#mp_album"+AlbumData[1]+"_play").click(function() {
+          //alert("Play_dir:"+AlbumData[1]);
+          do_cmd("audio_media_play_album",AlbumData[1]);
+        });
+        } else {
+        $("#mp_album"+AlbumData[1]).append("<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play' src='play.png' height='50px' width='50px'>"+
+                                  "<img src='leer.png' height='50px' width='50px'>"+
+                                  "<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_img' src='mp3file.png' height='50px' width='50px'>"+
+                                  "<div style='width: 150px;float: right;'>"+AlbumData[3]+"</div><br>");
+        $("#mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play").click(function() {
+          //alert("Play_dir:"+AlbumData[1]+" File:"+AlbumData[2]);
+          do_cmd("audio_media_play_song",AlbumData[1]+"#"+AlbumData[2]);
+        });
+      }
 
+    break;
+    case "audio_speak_show":
+      if ( val > 0.5 ) {
+        $("#audio_speak_txt").show();
+        $("#audio_speak_but").show();
+      }
+    break;
+    case "audio_speak":
+      audio_mediaswitch();
+      if ( val > 0.5 ) {
+        $("#audio_speak_but").css("color","black").css("background-color","yellow");
+        $("#audio_speak_but").html("ein");
+        $("#audio_speak_settings").show();
+      }
+    break;
+    case "audio_vol":
+      $("#audio_vol").val(val);
+    break;
+    case "audio_tre":
+      $("#audio_tre").val(val);
+    break;
+    case "audio_bas":
+      $("#audio_bas").val(val);
+    break;
+    case "audiomsg1":
+      $("#audiomsg1div").show();
+      $("#audiomsg1").html(val);
+    break;
+    case "audiomsg2":
+      $("#audiomsg2div").show();
+      $("#audiomsg2").html(val);
+    break;
+    case "audiomsg3":
+      $("#audiomsg3div").show();
+      $("#audiomsg3").html(val);
+    break;
+    case "audiomsg4":
+      $("#audiomsg4div").show();
+      $("#audiomsg4").html(val).css("fontSize", 10);
+    break;
+    case "audio_radio_empty":
+      $('#audio_radio_sel').empty();
+    break;
+    case "audio_radio_add_stn":
+      const valArray = val.split(";");
+      $('#audio_radio_sel').append($('<option>', {
+        value: valArray[0],
+        text: valArray[1]
+      }));
+    break;
+    case "audio_radio_stn_name":
+      $("#audio_radio_stn_name").val(val);
+    break;
+    case "audio_radio_stn_url":
+      $("#audio_radio_stn_url").val(val);
+    break;
     //Ab hier Konsole
     case "log":
       logs[logs.length]=val;
@@ -470,7 +617,7 @@ function prozessJS( key, val ) {
         $('#console').html(stats.join("\r\n"));
       }
     break;
-    case "statclear":
+    case "clear_stat":
       if ( tab_active == 3 ) {
         $('#console').html(" ");
       }
@@ -559,13 +706,13 @@ case "wifi_ssid":
       mqtttopicp2_old = val;
       $('#mqtttopicp2').val(val);
     break;
-    case "log_sensor":
+    case "log_module":
       if ( val == 1 ) {
-        log_sensor_old = true;
-        $('#log_sensor').prop('checked', true);
+        log_module_old = true;
+        $('#log_module').prop('checked', true);
       } else {
-        log_sensor_old = false;
-        $('#log_sensor').prop('checked', false);
+        log_module_old = false;
+        $('#log_module').prop('checked', false);
       }
     break;
     case "log_rf24":
@@ -588,20 +735,20 @@ case "wifi_ssid":
     break;
     case "log_web":
       if ( val == 1 ) {
-        log_webcmd_old = true;
+        log_web_old = true;
         $('#log_web').prop('checked', true);
       } else {
-        log_webcmd_old = false;
+        log_web_old = false;
         $('#log_web').prop('checked', false);
       }
     break;
-    case "log_sys":
+    case "log_system":
       if ( val == 1 ) {
-        log_sys_old = true;
-        $('#log_sys').prop('checked', true);
+        log_system_old = true;
+        $('#log_system').prop('checked', true);
       } else {
-        log_sys_old = false;
-        $('#log_sys').prop('checked', false);
+        log_system_old = false;
+        $('#log_system').prop('checked', false);
       }
     break;
     case "log_critical":
@@ -615,6 +762,9 @@ case "wifi_ssid":
     break;
 
 // Ab hier für Sysinfo
+    case "wifi_network":
+      $("#wifinw2").append(" "+val+"<br>");
+    break;
     case "Platform":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Host:</td></tr>"+
                        "<tr><td class='tab_left'> Platform: </td><td class='tab_right'>"+val+"</td></tr>");
@@ -664,7 +814,6 @@ case "wifi_ssid":
     case "UpTime":
       $("#Tab").append("<tr><td class='tab_left'> Uptime: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
-
     case "IP":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Network:</td></tr>"+
                        "<tr><td class='tab_left'> IP Address: </td><td class='tab_right'>"+val+"</td></tr>");
@@ -690,7 +839,6 @@ case "wifi_ssid":
     case "MAC":
       $("#Tab").append("<tr><td class='tab_left'> MAC Address: </td><td class='tab_right'>"+val+"</td></tr>");
     break;
-
     case "IdeVer":
       $("#Tab").append("<tr><td colspan=2 class='tab_head'>Build System:</td></tr>"+
                        "<tr><td class='tab_left'> IDE Version: </td><td class='tab_right'>"+val+"</td></tr>");
@@ -741,28 +889,33 @@ case "wifi_ssid":
     break;  
     case "sens-res":
       $("#Tab").append("<tr><td class='tab_left'> Resolution: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;  
-    case "sensorinfo1":
-      const sensordata1 = val.split("#");
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensoren:</td></tr>");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata1[0]+"</td><td class='tab_right'>"+sensordata1[1]+"</td></tr>");
-    break;  
-    case "sensorinfo2":
-      const sensordata2 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata2[0]+"</td><td class='tab_right'>"+sensordata2[1]+"</td></tr>");
-    break;  
-    case "sensorinfo3":
-      const sensordata3 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata3[0]+"</td><td class='tab_right'>"+sensordata3[1]+"</td></tr>");
-    break;  
-    case "sensorinfo4":
-      const sensordata4 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata4[0]+"</td><td class='tab_right'>"+sensordata4[1]+"</td></tr>");
-    break;  
-    case "sensorinfo5":
-      const sensordata5 = val.split("#");
-      $("#Tab").append("<tr><td class='tab_left'>"+sensordata5[0]+"</td><td class='tab_right'>"+sensordata5[1]+"</td></tr>");
-    break;  
+    break;
+    case "sdcard_enable":
+      if (val > 0.5) {
+        $("#Tab").append("<tr><td colspan=2 class='tab_head'>SD-Karte:</td></tr>");
+      }
+    break;
+    case "sdcard_size":
+      let n1 = val/1000/1000/1000;
+      $("#Tab").append("<tr><td class='tab_left'> Größe: </td><td class='tab_right'>"+n1.toFixed(2)+" GB</td></tr>");
+    break;
+    case "sdcard_used":
+      let n2 = val/1000/1000/1000;
+      $("#Tab").append("<tr><td class='tab_left'> Belegt: </td><td class='tab_right'>"+n2.toFixed(2)+" GB</td></tr>");
+    break;
+    case "tab_head":
+      $("#Tab tr:last").after("<tr><td colspan=2 class='tab_head'>"+val+"</td></tr>");
+    break;
+    case "tab_line":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
+    case "alert":
+      alert(val);
+    break;
+    default:
+//      alert("nicht zugeordnet "+ JSON.stringify(key) + " : " + JSON.stringify(val));
+    break; 
   }
 }
 
@@ -770,7 +923,6 @@ function hide_all() {
   $("#page_main").hide();
   $("#page_console").hide();
   $("#page_settings").hide();
-  $("#page_update").hide();
   $("#page_sysinfo").hide();
   $("#page_logfile").hide();
   $("#but_main").hide();
@@ -822,208 +974,219 @@ function switch_update() {
 
 function switch_sysinfo() {
   hide_all();
+  $("#Tab").html("<tr><td colspan=2 class=\"tab_head\">WiFi Networks</td></tr><tr><td colspan=2><div id=\"wifinw2\"></div></td></tr><tr><td colspan=2 class=\"tab_right\"><div id=\"wifinw1\"><button id=\"wifiscan\" class=\"button bg_gr\">Scan</button></div></td></tr>");
+  $('#wifiscan').on('click', function () {
+//    alert("Wifi Scan");
+    do_cmd("wifiscan","1");
+    $("#wifinw2").html("Scanning ... please wait").show();
+    $("#wifinw1").hide();
+    window.setTimeout(function(){
+      $("#wifinw2").html("");
+      $("#wifinw1").show();
+      do_cmd("wifishow","1");
+    }, 20000);
+  });
   $("#page_sysinfo").show();
   $("#but_main").show();
   $("#but_cons").show();
   $("#but_sett").show();
-  $.getJSON( "sysinfo1", function( data ) {
-    $.each( data, function( key, val ) {
-      prozessJS( key, val );
-    });
-  });
-  $.getJSON( "sysinfo2", function( data ) {
-    $.each( data, function( key, val ) {
-      prozessJS( key, val );
-    });
-  });
-  $.getJSON( "sysinfo3", function( data ) {
-    $.each( data, function( key, val ) {
-      prozessJS( key, val );
-    });
-  });
+  do_cmd("ws_sysinfo", "1");
 }
 
-
-
-
 function store() {
-  var mycmd = "/cmd?";
   if ( $("#rf24gw").is(":checked") ) {
     if ( ! rf24gw_active_old ) {
-      mycmd = mycmd + "rf24gw_active=1";
+      do_cmd("rf24gw_active", "1");
       rf24gw_active_old = true;
     }
     if ( rf24hubname_old != $("#rf24hubname").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24hubname=";
-      mycmd = mycmd + $("#rf24hubname").val();
+      do_cmd("rf24hubname", $("#rf24hubname").val());
       rf24hubname_old = $("#rf24hubname").val();
     }
     if ( rf24hubport_old != $("#rf24hubport").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24hubport=";
-      mycmd = mycmd + $("#rf24hubport").val();
+      do_cmd("rf24hubport", $("#rf24hubport").val());
       rf24hubport_old = $("#rf24hubport").val();
     }
     if ( rf24gwport_old != $("#rf24gwport").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24gwport=";
-      mycmd = mycmd + $("#rf24gwport").val();
+      do_cmd("rf24gwport", $("#rf24gwport").val());
       rf24gwport_old = $("#rf24gwport").val();
     }
     if ( rf24gwno_old != $("#rf24gwno").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24gwno=";
-      mycmd = mycmd + $("#rf24gwno").val();
+      do_cmd("rf24gwno", $("#rf24gwno").val());
       rf24gwno_old = $("#rf24gwno").val();
     }
   } else {
-    if (   rf24gw_active_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "rf24gw_active=0";
+    if ( rf24gw_active_old ) {
+      do_cmd("rf24gw_active", "0");
     }
     rf24gw_active_old = false;
   }
   if ( $("#mqtt").is(":checked") ) {
     if ( ! mqtt_active_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqtt_active=1";
+      do_cmd("mqtt_active", "1");
     }
     if ( mqttclient_old != $("#mqttclient").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqttclient=";
-      mycmd = mycmd + $("#mqttclient").val();
+      do_cmd("mqttclient", $("#mqttclient").val());
       mqttclient_old = $("#mqttclient").val();
     }
     if ( mqttserver_old != $("#mqttserver").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqttserver=";
-      mycmd = mycmd + $("#mqttserver").val();
+      do_cmd("mqttserver", $("#mqttserver").val());
       mqttserver_old = $("#mqttserver").val();
     }
     if ( mqtttopicp2_old != $("#mqtttopicp2").val() ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqtttopicp2=";  
-      mycmd = mycmd + $("#mqtttopicp2").val();
+      do_cmd("mqtttopic2", $("#mqtttopic2").val());
       mqtttopicp2_old = $("#mqtttopicp2").val();
     }
   } else {
     if ( mqtt_active_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "mqtt_active=0";
+      do_cmd("mqtt_active", "0");
     }
   }
   if ( $("#log_rf24").is(":checked") ) {
     if ( ! log_rf24_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_rf24=1";
+      do_cmd("log_rf24", "1");
       log_rf24_old = true;
     }
   } else {
-    if (   log_rf24_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_rf24=0";
+    if ( log_rf24_old ) {
+      do_cmd("log_rf24", "0");
       log_rf24_old = false;
     }
   }
-  if ( $("#log_sensor").is(":checked") ) {
-    if ( ! log_sensor_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sensor=1";
-      log_sensor_old = true;
+  if ( $("#log_module").is(":checked") ) {
+    if ( ! log_module_old ) {
+      do_cmd("log_module", "1");
+      log_module_old = true;
     }
   } else {
-    if (   log_sensor_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sensor=0";
-      log_sensor_old = false;
+    if ( log_module_old ) {
+      do_cmd("log_module", "0");
+      log_module_old = false;
     }
   }
   if ( $("#log_mqtt").is(":checked") ) {
     if ( ! log_mqtt_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_mqtt=1";
+      do_cmd("log_mqtt", "1");
       log_mqtt_old = true;
     }
   } else {
     if (   log_mqtt_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_mqtt=0";
+      do_cmd("log_mqtt", "0");
       log_mqtt_old = flase;
     }
   }
   if ( $("#log_web").is(":checked") ) {
-    if ( ! log_webcmd_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_web=1";
+    if ( ! log_web_old ) {
+      do_cmd("log_web", "1");
       log_web_old = true;
     }
   } else {
     if (   log_web_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_web=0";
+      do_cmd("log_web", "0");
       log_web_old = false;
     }
   }
-  if ( $("#log_sys").is(":checked") ) {
-    if ( ! log_sys_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sys=1";
-      log_sys_old = true;
+  if ( $("#log_system").is(":checked") ) {
+    if ( ! log_system_old ) {
+      do_cmd("log_system", "1");
+      log_system_old = true;
     }
   } else {
-    if (   log_sys_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_sys=0";
-      log_sys_old = false;
+    if (   log_system_old ) {
+      do_cmd("log_system", "0");
+      log_system_old = false;
     }
   }
   if ( $("#log_critical").is(":checked") ) {
     if ( ! log_critical_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_critical=1";
+      do_cmd("log_critical", "1");
       log_critical_old = true;
     }
   } else {
     if (   log_critical_old ) {
-      if (mycmd.length > 7) mycmd = mycmd + "&";
-      mycmd = mycmd + "log_critical=0";
+      do_cmd("log_critical", "0");
       log_critical_old = false;
     }
   }
   if ( $("#wifi_ssid").val() != wifi_ssid_old && $("#wifi_ssid").val().length > 0 ) {
-    if (mycmd.length > 7) mycmd = mycmd + "&";
-    mycmd = mycmd + "wifi_ssid=" + $("#wifi_ssid").val();
+    do_cmd("wifi_ssid", $("#wifi_ssid").val());
   }
   if ( $("#wifi_pass").val() != wifi_pass_old && $("#wifi_pass").val().length > 0 ) {
-    if (mycmd.length > 7) mycmd = mycmd + "&";
-    mycmd = mycmd + "wifi_pass=" + $("#wifi_pass").val();
+    do_cmd("wifi_pass", $("#wifi_pass").val());
   }
-  alert(mycmd);
-  $.get(mycmd, function(data) {
-    alert(data);
-  });
+  alert("Werte gespeichert");
 }
 
 function do_restart() {
   var r = confirm("Wirklich neustarten?");
   if (r == true) {
-    $.get("/cmd?restart", function(data) {
-       alert(data);
-       setTimeout(function(){
-         window.location.reload();
-       }, 15000);
-    });
+    do_cmd("restart", "1");
+    setTimeout(function(){
+      window.location.reload();
+    }, 15000);
   }
 }
 
 function dellog() {
   var r = confirm("Logfile löschen?");
   if (r == true) {
-    $.get("/cmd?dellogfile", function(data) {
-      alert(data);
-    });
+    do_cmd("dellogfile", "1");
   }
+}
+
+// Ab hier Funktionen fuer das Audio Modul
+function audio_trebas() {
+  if ($("#audio_trebas").hasClass("change")) {
+    $("#audio_trebas").removeClass("change");
+    $("#audio_trebas_settings").hide();
+  } else {
+    $("#audio_trebas").addClass("change");
+    $("#audio_trebas_settings").show();
+  }
+}
+
+function audio_menu() {
+  if ($("#audio_menu").hasClass("change")) {
+    $("#audio_menu").removeClass("change");
+    $("#audio_settings").hide();
+  } else {
+    $("#audio_menu").addClass("change");
+    $("#audio_settings").show();
+    $("#audio_media_alben").html(" ");
+    do_cmd("allAlbum2Web","1");
+  }
+}
+
+function audio_mediaswitch() {
+  $("#audio_trebas").removeClass("change");
+  $("#audio_menu").removeClass("change");
+  $("#audiomsg1div").hide();
+  $("#audiomsg2div").hide();
+  $("#audiomsg3div").hide();
+  $("#audiomsg4div").hide();
+  $("#audio_trebas_settings").hide();
+  $("#audio_settings").hide();
+  $("#audio_radio_settings").hide();
+  $("#audio_media_settings").hide();
+  $("#audio_speak_settings").hide();
+  $("#audio_radio_but").css("color","white").css("background-color","black");
+  $("#audio_radio_but").html("aus");
+  $("#audio_media_but").css("color","white").css("background-color","black");
+  $("#audio_media_but").html("aus");
+  $("#audio_speak_but").css("color","white").css("background-color","black");
+  $("#audio_speak_but").html("aus");
+}
+
+// Ab hier Funktionen fuer das Audio Modul Radio
+
+function audio_radio_stn_update() {
+  do_cmd("audio_radio_save_stn_name",$("#audio_radio_stn_name").val());
+  do_cmd("audio_radio_save_stn_url",$("#audio_radio_stn_url").val());
+  $('#audio_radio_sel')
+    .find('option')
+    .remove()
+    .end()
+  ;
 }
 
 </script>
@@ -1042,20 +1205,20 @@ function dellog() {
       <div id="rf24" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens1div">
-      <div id="sens1" class="msg_div"></div>
+    <div id="out1div">
+      <div id="out1" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens2div">
-      <div id="sens2" class="msg_div"></div>
+    <div id="out2div">
+      <div id="out2" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens3div">
-      <div id="sens3" class="msg_div"></div>
+    <div id="out3div">
+      <div id="out3" class="msg_div"></div>
       <hr>
     </div>
-    <div id="sens4div">
-      <div id="sens4" class="msg_div"></div>
+    <div id="out4div">
+      <div id="out4" class="msg_div"></div>
       <hr>
     </div>
     <div id="sw1_div" class="sw_div">
@@ -1094,26 +1257,115 @@ function dellog() {
         </button>
       </div>
     </div>
-    <div id="slider1div">
+    <div id="slider1div" class="slidecontainer">
       <label for='slider1' id='slider1label'></label>
-      <input type='range' name='slider1' id='slider1' min='0' max='255' value='0'>	
+      <input type='range' name='slider1' class="slider" id='slider1' min='0' max='255' value='0'>	
     </div>
-    <div id="slider2div">
+    <div id="slider2div" class="slidecontainer">
       <label for='slider2' id='slider2label'></label>
-      <input type='range' name='slider2' id='slider2' min='0' max='255' value='0'>	
+      <input type='range' name='slider2' class="slider" id='slider2' min='0' max='255' value='0'>	
     </div>
-    <div id="slider3div">
+    <div id="slider3div" class="slidecontainer">
       <label for='slider3' id='slider3label'></label>
-      <input type='range' name='slider3' id='slider3' min='0' max='255' value='0'>	
+      <input type='range' name='slider3' class="slider" id='slider3' min='0' max='255' value='0'>	
     </div>
     <div id="ledmatrix" class="ledmatrix_div">
 	    <div style="width:10px;"></div>
 	    <div id="display" class="display"></div>
     </div>
+    <div id="audio_div" class="audio_div">
+      <div id="audiomsg1div">
+        <div id="audiomsg1" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg2div">
+        <div id="audiomsg2" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg3div">
+        <div id="audiomsg3" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg4div">
+        <div id="audiomsg4" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audio_radio" class="audio_sw_div">
+        <p id="audio_radio_txt">Radio</p>
+        <button id='audio_radio_but' class='sw_button'>
+          aus
+        </button>
+      </div>
+      <div id="audio_media" class="audio_sw_div">
+        <p id="audio_media_txt">Media</p>
+        <button id='audio_media_but' class='sw_button'>
+          aus
+        </button>
+      </div>
+      <div id="audio_speak" class="audio_sw_div">
+        <p id="audio_speak_txt">BT</p>
+        <button id='audio_speak_but' class='sw_button'>
+          aus
+        </button>
+      </div>
+      <hr>
+      <div class="slidecontainer">
+      <p style="margin-top: 2cm;">Lautstärke</p>
+      <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
+      </div>
+      <div style="height: 50px;">
+        <div id="audio_trebas" class="menu" onclick="audio_trebas()">
+          <div class="bar1"></div>
+          <div class="bar2"></div>
+          <div class="bar3"></div>
+        </div>
+        <div class="menu_text">Höhen und Bässe</div>
+      </div>
+      <div id="audio_trebas_settings">
+        <div class="slidecontainer">
+          <p>Bass</p>
+          <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
+        </div>
+        <div class="slidecontainer">
+          <p>Höhen</p>
+          <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
+        </div>
+      </div>
+      <div style="height: 50px;">
+        <div id="audio_menu" class="menu" onclick="audio_menu()">
+          <div class="bar1"></div>
+          <div class="bar2"></div>
+          <div class="bar3"></div>
+        </div>
+        <div class="menu_text">Erweiterte Einstellungen</div>
+      </div>
+      <div id="audio_settings">
+        <div id="audio_radio_settings">
+          <p id="audio_radio_sel_div">Senderwahl:</p>
+          <select id="audio_radio_sel" class="custom-select" size="5"></select>
+          <table><tr>
+            <td>Sendername:</td>
+            <td><input name="Sendername" id="audio_radio_stn_name" size="30" maxlength="30"></td>
+            </tr><tr>
+            <td>URL:</td>
+            <td><input name="SenderURL" id="audio_radio_stn_url" size="30" maxlength="125"></td></tr>
+          </table>  
+          <button id="audio_radio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
+        </div>
+        <div id="audio_media_settings">
+          <div id="audio_media_alben">
+            Alben DIV
+          </div>
+        </div>
+        <div id="audio_speak_settings">
+          Speaker Menu TBD.
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="page_console" class="div_content">
-    <div id="console_tab1">Debugfile</div>
+    <div id="console_tab1">Logfile</div>
     <div id="console_tab2">Logs</div>
     <div id="console_tab3">Meldungen</div>
     <textarea readonly id='console' cols='340' wrap='off'></textarea>
@@ -1181,35 +1433,22 @@ function dellog() {
         <input type="checkbox" name="log_rf24" id="log_rf24" class="checkbox">
         <label for="log_rf24" id="log_rf24l">RF24</label><br>
       </div>
-      <input type="checkbox" name="log_sensor" id="log_sensor" class="checkbox">
-      <label for="log_sensor">Sensor</label><br>
+      <input type="checkbox" name="log_module" id="log_module" class="checkbox">
+      <label for="log_module">Modul</label><br>
       <div id="mqttlog_div">
         <input type="checkbox" name="log_mqtt" id="log_mqtt" class="checkbox">
         <label for="log_mqtt">MQTT</label><br>
       </div>
       <input type="checkbox" name="log_web" id="log_web" class="checkbox">
       <label for="log_web">Web / HTML</label><br>
-      <input type="checkbox" name="log_sys" id="log_sys" class="checkbox">
-      <label for="log_sys">System</label><br>
+      <input type="checkbox" name="log_system" id="log_system" class="checkbox">
+      <label for="log_system">System</label><br>
     </fieldset>
     
   </div>
 
-  <div id="page_update" class="div_content">
-    <div class="info"><button class="i_button">i</button></div>
-    <div class="uploadmsg" id="uploadmsg"></div>
-    <form enctype="multipart/form-data" id="fs_form">
-          <input name="file" type="file" id="fs_file" accept=".bin" style="width: 100%;font-size: medium;"/>
-          <progress style="width: 100%;" id="fs_progress"></progress>
-          <input type="button" value="Upload" id="fs_update" class="button bg_rt"/>
-    </form>
-  </div>
-
   <div id="page_sysinfo" class="div_content">
     <table style='width:100%;'' id='Tab'>
-      <tr><td colspan=2 class="tab_head">WiFi Networks</td></tr>
-      <tr><td colspan=2><div id="wifinw2"></div></td></tr>
-      <tr><td colspan=2 class="tab_right"><div id="wifinw1"><button id='nwscan' class='button bg_gr'>Scan</button></div></td></tr>
     </table> 
 </div>
 

@@ -1,17 +1,17 @@
 #include "config.h"
-
-// Das Sybol _ACTOR_LEDMATRIX_H_ wird gesetzt wenn die Headerdatei "actor_ledmatrix.h" in der 
-// Node-Konfiguration ("Node_settings.h") aufgerufen wurde.
-// Problem: Wird das Modul actor_ledmatrix kompiliert ist I2C (TWI) nicht mehr nutzbar!!!!!
-#ifdef _ACTOR_LEDMATRIX_H_
+#ifdef USE_ACTOR_LEDMATRIX
+#include "common.h"
+#include "actor_ledmatrix.h"
 
 LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
 
 void Actor_LEDMatrix::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-                            bool start_value, bool on_value, unsigned int slider_val, uint8_t slider_no,
-                            const char* mqtt_line , const char* mqtt_graph, const char* slider_mqtt_name) {
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, start_value,
-                      on_value, slider_val, slider_no, slider_mqtt_name);
+               bool start_value, bool on_value, bool is_state, uint8_t slider_val, uint8_t slider_no, 
+               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword,
+               const char* mqtt_line, const char* mqtt_graph) {
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, 
+                      start_value, on_value, is_state, slider_val, 15, slider_no, 
+                      slider_label, slider_mqtt_name, slider_keyword);
   obj_mqtt_line = mqtt_line;
   obj_mqtt_graph = mqtt_graph;
   matrix.begin();
@@ -33,12 +33,18 @@ void Actor_LEDMatrix::begin(const char* html_place, const char* label, const cha
   } else {
     matrix.off();
   }
+
+  obj_html_info = String("\"tab_head_ldr\":\"Matrixdislay\"") +
+                  String(",\"tab_line1_matrix\":\"CLK:#GPIO: ") + String(LEDMATRIX_CLK) + String("\"")+
+                  String(",\"tab_line2_matrix\":\"DIN:#GPIO: ") + String(LEDMATRIX_DIN) + String("\"")+
+                  String(",\"tab_line3_matrix\":\"CS: #GPIO: ") + String(LEDMATRIX_CS) + String("\"")+
+                  String(",\"tab_line4_matrix\":\"X Devices:# ") + String(LEDMATRIX_DEVICES_X) + String("\"")+
+                  String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
+  obj_mqtt_has_info = true; 
 }
 
 bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
   bool retval = false;
-  // Wird true gesetzt wenn das JSON von einem untergeordnetem Objekt (hier Switch_OnOff) gefüllt wird
-  bool json_extern = false;
   if (Switch_OnOff::set(keyword, value)) {
     if (get_switch_val()) {
         matrix.on();
@@ -47,23 +53,31 @@ bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
     }
     matrix.setIntensity(get_slider_val());
     retval = true;
-    json_extern = true;
+    html_refresh();
+  } else {
+    if ( keyword == obj_mqtt_line ) {
+      print_line(value.c_str());
+      graph_change_time = now;
+      retval = true;
+    }
+    if ( keyword == obj_mqtt_graph ) {
+      print_graph(value.c_str());
+      graph_change_time = now;
+      retval = true;
+    }
   }
-  if ( keyword == obj_mqtt_line ) {
-    print_line(value.c_str());
-    retval = true;
-  }
-  if ( keyword == obj_mqtt_graph ) {
-    print_graph(value.c_str());
-    retval = true;
-  }
-  if ( ! json_extern ) {
-    obj_html_stat_json = "{ \"matrix\":\"";
-    getMatrixFB(obj_html_stat_json);
-    obj_html_stat_json += "\"}";
-  }
-  matrix.display();
   return retval;
+}
+
+void Actor_LEDMatrix::loop(time_t now) {
+  if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
+    obj_html_stat = "\"matrix\":\"";
+    getMatrixFB(obj_html_stat);
+    obj_html_stat += "\"";
+    matrix.display();
+    html_refresh();
+    graph_change_time = 0;
+  }
 }
 
 void Actor_LEDMatrix::print_line(const char* rohtext ) {
@@ -120,17 +134,17 @@ void Actor_LEDMatrix::print_line(const char* rohtext ) {
     matrix.setCursor(cursor_x,cursor_y);
   }
   matrix.print(linetext); 
-  matrix.display();
+//  matrix.display();
 }
 
 void Actor_LEDMatrix::print_graph(const char* rohtext ) {
-    unsigned int length = strlen(rohtext);
-    for (unsigned int pos = 0; pos + 5 <= length; pos += 5) {
-        unsigned int cur_x = (rohtext[pos] - '0') * 10 + (rohtext[pos + 1] - '0');
-        unsigned int cur_y = (rohtext[pos + 2] - '0') * 10 + (rohtext[pos + 3] - '0');
-        matrix.setPixel(cur_x, cur_y, rohtext[pos + 4] - '0');
-    }
-    matrix.display();
+  unsigned int length = strlen(rohtext);
+  for (unsigned int pos = 0; pos + 5 <= length; pos += 5) {
+    unsigned int cur_x = (rohtext[pos] - '0') * 10 + (rohtext[pos + 1] - '0');
+    unsigned int cur_y = (rohtext[pos + 2] - '0') * 10 + (rohtext[pos + 3] - '0');
+    matrix.setPixel(cur_x, cur_y, rohtext[pos + 4] - '0');
+  }
+//  matrix.display();
 }
 
 void Actor_LEDMatrix::getMatrixFB(String& fb_cont) {
@@ -143,12 +157,15 @@ void Actor_LEDMatrix::getMatrixFB(String& fb_cont) {
   }
 }
 
-void Actor_LEDMatrix::html_create_json_part(String& json) {
-  Switch_OnOff::html_create_json_part(json);
+void Actor_LEDMatrix::html_create(String& json) {
+  Switch_OnOff::html_create(json);
   json += ",\"slider1max\":15,\"matrix_x\":";
   json += matrix.getNumDevicesX() * 8;
   json += ",\"matrix_y\":";
   json += matrix.getNumDevicesY() * 8;
   json += ",\"show_matrix\":1";
+  json += ",\"matrix\":\"";
+  getMatrixFB(json);
+  json += "\"";
 }
 #endif

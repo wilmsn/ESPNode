@@ -1,5 +1,7 @@
+#ifdef USE_ACTOR_LEDMATRIX
 #ifndef _ACTOR_LEDMATRIX_H_
 #define _ACTOR_LEDMATRIX_H_
+#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 #include "LED_Matrix.h"
 
@@ -34,14 +36,18 @@ public:
     /// @param keyword Das Schlüsselwort für den Schalter
     /// @param start_value Der Wert nach dem Einschalten (false = aus; true = ein)
     /// @param on_value Der logische Wert des IO Pins im eingeschalteten Zustand (false = aus; true = ein)
+    /// @param is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
     /// @param slider_val Der Wert des Schiebereglers (Steuert die Helligkeit des Displays)
     /// @param slider_no Die Nummer des Schiebereglers (Einbauplatz)
+    /// @param slider_label Eine Beschriftung für den Schieberegler
+    /// @param slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
+    /// @param slider_keyword Ein Keyword für den Schieberegler
     /// @param mqtt_line Der MQTT Bezeichner für Zeilendaten
     /// @param mqtt_graph Der MQTT Bezeichner für Grafikdaten
-    /// @param slider_mqtt_name Der MQTT Bezeichner für denSchieberegler
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, unsigned int slider_val, uint8_t slider_no,
-               const char* mqtt_line , const char* mqtt_graph, const char* slider_mqtt_name);
+               bool start_value, bool on_value, bool is_state, uint8_t slider_val, uint8_t slider_no, 
+               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword,
+               const char* mqtt_line, const char* mqtt_graph);
 
     /// @brief Die "set" Methode des Actors. Hier wird geprüft ob das Kommando für diesen Aktor bestimmt ist, wenn ja
     /// wird es ausgeführt.
@@ -56,8 +62,10 @@ public:
 
     /// @brief Erzeugt einen JSON zur Initialisierung innerhalb der Weboberfläche
     /// @param json Nimmt den JSON String zur Initialisierung auf
-    void html_create_json_part(String& json);
- 
+    void html_create(String& json);
+
+    void loop(time_t now);
+
 private:
     /// @brief Gibt eine Zeile im Display aus
     /// Dabei haben die ersten 6 Zeichen im übergebenen Zeichenarray eine besondere Bedeutung:
@@ -83,6 +91,9 @@ private:
     String obj_mqtt_line;
     /// @brief Nimmt das Schlüsselwort für den Grafiktext auf
     String obj_mqtt_graph;
+    /// @brief
+    time_t graph_change_time;
 };
 
+#endif
 #endif

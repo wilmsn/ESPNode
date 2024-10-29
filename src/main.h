@@ -6,6 +6,20 @@ On Branch: main@github  !!!!!
 #include "common.h"
 #include "secrets.h"
 
+#ifdef USE_FTP
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifdef ESP32
+#warning "ESP32 is defined"
+#else
+#define ESP32
+#endif
+//#define DEFAULT_FTP_SERVER_NETWORK_TYPE_ESP32 		NETWORK_ESP32
+//#define DEFAULT_STORAGE_TYPE_ESP32 					STORAGE_SD
+//#define DEFAULT_STORAGE_TYPE_ESP32 					STORAGE_LITTLEFS
+#endif
+#include <FtpServer.h>
+#endif
+
 #ifdef ESP32
 //ToDo
 #else
@@ -31,6 +45,8 @@ const char* ntp_server = NTP_SERVER;
 /// @brief TimeZone Info
 //const char* tz_info = TZ_INFO;
 
+int rssi_quality;
+int rssi;
 
 
 // preferences
@@ -43,28 +59,35 @@ int magicno;
 /// @brief Das reboot Flag, ist es auf "true" wird im nächsten Loop Durchgang der Node neu gestartet.
 bool rebootflag = false;
 
-/// @brief Variablen zur Nutzung im Umfeld der HTML Seite
-String html_json;
 // WiFi
 String wifi_ssid;
 String wifi_pass;
+#ifdef ESP32
+String wifi_ssid1;
+String wifi_pass1;
+String wifi_ssid2;
+String wifi_pass2;
+#endif
 
 bool ap_mode = false;
 
 // Logging
-bool do_log_sensor;
 bool do_log_module;
-bool do_log_sys;
+bool do_log_system;
 bool do_log_critical;
+bool do_log_web;
 
 /// @brief Ein String zum Einsatz in der Funktion write2log. Darf nicht genutzt werden wenn diese Funktion mit gefülltem String aufgerufen wird!
 String log_str;
 
 /// @brief Ein String zur temporären Nutzung im Programm.
-String tmp_str;
+//String tmp_str;
 
 /// @brief Ein fixes Array zur Aufnahme des Zeitstempels
 char timeStr[16];
+
+/// @brief Ein fixes Array zur Aufnahme des Log-Kategorie
+char katStr[7];
 
 // Schleifensteuerung
 
@@ -73,13 +96,13 @@ unsigned long mqtt_last_stat = 0;
 /// @brief Zeitpunkt der letzten Telemetriedatenübertragung
 unsigned long mqtt_last_tele = 0;
 /// @brief Startzeitpunkt des Messvorgangs
-unsigned long measure_starttime = 0;
+//unsigned long measure_starttime = 0;
 /// @brief
 unsigned long loop_starttime = 0;
 /// @brief
 unsigned long wifi_ap_starttime = 0;
 /// @brief Ein Flag der anzeigt ob die Messdatengenerierung gestartet ist
-bool measure_started = false;
+//bool measure_started = false;
 int lastHour = 0;
 int lastDay  = 0;
 unsigned long loop_time_alarm;
@@ -93,6 +116,20 @@ tm timeinfo;
 /// @brief Eine Variable für Zeitinformationen
 time_t now;
 
+#ifdef USE_SDCARD
+#include "FS.h"
+#include "SD.h"
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+// ESP32S3: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
+//#define SD_SCK                        12
+//#define SD_MISO                       13 
+//#define SD_MOSI                       11 
+#define SD_CS                           10
+#endif
+uint64_t sd_cardsize;
+uint64_t sd_usedbytes;
+uint8_t sd_cardType;
+#endif
 
 /// @brief Eine Funktion als Dummy die nichts macht
 void noop() {}

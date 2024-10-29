@@ -34,3 +34,37 @@
 [submodule "lib/Uptime"]
 	path = lib/Uptime
 	url = git@github.com:wilmsn/Uptime.git
+[submodule "lib/ESP32-audioI2S"]
+	path = lib/ESP32-audioI2S
+	url = git@github.com:wilmsn/ESP32-audioI2S.git
+
+[submodule "lib/Ai_Esp32_Rotary_Encoder"]
+	path = lib/Ai_Esp32_Rotary_Encoder
+	url = git@github.com:wilmsn/ai-esp32-rotary-encoder.git
+[submodule "lib/Adafruit_BusIO"]
+	path = lib/Adafruit_BusIO
+	url = git@github.com:wilmsn/Adafruit_BusIO.git
+[submodule "lib/Adafruit_GC9A01A"]
+	path = lib/Adafruit_GC9A01A
+	url = git@github.com:wilmsn/Adafruit_GC9A01A.git
+[submodule "lib/Adafruit_GFX_Library"]
+	path = lib/Adafruit_GFX_Library
+	url = git@github.com:wilmsn/Adafruit-GFX-Library.git
+[submodule "lib/SimleFTPServer"]
+	path = lib/SimleFTPServer
+	url = https://github.com/wilmsn/SimpleFTPServer
+[submodule "Adafruit_BusIO"]
+	path = Adafruit_BusIO
+	url = git@github.com:wilmsn/Adafruit_BusIO.git
+[submodule "Adafruit_GC9A01A"]
+	path = Adafruit_GC9A01A
+	url = git@github.com:wilmsn/Adafruit_GC9A01A.git
+[submodule "lib/Adafruit-GFX-Library"]
+	path = lib/Adafruit-GFX-Library
+	url = git@github.com:wilmsn/Adafruit-GFX-Library.git
+[submodule "lib/ai-esp32-rotary-encoder"]
+	path = lib/ai-esp32-rotary-encoder
+	url = git@github.com:wilmsn/ai-esp32-rotary-encoder.git
+[submodule "lib/SimpleFTPServer"]
+	path = lib/SimpleFTPServer
+	url = git@github.com:wilmsn/SimpleFTPServer.git

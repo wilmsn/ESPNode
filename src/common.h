@@ -5,6 +5,7 @@
  ****************************************************************/
 #ifndef _COMMON_H_
 #define _COMMON_H_
+#include "config.h"
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,7 @@
 #include <WiFi.h>
 #include "AsyncTCP.h"
 #include <rom/rtc.h>
+#include <WiFiMulti.h>
 typedef unsigned char uint8_t;
 #endif
 
@@ -32,12 +34,32 @@ typedef unsigned char uint8_t;
 #include "ESPAsyncTCP.h"
 #endif
 
-#include "config.h"
+
 
 // externe Referenzen
+
+// Alle Module
+extern void write2log(uint8_t kat, int count, ...);
+extern bool do_log_module;
+extern bool do_log_system;
+extern bool do_log_critical;
+extern bool do_log_web;
+extern time_t now;
+
+extern void sendWsMessage(String& _myMsg);
+extern void sendWsMessage(String& _myMsg, uint8_t kat);
+
+
 // Modul: webserver
 extern AsyncWebSocket ws;
-extern bool do_log_web;
+extern uint64_t sd_cardsize;
+extern uint64_t sd_usedbytes;
+extern uint8_t sd_cardType;
+extern int rssi;
+extern int rssi_quality;
+extern char *getResetReason(char *tmp);
+extern Uptime uptime;
+extern void getVcc(String& json);
 
 // Modul: mqtt
 extern PubSubClient mqttClient;
@@ -46,12 +68,10 @@ extern String mqtt_client;
 extern String mqtt_topicP2;
 extern String mqtt_topic;
 extern bool do_mqtt;
-extern bool do_send_mqtt_stat;
-extern bool do_send_mqtt_tele;
 extern bool do_log_mqtt;
 extern String mqtt_json;
 extern unsigned int mqtt_json_length_old;
-void mqtt_loop();
+void mqtt_loop(time_t now);
 void mqtt_setup();
 
 // Modul: rf24gw
@@ -68,59 +88,42 @@ void rf24gw_loop();
 // Modul: main
 //extern AsyncWebServer httpServer;
 extern bool rebootflag;
-extern bool do_log_sensor;
-extern bool do_log_sys;
-extern bool do_log_critical;
 extern String wifi_ssid;
 extern String wifi_pass;
-extern String tmp_str;
+#ifdef ESP32
+extern String wifi_ssid1;
+extern String wifi_pass1;
+extern String wifi_ssid2;
+extern String wifi_pass2;
+#endif
 extern int cmd_no;
 extern Preferences preferences;
 extern unsigned long loop_time_alarm;
 extern tm timeinfo;
 extern String mqtt_topicP2;
 
-/// @brief Erzeugt ein JSON mit Informationen über das System (Teil1)
-/// Es wird für die Webseite und für MQTT genutzt.
-/// @param Ein String zur Aufnahme der Informationen
-/// @return Ein Json zur Übergabe an die Webseite oder MQTT
-const char *mk_sysinfo1(String& info_str);
-
-/// @brief Erzeugt ein JSON mit Informationen über das System (Teil2)
-/// Es wird für die Webseite und für MQTT genutzt.
-/// @param Ein String zur Aufnahme der Informationen
-/// @return Ein Json zur Übergabe an die Webseite oder MQTT
-const char *mk_sysinfo2(String& info_str);
-
-/// @brief Erzeugt ein JSON mit Informationen über das System (Teil3)
-/// Es wird für die Webseite und für MQTT genutzt.
-/// @param Ein String zur Aufnahme der Informationen
-/// @return Ein Json zur Übergabe an die Webseite oder MQTT
-const char *mk_sysinfo3(String& info_str, bool format_mqtt);
-
-
-#if defined(SWITCH1)
-extern SWITCH1_DEFINITION
+#if defined(MODULE1)
+extern MODULE1_DEFINITION
 #endif
 
-#if defined(SWITCH2)
-extern SWITCH2_DEFINITION
+#if defined(MODULE2)
+extern MODULE2_DEFINITION
 #endif
 
-#if defined(SWITCH3)
-extern SWITCH3_DEFINITION
+#if defined(MODULE3)
+extern MODULE3_DEFINITION
 #endif
 
-#if defined(SWITCH4)
-extern SWITCH4_DEFINITION
+#if defined(MODULE4)
+extern MODULE4_DEFINITION
 #endif
 
-#if defined(SENSOR1)
-extern SENSOR1_DEFINITION
+#if defined(MODULE5)
+extern MODULE5_DEFINITION
 #endif
 
-#if defined(SENSOR2)
-extern SENSOR2_DEFINITION
+#if defined(MODULE6)
+extern MODULE6_DEFINITION
 #endif
 
 /// @brief Der Komandoprozessor. Hier werden alle Befehle in der Form "Kommando = Wert" abgearbeitet
@@ -128,8 +131,7 @@ extern SENSOR2_DEFINITION
 /// @param value Der Wert für dieses Kommando
 void prozess_cmd(const String cmd, const String value);
 
-/// @brief Variablen zur Nutzung im Umfeld der HTML Seite
-extern String html_json;
-
 const char* mk_topic(const char* part1, const char* part3);
+
+
 #endif

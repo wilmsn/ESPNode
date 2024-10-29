@@ -1,29 +1,25 @@
 #include "config.h"
+#ifdef USE_SENSOR_LDR
+#include "sensor_ldr.h"
+#include "config.h"
+#include "common.h"
 
-#ifdef _SENSOR_LDR_H_
-
-void Sensor_LDR::begin(const char* html_place, const char* label) {
-  Sensor_Generic::begin(html_place, label);
-  obj_value = analogRead(A0);
-  obj_sensorinfo_html = "\"sensorinfo1\":\"Hardware:#LDR an A0\"";
+void Sensor_LDR::begin(const char* html_place, const char* label, uint32_t messinterval) {
+  Base_Generic::begin(html_place, label);
+  obj_measure_interval = messinterval;
+  obj_html_info = String("\"tab_head_ldr\":\"Sensor\",\"tab_line1_ldr\":\"LDR:#GPIO: A0\"") +
+                  String(",\"GPIO_LDR\":\"A0\"");
+  obj_mqtt_has_info = true; 
 }
 
-void Sensor_LDR::start_measure() {
-  obj_value = analogRead(A0);
-  obj_html_stat_json = "{\"";
-  obj_html_stat_json += obj_html_place;
-  obj_html_stat_json += "\":\"";
-  obj_html_stat_json += obj_label;
-  obj_html_stat_json += ": ";
-  obj_html_stat_json += String(obj_value);
-  obj_html_stat_json += "\"}";
-
-  obj_mqtt_json = "\"";
-  obj_mqtt_json += obj_mqtt_name;
-  obj_mqtt_json += "\": ";
-  obj_mqtt_json += String(obj_value);
-
-  obj_changed = true;
+void Sensor_LDR::loop(time_t now) {
+  if ((now - obj_measure_starttime) > obj_measure_interval) {
+    obj_measure_starttime = now;
+    obj_value = analogRead(A0);
+    obj_html_stat = String("\"") + obj_html_place + String("\":\"") + obj_label + String(": ") +
+                    String(obj_value) + String("\"");
+    html_refresh();
+  }
 }
 
 #endif
