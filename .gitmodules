@@ -1,70 +1,61 @@
 [submodule "lib/ElegantOTA"]
 	path = lib/ElegantOTA
-	url = git@github.com:wilmsn/ElegantOTA.git
+	url = https://github.com/wilmsn/ElegantOTA.git
 [submodule "lib/RF24"]
 	path = lib/RF24
-	url = git@github.com:wilmsn/RF24.git
+	url = https://github.com/wilmsn/RF24.git
 [submodule "lib/AsyncTCP"]
 	path = lib/AsyncTCP
-	url = git@github.com:wilmsn/AsyncTCP.git
+	url = https://github.com/wilmsn/AsyncTCP.git
 [submodule "lib/BMX_sensor"]
 	path = lib/BMX_sensor
-	url = git@github.com:wilmsn/BMX_sensor.git
+	url = https://github.com/wilmsn/BMX_sensor.git
 [submodule "lib/DallasTemperature"]
 	path = lib/DallasTemperature
-	url = git@github.com:wilmsn/Arduino-Temperature-Control-Library.git
+	url = https://github.com/wilmsn/Arduino-Temperature-Control-Library.git
 [submodule "lib/ESPAsyncWebServer"]
 	path = lib/ESPAsyncWebServer
-	url = git@github.com:wilmsn/ESPAsyncWebServer.git
+	url = https://github.com/wilmsn/ESPAsyncWebServer.git
 [submodule "lib/LED_Matrix"]
 	path = lib/LED_Matrix
-	url = git@github.com:wilmsn/LED_Matrix.git
+	url = https://github.com/wilmsn/LED_Matrix.git
 [submodule "lib/OneWire"]
 	path = lib/OneWire
-	url = git@github.com:wilmsn/OneWire.git
+	url = https://github.com/wilmsn/OneWire.git
 [submodule "lib/ESPAsyncTCP"]
 	path = lib/ESPAsyncTCP
-	url = git@github.com:wilmsn/ESPAsyncTCP.git
+	url = https://github.com/wilmsn/ESPAsyncTCP.git
 [submodule "lib/PubSubClient"]
 	path = lib/PubSubClient
-	url = git@github.com:wilmsn/pubsubclient.git
+	url = https://github.com/wilmsn/pubsubclient.git
 [submodule "lib/Preferences"]
 	path = lib/Preferences
-	url = git@github.com:wilmsn/Preferences.git
+	url = https://github.com/wilmsn/Preferences.git
 [submodule "lib/Uptime"]
 	path = lib/Uptime
-	url = git@github.com:wilmsn/Uptime.git
+	url = https://github.com/wilmsn/Uptime.git
 [submodule "lib/ESP32-audioI2S"]
 	path = lib/ESP32-audioI2S
-	url = git@github.com:wilmsn/ESP32-audioI2S.git
-
-[submodule "lib/Ai_Esp32_Rotary_Encoder"]
-	path = lib/Ai_Esp32_Rotary_Encoder
-	url = git@github.com:wilmsn/ai-esp32-rotary-encoder.git
+	url = https://github.com/wilmsn/ESP32-audioI2S.git
 [submodule "lib/Adafruit_BusIO"]
 	path = lib/Adafruit_BusIO
-	url = git@github.com:wilmsn/Adafruit_BusIO.git
+	url = https://github.com/wilmsn/Adafruit_BusIO.git
 [submodule "lib/Adafruit_GC9A01A"]
 	path = lib/Adafruit_GC9A01A
-	url = git@github.com:wilmsn/Adafruit_GC9A01A.git
-[submodule "lib/Adafruit_GFX_Library"]
-	path = lib/Adafruit_GFX_Library
-	url = git@github.com:wilmsn/Adafruit-GFX-Library.git
+	url = https://github.com/wilmsn/Adafruit_GC9A01A.git
 [submodule "lib/SimleFTPServer"]
 	path = lib/SimleFTPServer
 	url = https://github.com/wilmsn/SimpleFTPServer
-[submodule "Adafruit_BusIO"]
-	path = Adafruit_BusIO
-	url = git@github.com:wilmsn/Adafruit_BusIO.git
-[submodule "Adafruit_GC9A01A"]
-	path = Adafruit_GC9A01A
-	url = git@github.com:wilmsn/Adafruit_GC9A01A.git
 [submodule "lib/Adafruit-GFX-Library"]
 	path = lib/Adafruit-GFX-Library
-	url = git@github.com:wilmsn/Adafruit-GFX-Library.git
+	url = https://github.com/wilmsn/Adafruit-GFX-Library.git
 [submodule "lib/ai-esp32-rotary-encoder"]
 	path = lib/ai-esp32-rotary-encoder
-	url = git@github.com:wilmsn/ai-esp32-rotary-encoder.git
+	url = https://github.com/wilmsn/ai-esp32-rotary-encoder.git
 [submodule "lib/SimpleFTPServer"]
 	path = lib/SimpleFTPServer
-	url = git@github.com:wilmsn/SimpleFTPServer.git
+	url = https://github.com/wilmsn/SimpleFTPServer.git
+[submodule "lib/Adafruit_BusIO/"]
+	url = https://github.com/wilmsn/Adafruit_BusIO.git
+[submodule "lib/pubsubclient"]
+	url = https://github.com/wilmsn/pubsubclient.git
