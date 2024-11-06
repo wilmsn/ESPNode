@@ -2,7 +2,6 @@
 #ifdef USE_SENSOR_18B20
 #include "sensor_18B20.h"
 #include "common.h"
-#define PIN_18B20      4
 #define REFRESHTIME    300
 #define RESOLUTION     12
 #define MEASUREDELAY   2
@@ -25,7 +24,7 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   obj_mqtt_has_info = true;
 
   obj_html_info =  String("\"tab_head_18b20\":\"Sensor 18B20\"")+
-                   String(",\"tab_line1_18b20\":\"GPIO:# ")+String(PIN_18B20)+String("\"")+
+                   String(",\"tab_line1_18b20\":\"GPIO:# ")+String(gpio)+String("\"")+
                    String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")+
                    String(",\"tab_line3_18b20\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"");
 
@@ -34,7 +33,7 @@ void Sensor_18B20::begin(const char* html_place, const char* label, const char* 
   sensors.requestTemperatures();
   delay(500); 
   if (sensors.getTempCByIndex(0) < -20.0) {
-    delay(500); 
+    delay(1000); 
     sensors.begin();
     sensors.setResolution(RESOLUTION);
     sensors.requestTemperatures();

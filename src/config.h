@@ -20,8 +20,8 @@
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-#define NODE_TEICH
-//#define NODE_FLUR
+//#define NODE_TEICH
+#define NODE_FLUR
 //#define NODE_KUECHENRADIO
 //---------------------------
 

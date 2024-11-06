@@ -28,9 +28,6 @@
 [submodule "lib/PubSubClient"]
 	path = lib/PubSubClient
 	url = https://github.com/wilmsn/pubsubclient.git
-[submodule "lib/Preferences"]
-	path = lib/Preferences
-	url = https://github.com/wilmsn/Preferences.git
 [submodule "lib/Uptime"]
 	path = lib/Uptime
 	url = https://github.com/wilmsn/Uptime.git
@@ -59,3 +56,6 @@
 	url = https://github.com/wilmsn/Adafruit_BusIO.git
 [submodule "lib/pubsubclient"]
 	url = https://github.com/wilmsn/pubsubclient.git
+[submodule "lib/Preferences8266"]
+	path = lib/Preferences8266
+	url = https://github.com/wilmsn/Preferences8266.git
