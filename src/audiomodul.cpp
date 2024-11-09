@@ -143,7 +143,12 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
                    String(",\"tab_line1_rotary\":\"A-Pin:#GPIO: ")+String(ROTARY_ENCODER_A_PIN)+ String("\"")+
                    String(",\"tab_line2_rotary\":\"B-Pin:#GPIO: ")+String(ROTARY_ENCODER_B_PIN)+ String("\"")+
                    String(",\"tab_line3_rotary\":\"SW-Pin:#GPIO: ")+String(ROTARY_ENCODER_SW_PIN)+ String("\"")+
-                   String(",\"tab_line4_rotary\":\"Resistor: ")+String("todo")+ String("\"");
+                   String(",\"tab_line4_rotary\":\"Resistor:# ");
+  switch (ROTARY_ENCODER_RESISTOR) {
+    case INPUT:          obj_html_info += String("keiner")+String("\"");   break;
+    case INPUT_PULLUP:   obj_html_info += String("pullup")+String("\"");   break;
+    case INPUT_PULLDOWN: obj_html_info += String("pulldown")+String("\""); break;
+  }
 }
 
 void AudioModul::html_create(String& tmpstr) {
