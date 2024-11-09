@@ -1,58 +1,73 @@
 #include "config.h"
 #ifdef USE_ROTARYMODUL
 #include "rotarymodul.h"
+#include "common.h"
 
-#if defined(CONFIG_IDF_TARGET_ESP32) 
-#warning ESP32
-#warning "Compiling Audiomodule with Settings for ESP32"
-// Definitions for ESP32 Board
-// Rotary Encoder Settings
-#define ROTARY_ENCODER_A_PIN            32
-#define ROTARY_ENCODER_B_PIN            33
-#define ROTARY_ENCODER_BUTTON_PIN       4
-#define ROTARY_ENCODER_VCC_PIN          -1
-//depending on your encoder - try 1,2 or 4 to get expected behaviour
-//#define ROTARY_ENCODER_STEPS 1
-//#define ROTARY_ENCODER_STEPS 2
-#define ROTARY_ENCODER_STEPS            4
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
-#warning ESP32S2
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-//#warning ESP32S3
-#warning "Compiling Rotarymodule with Settings for ESP32-S3"
-//#warning "Settings for ESP32-S3"
-#define ROTARY_ENCODER_A_PIN      1 //38 //37
-#define ROTARY_ENCODER_B_PIN      2 //39 //36
-#define ROTARY_ENCODER_BUTTON_PIN 3 //40 //35
-#define ROTARY_ENCODER_VCC_PIN    -1
-#define ROTARY_ENCODER_STEPS      4
-#endif
-
-#include "AiEsp32RotaryEncoder.h"
-
-#define DEBUG_SERIAL_MODULE
-
-
-/// The settings for each level for the rotary encoder
-/// 0 => Radio playing level
-/// 1 => station select level
-/// 2 => ????
-
-
-/// @brief Instance for rotary encoder
-AiEsp32RotaryEncoder rotary = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
-
-void IRAM_ATTR readRotaryISR() {
-  rotary.readEncoder_ISR();
+void RotaryModul::begin(uint8_t _pin_a, uint8_t _pin_b, uint8_t _pin_sw, uint8_t _pin_mode) {
+  pin_a = _pin_a;
+  pin_b = _pin_b;
+  pin_sw = _pin_sw;
+  pin_mode = _pin_mode;
+	pinMode(pin_a, pin_mode);
+	pinMode(pin_b, pin_mode);
+	pinMode(pin_sw, pin_mode);
+  raw_val = 0;
+  raw_val_old = 0;
+  rot_val = 0;
+  read();
+  read();
+  rotChanged = false;
+  rot_val = 0;
 }
 
-void RotaryModul::begin() {
-  rotary.begin(); //start rotary handling
-  rotary.setup(readRotaryISR); //register interrupt service routine
+void RotaryModul::read() {
+
+  int pin_a_val  = digitalRead(pin_a);
+  int pin_b_val  = digitalRead(pin_b);
+  int pin_sw_val = digitalRead(pin_sw);
+
+  if (pin_a_val) {
+    raw_a = 0b00000010;
+  } else {
+    raw_a = 0b00000000;
+  }
+  if (pin_b_val) {
+    raw_b = 0b00000001;
+  } else {
+    raw_b = 0b00000000;
+  }
+  raw_val = raw_a | raw_b;
+  if ( raw_val != raw_val_old) {
+    // Hochdrehen:  00 >> 01 >> 11 >> 10 >> 00
+    if (
+      (raw_val_old == 0 && raw_val == 1) || 
+      (raw_val_old == 1 && raw_val == 3) || 
+      (raw_val_old == 3 && raw_val == 2) || 
+      (raw_val_old == 2 && raw_val == 0) 
+    ) {
+      if (rot_val < rot_max_val) rot_val++;
+      rotChanged = true;
+    } 
+    // Runterdrehen:  00 >> 10 >> 11 >> 01 >> 00
+    else if (
+      (raw_val_old == 0 && raw_val == 2) || 
+      (raw_val_old == 2 && raw_val == 3) || 
+      (raw_val_old == 3 && raw_val == 1) || 
+      (raw_val_old == 1 && raw_val == 0)  
+    ) {  
+      if (rot_val > rot_min_val) rot_val--;
+      rotChanged = true;
+    } 
+    raw_val_old = raw_val;
+    char tmpstr[20];
+    sprintf(tmpstr,"A: %u B: %u SW: %i", raw_a, raw_b, pin_sw_val);
+    write2log(LOG_MODULE,1,tmpstr);
+  }
+  if (pin_sw_val) {
+    raw_sw = 1;
+  } else {
+    raw_sw = 0;
+  }
 }
 
 void RotaryModul::initLevel(uint8_t _level, uint16_t _minVal, uint16_t _curVal, uint16_t _maxVal) {
@@ -90,7 +105,7 @@ uint16_t RotaryModul::curValue(uint8_t _level) {
 
 void RotaryModul::setMaxValue(uint16_t _maxValue) {
   level[cur_level].max = _maxValue;
-  rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false);
+  rot_max_val = _maxValue;
 }
 
 void RotaryModul::setMaxLevel(uint8_t _maxLevel) {
@@ -103,26 +118,27 @@ void RotaryModul::setLevel(uint8_t _level) {
   } else {
     cur_level = 0;
   }
-  rotary.setBoundaries(level[cur_level].min, level[cur_level].max, false);
-  rotary.setEncoderValue(level[cur_level].cur);
+  rot_min_val = level[cur_level].min;
+  rot_max_val = level[cur_level].max;
+  rot_val = level[cur_level].cur;
 }
 
 void RotaryModul::setValue(uint16_t _value) {
   level[cur_level].cur = _value;
-  rotary.setEncoderValue(level[cur_level].cur); //preset the value to current gain
+  rot_val = _value;
 }
 
 void RotaryModul::loop(time_t now) {
+  read();
   // 1. Position changed
-  if (rotary.encoderChanged()) {
+  if (rotChanged) {
     level[cur_level].cur_old = level[cur_level].cur;
-    level[cur_level].cur = rotary.readEncoder();
-    if ( level[cur_level].cur > level[cur_level].cur_old +2) level[cur_level].cur = level[cur_level].cur_old+2;
-    if ( (level[cur_level].cur < level[cur_level].cur_old -2) && (level[cur_level].cur_old > 1) ) level[cur_level].cur = level[cur_level].cur_old-2;
+    level[cur_level].cur = rot_val;
     isChanged = 1;
+    rotChanged = false;
   }
   /// 2. Button is pressed
-  if (rotary.isEncoderButtonDown()) {
+  if (raw_sw == 0) {
     if (!wasButtonDown) {
       //start measuring
       millis_Button_pressed = millis();

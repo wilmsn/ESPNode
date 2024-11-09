@@ -21,8 +21,8 @@
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
-#define NODE_FLUR
-//#define NODE_KUECHENRADIO
+//#define NODE_FLUR
+#define NODE_KUECHENRADIO
 //---------------------------
 
 #include "Node_settings.h"

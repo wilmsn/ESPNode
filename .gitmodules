@@ -46,9 +46,6 @@
 [submodule "lib/Adafruit-GFX-Library"]
 	path = lib/Adafruit-GFX-Library
 	url = https://github.com/wilmsn/Adafruit-GFX-Library.git
-[submodule "lib/ai-esp32-rotary-encoder"]
-	path = lib/ai-esp32-rotary-encoder
-	url = https://github.com/wilmsn/ai-esp32-rotary-encoder.git
 [submodule "lib/SimpleFTPServer"]
 	path = lib/SimpleFTPServer
 	url = https://github.com/wilmsn/SimpleFTPServer.git

@@ -41,6 +41,11 @@ Audio            audio;
 #define GC9A01A_TFT_MOSI                11
 #define GC9A01A_TFT_CS                  8
 #define GC9A01A_TFT_DC                  9
+// Rotary Encoder
+#define ROTARY_ENCODER_A_PIN            1 //38 //37
+#define ROTARY_ENCODER_B_PIN            2 //39 //36
+#define ROTARY_ENCODER_SW_PIN           3 //40 //35
+#define ROTARY_ENCODER_RESISTOR         INPUT_PULLUP
 #endif
 
 #define ARC_SIGMENT_DEGREES             3
@@ -97,7 +102,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   audiodisplay.begin(&tftx);
   audiodisplay.show_ip(WiFi.localIP().toString().c_str());
   audiodisplay.show_info1("Init");
-  rotarymodul.begin();
+  rotarymodul.begin(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_SW_PIN, ROTARY_ENCODER_RESISTOR);
 //  rotarymodul.initLevel(0,0,audio_vol,100);
 //  rotarymodul.initLevel(1,0,audio_radio_cur_station,10);
 //  rotarymodul.initLevel(2,0,0,2);
@@ -133,14 +138,12 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
                    String(",\"tab_line1_display\":\"SCK:#GPIO: ")+String(GC9A01A_TFT_SCK)+ String("\"")+
                    String(",\"tab_line2_display\":\"MOSI:#GPIO: ")+String(GC9A01A_TFT_MOSI)+ String("\"")+
                    String(",\"tab_line3_display\":\"CS:#GPIO: ")+String(GC9A01A_TFT_CS)+ String("\"")+
-                   String(",\"tab_line4_display\":\"DC:#GPIO: ")+String(GC9A01A_TFT_DC)+ String("\"");
-
-
-#define GC9A01A_TFT_SCK                 12
-#define GC9A01A_TFT_MOSI                11
-#define GC9A01A_TFT_CS                  8
-#define GC9A01A_TFT_DC                  9
-
+                   String(",\"tab_line4_display\":\"DC:#GPIO: ")+String(GC9A01A_TFT_DC)+ String("\"")+
+                   String(",\"tab_head_rotary\":\"Rotary\"")+
+                   String(",\"tab_line1_rotary\":\"A-Pin:#GPIO: ")+String(ROTARY_ENCODER_A_PIN)+ String("\"")+
+                   String(",\"tab_line2_rotary\":\"B-Pin:#GPIO: ")+String(ROTARY_ENCODER_B_PIN)+ String("\"")+
+                   String(",\"tab_line3_rotary\":\"SW-Pin:#GPIO: ")+String(ROTARY_ENCODER_SW_PIN)+ String("\"")+
+                   String(",\"tab_line4_rotary\":\"Resistor: ")+String("todo")+ String("\"");
 }
 
 void AudioModul::html_create(String& tmpstr) {
@@ -190,8 +193,8 @@ void AudioModul::html_create(String& tmpstr) {
   if (audiomsg3.length() >2) tmpstr += String(",\"audiomsg3\":\"")+audiomsg3+String("\"");
   if (audiomsg4.length() >2) tmpstr += String(",\"audiomsg4\":\"")+audiomsg4+String("\"");
   if (audiomsg5.length() >2) tmpstr += String(",\"audiomsg5\":\"")+audiomsg5+String("\"");
-//  ws.textAll(tmpstr.c_str());
-//  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
+  write2log(LOG_MODULE,1,tmpstr.c_str());
 #ifdef USE_AUDIO_MEDIA
 //  if (modus == Media) allAlbum2Web();
 #endif

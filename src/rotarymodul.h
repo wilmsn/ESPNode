@@ -22,7 +22,7 @@ class RotaryModul {
 public:
     /// @brief Die Initialisierung des Rotary Modules
     /// @brief Alle Werte werden innerhalb des Modules gesetzt.
-    void begin();
+    void begin(uint8_t _pin_a, uint8_t _pin_b, uint8_t _pin_sw, uint8_t _pin_mode);
     void initLevel(uint8_t _level, uint16_t _minVal, uint16_t _curVal, uint16_t _maxVal);
     uint8_t changed();
     uint8_t curLevel();
@@ -34,6 +34,7 @@ public:
     void setValue(uint16_t _value);
     void setIsChanged(uint8_t _changed);
     void loop(time_t now);
+    void html_info(String& tmpstr);
 
 
 private:
@@ -48,7 +49,22 @@ private:
 /// @brief Letzter Zustand Rotary Schalter
     bool wasButtonDown = false;
     uint8_t isChanged = 0;
+    bool rotChanged = false;
 //    time_t timeout_cnt;
+    uint8_t  pin_a;
+    uint8_t  pin_b;
+    uint8_t  pin_sw;
+    uint8_t  pin_mode;
+    uint8_t  raw_a;
+    uint8_t  raw_b;
+    uint8_t  raw_sw;
+    uint8_t  raw_val;
+    uint8_t  raw_val_old;
+    uint16_t rot_val;
+    uint16_t rot_max_val;
+    uint16_t rot_min_val;
+
+    void read();
 };
 
 #endif
