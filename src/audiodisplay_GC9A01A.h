@@ -27,7 +27,7 @@
 
 class AudioDisplay : public Adafruit_GC9A01A {
 public:
-  AudioDisplay(int8_t _cs, int8_t _dc);
+  AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot);
   void clear();
   void show_ip(const char* myip);
   void show_bps(const char* mybps);

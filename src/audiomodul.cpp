@@ -22,7 +22,7 @@ RotaryModul      rotarymodul;
 /// @brief Instance for ohysical TFT Display
 #ifdef USE_AUDIODISPLAY_GC9A01A
 #include "audiodisplay_GC9A01A.h"
-AudioDisplay audiodisplay(TFT_CS, TFT_DC);
+AudioDisplay audiodisplay(TFT_CS, TFT_DC, TFT_ROT);
 #endif
 #ifdef USE_AUDIODISPLAY_ST7789
 #include "audiodisplay_ST7789.h"
@@ -43,9 +43,6 @@ uint16_t   allAlbum;
 
 void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true);
-//#ifdef USE_AUDIODISPLAY
-//  audiodisplay.begin(TFT_X, TFT_Y);
-//#endif
 #ifdef USE_AUDIO_RADIO
   audio_radio_load_stations();
 #endif

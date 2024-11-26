@@ -134,7 +134,9 @@ RF24 Gateway:
 // Nur lauffähig auf ESP32 !!!
 #ifdef ESP32
 #define USE_AUDIOMODUL
+#define USE_ROTARY
 #define USE_AUDIODISPLAY_GC9A01A
+#define TFT_ROT   3
 //#define USE_SDCARD
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
@@ -142,9 +144,9 @@ RF24 Gateway:
 //#define USE_WIFIMULTI
 
 #include "audiomodul.h"
-#define MAGICNO                  76
+#define MAGICNO                  77
 
-//#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_MODULE
 //#define DEBUG_SERIAL_WEB
 
 #define HOSTNAME                 "Kuechenradio"
@@ -515,26 +517,41 @@ void RotaryTest::begin(const char* html_place, const char* label, const char* mq
 #ifdef USE_DISPLAY_GC9A01A
 #if defined(CONFIG_IDF_TARGET_ESP32) 
 #warning "Compiling Display GC9A01A with Settings for ESP32"
-//TFT Settings
-#define TFT_MISO -1
-#define TFT_MOSI 19
-#define TFT_SCK  18
-#define TFT_CS 5
-#define TFT_DC 16
-#define TFT_RST 23
-#define TFT_BL 4
-#define TFT_X  240
-#define TFT_Y  135
+#ifndef TFT_SCK
+#define TFT_SCK                 18
+#endif
+#ifndef TFT_MOSI
+#define TFT_MOSI                23
+#endif
+#ifndef TFT_CS
+#define TFT_CS                  17
+#endif
+#ifndef TFT_DC
+#define TFT_DC                  16
+#endif
 #endif
 
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
 //#warning ESP32S3
 #warning "Compiling Display GC9A01A with Settings for ESP32-S3"
+#ifndef TFT_SCK
 #define TFT_SCK                 12
+#endif
+#ifndef TFT_MOSI
 #define TFT_MOSI                11
+#endif
+#ifndef TFT_CS
 #define TFT_CS                  8
+#endif
+#ifndef TFT_DC
 #define TFT_DC                  9
 #endif
+#endif
+
+#ifndef TFT_ROT
+#define TFT_ROT   3
+#endif
+
 #endif
 
 

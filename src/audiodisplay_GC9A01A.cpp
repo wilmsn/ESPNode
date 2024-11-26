@@ -4,8 +4,10 @@
 #include "audiomodul.h"
 #include "common.h"
 
-AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc ) :
+AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot ) :
               Adafruit_GC9A01A(_cs, _dc) {
+  begin();
+  setRotation(_rot);
 }
 
 void AudioDisplay::clear() {
