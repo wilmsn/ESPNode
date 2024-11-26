@@ -1,121 +1,113 @@
 #include "config.h"
-#ifdef USE_AUDIOMODUL
-
+#ifdef USE_AUDIODISPLAY_GC9A01A
+#include "audiodisplay_GC9A01A.h"
 #include "audiomodul.h"
 #include "common.h"
 
-// define colors
-#ifdef DISPLAY_GC9A01A
-#define COLOR_WHITE       0xFFFF
-#define COLOR_RED         0xF800
-#define COLOR_BLACK       0x0000
-#define COLOR_YELLOW      0xFFE0
-#define COLOR_ORANGE      0xFD20
-#define COLOR_GREEN       0x07E0
-#define COLOR_LIGHTGREY   0xC618
-#define COLOR_BLUE        0x001F
-#endif
+AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc ) :
+              Adafruit_GC9A01A(_cs, _dc) {
+}
 
 void AudioDisplay::clear() {
-  tft->fillScreen(GC9A01A_BLACK);
+  fillScreen(GC9A01A_BLACK);
 }
 
 void AudioDisplay::show_ip(const char* myip) {
-  tft->setTextColor(COLOR_WHITE);  
-  tft->setTextSize(1);
-  tft->setCursor(75, 225);
-  tft->println(myip);
+  setTextColor(GC9A01A_WHITE);  
+  setTextSize(1);
+  setCursor(75, 225);
+  println(myip);
 }
 
 void AudioDisplay::show_bps(const char* mybps) {
-  tft->setTextColor(COLOR_RED);  
-  tft->setTextSize(1);
-  tft->setCursor(75, 205);
-  tft->println(mybps);
+  setTextColor(GC9A01A_RED);  
+  setTextSize(1);
+  setCursor(75, 205);
+  println(mybps);
 }
 
 void AudioDisplay::show_vol(uint8_t vol) {
   if (vol > 90) vol=90;
-  fillArc(119,119,-90,180,120,120,ARC_WIDTH,COLOR_BLACK);
-  fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,COLOR_YELLOW);
+  fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
+  fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
 }
 
 void AudioDisplay::show_time(bool big) {
-  tft->setTextColor(COLOR_WHITE); 
+  setTextColor(GC9A01A_WHITE); 
   if (big) {
     clear();
-    tft->setTextSize(7);
+    setTextSize(7);
     if ( timeinfo.tm_hour < 10) {
-      tft->setCursor(60,100);
+      setCursor(60,100);
     } else {
-      tft->setCursor(20,100);
+      setCursor(20,100);
     }
   } else {
-    tft->fillRect(80, 30, 90, 23, COLOR_BLACK);
-    tft->setTextSize(3);
+    fillRect(80, 30, 90, 23, GC9A01A_BLACK);
+    setTextSize(3);
     if ( timeinfo.tm_hour < 10) {
-      tft->setCursor(90,30);
+      setCursor(90,30);
     } else {
-      tft->setCursor(80,30);
+      setCursor(80,30);
     }
   }
   if ( timeinfo.tm_min < 10) {
-    tft->printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
+    printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
   } else {
-    tft->printf("%d:%d",timeinfo.tm_hour, timeinfo.tm_min);
+    printf("%d:%d",timeinfo.tm_hour, timeinfo.tm_min);
   }
 }
 
 void AudioDisplay::show_info1(const char* myinfo) {
-  tft->fillRect(25, 65, 190, 55, COLOR_BLACK);
-  show_text(myinfo, 25, 65, COLOR_ORANGE);
+  fillRect(25, 65, 190, 55, GC9A01A_BLACK);
+  show_text(myinfo, 25, 65, GC9A01A_ORANGE);
 }
 
 void AudioDisplay::show_info2(const char* myinfo) {
-  tft->fillRect(0, 130, 240, 60, COLOR_BLACK);
-  show_text(myinfo, 25, 130, COLOR_GREEN);
+  fillRect(0, 130, 240, 60, GC9A01A_BLACK);
+  show_text(myinfo, 25, 130, GC9A01A_GREEN);
 }
 
 void AudioDisplay::select(const char* s0, const char* s1, const char* s2) {
   clear();
-  if (strlen(s0) > 0) show_text_s2(s0,40,50,COLOR_LIGHTGREY);
-  if (strlen(s1) > 0) show_text_s2(s1,10,110,COLOR_ORANGE);
-  if (strlen(s2) > 0) show_text_s2(s2,40,170,COLOR_LIGHTGREY);
+  if (strlen(s0) > 0) show_text_s2(s0,40,50,GC9A01A_LIGHTGREY);
+  if (strlen(s1) > 0) show_text_s2(s1,10,110,GC9A01A_ORANGE);
+  if (strlen(s2) > 0) show_text_s2(s2,40,170,GC9A01A_LIGHTGREY);
 }
 
 void AudioDisplay::select(const char* s0, uint16_t * pic) {
   clear();
-  if (strlen(s0) > 0) show_text_s2(s0,10,110,COLOR_ORANGE);
-  tft->drawRGBBitmap(80,20,pic,80,80);
+  if (strlen(s0) > 0) show_text_s2(s0,10,110,GC9A01A_ORANGE);
+  drawRGBBitmap(80,20,pic,80,80);
 }
 
 void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const char* s3, const char* s4) {
   clear();
-  tft->setTextSize(2);
+  setTextSize(2);
   if (strlen(s0) > 0) {
-    tft->setTextColor(COLOR_LIGHTGREY);  
-    tft->setCursor(70, 50);
-    tft->println(s0);
+    setTextColor(GC9A01A_LIGHTGREY);
+    setCursor(70, 50);
+    println(s0);
   }
   if (strlen(s1) > 0) {
-    tft->setTextColor(COLOR_LIGHTGREY);  
-    tft->setCursor(40, 80);
-    tft->println(s1);
+    setTextColor(GC9A01A_LIGHTGREY);  
+    setCursor(40, 80);
+    println(s1);
   }
   if (strlen(s2) > 0) {
-    tft->setTextColor(COLOR_ORANGE);  
-    tft->setCursor(10, 120);
-    tft->println(s2);
+    setTextColor(GC9A01A_ORANGE);  
+    setCursor(10, 120);
+    println(s2);
   }
   if (strlen(s3) > 0) {
-    tft->setTextColor(COLOR_LIGHTGREY);  
-    tft->setCursor(40, 150);
-    tft->println(s3);
+    setTextColor(GC9A01A_LIGHTGREY);  
+    setCursor(40, 150);
+    println(s3);
   }
   if (strlen(s4) > 0) {
-    tft->setTextColor(COLOR_LIGHTGREY);  
-    tft->setCursor(70, 180);
-    tft->println(s4);
+    setTextColor(GC9A01A_LIGHTGREY);  
+    setCursor(70, 180);
+    println(s4);
   }
 }
 
@@ -124,18 +116,18 @@ void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t
   int mytxtlength = strlen(mytext);
   int chars_per_line = 20;
   int pixel_to_next_line;
-  tft->setTextColor(color);  
-  tft->setTextSize(2);
+  setTextColor(color);  
+  setTextSize(2);
   pixel_to_next_line = 20;
   char mystr[chars_per_line+1];
   mypos = splitStr(mytext,mypos,chars_per_line,mystr);
   if (mypos < strlen(mytext)) {
-    tft->setCursor(posx, posy);
-    tft->println(mystr);
+    setCursor(posx, posy);
+    println(mystr);
     mypos = splitStr(mytext,mypos,chars_per_line,mystr);
   }
-  tft->setCursor(posx, posy + pixel_to_next_line);
-  tft->println(mystr);
+  setCursor(posx, posy + pixel_to_next_line);
+  println(mystr);
 }
 
 void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t color) {
@@ -143,23 +135,23 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
   int chars_per_line;
   int pixel_to_next_line;
   int linecnt = 0;
-  tft->setTextColor(color);
+  setTextColor(color);
   if (strlen(in_text) > 20) {
     chars_per_line = 18;
-    tft->setTextSize(2);
+    setTextSize(2);
     pixel_to_next_line = 20;
   } else {
     chars_per_line = 10;
-    tft->setTextSize(3);
+    setTextSize(3);
     pixel_to_next_line = 30;
   }
-  tft->setCursor(posx, posy);
+  setCursor(posx, posy);
   char result_str[chars_per_line+3];
   do {
     start_pos = splitStr(in_text,start_pos,chars_per_line,result_str);
     if (start_pos >= 0) {
-      tft->setCursor(posx, posy);
-      if (linecnt < 2) tft->println(result_str);
+      setCursor(posx, posy);
+      if (linecnt < 2) println(result_str);
       posy += pixel_to_next_line;
       linecnt++;
     }
@@ -169,46 +161,37 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
 void AudioDisplay::show_modus(const char* _modusStr) {
   String modusStr = String(_modusStr);
   clear();
-  tft->setTextSize(3);
-  tft->setCursor(TEXT_UNDER_BMP_X, TEXT_UNDER_BMP_Y);
+  setTextSize(3);
+  setCursor(TEXT_UNDER_BMP_X, TEXT_UNDER_BMP_Y);
   if (modusStr == "Off") {
-      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
-      tft->setTextColor(COLOR_RED);  
-      tft->println(modusStr);
+      drawRGBBitmap(BMP_LEFT,BMP_DOWN,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
+      setTextColor(GC9A01A_RED);  
+      println(modusStr);
   }
   if (modusStr == "Radio") {
-      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
-      tft->setTextColor(COLOR_ORANGE);  
-      tft->println(modusStr);
+      drawRGBBitmap(BMP_LEFT,BMP_DOWN,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+      setTextColor(GC9A01A_ORANGE);  
+      println(modusStr);
   }
   if (modusStr == "Media") {
-      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
-      tft->setTextColor(COLOR_GREEN);  
-      tft->println(modusStr);
+      drawRGBBitmap(BMP_LEFT,BMP_DOWN,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
+      setTextColor(GC9A01A_GREEN);  
+      println(modusStr);
   }
   if (modusStr == "Speaker") {
-      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
-      tft->setTextColor(COLOR_BLUE);  
-      tft->println(modusStr);
+      drawRGBBitmap(BMP_LEFT,BMP_DOWN,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
+      setTextColor(GC9A01A_BLUE);  
+      println(modusStr);
   }
   if (modusStr == "Settings") {
-      tft->drawRGBBitmap(BMP_LEFT,BMP_DOWN,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
-      tft->setTextColor(COLOR_RED);  
-      tft->println(modusStr);
+      drawRGBBitmap(BMP_LEFT,BMP_DOWN,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
+      setTextColor(GC9A01A_RED);  
+      println(modusStr);
   }
 }
 
 void AudioDisplay::show_jpg(String& jpgFile) {
 // todo
-}
-
-#ifdef DISPLAY_GC9A01A
-void AudioDisplay::begin(Adafruit_GC9A01A* mytft) {
-#endif
-  tft = mytft;
-  tft->begin();
-  tft->fillScreen(COLOR_BLACK);
-  tft->setRotation(3);
 }
 
 int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* resultStr) {
@@ -264,8 +247,8 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
     int x3 = sx2 * rx + x;
     int y3 = sy2 * ry + y;
 
-    tft->fillTriangle(x0, y0, x1, y1, x2, y2, colour);
-    tft->fillTriangle(x1, y1, x2, y2, x3, y3, colour);
+    fillTriangle(x0, y0, x1, y1, x2, y2, colour);
+    fillTriangle(x1, y1, x2, y2, x3, y3, colour);
 
     // Copy segment end to sgement start for next segment
     x0 = x2;

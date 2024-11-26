@@ -16,6 +16,7 @@
 //#define NODEBOSCH
 //#define WITTYNODE
 //#define NODE_AUDIO
+//#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
@@ -23,6 +24,7 @@
 //#define NODE_TEICH
 //#define NODE_FLUR
 #define NODE_KUECHENRADIO
+//#define NODE_WOHNZIMMERRADIO
 //---------------------------
 
 #include "Node_settings.h"

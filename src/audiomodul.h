@@ -36,8 +36,12 @@ Modus = Choose  Level = 0 Pos = beliebig    ==> Modus wird ausgewählt; Nach 60 
 #include "rotarymodul.h"
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
-#define USE_AUDIODISPLAY
-#include "audiodisplay.h"
+#ifdef USE_AUDIODISPLAY_ST7789
+#include "audiodisplay_ST7789.h"
+#endif
+#ifdef USE_AUDIODISPLAY_GC9A01A
+#include "audiodisplay_GC9A01A.h"
+#endif
 #ifdef USE_SDCARD
 #include "FS.h"
 #include "SD.h"

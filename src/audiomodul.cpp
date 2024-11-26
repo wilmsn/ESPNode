@@ -8,61 +8,24 @@
 /// @brief Instance for audio (I2S and decoder) device
 Audio            audio;
 
-#if defined(CONFIG_IDF_TARGET_ESP32) 
-#warning "Compiling Audiomodule with Settings for ESP32"
-// Config für das Audiomodul
-// Definitions for ESP32 Board
-// I2S Settings
-#define I2S_LRC                         26
-#define I2S_BCLK                        27
-#define I2S_DOUT                        25
-//TFT Settings
-// SCL (Display) => SCK  
-// SDA (Display) => MOSI 
-#define GC9A01A_TFT_CS                  21
-#define GC9A01A_TFT_DC                  5
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
-#warning ESP32S2
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-//#warning ESP32S3
-#warning "Compiling Audiomodule with Settings for ESP32-S3"
-//#warning "Settings for ESP32-S3"
-#define I2S_DOUT                        6
-#define I2S_BCLK                        5
-#define I2S_LRC                         4
-// Display
-// SCL (Display) => SCK                 12
-// SDA (Display) => MOSI                11
-#define GC9A01A_TFT_SCK                 12
-#define GC9A01A_TFT_MOSI                11
-#define GC9A01A_TFT_CS                  8
-#define GC9A01A_TFT_DC                  9
-// Rotary Encoder
-#define ROTARY_ENCODER_A_PIN            1 //38 //37
-#define ROTARY_ENCODER_B_PIN            2 //39 //36
-#define ROTARY_ENCODER_SW_PIN           3 //40 //35
-#define ROTARY_ENCODER_RESISTOR         INPUT_PULLUP
-#endif
-
-#define ARC_SIGMENT_DEGREES             3
-#define ARC_WIDTH                       5
-
 /// @brief Instances for the Preferences is defined in main.h
 extern Preferences preferences;
 /// @brief Instance for websockets is defined in webserver.h
 extern AsyncWebSocket ws;
 
 /// @brief Instance for the rotary module
+#ifdef USE_ROTARY
 RotaryModul      rotarymodul;
+#endif
 /// @brief Instance for displayhandling
-AudioDisplay     audiodisplay;
+//AudioDisplay     audiodisplay;
 /// @brief Instance for ohysical TFT Display
-#ifdef DISPLAY_GC9A01A
-Adafruit_GC9A01A tftx(GC9A01A_TFT_CS, GC9A01A_TFT_DC);
+#ifdef USE_AUDIODISPLAY_GC9A01A
+#include "audiodisplay_GC9A01A.h"
+AudioDisplay audiodisplay(TFT_CS, TFT_DC);
+#endif
+#ifdef USE_AUDIODISPLAY_ST7789
+#include "audiodisplay_ST7789.h"
 #endif
 
 /// @brief Variable zur Steuerung der Anzeige Steaminhalte im Display
@@ -80,6 +43,9 @@ uint16_t   allAlbum;
 
 void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
   Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true);
+//#ifdef USE_AUDIODISPLAY
+//  audiodisplay.begin(TFT_X, TFT_Y);
+//#endif
 #ifdef USE_AUDIO_RADIO
   audio_radio_load_stations();
 #endif
@@ -99,13 +65,17 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   audio_tre = preferences.getUChar("audio_tre");
   audio_bas = preferences.getUChar("audio_bas");
   preferences.end();
-  audiodisplay.begin(&tftx);
+//  audiodisplay.begin(&tftx);
+#ifdef USE_AUDIODISPLAY
   audiodisplay.show_ip(WiFi.localIP().toString().c_str());
   audiodisplay.show_info1("Init");
+#endif
+#ifdef USE_ROTARY
   rotarymodul.begin(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_SW_PIN, ROTARY_ENCODER_RESISTOR);
 //  rotarymodul.initLevel(0,0,audio_vol,100);
 //  rotarymodul.initLevel(1,0,audio_radio_cur_station,10);
 //  rotarymodul.initLevel(2,0,0,2);
+#endif
   if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
 #if defined(DEBUG_SERIAL_MODULE)
     Serial.print("Set PinOut: BCLK:");
@@ -120,7 +90,11 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   audio.setVolumeSteps(100);
   audio.setVolume(audio_vol);
   audio_set_modus(Off);
+#ifdef USE_AUDIO_RADIO
   last_modus = Radio;
+#else
+  last_modus = Settings;
+#endif
 //  audio.setAudioTaskCore(1);
 #ifdef USE_AUDIO_MEDIA
   readSD();
@@ -133,13 +107,21 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
   obj_html_info =  String("\"tab_head_audio\":\"I2S: MA98357\"")+
                    String(",\"tab_line1_audio\":\"DOUT:#GPIO: ")+String(I2S_DOUT)+ String("\"")+
                    String(",\"tab_line2_audio\":\"BCLK:#GPIO: ")+String(I2S_BCLK)+ String("\"")+
-                   String(",\"tab_line3_audio\":\"LRC:#GPIO: ")+String(I2S_LRC)+ String("\"")+
-                   String(",\"tab_head_display\":\"Display: GC9A01A\"")+
-                   String(",\"tab_line1_display\":\"SCK:#GPIO: ")+String(GC9A01A_TFT_SCK)+ String("\"")+
-                   String(",\"tab_line2_display\":\"MOSI:#GPIO: ")+String(GC9A01A_TFT_MOSI)+ String("\"")+
-                   String(",\"tab_line3_display\":\"CS:#GPIO: ")+String(GC9A01A_TFT_CS)+ String("\"")+
-                   String(",\"tab_line4_display\":\"DC:#GPIO: ")+String(GC9A01A_TFT_DC)+ String("\"")+
-                   String(",\"tab_head_rotary\":\"Rotary\"")+
+                   String(",\"tab_line3_audio\":\"LRC:#GPIO: ")+String(I2S_LRC)+ String("\"");
+#ifdef USE_AUDIODISPLAY                   
+#ifdef USE_AUDIODISPLAY_GC9A01A
+  obj_html_info += String(",\"tab_head_display\":\"Display: GC9A01A\"");
+#endif
+#ifdef USE_AUDIODISPLAY_ST7789
+  obj_html_info += String(",\"tab_head_display\":\"Display: ST7789\"");
+#endif
+  obj_html_info += String(",\"tab_line1_display\":\"SCK:#GPIO: ")+String(TFT_SCK)+ String("\"")+
+                   String(",\"tab_line2_display\":\"MOSI:#GPIO: ")+String(TFT_MOSI)+ String("\"")+
+                   String(",\"tab_line3_display\":\"CS:#GPIO: ")+String(TFT_CS)+ String("\"")+
+                   String(",\"tab_line4_display\":\"DC:#GPIO: ")+String(TFT_DC)+ String("\"");
+#endif
+#ifdef USE_ROTARY
+  obj_html_info += String(",\"tab_head_rotary\":\"Rotary\"")+
                    String(",\"tab_line1_rotary\":\"A-Pin:#GPIO: ")+String(ROTARY_ENCODER_A_PIN)+ String("\"")+
                    String(",\"tab_line2_rotary\":\"B-Pin:#GPIO: ")+String(ROTARY_ENCODER_B_PIN)+ String("\"")+
                    String(",\"tab_line3_rotary\":\"SW-Pin:#GPIO: ")+String(ROTARY_ENCODER_SW_PIN)+ String("\"")+
@@ -149,6 +131,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
     case INPUT_PULLUP:   obj_html_info += String("pullup")+String("\"");   break;
     case INPUT_PULLDOWN: obj_html_info += String("pulldown")+String("\""); break;
   }
+#endif
 }
 
 void AudioModul::html_create(String& tmpstr) {
@@ -217,8 +200,12 @@ bool AudioModul::set(const String& keyword, const String& value) {
       tmpstr = "{\"audio_vol\":";
       tmpstr += audio_vol;
       audio.setVolume(audio_vol);
+#ifdef USE_ROTARY
       rotarymodul.setValue(audio_vol);
+#endif
+#ifdef USE_AUDIODISPLAY                   
       audiodisplay.show_vol(audio_vol);
+#endif
       if (audio_vol == 0) {
         audio_set_modus(Off);
       }
@@ -355,22 +342,26 @@ void AudioModul::audio_set_modus(modus_t _modus) {
   switch (_modus) {
     case Select:
       write2log(LOG_MODULE,1,"audio_set_modus: case Select");
+#ifdef USE_ROTARY
       rotarymodul.setMaxLevel(1);
       rotarymodul.initLevel(1, 0, 0, 100);
       rotarymodul.initLevel(0, 0, (uint8_t)modus, modus_count-1);
       rotarymodul.setLevel(0);
       rotarymodul.setValue((uint8_t)last_modus);
+#endif
       modus = Select;
       audio_show_modus(last_modus);      
     break;
 #ifdef USE_AUDIO_RADIO
     case Radio:
       write2log(LOG_MODULE,1,"audio_set_modus: case Radio");
+#ifdef USE_ROTARY
       rotarymodul.setMaxLevel(1);
       rotarymodul.initLevel(0, 0, audio_vol, 100);
       rotarymodul.initLevel(1, 0, audio_radio_cur_station, MAXSTATIONS-1);
       rotarymodul.setLevel(0);
       rotarymodul.setValue(audio_vol);
+#endif
       modus = Radio;
       do_switch(true);
       switch (last_modus) {
@@ -393,12 +384,14 @@ void AudioModul::audio_set_modus(modus_t _modus) {
 #ifdef USE_AUDIO_MEDIA
     case Media:
       write2log(LOG_MODULE,1,"audio_set_modus: case Media");
+#ifdef USE_ROTARY
       rotarymodul.setMaxLevel(2);
       rotarymodul.initLevel(0, 0, audio_vol, 100);
       rotarymodul.initLevel(1, 0, audio_media_cur_dir, allAlbum-1);
       rotarymodul.initLevel(2, 0, audio_media_cur_file, 100);
       rotarymodul.setLevel(0);
       rotarymodul.setValue(audio_vol);
+#endif
       modus = Media;
       do_switch(true);
       switch (last_modus) {
@@ -441,10 +434,12 @@ void AudioModul::audio_set_modus(modus_t _modus) {
     default:
       write2log(LOG_MODULE,1,"audio_set_modus: case Off");
       ws.textAll("{\"audio_vol\":0}");
+#ifdef USE_ROTARY
       rotarymodul.setMaxLevel(0);
       rotarymodul.initLevel(0, 0, 0, 100);
       rotarymodul.setLevel(0);
       rotarymodul.setValue(0);
+#endif
       audio_vol=0;
       do_switch(false);
       modus = Off;
@@ -463,12 +458,15 @@ void AudioModul::audio_set_modus(modus_t _modus) {
 #ifdef USE_AUDIO_SPEAKER
       audio_speak_off();
 #endif
+#ifdef USE_AUDIODISPLAY                   
       audiodisplay.show_time(true);
+#endif
     break;
   }
 }
 
 void AudioModul::audio_show_modus(modus_t _modus) {
+#ifdef USE_AUDIODISPLAY                   
   if (_modus == Off) audiodisplay.show_modus("Off");
   if (_modus == Settings) audiodisplay.show_modus("Settings");
 #ifdef USE_AUDIO_RADIO
@@ -479,6 +477,7 @@ void AudioModul::audio_show_modus(modus_t _modus) {
 #endif
 #ifdef USE_AUDIO_SPEAKER
   if (_modus == Speaker) audiodisplay.show_modus("Speaker");
+#endif
 #endif
 }
 
@@ -493,10 +492,18 @@ void AudioModul::loop(time_t now) {
     time_update = false;
   }
 #ifdef USE_AUDIO_RADIO
+#ifdef USE_ROTARY
   radioPlayMode = (modus == Radio) && (rotarymodul.curLevel() == 0);
+#else
+  radioPlayMode = (modus == Radio);
+#endif
 #endif
 #ifdef USE_AUDIO_MEDIA
+#ifdef USE_ROTARY
   mediaPlayMode = (modus == Media) && (rotarymodul.curLevel() == 0);
+#else
+  mediaPlayMode = (modus == Media);
+#endif
 #endif
 
   if (modus != Off) {
@@ -528,11 +535,22 @@ void AudioModul::loop(time_t now) {
 #endif
     }
   }
+#ifdef USE_ROTARY
   rotarymodul.loop(now);
+#endif
 // Hier wird der Klickstream definiert
+#ifdef USE_AUDIODISPLAY                   
+#ifdef USE_ROTARY
+      if ( time_update && rotarymodul.curLevel() == 0)
+#endif
+      audiodisplay.show_time(false);
+#endif
   switch(modus) {
       case Off:
+#ifdef USE_AUDIODISPLAY                   
       if ( time_update ) audiodisplay.show_time(true);
+#endif
+#ifdef USE_ROTARY
       switch (rotarymodul.changed()) {
         case 1:
         default:
@@ -543,10 +561,11 @@ void AudioModul::loop(time_t now) {
         }
         break;
       }
+#endif
     break;
 #ifdef USE_AUDIO_RADIO
     case Radio:
-      if ( time_update && rotarymodul.curLevel() == 0) audiodisplay.show_time(false);
+#ifdef USE_ROTARY
       if ( timeout_set && (now - timeout_start) > TIMEOUT) {
         rotarymodul.setLevel(0);
         rotarymodul.setIsChanged(2);
@@ -592,20 +611,23 @@ void AudioModul::loop(time_t now) {
         timeout_set = true;
         break;
       }
+#endif      
     break;
 #endif
 #ifdef USE_AUDIO_MEDIA
     case Media:
-      if ( time_update && rotarymodul.curLevel() == 0) audiodisplay.show_time(false);
       if ( timeout_set && now - timeout_start > TIMEOUT) {
         audio_media_cur_dir   = audio_media_tmp_dir;
         audio_media_cur_album = audio_media_tmp_album;
         audio_media_cur_file  = audio_media_tmp_file;
         audio_media_cur_song  = audio_media_tmp_song;
+#ifdef USE_ROTARY
         rotarymodul.setLevel(0);
+#endif
         timeout_set = false;
         audio_media_disp_init();
       }
+#ifdef USE_ROTARY
       switch (rotarymodul.changed()) {
         case 1:
         // Der Rotary wurde gedreht
@@ -667,11 +689,12 @@ void AudioModul::loop(time_t now) {
           timeout_set = true;
         break;
       }
+#endif
     break;
 #endif
 #ifdef USE_AUDIO_SPEAKER
     case Speaker:
-      if ( time_update && rotarymodul.curLevel() == 0) audiodisplay.show_time(false);
+#ifdef USE_ROTARY
       switch (rotarymodul.changed()) {
         case 1:
         // Der Rotary wurde gedreht => Anwendung ändern
@@ -686,6 +709,7 @@ void AudioModul::loop(time_t now) {
 
 
       }
+#endif
     break;
 #endif
     case Select:
@@ -694,6 +718,7 @@ void AudioModul::loop(time_t now) {
         audio_set_modus(last_modus);
         timeout_set = false;
       }
+#ifdef USE_ROTARY
       switch (rotarymodul.changed()) {
         case 1:
         // Der Rotary wurde gedreht => Anwendung ändern
@@ -708,6 +733,7 @@ void AudioModul::loop(time_t now) {
         // Keine Aktion
         break;
       }
+#endif
     break;
     case Settings:
     // Zusätzliche Einstellungen: Bass, Höhen 
@@ -715,6 +741,7 @@ void AudioModul::loop(time_t now) {
         audio_set_modus(last_modus);
         timeout_set = false;
       }
+#ifdef USE_ROTARY
       switch (rotarymodul.changed()) {
         case 1:
         // Der Rotary wurde gedreht => Anwendung ändern
@@ -729,6 +756,7 @@ void AudioModul::loop(time_t now) {
 
         break;
       }
+#endif
     break;
   }
 // Ende Klickstream Definition  
@@ -764,7 +792,9 @@ void audio_info(const char *info){
       str2[5]='B';
       str2[6]='s';
       str2[7]=0;
+#ifdef USE_AUDIODISPLAY                   
       if (mediaPlayMode) audiodisplay.show_bps(str2);
+#endif
     }
     if (strlen(str2) == 5) {
       str2[2]=' ';
@@ -772,7 +802,9 @@ void audio_info(const char *info){
       str2[4]='B';
       str2[5]='s';
       str2[6]=0;
+#ifdef USE_AUDIODISPLAY                   
       if (mediaPlayMode) audiodisplay.show_bps(str2);
+#endif
     }
   }
 }
@@ -799,12 +831,16 @@ void audio_id3data(const char *info){
   str2[j]=0;
   String tmpstr = "{";
   if (info[0] == 'A' && info[1] == 'r' && info[2] == 't') {
+#ifdef USE_AUDIODISPLAY                   
     if (mediaPlayMode) audiodisplay.show_info1(str2);
+#endif
     audiomsg1 = String(str2);
     tmpstr += String("\"audiomsg1\":\"Artist: ")+audiomsg1+String("\"");
   }
   if (info[0] == 'T' && info[1] == 'i' && info[2] == 't') {
+#ifdef USE_AUDIODISPLAY                   
     if (mediaPlayMode) audiodisplay.show_info2(str2);
+#endif
     if (tmpstr.length() > 5) tmpstr += ",";
     audiomsg2 = String(str2);
     tmpstr += String("\"audiomsg2\":\"Title: ")+audiomsg2+String("\"");
@@ -824,7 +860,9 @@ void audio_id3data(const char *info){
 void audio_showstreamtitle(const char *info){
   String tmpstr;
   audiomsg2 = info;
+#ifdef USE_AUDIODISPLAY                   
   if (radioPlayMode) audiodisplay.show_info2(info);
+#endif
   tmpstr = String("{\"audiomsg2\":\"") + audiomsg2 + "\"}";
   write2log(LOG_MODULE,1,tmpstr.c_str());
   ws.textAll(tmpstr.c_str());
@@ -842,7 +880,9 @@ void audio_bitrate(const char *info) {
   bpsInfo[6] = 'p';
   bpsInfo[7] = 's';
   bpsInfo[8] = 0;
+#ifdef USE_AUDIODISPLAY                   
   if (radioPlayMode || mediaPlayMode) audiodisplay.show_bps(bpsInfo);
+#endif
   tmpstr = String("{\"audiomsg4\":\"") + String(bpsInfo) + String("\"}");
   write2log(LOG_MODULE,1,tmpstr.c_str());
   ws.textAll(tmpstr.c_str());
@@ -879,11 +919,13 @@ void AudioModul::audio_radio_on() {
 }
 
 void AudioModul::audio_radio_disp_init() {
+#ifdef USE_AUDIODISPLAY                   
   audiodisplay.clear();
   audiodisplay.show_ip(WiFi.localIP().toString().c_str());
   audiodisplay.show_vol(audio_vol);
   audiodisplay.show_time(false);
   audiodisplay.show_info1(station[audio_radio_cur_station].name);
+#endif
 }
 
 void AudioModul::audio_radio_web_init() {
@@ -901,6 +943,7 @@ void AudioModul::audio_radio_web_init() {
 }
 
 void AudioModul::audio_radio_select() {
+#ifdef USE_AUDIODISPLAY                   
   audiodisplay.select(
     audio_radio_cur_station > 1 ? station[audio_radio_cur_station-2].name : "",
     audio_radio_cur_station > 0 ? station[audio_radio_cur_station-1].name : "",
@@ -908,6 +951,7 @@ void AudioModul::audio_radio_select() {
     audio_radio_cur_station < MAXSTATIONS ? station[audio_radio_cur_station+1].name : "",
     audio_radio_cur_station < MAXSTATIONS - 1 ? station[audio_radio_cur_station+2].name : ""
   );
+#endif
 }
 
 void AudioModul::audio_radio_set_station() {
@@ -954,7 +998,9 @@ void AudioModul::audio_radio_save_stations() {
 
 void AudioModul::audio_media_on() {
   audio_media_play(audio_media_cur_dir,audio_media_cur_file);
+#ifdef USE_ROTARY
   if (rotarymodul.curLevel() == 0) audio_media_disp_init();
+#endif
   ws.textAll("{\"audio_media\":1}");
   write2log(LOG_MODULE,2,"Anzahl Songs: ",String(allSongs).c_str());
 }
@@ -1342,7 +1388,11 @@ void AudioModul::audio_media_select_song() {
 #ifdef USE_AUDIO_SPEAKER
 
 void AudioModul::audio_speak_on() {
+#ifdef USE_ROTARY
   if (rotarymodul.curLevel() == 0) audio_speak_show();
+#else
+  audio_speak_show();
+#endif
   html_json = "{\"audio_speak\":1}";
   ws.textAll(html_json);
 }

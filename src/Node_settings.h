@@ -134,7 +134,7 @@ RF24 Gateway:
 // Nur lauffähig auf ESP32 !!!
 #ifdef ESP32
 #define USE_AUDIOMODUL
-#define DISPLAY_GC9A01A
+#define USE_AUDIODISPLAY_GC9A01A
 //#define USE_SDCARD
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
@@ -161,6 +161,30 @@ RF24 Gateway:
 #warning "Audio läuft nur auf dem ESP32"
 #endif
 #endif
+//-------------------------------------------------------
+#if defined(NODE_WOHNZIMMERRADIO)
+
+#define USE_AUDIOMODUL
+#define USE_AUDIO_RADIO
+
+#include "audiomodul.h"
+#define MAGICNO                  51
+
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_WEB
+
+#define HOSTNAME                 "Wohnzimmerradio"
+#define HOST_DISCRIPTION         "Ein Radionode im Wohnzimmer"
+
+#define MODULE1_DEFINITION       AudioModul module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
+
+#define DO_LOG_WEB               true
+#define DO_LOG_MODULE            true
+#define DO_LOG_SYSTEM            true
+
+#endif
+//-----------------------------------------------------
 
 //*****************************************************
 //    Testnodes
@@ -176,6 +200,9 @@ RF24 Gateway:
 #define DEBUG_SERIAL_MQTT
 #define MODULE1_DEFINITION      Switch_OnOff module1;
 #ifdef ESP32
+#ifndef LED_BUILTIN
+#define LED_BUILTIN   2
+#endif
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, LED_BUILTIN);
 #else
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, false, 2);
@@ -309,12 +336,46 @@ RF24 Gateway:
 
 #ifdef ESP32
 #define USE_AUDIOMODUL
-#define DISPLAY_GC9A01A
-#define USE_SDCARD
+#define AUDIODISPLAY_GC9A01A
+//#define USE_SDCARD
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
 #define USE_FTP
 #define USE_WIFIMULTI
+
+#include "audiomodul.h"
+#define MAGICNO                  76
+
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_WEB
+
+#define HOSTNAME                 "Audiotestnode"
+#define HOST_DISCRIPTION         "Ein Audio Testnode"
+
+#define MODULE1_DEFINITION       AudioModul module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
+
+#define DO_LOG_WEB               true
+#define DO_LOG_MODULE            true
+#define DO_LOG_SYSTEM            true
+
+#else
+#warning "Audio läuft nur auf dem ESP32"
+#endif
+#endif
+
+//-----------------------------------------------------
+#if defined(NODE_TTGO_T_DISPLAY)
+
+#ifdef ESP32
+#define USE_AUDIOMODUL
+#define USE_AUDIODISPLAY_ST7789
+#define USE_AUDIODISPLAY
+//#define USE_SDCARD
+#define USE_AUDIO_RADIO
+//#define USE_AUDIO_MEDIA
+//#define USE_FTP
+//#define USE_WIFIMULTI
 
 #include "audiomodul.h"
 #define MAGICNO                  76
@@ -421,11 +482,93 @@ void RotaryTest::begin(const char* html_place, const char* label, const char* mq
 #endif
 
 /// Audio
-#if defined(DO_WEBRADIO) || defined(DO_MEDIAPLAYER) || defined(DO_BTSPEAKER)
-#define AUDIOBOX
-#warning "do we need this?"
+#ifdef USE_AUDIOMODUL
+#if defined(CONFIG_IDF_TARGET_ESP32) 
+#warning "Compiling Audiomodule with Settings for ESP32"
+#define I2S_LRC                         26
+#define I2S_BCLK                        27
+#define I2S_DOUT                        25
+#define ROTARY_ENCODER_A_PIN            34 //38 //37
+#define ROTARY_ENCODER_B_PIN            35 //39 //36
+#define ROTARY_ENCODER_SW_PIN           36 //40 //35
+#define ROTARY_ENCODER_RESISTOR         INPUT_PULLUP
 #endif
 
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#warning "Compiling Audiomodule with Settings for ESP32-S3"
+#define I2S_DOUT                        6
+#define I2S_BCLK                        5
+#define I2S_LRC                         4
+// Rotary Encoder
+#define ROTARY_ENCODER_A_PIN            1 //38 //37
+#define ROTARY_ENCODER_B_PIN            2 //39 //36
+#define ROTARY_ENCODER_SW_PIN           3 //40 //35
+#define ROTARY_ENCODER_RESISTOR         INPUT_PULLUP
+#endif
+#endif
+
+#ifdef USE_AUDIODISPLAY_GC9A01A
+#define USE_DISPLAY_GC9A01A
+#define USE_AUDIODISPLAY
+#endif
+
+#ifdef USE_DISPLAY_GC9A01A
+#if defined(CONFIG_IDF_TARGET_ESP32) 
+#warning "Compiling Display GC9A01A with Settings for ESP32"
+//TFT Settings
+#define TFT_MISO -1
+#define TFT_MOSI 19
+#define TFT_SCK  18
+#define TFT_CS 5
+#define TFT_DC 16
+#define TFT_RST 23
+#define TFT_BL 4
+#define TFT_X  240
+#define TFT_Y  135
+#endif
+
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+//#warning ESP32S3
+#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
+#define TFT_SCK                 12
+#define TFT_MOSI                11
+#define TFT_CS                  8
+#define TFT_DC                  9
+#endif
+#endif
+
+
+#ifdef USE_DISPLAY_XYZ
+#if defined(CONFIG_IDF_TARGET_ESP32) 
+#warning "Compiling Display xyz with Settings for ESP32"
+//TFT Settings
+#define TFT_MISO -1
+#define TFT_MOSI 19
+#define TFT_SCK  18
+#define TFT_CS 5
+#define TFT_DC 16
+#define TFT_RST 23
+#define TFT_BL 4
+#define TFT_X  240
+#define TFT_Y  135
+// SCL (Display) => SCK  
+// SDA (Display) => MOSI 
+//#define TFT_SCK                 12
+//#define TFT_MOSI                11
+//#define TFT_CS                  21
+//#define TFT_DC                  5
+// Rotary Encoder
+#endif
+
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#warning "Compiling Display xyz with Settings for ESP32-S3"
+#define TFT_SCK                 12
+#define TFT_MOSI                11
+#define TFT_CS                   8
+#define TFT_DC                   9
+#define TFT_RST                  7
+#endif
+#endif
 
 #endif
 //_NODE_SETTINGS_H_
