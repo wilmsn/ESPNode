@@ -46,6 +46,7 @@ void rf24gw_loop() {
   if ( radio.available() ) {
     radio.read(&payload, sizeof(payload));
     udpdata.gw_no = rf24gw_gw_no;
+    udpdata.utime = time(0);
     if (do_log_rf24) writeRf242log("N>G", payload);
     memcpy(&udpdata.payload, &payload, sizeof(payload));
     udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);

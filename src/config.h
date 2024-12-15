@@ -21,9 +21,9 @@
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-//#define NODE_TEICH
+#define NODE_TEICH
 //#define NODE_FLUR
-#define NODE_KUECHENRADIO
+//#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
 
@@ -202,6 +202,8 @@ typedef struct {
   uint16_t          gw_no;         // the number of the sending gateway
 /// Die Payloadstruktur wie unter payload_t definiert.
   payload_t         payload;      // the payload to send forward
+/// Der Unix Timestamp
+  time_t            utime;
 } udpdata_t;
 
 /// Definition der LogTypen
