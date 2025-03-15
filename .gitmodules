@@ -31,9 +31,6 @@
 [submodule "lib/Uptime"]
 	path = lib/Uptime
 	url = https://github.com/wilmsn/Uptime.git
-[submodule "lib/ESP32-audioI2S"]
-	path = lib/ESP32-audioI2S
-	url = https://github.com/wilmsn/ESP32-audioI2S.git
 [submodule "lib/Adafruit_BusIO"]
 	path = lib/Adafruit_BusIO
 	url = https://github.com/wilmsn/Adafruit_BusIO.git
@@ -56,3 +53,6 @@
 [submodule "lib/Preferences8266"]
 	path = lib/Preferences8266
 	url = https://github.com/wilmsn/Preferences8266.git
+[submodule "lib/ESP32-audioI2S"]
+	path = lib/ESP32-audioI2S
+	url = https://github.com/wilmsn/ESP32-audioI2S.git

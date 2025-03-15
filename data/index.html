@@ -439,6 +439,13 @@ function prozessJS( key, val ) {
     case "audio_show":
       $("#audio_div").show();
     break;
+    case "audio_trebas_enable":
+    if ( val > 0.5 ) {
+        $("#audio_trebas_enable").show();
+      } else {
+        $("#audio_trebas_enable").hide();
+      }
+    break;
     case "audio_trebas_settings":
       if ( val > 0.5 ) {
         $("#audio_settings").show();
@@ -1135,6 +1142,8 @@ function dellog() {
 }
 
 // Ab hier Funktionen fuer das Audio Modul
+// Öffnet die Einstellung für Bässe und Höhen 
+// über das "Hamburger"-Menü 
 function audio_trebas() {
   if ($("#audio_trebas").hasClass("change")) {
     $("#audio_trebas").removeClass("change");
@@ -1310,25 +1319,25 @@ function audio_radio_stn_update() {
       </div>
       <hr>
       <div class="slidecontainer">
-      <p style="margin-top: 2cm;">Lautstärke</p>
-      <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
+        <p style="margin-top: 2cm;">Lautstärke</p>
+        <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
       </div>
-      <div style="height: 50px;">
+      <div id="audio_trebas_enable" style="height: 50px;">
         <div id="audio_trebas" class="menu" onclick="audio_trebas()">
           <div class="bar1"></div>
           <div class="bar2"></div>
           <div class="bar3"></div>
         </div>
         <div class="menu_text">Höhen und Bässe</div>
-      </div>
-      <div id="audio_trebas_settings">
-        <div class="slidecontainer">
-          <p>Bass</p>
-          <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
-        </div>
-        <div class="slidecontainer">
-          <p>Höhen</p>
-          <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
+        <div id="audio_trebas_settings">
+          <div class="slidecontainer">
+            <p>Bass</p>
+            <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
+          </div>
+          <div class="slidecontainer">
+            <p>Höhen</p>
+            <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
+          </div>
         </div>
       </div>
       <div style="height: 50px;">

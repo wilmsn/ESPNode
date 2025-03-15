@@ -29,7 +29,7 @@
 
 #include "Node_settings.h"
 
-#define SWVERSION   "0.999 beta1"
+#define SWVERSION   "0.999 beta2"
 #define NTP_SERVER  "de.pool.ntp.org"
 #define TZ_INFO     "CET-1CEST,M3.5.0/03,M10.5.0/03"
 //#define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"

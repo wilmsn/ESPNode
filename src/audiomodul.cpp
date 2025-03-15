@@ -69,9 +69,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 #endif
 #ifdef USE_ROTARY
   rotarymodul.begin(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_SW_PIN, ROTARY_ENCODER_RESISTOR);
-//  rotarymodul.initLevel(0,0,audio_vol,100);
-//  rotarymodul.initLevel(1,0,audio_radio_cur_station,10);
-//  rotarymodul.initLevel(2,0,0,2);
 #endif
   if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
 #if defined(DEBUG_SERIAL_MODULE)
@@ -134,6 +131,8 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
 void AudioModul::html_create(String& tmpstr) {
   Switch_OnOff::html_create(tmpstr);
   tmpstr += String(",\"audio_show\":1");
+// Höhen und Bässe  derzeit deaktiviert 
+  tmpstr += String(",\"audio_trebas_enable\":0");
 #ifdef USE_AUDIO_RADIO
   tmpstr += String(",\"audio_radio_show\":1");
 #endif
@@ -211,6 +210,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       ws.textAll(tmpstr.c_str());
       retval = true;
     }
+/* Höhen und Bässe bereiten noch Probleme !!!!!!!
     if ( keyword == String("audio_bas") ) {
       // Bass kann nur über die Weboberfläche eingestellt werden
       audio_bas = value.toInt();
@@ -233,6 +233,7 @@ bool AudioModul::set(const String& keyword, const String& value) {
       audio.setTone((int8_t)-40+audio_bas,0,(int8_t)-40+audio_tre);
       retval = true;
     }
+Ende Höhen und Bässe */
 #ifdef USE_AUDIO_RADIO
     // Set for radio
     // Radio einschalten
@@ -480,11 +481,9 @@ void AudioModul::audio_show_modus(modus_t _modus) {
 
 void AudioModul::loop(time_t now) {
   // Jede Minute benötigt die Uhrzeit ein Update
-//  if (timeinfo.tm_min != old_min) {
   if (now - old_now > 59) { 
     time_update = true;
     old_now = now;
-//    old_min = timeinfo.tm_min;
   } else {
     time_update = false;
   }
@@ -552,7 +551,7 @@ void AudioModul::loop(time_t now) {
         case 1:
         default:
         // Der Rotary wurde gedreht => Anwendung ändern
-        if (rotarymodul.curValue() > 5) {
+        if (rotarymodul.curValue() > 1) {
           // Anlage einschalten
           audio_set_modus(last_modus);
         }
@@ -758,6 +757,7 @@ void AudioModul::loop(time_t now) {
   }
 // Ende Klickstream Definition  
 }
+
 /************************************************************************************
 // Die folgenden Funktionen ergänzen die Lib: ESP32-audioI2S
 // Die Funktionsnamen sind dort festgelegt

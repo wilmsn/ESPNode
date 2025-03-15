@@ -277,13 +277,13 @@ void prozess_sysinfo() {
 #endif
 #if defined(RF24GW)  
       tmpstr += ",\"RF24HUB-Server\":\"";
-      tmpstr += RF24GW_HUB_SERVER;
+      tmpstr += rf24gw_hub_server;
       tmpstr += "\",\"RF24HUB-Port\":";
-      tmpstr += String(RF24GW_HUB_UDP_PORTNO);
+      tmpstr += String(rf24gw_hub_port);
       tmpstr += ",\"RF24GW-Port\":";
-      tmpstr += String(RF24GW_GW_UDP_PORTNO);
+      tmpstr += String(rf24gw_gw_port);
       tmpstr += ",\"RF24GW-No\":";
-      tmpstr += String(RF24GW_NO);  
+      tmpstr += String(rf24gw_gw_no);  
 #endif
       tmpstr += "}";
       sendWsMessage(tmpstr, LOG_WEB);

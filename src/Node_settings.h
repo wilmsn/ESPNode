@@ -66,7 +66,7 @@ RF24 Gateway:
 #define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "Balkon", "balkon", "balkon", false, false, false, 0);
 
 #define MODULE3_DEFINITION       Sensor_18B20 module3;
-#define MODULE3_BEGIN_STATEMENT  module3.begin("sens1","Temperatur","Temperatur", 4);
+#define MODULE3_BEGIN_STATEMENT  module3.begin("out1","Temperatur","Temperatur", 4);
 
 #define MQTT_CLIENT              "terassennode"
 #define MQTT_TOPICP2             "terassennode"
@@ -90,7 +90,7 @@ RF24 Gateway:
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, true, 0, 2);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("sens1","Temperatur","Temperatur", 4);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur", 4);
 
 #define MQTT_CLIENT              "TeichNode"
 #define MQTT_TOPICP2             "TeichNode"
@@ -168,9 +168,13 @@ RF24 Gateway:
 
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
+#define USE_AUDIO_MEDIA
+#define USE_AUDIODISPLAY
+#define USE_AUDIODISPLAY_GC9A01A
+#define USE_SDCARD
 
 #include "audiomodul.h"
-#define MAGICNO                  51
+#define MAGICNO                  69
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
@@ -339,7 +343,7 @@ RF24 Gateway:
 #ifdef ESP32
 #define USE_AUDIOMODUL
 #define AUDIODISPLAY_GC9A01A
-//#define USE_SDCARD
+#define USE_SDCARD
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
 #define USE_FTP
