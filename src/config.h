@@ -19,17 +19,24 @@
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
-//#define NODE_WOHNZIMMER
+#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-#define NODE_TEICH
+//#define NODE_TEICH
 //#define NODE_FLUR
 //#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
 
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#define ESP32
+#endif
+#ifdef CONFIG_IDF_TARGET_ESP32
+#define ESP32
+#endif
+
 #include "Node_settings.h"
 
-#define SWVERSION   "0.999 beta2"
+#define SWVERSION   "0.999 beta3"
 #define NTP_SERVER  "de.pool.ntp.org"
 #define TZ_INFO     "CET-1CEST,M3.5.0/03,M10.5.0/03"
 //#define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
@@ -52,6 +59,11 @@
 #endif
 #ifndef RF24GW_GW_UDP_PORTNO
 #define RF24GW_GW_UDP_PORTNO           7003
+#endif
+
+//Settings for one wire bus
+#ifndef ONEWIREBUS
+#define ONEWIREBUS                      4
 #endif
 
 //Setting for Components
@@ -100,16 +112,22 @@
 /// Statusinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Messungen mit anschliessendem Versand der Daten über MQTT (falls aktiviert).
 /// In diesem Zeitinterval werden auch die Schalterzustände übertragen.
-#define STATINTERVAL                 60  // 300
+#ifndef STATINTERVAL
+#define STATINTERVAL                 300
+#endif
 
 /// Messinterval:
 /// Definiert den Abstand zwischen dem Start der Messung und dem gesicherten Vorliegen der Ergebnisse in Sekunden.
+#ifndef MESSINTERVAL
 #define MESSINTERVAL                 1
+#endif
 
 /// Telemetrieinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Telemetrieübertragungen.
 /// Hierzu gehören: Serverdaten, Netzwerkdaten, ...
-#define TELEINTERVAL                 300 // 1200
+#ifndef TELEINTERVAL
+#define TELEINTERVAL                 1200
+#endif
 
 /// Loop Time Alarm
 /// Definiert das Zeitintervall (in Millisekunden) für einen Loop Durchgang das nicht überschritten werden sollte.

@@ -44,91 +44,74 @@ public:
     /// @return true bei Übereinstimmung sonst false
     bool keyword_match(const String& keyword);
 
-    /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Webinhalt initialisiert.
-    void html_create(String& tmpstr);
-
-    /// @brief Sendet den Inhalt der Variablen "obj_htm_stat" als Websocketmessage.
-    void html_refresh();
+    /// @brief Sendet alle benötigten Daten um eine Zustandsänderung auf der Webseite für diesen Schalter darzustellen.
+    /// @brief Sendet den Inhalt der Variablen "obj_htm_stat" als Websocketmessage wenn obj_html_has_stat = true.
+    void html_update();
     
-    /// @brief Dummy, in dieser Funktion wird bei der abgeleiteten Klasse der Inhalt für die Systeminfoseite geliefert.
-    void html_info(String& tmpstr);
-
-    // MQTT Support
-
-    /// @brief Der mqtt_name wird im Topic3 für die Statusdaten genutzt.
-    /// @return Inhalt der Variablen "obj_mqtt_name"
-    String& mqtt_name();
-
-    /// @brief Aktuelle Statuswerte werden hier für die MQTT Übertragung zurückgegeben.
-    /// @brief Die Befüllung der zugrundeliegenden Variablen "obj_mqtt_state" erfolgt in dem abgeleiteten Script.
-    /// @brief Der Eintrag erfolgt entweder als Einzelwert oder als JSON formatierter String.
-    /// @brief Eine Übertragung per MQTT erfolgt nach jeder Änderung getriggert durch mqtt_stat_changed()
-    /// @return Ein String
-    String& mqtt_stat();
-
-    /// @brief Sobald sich ein Wert innerhalb von mqtt_state() verändert muss die abgeleitete Klasse "obj_mqtt_state_changed" entsprechend setzen.
-    /// @return true wenn sich mqtt_state geändert hat sonst false
-    bool mqtt_stat_changed();
-
-    /// @brief Hier wird alles übertragen was keine aktuelen Statuswerte sind.
-    /// @return Ein Teil-JSON als String ohne Klammern
-    String& mqtt_info();
-
-    /// @brief Ein Schalter ob mqtt_info vorhanden ist.
-    /// @return MQTT Info: true vorhanden; false nicht vorhanden
-    bool mqtt_has_info();
-
  //----------------Variablen---------------   
  
     /// @brief Das Schlüsselword für diesen Sensor/Actor.
-    String     obj_keyword;
+    String     keyword;
     
     /// @brief Der Einbauort für diesen Sensor/Actor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
-    String     obj_html_place;
+    String     html_place;
     
     /// @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt. 
-    String     obj_label;
+    String     label;
+
+    /// @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Daten für die Webseiteninitialisierung bereitstellt.
+    bool       html_has_stat = false;
+ 
+    /// @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Daten für die Seite "Systeminfo" bereitstellt.
+    bool       html_has_info = false;
     
     /// @brief Systeminformationen zum Sensor für die Webseite als json abgespeichert;
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Systeminfowert:
     /// @brief ""obj_html_placeX"+":"+"obj_labelX"+"MesswertX"+"EinheitX", ... "
     /// @brief Hier muss immer ein komplettes, gültiges Teil-JSON stehen dazu wird als default ein Dummy eingetragen.
-    String     obj_html_info = "\"x\":0";
+    String     html_info;
+
+    /// @brief Wenn auf der Webseite spezielle Initialisierungsinformationen benötigt werden, 
+    /// @brief müssen diese hier vom abgeleiteten Objekt im JSON Format abgelegt werden.
+    String     html_init;
 
     /// @brief Informationen zum Sensor für die Webseite als json abgespeichert;
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
     /// @brief ""obj_html_placeX"+":"+"obj_labelX"+"MesswertX"+"EinheitX", ... "
-    /// @brief Hier muss immer ein komplettes, gültiges Teil-JSON stehen dazu wird als default ein Dummy eingetragen.
-    String     obj_html_stat = "\"x\":0";
+    String     html_stat;
 
     /// @brief Ein Schalter der angibt ob der Nodestatus aus diesem Modul genommen wird.
     /// @brief Macht nur Sinn bei einem Schalter und muss dann in der abgeleiteten Klasse auf true gesetzt werden.
-    bool       obj_is_state = false;
+    bool       is_state = false;
 
     /// @brief Der aktuelle State des Nodes wird hier abgelegt (nur wenn dieses Modul den State setzt)
-    String     obj_state;
+    String     state;
 
     // MQTT Support
+
+    /// @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Statusdaten bereitstellt.
+    bool       mqtt_has_stat = false;
+
     /// @brief Der aktuelle Wert/Zustand des Schalters: "0" oder "1"
-    bool       obj_mqtt_state;
+    bool       mqtt_state;
 
     /// @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
-    bool       obj_mqtt_has_info;
+    bool       mqtt_has_info = false;
 
     /// @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
-    String     obj_mqtt_info;
+    String     mqtt_info;
 
     /// @brief Schalter ob "obj_mqtt_state" verändert worden ist und neu (=true) übertragen werden soll.
-    bool       obj_mqtt_stat_changed;
+    bool       mqtt_stat_changed = false;
 
     /// @brief Der MQTT Status
     /// @brief Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
     /// @brief "mqtt_nameX"+":"+"MesswertX",...
     /// @brief Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
-    String     obj_mqtt_stat;
+    String     mqtt_stat;
 
     /// @brief Die Bezeichnung für den ersten Wert
-    String     obj_mqtt_name;
+    String     mqtt_name;
 
 };
 

@@ -5,22 +5,22 @@
 
 LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
 
-void Actor_LEDMatrix::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword,
-               bool start_value, bool on_value, bool is_state, uint8_t slider_val, uint8_t slider_no, 
-               const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword,
-               const char* mqtt_line, const char* mqtt_graph) {
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, 
-                      start_value, on_value, is_state, slider_val, 15, slider_no, 
-                      slider_label, slider_mqtt_name, slider_keyword);
-  obj_mqtt_line = mqtt_line;
-  obj_mqtt_graph = mqtt_graph;
+void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+               bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_no, 
+               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword,
+               const char* _mqtt_line, const char* _mqtt_graph) {
+  Switch_OnOff::begin(_html_place, _label, _mqtt_name, _keyword, 
+                      _start_value, _on_value, _is_state, _slider_val, 15, _slider_no, 
+                      _slider_label, _slider_mqtt_name, _slider_keyword);
+  mqtt_line = _mqtt_line;
+  mqtt_graph = _mqtt_graph;
   matrix.begin();
   for (unsigned int address=0; address < LEDMATRIX_DEVICES_X * LEDMATRIX_DEVICES_Y ; address++) {
     matrix.displayTest(address, true);
     delay(200);
     matrix.displayTest(address, false);
   }
-  matrix.setIntensity(slider_val);
+  matrix.setIntensity(_slider_val);
   matrix.clear();
   matrix.setCursor(8,8);
   matrix.print("init");
@@ -34,18 +34,23 @@ void Actor_LEDMatrix::begin(const char* html_place, const char* label, const cha
     matrix.off();
   }
 
-  obj_html_info = String("\"tab_head_ldr\":\"Matrixdislay\"") +
-                  String(",\"tab_line1_matrix\":\"CLK:#GPIO: ") + String(LEDMATRIX_CLK) + String("\"")+
-                  String(",\"tab_line2_matrix\":\"DIN:#GPIO: ") + String(LEDMATRIX_DIN) + String("\"")+
-                  String(",\"tab_line3_matrix\":\"CS: #GPIO: ") + String(LEDMATRIX_CS) + String("\"")+
-                  String(",\"tab_line4_matrix\":\"X Devices:# ") + String(LEDMATRIX_DEVICES_X) + String("\"")+
-                  String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
-  obj_mqtt_has_info = true; 
+  html_info += String("\"tab_head_ldr\":\"Matrixdislay\"") +
+               String(",\"tab_line1_matrix\":\"CLK:#GPIO: ") + String(LEDMATRIX_CLK) + String("\"")+
+               String(",\"tab_line2_matrix\":\"DIN:#GPIO: ") + String(LEDMATRIX_DIN) + String("\"")+
+               String(",\"tab_line3_matrix\":\"CS: #GPIO: ") + String(LEDMATRIX_CS) + String("\"")+
+               String(",\"tab_line4_matrix\":\"X Devices:# ") + String(LEDMATRIX_DEVICES_X) + String("\"")+
+               String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
+  mqtt_info += String("\"Display-HW\":\"MAX7219 / MAX7221\"");
+  mqtt_has_info = true; 
+  if ( html_init.length() > 2) html_init += String(",");
+  html_init += String("\"matrix_x\":") + String(matrix.getNumDevicesX() * 8) +
+               String(",\"matrix_y\":") + String(matrix.getNumDevicesY() * 8) + 
+               String(",\"show_matrix\":1");
 }
 
-bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
+bool Actor_LEDMatrix::set(const String& _keyword, const String& _value) {
   bool retval = false;
-  if (Switch_OnOff::set(keyword, value)) {
+  if (Switch_OnOff::set(_keyword, _value)) {
     if (get_switch_val()) {
         matrix.on();
     } else {
@@ -53,15 +58,15 @@ bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
     }
     matrix.setIntensity(get_slider_val());
     retval = true;
-    html_refresh();
+    html_update();
   } else {
-    if ( keyword == obj_mqtt_line ) {
-      print_line(value.c_str());
+    if ( keyword == mqtt_line ) {
+      print_line(_value.c_str());
       graph_change_time = now;
       retval = true;
     }
-    if ( keyword == obj_mqtt_graph ) {
-      print_graph(value.c_str());
+    if ( keyword == mqtt_graph ) {
+      print_graph(_value.c_str());
       graph_change_time = now;
       retval = true;
     }
@@ -71,11 +76,13 @@ bool Actor_LEDMatrix::set(const String& keyword, const String& value) {
 
 void Actor_LEDMatrix::loop(time_t now) {
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
-    obj_html_stat = "\"matrix\":\"";
-    getMatrixFB(obj_html_stat);
-    obj_html_stat += "\"";
+    html_stat  = String("\"") + html_place + String("\":") + String(switch_state?"1":"0");
+    html_stat += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_val) + String("\"");  
+    html_stat += ",\"matrix\":\"";
+    getMatrixFB(html_stat);
+    html_stat += "\"";
     matrix.display();
-    html_refresh();
+    html_update();
     graph_change_time = 0;
   }
 }
@@ -157,15 +164,4 @@ void Actor_LEDMatrix::getMatrixFB(String& fb_cont) {
   }
 }
 
-void Actor_LEDMatrix::html_create(String& json) {
-  Switch_OnOff::html_create(json);
-  json += ",\"slider1max\":15,\"matrix_x\":";
-  json += matrix.getNumDevicesX() * 8;
-  json += ",\"matrix_y\":";
-  json += matrix.getNumDevicesY() * 8;
-  json += ",\"show_matrix\":1";
-  json += ",\"matrix\":\"";
-  getMatrixFB(json);
-  json += "\"";
-}
 #endif

@@ -4,82 +4,75 @@
 #include "common.h"
 #define REFRESHTIME    300
 #define RESOLUTION     12
-#define MEASUREDELAY   2
+#define MEASUREDELAY   10
 
-OneWire oneWire;
+OneWire oneWire(ONEWIREBUS);
 DallasTemperature sensors(&oneWire);
 
-void Sensor_18B20::begin(const char* html_place, const char* label, const char* mqtt_name, const int gpio) {
-  obj_label = label;
-  obj_html_place = html_place;
-  obj_mqtt_name = mqtt_name;
-  oneWire.begin(gpio);
-  delay(100);
+void Sensor_18B20::begin(const char* _html_place, const char* _label, const char* _mqtt_name) {
+  label = _label;
+  html_place = _html_place;
+  mqtt_name = _mqtt_name;
   sensors.begin();
-  delay(100);
-  sensors.setResolution(RESOLUTION);
-
-  obj_mqtt_info =  String("\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":") + String(RESOLUTION) +
-                   String(",\"Sensor-Refreshtime\":\"") + String(REFRESHTIME) + String(" Sek.\"");
-  obj_mqtt_has_info = true;
-
-  obj_html_info =  String("\"tab_head_18b20\":\"Sensor 18B20\"")+
-                   String(",\"tab_line1_18b20\":\"GPIO:# ")+String(gpio)+String("\"")+
-                   String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")+
-                   String(",\"tab_line3_18b20\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"");
-
-  obj_html_stat =  String("\"") + obj_html_place + String("\":\"") + obj_label + String(": --- \"");
-
-  sensors.requestTemperatures();
-  delay(500); 
-  if (sensors.getTempCByIndex(0) < -20.0) {
-    delay(1000); 
-    sensors.begin();
-    sensors.setResolution(RESOLUTION);
-    sensors.requestTemperatures();
-    delay(500); 
+  if (!sensors.getAddress(myThermometer, 0)) {
+    write2log(LOG_CRITICAL,1,"ERROR: Temeratursensor 18B20 nicht gefunden");
   }
+  sensors.setResolution(myThermometer, RESOLUTION);
+
+  mqtt_info =  String("\"Sensor-HW\":\"18B20\",\"Sensor-Resolution\":") + String(RESOLUTION) +
+                   String(",\"Sensor-Refreshtime\":\"") + String(REFRESHTIME) + String(" Sek.\"");
+  mqtt_has_info = true;
+  mqtt_has_stat = true;
+
+  html_info =  String("\"tab_head_18b20\":\"Sensor 18B20\"")+
+                   String(",\"tab_line1_18b20\":\"GPIO:# ")+String(ONEWIREBUS)+String("\"")+
+                   String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")+
+                   String(",\"tab_line3_18b20\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"")+
+                   String(",\"tab_line4_18b20\":\"Measuredelaytime:# ")+String(MEASUREDELAY)+String(" Sek.\"")+
+                   String(",\"tab_line5_18b20\":\"Deviceaddress:# 0x");
+                   for (uint8_t i = 0; i < 8; i++) {
+                     if (myThermometer[i] < 16) html_info += String("0");
+                     html_info += String(myThermometer[i], HEX);
+                   }
+  html_info += String("\"");
+  html_has_info = true;
+
+  html_init = 
+
+  html_stat =  String("\"") + html_place + String("\":\"") + label + String(": --- \"");
+  html_has_stat = true;
 }
 
 void Sensor_18B20::start_measure(time_t now) {
-  obj_measure_starttime = now;
-  obj_measure_started = true;
+  measure_starttime = now;
+  measure_started = true;
   sensors.requestTemperatures(); 
 }
 
 void Sensor_18B20::loop(time_t now) {
-  if (obj_measure_starttime == 0) {
+  if (measure_starttime == 0) {
     start_measure(now); 
   }
-  if (obj_measure_started) {
-    if ((now - obj_measure_starttime) > MEASUREDELAY) {
-      char tempstr[6];
+  if (measure_started) {
+    if ((now - measure_starttime) > MEASUREDELAY) {
       float tempC = -99;
-      tempC = sensors.getTempCByIndex(0);
-
-#if defined(DEBUG_SERIAL_MODULE)
-      Serial.print("Temperatur: ");
-      Serial.println(tempC);
-#endif
-
-      snprintf(tempstr,5,"%.1f",tempC);
-
-      obj_html_stat =  String("\"");
-      obj_html_stat += obj_html_place;
-      obj_html_stat += String("\":\"");
-      obj_html_stat += obj_label;
-      obj_html_stat += String(": ");
-      obj_html_stat += String(tempstr);
-      obj_html_stat += String(" °C\"");
-      html_refresh();
-      
-      obj_mqtt_stat = String("\"") + obj_mqtt_name + String("\":") + String(tempstr);
-      obj_mqtt_stat_changed = true;
-
-      obj_measure_started = false;
+      float tempCread;
+      tempCread = sensors.getTempC(myThermometer);
+      if (tempCread == DEVICE_DISCONNECTED_C) {
+        start_measure(now); 
+      } else {
+        tempC = tempCread;
+        measure_started = false;
+        html_stat = String("\"") + html_place + String("\":\"") + label + String(": ") +
+                        String(tempC,1) + String(" °C\"");
+        html_update();
+        mqtt_stat = String("\"") + mqtt_name + String("\":") + String(tempC,1);
+        mqtt_stat_changed = true;
+        write2log(LOG_MQTT,2,"18B20 Loop",mqtt_stat.c_str());
+      }
     }
   } else {
-    if ((now - obj_measure_starttime) > REFRESHTIME) {
+    if ((now - measure_starttime) > REFRESHTIME) {
       start_measure(now);
     }
   }

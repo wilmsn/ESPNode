@@ -14,12 +14,12 @@ uint8_t  rf24_hub2node[] = RF24_HUB2NODE;
 /// @param  Radio CE Pin
 /// @param  Radio CSN Pin
 RF24 radio(RF24_RADIO_CE_PIN, RF24_RADIO_CSN_PIN);
-bool do_rf24gw;
-String rf24gw_hub_server;
-int rf24gw_hub_port;
-int rf24gw_gw_port;
-int rf24gw_gw_no;
-bool do_log_rf24;
+bool         do_rf24gw;
+String       rf24gw_hub_server;
+uint16_t     rf24gw_hub_port;
+uint16_t     rf24gw_gw_port;
+uint8_t      rf24gw_gw_no;
+bool         do_log_rf24;
 /// @brief Eine Variable zur Aufnahme der UDP Daten Struktur
 udpdata_t udpdata;
 /// @brief Ein Objekt für udp Daten

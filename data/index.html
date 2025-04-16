@@ -8,7 +8,7 @@
 <script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.999 beta1 (10/2024)";
+var htmlversion = "0.999 beta3 (4/2025)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -68,7 +68,7 @@ function onOpen(event) {
 
 function onClose(event) {
     console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
+//    setTimeout(initWebSocket, 2000);
 }
 
 function onMessage(event) {

@@ -25,14 +25,18 @@ public:
 
 private:
 
+    /// @brief Füllt die Variable html_stat.
+    void fill_html_stat();
+    /// @brief Füllt die Variable mqtt_stat.
+    void fill_mqtt_stat();
     /// @brief Der numerische Messwert des LDR
-    int            obj_value;
+    int            value;
     /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
-    time_t         obj_measure_starttime = 0;
+    time_t         measure_starttime = 0;
     /// @brief Das Intervall zwischen 2 Messungen in Sekunden
-    time_t         obj_measure_interval = 60;
+    time_t         measure_interval = 60;
     /// @brief Der Abstand zwischen dem Start der Messung und dem Auslesen der Werte
-    time_t         obj_measure_delay = 60;
+    time_t         measure_delay = 60;
 
 };
 

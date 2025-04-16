@@ -397,9 +397,9 @@ void setup() {
     do_log_rf24       = DO_LOG_RF24;
     preferences.putBool("do_rf24gw", do_rf24gw);
     preferences.putString("rf24gw_hub_server", rf24gw_hub_server);
-    preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
-    preferences.putInt("rf24gw_gw_port", rf24gw_gw_port);
-    preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
+    preferences.putUShort("rf24gw_hub_port", rf24gw_hub_port);
+    preferences.putUShort("rf24gw_gw_port", rf24gw_gw_port);
+    preferences.putUChar("rf24gw_gw_no", rf24gw_gw_no);
     preferences.putBool("do_log_rf24", do_log_rf24);
 #endif
     do_log_module   = DO_LOG_MODULE;
@@ -433,9 +433,9 @@ void setup() {
 #if defined(RF24GW)
     do_rf24gw         = preferences.getBool("do_rf24gw");
     rf24gw_hub_server = preferences.getString("rf24gw_hub_server");
-    rf24gw_hub_port   = preferences.getInt("rf24gw_hub_port");
-    rf24gw_gw_port    = preferences.getInt("rf24gw_gw_port");
-    rf24gw_gw_no      = preferences.getInt("rf24gw_gw_no");
+    rf24gw_hub_port   = preferences.getUShort("rf24gw_hub_port");
+    rf24gw_gw_port    = preferences.getUShort("rf24gw_gw_port");
+    rf24gw_gw_no      = preferences.getUChar("rf24gw_gw_no");
     do_log_rf24       = preferences.getBool("do_log_rf24");
 #endif
     do_log_module     = preferences.getBool("do_log_module");
@@ -484,8 +484,7 @@ void setup() {
     start_AP();
   } else {
 #if defined(DEBUG_SERIAL)
-    IPAddress IP = WiFi.localIP();
-    write2log(LOG_SYSTEM,2, "Node Address is ", IP.toString().c_str());
+    write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
 #endif
     setupTime();
     if ( !getNTPtime(10) ) {
@@ -522,11 +521,18 @@ void setup() {
   Serial.println(ESP.getCycleCount());
 #endif
 #endif
-#ifdef USE_SDCARD
-  SD.begin(SD_CS);
-  sd_cardsize = SD.cardSize();
-  sd_cardType = SD.cardType();
-  sd_usedbytes = SD.usedBytes();
+#ifdef USE_AUDIO_MEDIA
+  if (SD.begin(SD_CS)) {
+    sd_cardsize = SD.cardSize();
+    sd_cardType = SD.cardType();
+    sd_usedbytes = SD.usedBytes();
+#if defined(DEBUG_SERIAL)
+#endif
+  } else {
+#if defined(DEBUG_SERIAL)
+  Serial.println("Error mounting SD Card");
+#endif        
+  }
 #endif
 #if defined(MODULE1)
   MODULE1_BEGIN_STATEMENT

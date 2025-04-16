@@ -13,11 +13,11 @@
 class Sensor_18B20 : public Base_Generic {
 
 public:
-    /// @brief Initialisierung des Sensorobjektes
+    /// @brief Initialisierung des Sensorobjektes. Achtung: Der Port wird über die Precompilerdirektive ONEWIREBUS gesetzt.
     /// @param html_place Der Einbauort der HTML Seite
     /// @param label Ein Bezeichner für den Messwert
     /// @param mqtt_name Der MQTT Bezeichner für den Messwert
-    void begin(const char* html_place, const char* label, const char* mqtt_name, const int gpio);
+    void begin(const char* html_place, const char* label, const char* mqtt_name);
 
     /// @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
     /// @param now Die aktuelle Zeit in Unix Sekunden
@@ -27,9 +27,11 @@ private:
     /// @brief Startet den Bosch Sensor im single Measure Mode. Nach der Erzeugung der Messwerte wird das Changed Flag gesetzt.
     void start_measure(time_t now);
     /// @brief Ein Flag ob die Messung gestartet wurde
-    bool       obj_measure_started = false;
+    bool       measure_started = false;
     /// @brief Die Startzeit in Unix Sekunden - Initialwert 0 sorgt für sofortige Messung beim Start
-    time_t     obj_measure_starttime = 0;
+    time_t     measure_starttime = 0;
+    /// @brief Eine Variable für die Deviceadresse
+    DeviceAddress myThermometer;
 
 };
 

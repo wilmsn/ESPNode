@@ -1,5 +1,6 @@
 #ifndef _NODE_SETTINGS_H_
 #define _NODE_SETTINGS_H_
+#include "config.h"
 
 /******************************************************
 The following settings ca be used for the individual node:
@@ -32,13 +33,13 @@ RF24 Gateway:
 
 #define HOSTNAME                 "FlurNode"
 #define HOST_DISCRIPTION         "Der Node im Flur: Hintergrundbeleuchtung"
-#define MAGICNO                  482
+#define MAGICNO                  321
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur", 4);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "flurnode"
 #define MQTT_TOPICP2             "flurnode"
@@ -54,7 +55,7 @@ RF24 Gateway:
 #define USE_SENSOR_18B20
 #include "sensor_18B20.h"
 
-#define MAGICNO                  475
+#define MAGICNO                  267
 
 #define HOSTNAME                 "TerassenNode"
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
@@ -66,7 +67,7 @@ RF24 Gateway:
 #define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "Balkon", "balkon", "balkon", false, false, false, 0);
 
 #define MODULE3_DEFINITION       Sensor_18B20 module3;
-#define MODULE3_BEGIN_STATEMENT  module3.begin("out1","Temperatur","Temperatur", 4);
+#define MODULE3_BEGIN_STATEMENT  module3.begin("out1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "terassennode"
 #define MQTT_TOPICP2             "terassennode"
@@ -90,7 +91,7 @@ RF24 Gateway:
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, true, 0, 2);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur", 4);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
 
 #define MQTT_CLIENT              "TeichNode"
 #define MQTT_TOPICP2             "TeichNode"
@@ -110,14 +111,14 @@ RF24 Gateway:
 
 #define HOSTNAME                 "wohnzimmernode"
 #define HOST_DISCRIPTION         "Node mit LED Matrix"
-#define MAGICNO                  105
+#define MAGICNO                  288
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", false, true, false, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, false, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur", 4);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur");
 
 #define MQTT_CLIENT              "wohnzimmernode"
 #define MQTT_TOPICP2             "wohnzimmernode"
@@ -145,6 +146,12 @@ RF24 Gateway:
 
 #include "audiomodul.h"
 #define MAGICNO                  77
+#define ROTARY_ENCODER_A_PIN     1
+#define ROTARY_ENCODER_B_PIN     2
+#define ROTARY_ENCODER_SW_PIN    3
+#define I2S_BCLK                 0
+#define I2S_LRC                  0
+#define I2S_DOUT                 0
 
 #define DEBUG_SERIAL_MODULE
 //#define DEBUG_SERIAL_WEB
@@ -194,13 +201,17 @@ RF24 Gateway:
 
 //*****************************************************
 //    Testnodes
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++
+//    NODESIMPLE
+//    Ein Node ohne externe Elemente.
+//    Lauffähig auf ESP8266 oder ESP32,ESP32S3,...    
 //-----------------------------------------------------
 #ifdef NODESIMPLE
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 
 #define HOSTNAME               "nodesimple"
-#define HOST_DISCRIPTION       "Ein ESP32 Node ohne externe Elemente"
+#define HOST_DISCRIPTION       "Ein Node ohne externe Elemente"
 #define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
@@ -209,7 +220,7 @@ RF24 Gateway:
 #ifndef LED_BUILTIN
 #define LED_BUILTIN   2
 #endif
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, LED_BUILTIN);
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, false, LED_BUILTIN);
 #else
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, false, 2);
 #endif
@@ -235,11 +246,14 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Ein Testnode für den Temperatursensor 18B20"
 #define MAGICNO                  0
 
+#define MQTT_CLIENT              "node18b20"
+#define MQTT_TOPICP2             "node18b20"
+
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", "led", false, false, true, 2);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", "led", false, false, false, 2);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur",4);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
 
 #endif
 //-----------------------------------------------------
@@ -303,7 +317,7 @@ RF24 Gateway:
 #define WITTY_RGB_BL           13
 #define WITTY_LED_PIN          2
 
-#define MAGICNO                123
+#define MAGICNO                0
 
 #define HOSTNAME               "wittynode"
 #define HOST_DISCRIPTION       "A Witty Node"
@@ -342,18 +356,19 @@ RF24 Gateway:
 
 #ifdef ESP32
 #define USE_AUDIOMODUL
-#define AUDIODISPLAY_GC9A01A
-#define USE_SDCARD
+#define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
-#define USE_FTP
+//#define USE_FTP
 #define USE_WIFIMULTI
+#define USE_ROTARY
 
 #include "audiomodul.h"
-#define MAGICNO                  76
+#define MAGICNO                  63
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL
 
 #define HOSTNAME                 "Audiotestnode"
 #define HOST_DISCRIPTION         "Ein Audio Testnode"
@@ -485,32 +500,6 @@ void RotaryTest::begin(const char* html_place, const char* label, const char* mq
 #endif
 #if defined(MODULE6_DEFINITION)
 #define MODULE6
-#endif
-
-/// Audio
-#ifdef USE_AUDIOMODUL
-#if defined(CONFIG_IDF_TARGET_ESP32) 
-#warning "Compiling Audiomodule with Settings for ESP32"
-#define I2S_LRC                         26
-#define I2S_BCLK                        27
-#define I2S_DOUT                        25
-#define ROTARY_ENCODER_A_PIN            34 //38 //37
-#define ROTARY_ENCODER_B_PIN            35 //39 //36
-#define ROTARY_ENCODER_SW_PIN           36 //40 //35
-#define ROTARY_ENCODER_RESISTOR         INPUT_PULLUP
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-#warning "Compiling Audiomodule with Settings for ESP32-S3"
-#define I2S_DOUT                        6
-#define I2S_BCLK                        5
-#define I2S_LRC                         4
-// Rotary Encoder
-#define ROTARY_ENCODER_A_PIN            1 //38 //37
-#define ROTARY_ENCODER_B_PIN            2 //39 //36
-#define ROTARY_ENCODER_SW_PIN           3 //40 //35
-#define ROTARY_ENCODER_RESISTOR         INPUT_PULLUP
-#endif
 #endif
 
 #ifdef USE_AUDIODISPLAY_GC9A01A

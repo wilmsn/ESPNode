@@ -94,7 +94,7 @@ public:
                bool start_value, bool on_value, bool is_state, uint8_t hw_pin, uint8_t slider_val, uint8_t slider_max_val, uint8_t slider_no,
                const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword);
 
-    /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "obj_keyword" übereinstimmt.
+    /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "keyword" übereinstimmt.
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
     ///**0** **aus** **Aus** **off** **Off**\n 
@@ -104,9 +104,6 @@ public:
     ///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n 
     /// @return "true" bei Übereinstimmung der Keywörter sonst false
     bool set(const String& keyword, const String& value);
-
-    /// @brief Erstellt ein Teil-JSON zur initialen Konfiguration der Webseite
-    void html_create(String& tmpstr);
 
     /// @brief Gibt die aktuellen Einstellungen des Sliders zurück 
     /// @return Der aktuelle Wert des Sliders
@@ -141,37 +138,40 @@ public:
     void set_hw_pin(uint8_t pin1, uint8_t pin2);
 
     /// @brief Der aktuelle Zustand des SChalters
-    bool obj_value;
+    bool switch_state;
     /// @brief Der hardwareseitige Einschaltwert des Schalters.
-    bool obj_on_value;
+    bool on_value;
     /// @brief Der zu setzende Wert beim Boot Vorgang
-    bool obj_start_value;
+    bool start_value;
     /// @brief "true" wenn der Slider genutzt wird, sonst "false"
-    bool obj_slider_used = false;
+    bool slider_used = false;
     /// @brief Nimmt den MQTT Namen für den Switch auf
-    String obj_switch_mqtt_name;
+    String switch_mqtt_name;
     /// @brief Nimmt den MQTT Namen für den Slider auf
-    String obj_slider_mqtt_name;
+    String slider_mqtt_name;
     /// @brief Nimmt das Keyword für den Slider auf
-    String obj_slider_keyword;
+    String slider_keyword;
     /// @brief Nimmt das Label für den Slider auf
-    String obj_slider_label;
+    String slider_label;
     /// @brief Nimmt den aktuellen Wert des Sliders auf
-    uint8_t obj_slider_val;
+    uint8_t slider_val;
     /// @brief Nimmt den maximalen Wert des Sliders auf
-    uint8_t obj_slider_max_val;
+    uint8_t slider_max_val;
     /// @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
-    uint8_t obj_slider_no;
+    uint8_t slider_no;
     /// @brief Flag das festlegt ob HW-Pin1 genutzt wird (true = wird genutzt)
-    bool       obj_hw_pin1_used = false;
+    bool       hw_pin1_used = false;
     /// @brief Flag das festlegt ob HW-Pin2 genutzt wird (true = wird genutzt)
-    bool       obj_hw_pin2_used = false;
+    bool       hw_pin2_used = false;
     /// @brief Optional: Der Hardwarepin1 für diesen Sensor.
-    uint8_t    obj_hw_pin1;
+    uint8_t    hw_pin1;
     /// @brief Optional: Der Hardwarepin2 für diesen Sensor.
-    uint8_t    obj_hw_pin2;
-//private:
+    uint8_t    hw_pin2;
 
+private:
+
+    void fill_html_stat();
+    void fill_html_init();
 };
 
 #endif

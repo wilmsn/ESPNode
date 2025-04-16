@@ -125,6 +125,7 @@ void prozess_wifiscan() {
 
 void prozess_sysinfo() {
   String tmpstr;
+  bool set_comma = false;
 // Daten für Sysinfo
 // Teil 1
       uint32_t free;
@@ -259,7 +260,7 @@ void prozess_sysinfo() {
       sendWsMessage(tmpstr, LOG_WEB);
 // Teil 3
       tmpstr = "{\"ws_teil2\":2,";
-#ifdef USE_SDCARD
+#ifdef USE_AUDIO_MEDIA
       tmpstr += "\"sdcard_enable\":1";
       tmpstr += ",\"sdcard_size\":"+String(sd_cardsize);
       tmpstr += ",\"sdcard_used\":"+String(sd_usedbytes);
@@ -289,27 +290,57 @@ void prozess_sysinfo() {
       sendWsMessage(tmpstr, LOG_WEB);
       tmpstr = "{";
 #ifdef MODULE1
-      module1.html_info(tmpstr);
-#endif
+      if (module1.html_has_info) {
+        if (module1.html_info.length() > 2) {
+          tmpstr += module1.html_info;
+          set_comma = true;
+        }
+      }
 #ifdef MODULE2
-      tmpstr += ",";
-      module2.html_info(tmpstr);
-#endif
+      if (module2.html_has_info) {
+        if (module2.html_info.length() > 2) {
+          if (set_comma) tmpstr += ",";
+          tmpstr += module2.html_info;
+          set_comma = true;
+        }
+      }
 #ifdef MODULE3
-      tmpstr += ",";
-      module3.html_info(tmpstr);
-#endif
+      if (module3.html_has_info) {
+        if (module3.html_info.length() > 2) {
+          if (set_comma) tmpstr += ",";
+          tmpstr += module3.html_info;
+          set_comma = true;
+        }
+      }
 #ifdef MODULE4
-      tmpstr += ",";
-      module4.html_info(tmpstr);
-#endif
+      if (module4.html_has_info) {
+        if (module4.html_info.length() > 2) {
+          if (set_comma) tmpstr += ",";
+          tmpstr += module4.html_info;
+          set_comma = true;
+        }
+      }
 #ifdef MODULE5
-      tmpstr += ",";
-      module5.html_info(tmpstr);
-#endif
+      if (module5.html_has_info) {
+        if (module5.html_info.length() > 2) {
+          if (set_comma) tmpstr += ",";
+          tmpstr += module5.html_info;
+          set_comma = true;
+        }
+      }
 #ifdef MODULE6
-      tmpstr += ",";
-      module6.html_info(tmpstr);
+      if (module6.html_has_info) {
+        if (module6.html_info.length() > 2) {
+          if (set_comma) tmpstr += ",";
+          tmpstr += module6.html_info;
+          set_comma = true;
+        }
+      }
+#endif
+#endif
+#endif
+#endif
+#endif
 #endif
   tmpstr += "}";
   sendWsMessage(tmpstr, LOG_WEB);
@@ -341,6 +372,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
 void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
   String tmpstr;
+  bool setComma = false;
   tmpstr = String("{\"titel1\":\"") + String(HOSTNAME) + String("\"");
   tmpstr += String(",\"wifi_ssid\":\"") + wifi_ssid + String("\"");
   tmpstr += String(",\"wifi_pass\":\"") + wifi_pass + String("\"");
@@ -387,29 +419,71 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
   sendWsMessage(tmpstr, LOG_WEB);
   tmpstr = "{";
 #ifdef MODULE1
-      module1.html_create(tmpstr);
-#endif
+  if (module1.html_init.length() > 2) {
+    tmpstr += module1.html_init;
+    setComma = true;
+  }
+  if (module1.html_stat.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module1.html_stat;
+    setComma = true;
+  }
 #ifdef MODULE2
-      tmpstr += ",";
-      module2.html_create(tmpstr);
-#endif
+  if (module2.html_init.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module2.html_init;
+  }
+  if (module2.html_stat.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module2.html_stat;
+    setComma = true;
+  }
 #ifdef MODULE3
-      tmpstr += ",";
-      module3.html_create(tmpstr);
-#endif
+  if (module3.html_init.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module3.html_init;
+  }
+  if (module3.html_stat.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module3.html_stat;
+    setComma = true;
+  }
 #ifdef MODULE4
-      tmpstr += ",";
-      module4.html_create(tmpstr);
-#endif
+  if (module4.html_init.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module4.html_init;
+  }
+  if (module4.html_stat.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module4.html_stat;
+    setComma = true;
+  }
 #ifdef MODULE5
-      tmpstr += ",";
-      module5.html_create(tmpstr);
-#endif
+  if (module5.html_init.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module5.html_init;
+  }
+  if (module5.html_stat.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module5.html_stat;
+    setComma = true;
+  }
 #ifdef MODULE6
-      tmpstr += ",";
-      module6.html_create();
-#endif
-  tmpstr += "}";
+  if (module6.html_init.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module6.html_init;
+  }
+  if (module6.html_stat.length() > 2) {
+    if (setComma) tmpstr += String(",");
+    tmpstr += module6.html_stat;
+  }
+#endif  //module6
+#endif  //Module5
+#endif  //Module4
+#endif  //Module3
+#endif  //Module2
+#endif  //module1
+  tmpstr += String("}");
   sendWsMessage(tmpstr, LOG_WEB);
 }
 
@@ -427,6 +501,7 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
     break;
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
+    default:
     break;
   }
 }

@@ -10,23 +10,23 @@
 
 BMX_SENSOR bmx_sensor;
 
-void Sensor_Bosch::begin(const char* html_place, const char* label, const char* mqtt_name,
-                         const char* html_place2, const char* label2, const char* mqtt_name2,
-                         const char* html_place3, const char* label3, const char* mqtt_name3) {
-  obj_label3 = label3;
-  obj_html_place3 = html_place3;
-  obj_mqtt_name3 = mqtt_name3;
-  begin(html_place, label, mqtt_name, html_place2, label2, mqtt_name2);
+void Sensor_Bosch::begin(const char* _html_place, const char* _label, const char* _mqtt_name,
+                         const char* _html_place2, const char* _label2, const char* _mqtt_name2,
+                         const char* _html_place3, const char* _label3, const char* _mqtt_name3) {
+  label3 = _label3;
+  html_place3 = _html_place3;
+  mqtt_name3 = _mqtt_name3;
+  begin(_html_place, _label, _mqtt_name, _html_place2, _label2, _mqtt_name2);
 }
 
-void Sensor_Bosch::begin(const char* html_place, const char* label, const char* mqtt_name,
-                         const char* html_place2, const char* label2, const char* mqtt_name2) {
-  obj_label2 = label2;
-  obj_html_place2 = html_place2;
-  obj_mqtt_name2 = mqtt_name2;
-  obj_label = label;
-  obj_html_place = html_place;
-  obj_mqtt_name1 = mqtt_name;
+void Sensor_Bosch::begin(const char* _html_place, const char* _label, const char* _mqtt_name,
+                         const char* _html_place2, const char* _label2, const char* _mqtt_name2) {
+  label2 = _label2;
+  html_place2 = _html_place2;
+  mqtt_name2 = _mqtt_name2;
+  label = _label;
+  html_place = _html_place;
+  mqtt_name1 = _mqtt_name;
 
   bmx_sensor.begin();
 
@@ -35,64 +35,58 @@ void Sensor_Bosch::begin(const char* html_place, const char* label, const char* 
   if (bmx_sensor.isBMP280()) bmx = String("BMP280");
   if (bmx_sensor.isBME280()) bmx = String("BME280");
 
-  obj_mqtt_info = String("\"Sensor-HW\":\"")+bmx+String("\"");
-  obj_mqtt_has_info = true;
+  mqtt_info = String("\"Sensor-HW\":\"")+bmx+String("\"");
+  mqtt_has_info = true;
 
-  obj_html_stat = String("\"")+String(obj_html_place)+String("\":\"")+obj_label+String(": --- °C\"")+
-                  String(",\"")+obj_html_place2+String("\":\"")+obj_label2+String(": --- hPa\"");
+  html_stat = String("\"") + String(html_place) + String("\":\"") + label+String(": --- °C\"") +
+              String(",\"") + html_place2 + String("\":\"") + label2 + String(": --- hPa\"");
+  html_has_stat = true;
 
-  obj_html_info = String("\"tab_head_bosch\":\"Sensor\"")+
-                  String(",\"tab_line1_bosch\":\"HW: ")+bmx+String(":#GPIO: ");
+  html_info = String("\"tab_head_bosch\":\"Sensor\"") +
+              String(",\"tab_line1_bosch\":\"HW: ") + bmx + String(":#GPIO: ");
 #ifdef ESP8266
-  obj_html_info += String("D1/D2 SDA/SCL\"");
+  html_info += String("D1/D2 SDA/SCL\"");
 #endif
-//  obj_html_info += String("\"")+
-  obj_html_info += String(",\"tab_line2_bosch\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"")+
+  html_info += String(",\"tab_line2_bosch\":\"Refreshtime:# ")+String(REFRESHTIME)+String(" Sek.\"")+
                    String(",\"tab_line3_bosch\":\"Chip ID:# ")+String(bmx_sensor.getChipId())+String("\"")+
                    String(",\"tab_line4_bosch\":\"I2C Addr:# ")+String(bmx_sensor.getI2Cadr())+String("\"");
-
-  obj_mqtt_name = bmx;
+  html_has_info = true;
+  
+  mqtt_name = bmx;
 
   start_measure(0);
 }
 
 void Sensor_Bosch::start_measure(time_t now) {
-  obj_measure_starttime = now;
-  obj_measure_started = true;
+  measure_starttime = now;
+  measure_started = true;
   bmx_sensor.startSingleMeasure();
 }
 
 void Sensor_Bosch::loop(time_t now) {
- if (obj_measure_started) {
-    if ((now - obj_measure_starttime) > MEASUREDELAY) {
-      char tempstr[6];
-      obj_html_stat =  String("\"")+String(obj_html_place)+String("\":\"")+obj_label+String(": ");
-      snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-      obj_html_stat += String(tempstr)+String(" °C\",\"")+obj_html_place2+String("\":\"")+obj_label2+String(": ");
-      snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-      obj_html_stat += String(tempstr)+String(" hPa\"");
+ if (measure_started) {
+    if ((now - measure_starttime) > MEASUREDELAY) {
+      html_stat = String("\"") + String(html_place) + String("\":\"") + label + String(": ") +
+                  String(bmx_sensor.getTemperature(),1) + String(" °C\",\"") + 
+                  html_place2 + String("\":\"") + label2 + String(": ") +
+                  String(bmx_sensor.getPressure(),0) + String(" hPa\"");
       if ( bmx_sensor.hasHumidity() ) {
-        obj_html_stat += String(",\"")+obj_html_place3+String("\":\"")+obj_label3+String(": ");
-        snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-        obj_html_stat += String(tempstr)+String(" %\"");
+        html_stat += String(",\"") + html_place3 + String("\":\"") + label3 + String(": ") +
+        String(bmx_sensor.getHumidity(),0) + String(" %\"");
       }
 
-      obj_mqtt_stat =  String("{\"")+obj_mqtt_name1+String("\":\"");
-      snprintf(tempstr,5,"%.1f",bmx_sensor.getTemperature());
-      obj_mqtt_stat += String(tempstr)+String("\",\"")+obj_mqtt_name2+String("\":\"");
-      snprintf(tempstr,5,"%.0f",bmx_sensor.getPressure());
-      obj_mqtt_stat += String(tempstr)+String("\"");
+      mqtt_stat = String("{\"") + mqtt_name1+String("\":\"") + String(bmx_sensor.getTemperature(),1) +
+                  String("\",\"") + mqtt_name2 + String("\":\"") + String(bmx_sensor.getPressure(),0) + String("\"");
       if ( bmx_sensor.hasHumidity() ) {
-        obj_mqtt_stat += String(",\"")+obj_mqtt_name3+String("\":\"");
-        snprintf(tempstr,5,"%.1f",bmx_sensor.getHumidity());
-        obj_mqtt_stat += String(tempstr)+String("\"");
+        mqtt_stat += String(",\"") + mqtt_name3 + String("\":\"") + String(bmx_sensor.getHumidity(),0) + String("\"");
       }
-      obj_mqtt_stat += String("}");
-      obj_mqtt_stat_changed = true;
-      obj_measure_started = false;
+      mqtt_stat += String("}");
+      mqtt_stat_changed = true;
+      mqtt_has_stat = true;
+      measure_started = false;
     }
   } else {
-    if ((now - obj_measure_starttime) > REFRESHTIME) {
+    if ((now - measure_starttime) > REFRESHTIME) {
       start_measure(now);
     }
   }

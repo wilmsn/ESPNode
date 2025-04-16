@@ -116,7 +116,7 @@ tm timeinfo;
 /// @brief Eine Variable für Zeitinformationen
 time_t now;
 
-#ifdef USE_SDCARD
+#ifdef USE_AUDIO_MEDIA
 #include "FS.h"
 #include "SD.h"
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
@@ -124,7 +124,18 @@ time_t now;
 //#define SD_SCK                        12
 //#define SD_MISO                       13 
 //#define SD_MOSI                       11 
+#ifndef SD_CS
 #define SD_CS                           10
+#endif
+#endif
+#if defined(CONFIG_IDF_TARGET_ESP32)
+// ESP32: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
+//#define SD_SCK                        18
+//#define SD_MISO                       19
+//#define SD_MOSI                       23 
+#ifndef SD_CS
+#define SD_CS                           5
+#endif
 #endif
 uint64_t sd_cardsize;
 uint64_t sd_usedbytes;

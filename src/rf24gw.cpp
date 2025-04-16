@@ -36,8 +36,10 @@ void rf24gw_setup() {
   radio.printDetails();
   if (udp.begin(rf24gw_gw_port) == 1) {
     if (do_log_rf24) {
-      write2log(LOG_SYSTEM,2, "RF24: Opened UDP Port:", String(rf24gw_hub_port).c_str() );
+      write2log(LOG_CRITICAL,2, "RF24: Opened UDP Port:", String(rf24gw_gw_port).c_str() );
     }
+  } else {
+    write2log(LOG_CRITICAL,2, "ERROR: Failed to open UDP Port:", String(rf24gw_gw_port).c_str() );
   }
 }
 

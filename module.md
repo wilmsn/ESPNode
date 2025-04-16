@@ -25,7 +25,7 @@ In der HTML Oberfläche gibt es folgende Nutzungsszenarien:
 
 - Aufbau der Webseite durch Aufruf der URL bzw. Reresh der Seite:
 
-Diese Funktion wird durch das Hauptprogramm umgesetzt, das Modul unterstützt durch die Funktion "html_create()".
+Diese Funktion wird durch das Hauptprogramm umgesetzt, das Modul unterstützt durch die Funktion "html_init()". Diese Funktion wird durch das Hauptprogramm aufgerufen wenn eine HTML-Seite geöffnet oder neu geladen wurde. Innerhalb der Funktion wird vom Modul eine Websocket Nachricht an die Webseite geschickt.
 
 - Änderung von Inhalten der Webseite
 
@@ -54,7 +54,7 @@ Grundsätzlich ist das Modul dafür verantwortlich:
 
 - GPIOs selbst zu verwalten (initialisieren, setzen)
 
-- Webinhalte sebst zu verwalten
+- Webinhalte selbst zu verwalten
 
 ##Schnittstellen zum Hauptprogramm
 Die nachfolgenden Schnittstellen werden durch das Hauptprogramm aufgerufen und müssen vorhanden sein. Wenn ein Modul auf "Base_Generic" als Vaterobjekt aufbaut ist das gewährleistet.
@@ -75,38 +75,47 @@ Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptpro
 
 "false" wenn das "item" nicht in diesem Modul ausgewertet wird, sonst "true"
 
-###Funktion html_create(String&)
-Diese Funktion wird vom Hauptrogramm aus aufgerufen wenn ein neuer Webclient sich verbindet. In diesem Fall muss der Client mit aktuellen Daten (idR. mittels Websocket) versorgt werden.
+###Funktion html_init()
+Diese Funktion wird vom Hauptrogramm aus aufgerufen wenn ein neuer Webclient sich verbindet. In diesem Fall muss der Client mit aktuellen Daten (mittels Websocket) versorgt werden.
+
+**Aufgabe**
+
+Liefert eine Websocketmessage mit allen benötigten Daten zur Initialisierung und dem aktuellen Werten der Webseite (für dieses Modul) 
 
 **Umsetzung**
 
-Innerhalb des Modues muss zu jedem Zeitpunkt die Variable "obj_html_stat" mit gültigem Inhalt gefüllt sein.
-Dies geschieht grundlegend in der Funktion begin() und wird dann bei jeder Änderung überarbeitet.
-Sollte kein Inhalt geliefert werden bleibt die Variable unangetastet. In der KLasse "Base_Generic" wurde für diesen Fall ein Dummy eingetragen. 
+Die Variable "obj_html_has_stat" wird auf "true" gesetzt wenn das Modul Inhalte für die Webseite liefert.
+ 
+Standardmäßig werden die Variablen obj_html_init (für die einmaligen Initialisierungsdaten) und obj_html_stat (für die aktuellen Daten) als Websocketnachricht übermittelt.
+
+"obj_html_init" wird idR. innerhalb der Funktion begin() gefüllt und muss danach idR. nicht mehr verändert werden..
+
+"obj_html_stat" wird nach jeder Zustandsänderung mit aktuellen Werten angepasst.
 
 **Rückgabewert:**
 
-Der übergebene String wird erweitert. Es muss um mindestens ein Wertepaar erweitert werden. Wird programmtechnisch kein Wert benötigt muss ein Dummy eingefügt werden (z.B "x"=1)
+Keine.
 
 **sonstige Infos**
 
 Auszug aus der KLasse "Base_Generic"
 
-	void Base_Generic::html_create(String& tmpstr) {
-	  tmpstr += obj_html_stat;
+	void Base_Generic::html_init() {
+	  if (obj_html_has_stat) {
+	    if (obj_html_init.length() > 0) {
+	      ws.textAll( String("{") + obj_html_init + String(",") + obj_html_stat + String("}") );
+	    } else {
+	      ws.textAll( String("{") + obj_html_stat + String("}") );
+	    }
+	  }
 	}
 
 Auszug aus dem Hauptprogramm:
 
-	tmpstr = "{";
 	#ifdef MODULE1
-	      module1.html_create(tmpstr);
+	      module1.html_init();
 	#endif
-	#ifdef MODULE2
-	      tmpstr += ",";
-	      module2.html_create(tmpstr);
-	#endif
-
+	
 Hier wird ersichtlich das die Funktion html_create() immer midestens ein Wertepaar liefern muss, da sonst durch die Kommatrennung das gesamte Statement ungültig wird.
 
 ###Funktion html_sysinfo(String&)

@@ -74,12 +74,12 @@ void mqtt_loop(time_t now);
 void mqtt_setup();
 
 // Modul: rf24gw
-extern bool do_rf24gw;
-extern bool do_log_rf24;
-extern String rf24gw_hub_server;
-extern int rf24gw_hub_port;
-extern int rf24gw_gw_port;
-extern int rf24gw_gw_no;
+extern bool     do_rf24gw;
+extern bool     do_log_rf24;
+extern String   rf24gw_hub_server;
+extern uint16_t rf24gw_hub_port;
+extern uint16_t rf24gw_gw_port;
+extern uint8_t  rf24gw_gw_no;
 
 void rf24gw_setup();
 void rf24gw_loop();
