@@ -9,6 +9,7 @@
  * 1) der zu erzeugende Node ausgewählt
  * 2) grundlegende Konfigurationen festgelegt 
 */
+//#if ESP_IDF_VERSION_MAJOR == 5
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
@@ -19,24 +20,20 @@
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
-#define NODE_WOHNZIMMER
+//#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
-//#define NODE_KUECHENRADIO
+#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
-
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#define ESP32
-#endif
-#ifdef CONFIG_IDF_TARGET_ESP32
-#define ESP32
-#endif
-
-#include "Node_settings.h"
-
+// Ab hier werden Abhängigkeiten gesetzt. 
+// Die folgende Einstellungen müssen an die aktuelle Umgebung angepasst werden.
+//---------------------------
+// Change below to your requirements and infrastructure.
+//---------------------------
 #define SWVERSION   "0.999 beta3"
+// Network Time Protocoll
 #define NTP_SERVER  "de.pool.ntp.org"
 #define TZ_INFO     "CET-1CEST,M3.5.0/03,M10.5.0/03"
 //#define TZ_INFO     "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
@@ -44,31 +41,137 @@
 //#define TZ_INFO     "WIB-7"
 // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
 
+// MQTT Default Configuration
+#define DEFAULT_MQTT_SERVER                    "rpi1.fritz.box"
+
+// RF24 Default Configuration
+#define DEFAULT_RF24GW_HUB_SERVER              "rpi1.fritz.box"
+#define DEFAULT_RF24GW_HUB_UDP_PORTNO          7004
+#define DEFAULT_RF24GW_GW_UDP_PORTNO           7003
+
+//---------------------------
+// Ab hier werden Abhängigkeiten gesetzt. Normalerweise sollte ab hier nichts editiert werden, es sei denn....
+// man weiss was man tut !!!!
+//---------------------------
+// No changes below - exept you know what are you doing !!!
+//---------------------------
+
+// Globale Einstellungen für Sensoren, können in den Settings für jeden Node überschrieben werden. 
+#ifndef REFRESHTIME
+/**
+ * Die globale Wiederholdauer für Messungen in Sekunden 
+ */
+#define REFRESHTIME          300
+#endif
+
+#ifndef MEASUREDELAY
+/**
+ * Die globale Wartezeit nach dem Start einer Messung in Sekunden 
+ */
+#define MEASUREDELAY         10
+#endif
+
+#ifndef RESOLUTION_18B20
+/**
+ * Globale Festlegung der Messauflösung für den 18B20 Sensor
+ */
+#define RESOLUTION_18B20     12
+#endif
+
+#ifndef ONEWIREBUS
+/**
+ * Settings for one wire bus
+ */
+#define ONEWIREBUS           4
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifndef ESP32
+#define ESP32
+#endif
+#endif
+#ifdef CONFIG_IDF_TARGET_ESP32
+#ifndef ESP32
+#define ESP32
+#endif
+#endif
+
+#include "Node_settings.h"
+
 // Hier werden die allgemeinen Parameter für den Einsatz festgelegt
 // Alternativ können diese Einstellungen auch in der Konfiguration des Nodes 
 // festgelegt werden.
 // Achtung: Die Festlegung hier kann für jeden Node überschrieben werden!
-#ifndef MQTT_SERVER
-#define MQTT_SERVER                    "rpi1.fritz.box"
+
+#ifndef MAGICNO
+/// @brief Die Magic Number
+/// Eine Null (0) bewirkt das die Einstellungen nicht gespeichert werden, 
+///               Beim Neustart werden wieder die Defaults genutzt.
+/// Jede andere Zahl bewirkt das die Defaults einmalig übernommen werden wenn sich die NUmmer geändert hat.
+#define MAGICNO               0
 #endif
+
+/// Modules
+#ifdef MODULE1_DEFINITION
+#define MODULE1
+#endif
+#ifdef MODULE2_DEFINITION
+#define MODULE2
+#endif
+#ifdef MODULE3_DEFINITION
+#define MODULE3
+#endif
+#ifdef MODULE4_DEFINITION
+#define MODULE4
+#endif
+#ifdef MODULE5_DEFINITION
+#define MODULE5
+#endif
+#ifdef MODULE6_DEFINITION
+#define MODULE6
+#endif
+
+/// Abhängigkeiten für das Debugging
+/// Debug Settings
+#ifdef DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL
+#endif
+#ifdef DEBUG_SERIAL_RF24
+#define DEBUG_SERIAL
+#endif
+#ifdef DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL
+#endif
+#ifdef DEBUG_SERIAL_MQTT
+#define DEBUG_SERIAL
+#endif
+#ifdef DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL
+#endif
+
+/// Festlegung des MQTT Defaultservers
+#ifndef MQTT_SERVER
+#define MQTT_SERVER                    DEFAULT_MQTT_SERVER
+#endif
+#ifdef MQTT_CLIENT
+#define MQTT                          true
+#ifndef MQTT_TOPICP2
+#define MQTT_TOPICP2                  MQTT_CLIENT
+#endif
+#endif
+
+/// Festlegung der RF24 Defaulteinstellungen
 #ifndef RF24GW_HUB_SERVER
-#define RF24GW_HUB_SERVER              "rpi1.fritz.box"
+#define RF24GW_HUB_SERVER              DEFAULT_RF24GW_HUB_SERVER
 #endif
 #ifndef RF24GW_HUB_UDP_PORTNO
-#define RF24GW_HUB_UDP_PORTNO          7004
+#define RF24GW_HUB_UDP_PORTNO          DEFAULT_RF24GW_HUB_UDP_PORTNO
 #endif
 #ifndef RF24GW_GW_UDP_PORTNO
-#define RF24GW_GW_UDP_PORTNO           7003
+#define RF24GW_GW_UDP_PORTNO           DEFAULT_RF24GW_GW_UDP_PORTNO
 #endif
-
-//Settings for one wire bus
-#ifndef ONEWIREBUS
-#define ONEWIREBUS                      4
-#endif
-
-//Setting for Components
-#ifdef USE_AUDIO_MEDIA
-#define USE_SDCARD
+#ifdef RF24GW_NO
+#define RF24GW                         true
 #endif
 
 //Set a default hostname
@@ -116,10 +219,10 @@
 #define STATINTERVAL                 300
 #endif
 
-/// Messinterval:
+/// Measuredelay:
 /// Definiert den Abstand zwischen dem Start der Messung und dem gesicherten Vorliegen der Ergebnisse in Sekunden.
-#ifndef MESSINTERVAL
-#define MESSINTERVAL                 1
+#ifndef MEASUREDELAY
+#define MEASUREDELAY                 10
 #endif
 
 /// Telemetrieinterval:
@@ -146,11 +249,11 @@
 #endif
 ///Der verwendete RF24 Funkkanal
 #ifndef RF24_CHANNEL
-#define RF24_CHANNEL        92
+#define RF24_CHANNEL                   92
 #endif
 /// Die Übertragungsgeschwindigkeit
 #ifndef RF24_SPEED
-#define RF24_SPEED          RF24_250KBPS
+#define RF24_SPEED                     RF24_250KBPS
 #endif
 /// Der Netzwerkschlüssel Hub zum Node
 #ifndef RF24_HUB2NODE

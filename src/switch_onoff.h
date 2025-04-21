@@ -95,15 +95,17 @@ public:
                const char* slider_label, const char* slider_mqtt_name, const char* slider_keyword);
 
     /// @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "keyword" übereinstimmt.
-    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
-    /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
+    /// @param _cmnd Das Schlüsselword auf das dieser Schalter reagiert
+    /// @param _val Folgende Strings als **value** übergeben schalten **aus**:\n 
     ///**0** **aus** **Aus** **off** **Off**\n 
     ///Folgende Strings als **value** übergeben schalten **ein**:\n 
     ///**1** **ein** **Ein** **on** **On**\n 
     ///Folgende Strings als **value** übergeben schalten **um**:\n 
     ///**2** **umschalten** **Umschalten** **toggle** **Toggle**\n 
     /// @return "true" bei Übereinstimmung der Keywörter sonst false
-    bool set(const String& keyword, const String& value);
+    bool set(const String& _cmnd, const String& _val);
+
+    void html_init();
 
     /// @brief Gibt die aktuellen Einstellungen des Sliders zurück 
     /// @return Der aktuelle Wert des Sliders
@@ -115,29 +117,29 @@ public:
 
     /// @brief Sets the switch
     /// @param val 0=off 1=on 2=toogle
-    void set_switch(uint8_t val);
+    void set_switch(uint8_t _val);
 
     /// @brief Sets the slider
     /// @param val The value to set (0...255)
-    void set_slider(uint8_t val);
+    void set_slider(uint8_t _val);
 
     /// @brief Sets the slider
     /// @param val The value to set (0...255)
-    void set_slider_label(const char* label);
+    void set_slider_label(const char* _label);
 
     /// @brief Sets the sliders max value
     /// @param val The value to set (0...255)
-    void set_slider_max_value(uint8_t val);
+    void set_slider_max_value(uint8_t _val);
 
     /// @brief Schaltet den Schalter auf einen neuen Zustand.
-    /// @param state Der neue Zustand des Schalters ("true" = Ein, "false" = Aus).
-    void do_switch(bool state);
+    /// @param new_state Der neue Zustand des Schalters ("true" = Ein, "false" = Aus).
+    void do_switch(bool new_state);
 
     void set_hw_pin(uint8_t pin1);
 
     void set_hw_pin(uint8_t pin1, uint8_t pin2);
 
-    /// @brief Der aktuelle Zustand des SChalters
+    /// @brief Der aktuelle Zustand des Schalters
     bool switch_state;
     /// @brief Der hardwareseitige Einschaltwert des Schalters.
     bool on_value;
@@ -170,8 +172,8 @@ public:
 
 private:
 
-    void fill_html_stat();
-    void fill_html_init();
+//    void fill_html_stat();
+//    void fill_html_init();
 };
 
 #endif

@@ -42,15 +42,12 @@ void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const c
                String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
   mqtt_info += String("\"Display-HW\":\"MAX7219 / MAX7221\"");
   mqtt_has_info = true; 
-  if ( html_init.length() > 2) html_init += String(",");
-  html_init += String("\"matrix_x\":") + String(matrix.getNumDevicesX() * 8) +
-               String(",\"matrix_y\":") + String(matrix.getNumDevicesY() * 8) + 
-               String(",\"show_matrix\":1");
+
 }
 
-bool Actor_LEDMatrix::set(const String& _keyword, const String& _value) {
+bool Actor_LEDMatrix::set(const String& _cmnd, const String& _val) {
   bool retval = false;
-  if (Switch_OnOff::set(_keyword, _value)) {
+  if (Switch_OnOff::set(_cmnd, _val)) {
     if (get_switch_val()) {
         matrix.on();
     } else {
@@ -58,15 +55,14 @@ bool Actor_LEDMatrix::set(const String& _keyword, const String& _value) {
     }
     matrix.setIntensity(get_slider_val());
     retval = true;
-    html_update();
   } else {
-    if ( keyword == mqtt_line ) {
-      print_line(_value.c_str());
+    if ( _cmnd == mqtt_line ) {
+      print_line(_val.c_str());
       graph_change_time = now;
       retval = true;
     }
-    if ( keyword == mqtt_graph ) {
-      print_graph(_value.c_str());
+    if ( _cmnd == mqtt_graph ) {
+      print_graph(_val.c_str());
       graph_change_time = now;
       retval = true;
     }
@@ -74,14 +70,27 @@ bool Actor_LEDMatrix::set(const String& _keyword, const String& _value) {
   return retval;
 }
 
+void Actor_LEDMatrix::html_init() {
+  Switch_OnOff::html_init();
+  html_json += String(",\"matrix_x\":") + String(matrix.getNumDevicesX() * 8) +
+              String(",\"matrix_y\":") + String(matrix.getNumDevicesY() * 8) + 
+              String(",\"show_matrix\":1,");
+  html_upd_data();
+  html_json_filled = true;
+}
+
+void Actor_LEDMatrix::html_upd_data(){
+  html_json += String("\"") + html_place + String("\":") + String(switch_state?"1":"0") + String(",\"slider") + 
+               String(slider_no) + String("val\":\"") + String(slider_val) + String("\"") + String(",\"matrix\":\"");
+  getMatrixFB(html_json);
+  html_json += String("\"");
+}
+
 void Actor_LEDMatrix::loop(time_t now) {
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
-    html_stat  = String("\"") + html_place + String("\":") + String(switch_state?"1":"0");
-    html_stat += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_val) + String("\"");  
-    html_stat += ",\"matrix\":\"";
-    getMatrixFB(html_stat);
-    html_stat += "\"";
     matrix.display();
+    html_json = "";
+    html_upd_data();
     html_update();
     graph_change_time = 0;
   }

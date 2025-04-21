@@ -115,7 +115,7 @@ RF24 Gateway:
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, false, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur");
@@ -173,12 +173,13 @@ RF24 Gateway:
 //-------------------------------------------------------
 #if defined(NODE_WOHNZIMMERRADIO)
 
+#define USE_WIFIMULTI
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
-#define USE_AUDIO_MEDIA
-#define USE_AUDIODISPLAY
-#define USE_AUDIODISPLAY_GC9A01A
-#define USE_SDCARD
+//#define USE_AUDIO_MEDIA
+//#define USE_AUDIODISPLAY
+//#define USE_AUDIODISPLAY_GC9A01A
+//#define USE_SDCARD
 
 #include "audiomodul.h"
 #define MAGICNO                  69
@@ -282,7 +283,7 @@ RF24 Gateway:
 #define MODULE2_BEGIN_STATEMENT  module2.begin("sw1", "interne LED", "led1", "led1", false, false, false, 2);
 
 #define MODULE3_DEFINITION       Switch_OnOff module3;
-#define MODULE3_BEGIN_STATEMENT  module3.begin("sw2", "zweite LED", "led2", "led2", false, false, false, 0);
+#define MODULE3_BEGIN_STATEMENT  module3.begin("sw2", "zweite LED", "led2", "led2", false, false, true, 0);
 
 #define MQTT_CLIENT              "BoschNode"
 
@@ -336,7 +337,7 @@ RF24 Gateway:
 #define DO_LOG_SYSTEM            true
 
 #define MODULE1_DEFINITION      Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, false, WITTY_LED_PIN);
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, true, WITTY_LED_PIN);
 
 #define MODULE2_DEFINITION      Switch_OnOff module2;
 #define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot-Helligkeit", "rot_sl", "rot_sl");
@@ -348,7 +349,7 @@ RF24 Gateway:
 #define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, false, WITTY_RGB_BL, 100, 100, 3, "Blau Helligkeit", "blau_sl", "blau_sl");
 
 #define MODULE5_DEFINITION      Sensor_LDR module5;
-#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", 30);
+#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR");
 
 #endif
 //-----------------------------------------------------
@@ -442,142 +443,6 @@ void RotaryTest::begin(const char* html_place, const char* label, const char* mq
 #define DO_LOG_SYSTEM           true
 #define MAGICNO                 0
 
-#endif
-
-//define constrains for precompiler 
-//no changes below !!!!!!!!!!!!!!!!
-
-#ifndef MAGICNO
-#define MAGICNO               0
-#endif
-
-#if defined(RF24GW_NO)
-#define RF24GW                true
-#endif
-
-#if defined(MQTT_CLIENT)
-#define MQTT                  true
-#ifndef MQTT_TOPICP2
-#define MQTT_TOPICP2          MQTT_CLIENT
-#endif
-#endif
-
-/// Debug Settings
-#if defined(DEBUG_SERIAL_MODULE)
-#define DEBUG_SERIAL
-#endif
-#if defined(DEBUG_SERIAL_RF24)
-#define DEBUG_SERIAL
-#endif
-#if defined(DEBUG_SERIAL_WEB)
-#define DEBUG_SERIAL
-#endif
-#if defined(DEBUG_SERIAL_MQTT)
-#define DEBUG_SERIAL
-#endif
-#if defined(DEBUG_SERIAL_MODULE)
-#define DEBUG_SERIAL
-#endif
-
-/// Modules
-#if defined(LEDMATRIX_DEVICES_X) && defined(LEDMATRIX_DEVICES_Y)
-#define LEDMATRIX
-#endif
-#if defined(MODULE1_DEFINITION)
-#define MODULE1
-#endif
-#if defined(MODULE2_DEFINITION)
-#define MODULE2
-#endif
-#if defined(MODULE3_DEFINITION)
-#define MODULE3
-#endif
-#if defined(MODULE4_DEFINITION)
-#define MODULE4
-#endif
-#if defined(MODULE5_DEFINITION)
-#define MODULE5
-#endif
-#if defined(MODULE6_DEFINITION)
-#define MODULE6
-#endif
-
-#ifdef USE_AUDIODISPLAY_GC9A01A
-#define USE_DISPLAY_GC9A01A
-#define USE_AUDIODISPLAY
-#endif
-
-#ifdef USE_DISPLAY_GC9A01A
-#if defined(CONFIG_IDF_TARGET_ESP32) 
-#warning "Compiling Display GC9A01A with Settings for ESP32"
-#ifndef TFT_SCK
-#define TFT_SCK                 18
-#endif
-#ifndef TFT_MOSI
-#define TFT_MOSI                23
-#endif
-#ifndef TFT_CS
-#define TFT_CS                  17
-#endif
-#ifndef TFT_DC
-#define TFT_DC                  16
-#endif
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-//#warning ESP32S3
-#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
-#ifndef TFT_SCK
-#define TFT_SCK                 12
-#endif
-#ifndef TFT_MOSI
-#define TFT_MOSI                11
-#endif
-#ifndef TFT_CS
-#define TFT_CS                  8
-#endif
-#ifndef TFT_DC
-#define TFT_DC                  9
-#endif
-#endif
-
-#ifndef TFT_ROT
-#define TFT_ROT   3
-#endif
-
-#endif
-
-
-#ifdef USE_DISPLAY_XYZ
-#if defined(CONFIG_IDF_TARGET_ESP32) 
-#warning "Compiling Display xyz with Settings for ESP32"
-//TFT Settings
-#define TFT_MISO -1
-#define TFT_MOSI 19
-#define TFT_SCK  18
-#define TFT_CS 5
-#define TFT_DC 16
-#define TFT_RST 23
-#define TFT_BL 4
-#define TFT_X  240
-#define TFT_Y  135
-// SCL (Display) => SCK  
-// SDA (Display) => MOSI 
-//#define TFT_SCK                 12
-//#define TFT_MOSI                11
-//#define TFT_CS                  21
-//#define TFT_DC                  5
-// Rotary Encoder
-#endif
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-#warning "Compiling Display xyz with Settings for ESP32-S3"
-#define TFT_SCK                 12
-#define TFT_MOSI                11
-#define TFT_CS                   8
-#define TFT_DC                   9
-#define TFT_RST                  7
-#endif
 #endif
 
 #endif

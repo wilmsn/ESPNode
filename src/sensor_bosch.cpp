@@ -5,9 +5,6 @@
 #include "sensor_bosch.h"
 #include "common.h"
 
-#define REFRESHTIME    300
-#define MEASUREDELAY   2
-
 BMX_SENSOR bmx_sensor;
 
 void Sensor_Bosch::begin(const char* _html_place, const char* _label, const char* _mqtt_name,
@@ -30,17 +27,12 @@ void Sensor_Bosch::begin(const char* _html_place, const char* _label, const char
 
   bmx_sensor.begin();
 
-  String bmx;
   if (bmx_sensor.isBMP180()) bmx = String("BMP180");
   if (bmx_sensor.isBMP280()) bmx = String("BMP280");
   if (bmx_sensor.isBME280()) bmx = String("BME280");
 
   mqtt_info = String("\"Sensor-HW\":\"")+bmx+String("\"");
   mqtt_has_info = true;
-
-  html_stat = String("\"") + String(html_place) + String("\":\"") + label+String(": --- °C\"") +
-              String(",\"") + html_place2 + String("\":\"") + label2 + String(": --- hPa\"");
-  html_has_stat = true;
 
   html_info = String("\"tab_head_bosch\":\"Sensor\"") +
               String(",\"tab_line1_bosch\":\"HW: ") + bmx + String(":#GPIO: ");
@@ -57,6 +49,15 @@ void Sensor_Bosch::begin(const char* _html_place, const char* _label, const char
   start_measure(0);
 }
 
+void Sensor_Bosch::html_init() {
+  html_json = String("\"") + html_place + String("\":\"") + label + String(": ") + temp + String(" °C\"") +
+              String(",\"") + html_place2 + String("\":\"") + label2 + String(": ") + pres + String(" hPa\"");
+  if (bmx == String("BME280")) {
+    html_json += String(",\"") + html_place3 + String("\":\"") + label3 + String(": ") + humi +String(" %\"");
+  }            
+  html_json_filled = true;
+}
+
 void Sensor_Bosch::start_measure(time_t now) {
   measure_starttime = now;
   measure_started = true;
@@ -66,21 +67,19 @@ void Sensor_Bosch::start_measure(time_t now) {
 void Sensor_Bosch::loop(time_t now) {
  if (measure_started) {
     if ((now - measure_starttime) > MEASUREDELAY) {
-      html_stat = String("\"") + String(html_place) + String("\":\"") + label + String(": ") +
-                  String(bmx_sensor.getTemperature(),1) + String(" °C\",\"") + 
-                  html_place2 + String("\":\"") + label2 + String(": ") +
-                  String(bmx_sensor.getPressure(),0) + String(" hPa\"");
+      temp = String(bmx_sensor.getTemperature(),1);
+      pres = String(bmx_sensor.getPressure(),0);
       if ( bmx_sensor.hasHumidity() ) {
-        html_stat += String(",\"") + html_place3 + String("\":\"") + label3 + String(": ") +
-        String(bmx_sensor.getHumidity(),0) + String(" %\"");
+        humi = String(bmx_sensor.getHumidity(),0);
       }
-
-      mqtt_stat = String("{\"") + mqtt_name1+String("\":\"") + String(bmx_sensor.getTemperature(),1) +
+      // Hier gibt es keine spezielle Initialisierung, deshalb können init Daten auch als Updatedaten geschickt werden
+      html_init();
+      html_update();
+      mqtt_stat = String("\"") + mqtt_name1 + String("\":\"") + String(bmx_sensor.getTemperature(),1) +
                   String("\",\"") + mqtt_name2 + String("\":\"") + String(bmx_sensor.getPressure(),0) + String("\"");
       if ( bmx_sensor.hasHumidity() ) {
         mqtt_stat += String(",\"") + mqtt_name3 + String("\":\"") + String(bmx_sensor.getHumidity(),0) + String("\"");
       }
-      mqtt_stat += String("}");
       mqtt_stat_changed = true;
       mqtt_has_stat = true;
       measure_started = false;
@@ -90,6 +89,5 @@ void Sensor_Bosch::loop(time_t now) {
       start_measure(now);
     }
   }
-
 }
 #endif

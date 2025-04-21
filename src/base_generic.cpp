@@ -30,7 +30,7 @@ void Base_Generic::begin(const char* _html_place, const char* _label, const char
 void Base_Generic::loop(time_t now) {
 }
 
-bool Base_Generic::set(const String& keyword, const String& value) {
+bool Base_Generic::set(const String& _cmnd, const String& _val) {
   return false;
 }
 
@@ -43,7 +43,9 @@ bool Base_Generic::keyword_match(const String& _keyword) {
 }
 
 void Base_Generic::html_update() {
-  if (html_has_stat) {
-    ws.textAll( String("{") + html_stat + String("}") );
-  }
+  write2log(LOG_MODULE,2,"html_json: ",html_json.c_str());
+  ws.textAll( String("{") + html_json + String("}") );    
+}
+
+void Base_Generic::html_init() {
 }

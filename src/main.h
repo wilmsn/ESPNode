@@ -101,8 +101,6 @@ unsigned long mqtt_last_tele = 0;
 unsigned long loop_starttime = 0;
 /// @brief
 unsigned long wifi_ap_starttime = 0;
-/// @brief Ein Flag der anzeigt ob die Messdatengenerierung gestartet ist
-//bool measure_started = false;
 int lastHour = 0;
 int lastDay  = 0;
 unsigned long loop_time_alarm;

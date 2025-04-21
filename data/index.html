@@ -74,6 +74,9 @@ function onClose(event) {
 function onMessage(event) {
 //  alert(JSON.stringify(event.data));
   const json = JSON.parse(event.data, function (key, val) {
+    if (key.startsWith("audio_radio_add_stn") ) {
+      prozessJS( "audio_radio_add_stn", val);
+    } else
     if (key.startsWith("audio_media_add_album") ) {
       prozessJS( "audio_media_add_album", val);
     } else
@@ -439,25 +442,18 @@ function prozessJS( key, val ) {
     case "audio_show":
       $("#audio_div").show();
     break;
-    case "audio_trebas_enable":
-    if ( val > 0.5 ) {
-        $("#audio_trebas_enable").show();
-      } else {
-        $("#audio_trebas_enable").hide();
-      }
-    break;
-    case "audio_trebas_settings":
-      if ( val > 0.5 ) {
-        $("#audio_settings").show();
-      } else {
-        $("#audio_settings").hide();
-      }
-    break;
     case "audio_settings":
       if ( val > 0.5 ) {
         $("#audio_settings").show();
       } else {
         $("#audio_settings").hide();
+      }
+    break;
+    case "audio_trebas_enable":
+    if ( val > 0.5 ) {
+        $("#audio_trebas_enable").show();
+      } else {
+        $("#audio_trebas_enable").hide();
       }
     break;
     case "audio_radio_show":
