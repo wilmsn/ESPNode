@@ -79,9 +79,10 @@ void Actor_LEDMatrix::html_init() {
   html_json_filled = true;
 }
 
-void Actor_LEDMatrix::html_upd_data(){
-  html_json += String("\"") + html_place + String("\":") + String(switch_state?"1":"0") + String(",\"slider") + 
-               String(slider_no) + String("val\":\"") + String(slider_val) + String("\"") + String(",\"matrix\":\"");
+void Actor_LEDMatrix::html_upd_data() {
+  html_json += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
+               String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
+               String("\"") + String(",\"matrix\":\"");
   getMatrixFB(html_json);
   html_json += String("\"");
 }

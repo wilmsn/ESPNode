@@ -1,7 +1,7 @@
 #include "config.h"
 #ifdef USE_AUDIODISPLAY_ST7789
 #include "audiodisplay_ST7789.h"
-#include "audiomodul.h"
+//#include "audiomodul.h"
 #include "common.h"
 
 

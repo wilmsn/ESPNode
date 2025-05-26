@@ -55,7 +55,7 @@ RF24 Gateway:
 #define USE_SENSOR_18B20
 #include "sensor_18B20.h"
 
-#define MAGICNO                  267
+#define MAGICNO                  269
 
 #define HOSTNAME                 "TerassenNode"
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
@@ -72,8 +72,8 @@ RF24 Gateway:
 #define MQTT_CLIENT              "terassennode"
 #define MQTT_TOPICP2             "terassennode"
 
-#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO                104
+//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+//#define RF24GW_NO                104
 
 #endif
 //*****************************************************
@@ -85,7 +85,7 @@ RF24 Gateway:
 
 #define HOSTNAME                 "TeichNode"
 #define HOST_DISCRIPTION         "Der Node zur Steuerung der Teichpumpe"
-#define MAGICNO                  479
+#define MAGICNO                  416
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, true, 0, 2);
@@ -93,8 +93,8 @@ RF24 Gateway:
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
 
-#define MQTT_CLIENT              "TeichNode"
-#define MQTT_TOPICP2             "TeichNode"
+#define MQTT_CLIENT              "teichnode"
+#define MQTT_TOPICP2             "teichnode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
 #define RF24GW_NO                101
@@ -177,25 +177,28 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
-//#define USE_AUDIODISPLAY
-//#define USE_AUDIODISPLAY_GC9A01A
+#define USE_AUDIODISPLAY
+#define USE_AUDIODISPLAY_GC9A01A
 //#define USE_SDCARD
+#define USE_ROTARY
 
-#include "audiomodul.h"
+#define TFT_ROT                  4
+
 #define MAGICNO                  69
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
 
-#define HOSTNAME                 "Wohnzimmerradio"
-#define HOST_DISCRIPTION         "Ein Radionode im Wohnzimmer"
-
-#define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
-
 #define DO_LOG_WEB               true
 #define DO_LOG_MODULE            true
 #define DO_LOG_SYSTEM            true
+
+#define HOSTNAME                 "Wohnzimmerradio"
+#define HOST_DISCRIPTION         "Ein Radionode im Wohnzimmer"
+
+#include "audiomodul.h"
+#define MODULE1_DEFINITION       AudioModul module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
 
 #endif
 //-----------------------------------------------------
@@ -357,15 +360,15 @@ RF24 Gateway:
 
 #ifdef ESP32
 #define USE_AUDIOMODUL
-#define USE_AUDIODISPLAY_GC9A01A
+//#define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
-#define USE_AUDIO_MEDIA
+//#define USE_AUDIO_MEDIA
 //#define USE_FTP
 #define USE_WIFIMULTI
-#define USE_ROTARY
+//#define USE_ROTARY
 
 #include "audiomodul.h"
-#define MAGICNO                  63
+#define MAGICNO                  61
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB

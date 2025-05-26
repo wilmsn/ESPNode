@@ -1,0 +1,1341 @@
+#include "config.h"
+#ifdef USE_AUDIOMODUL
+
+#include "audiomodul.h"
+#include "common.h"
+
+#include "Audio.h"
+
+#ifdef USE_ROTARY
+#include "rotarylib4ESP32.h"
+#endif
+
+#ifdef USE_AUDIODISPLAY                   
+#ifdef USE_AUDIODISPLAY_ST7789
+#include "audiodisplay_ST7789.h"
+#endif
+
+#ifdef USE_AUDIODISPLAY_GC9A01A
+#include "audiodisplay_GC9A01A.h"
+#endif
+#endif
+
+char bps_str[10]; //vorher 30 ?????
+
+/// @brief Instance for audio (I2S and decoder) device
+Audio            audio;
+
+/// @brief Instances for the Preferences is defined in main.h
+extern Preferences preferences;
+/// @brief Instance for websockets is defined in webserver.h
+extern AsyncWebSocket ws;
+
+#ifdef USE_ROTARY
+/// @brief Instance for the rotary module
+RotaryLibMulti rotary;
+
+void IRAM_ATTR intrSRV() {
+  rotary.read();
+}
+#endif
+
+/// @brief Instance for ohysical TFT Display
+#ifdef USE_AUDIODISPLAY_GC9A01A
+#include "audiodisplay_GC9A01A.h"
+AudioDisplay audiodisplay(TFT_CS, TFT_DC, TFT_ROT);
+#endif
+
+#ifdef USE_AUDIODISPLAY_ST7789
+// TODO Instanz erstellen
+#endif
+
+#ifdef USE_AUDIODISPLAY
+uint16_t* bmpBuffer;
+
+// This next function will be called during decoding of the jpeg file to
+// render each block to the TFT.  If you use a different TFT library
+// you will need to adapt this function to suit.
+bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+  for(uint8_t xb=0; xb<w; xb++){
+    for(uint8_t yb=0; yb<h; yb++){
+      bmpBuffer[x+xb+((y+yb)*160)]=bitmap[xb+(yb*h)];
+    }
+  }
+  audiodisplay.drawRGBBitmap(x+80, y+10, bitmap, w, h);
+  return 1;
+}
+#endif
+
+/// @brief Variable zur Steuerung der Anzeige Steaminhalte im Display
+String     audiomsg1;
+String     audiomsg2;
+String     audiomsg3;
+String     audiomsg4;
+String     audiomsg5;
+
+uint32_t   allSongs;
+uint16_t   allAlbum;
+
+
+void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true);
+  uint8_t this_app;
+#ifdef USE_AUDIO_RADIO
+  audio_radio_load_stations();
+#endif
+  preferences.begin("settings",false);
+  if ( !preferences.isKey("audio_vol") ) {
+    preferences.putUChar("audio_vol", 0);
+    preferences.putUChar("audio_tre", 0);
+    preferences.putUChar("audio_bas", 0);
+#ifdef USE_AUDIO_RADIO
+    preferences.putUChar("ar_cur_station", 0);
+#endif
+  }
+#ifdef USE_AUDIO_RADIO
+  audio_radio_cur_station = preferences.getUChar("ar_cur_station");
+#endif
+  audio_vol = 0; //preferences.getUChar("audio_vol");
+//  audio_tre = preferences.getUChar("audio_tre");
+//  audio_bas = preferences.getUChar("audio_bas");
+  preferences.end();
+#ifdef USE_AUDIODISPLAY
+  audiodisplay.begin();
+#endif
+#ifdef USE_ROTARY
+  pinMode(ROTARY_A, INPUT_PULLUP);
+  pinMode(ROTARY_B, INPUT_PULLUP);
+  pinMode(ROTARY_SW, INPUT_PULLUP);
+  attachInterrupt(ROTARY_A, intrSRV, CHANGE);
+  attachInterrupt(ROTARY_B, intrSRV, CHANGE);
+  attachInterrupt(ROTARY_SW, intrSRV, CHANGE);
+  rotary.begin(ROTARY_A, ROTARY_B, ROTARY_SW);
+  // Rotary Apps und Level initialisieren
+  // App 0 wird automatisch initialisiert
+  // App 0, Lev 0: Initialisieren
+  rotary.set(0,0,0,10,0);
+  #ifdef USE_AUDIO_RADIO
+  // App => Radio
+  // Lev 0 => Lautstärke
+  this_app = rotary.app_add(0,100,0);
+  // Lev 1 => Senderwahl
+  rotary.lev_add(this_app, 0, MAXSTATIONS-1, 0);
+  // Lev 2 => Senderwahl durchführen
+  rotary.lev_add(this_app, 0, 0, 0);
+#endif
+//#ifdef USE_AUDIO_MEDIA
+  // App => Media
+  // Lev 0 => Lautstärke
+  this_app = rotary.app_add(0,100,0);
+  // Lev 1 => Senderwahl
+  rotary.lev_add(this_app, 0, MAXSTATIONS-1, 0);
+  // Lev 2 => Senderwahl durchführen
+  rotary.lev_add(this_app, 0, 0, 0);
+//#endif
+//#ifdef USE_AUDIO_SPEAKER
+  // App => Radio
+  // Lev 0 => Lautstärke
+  this_app = rotary.app_add(0,100,0);
+  // Lev 1 => Senderwahl
+  rotary.lev_add(this_app, 0, MAXSTATIONS-1, 0);
+  // Lev 2 => Senderwahl durchführen
+  rotary.lev_add(this_app, 0, 0, 0);
+//#endif
+  // App => Settings
+  // Lev 0 => tbd.
+  this_app = rotary.app_add(0,6,0);
+  // Lev 1 => tbd.
+  rotary.lev_add(this_app);
+  // App => MusicUpdate
+  // Lev 0 => App waehlen.
+  this_app = rotary.app_add(0, LastApp-1, 0);
+  // Lev 1 => tbd.
+  rotary.lev_add(this_app);
+#endif //USE_ROTARY
+  if (audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT)) {
+#if defined(DEBUG_SERIAL_MODULE)
+    Serial.print("Set PinOut: BCLK:");
+    Serial.print(I2S_BCLK);
+    Serial.print(" LRC:");
+    Serial.print(I2S_LRC);
+    Serial.print(" DOUT:");
+    Serial.println(I2S_DOUT);
+#endif
+  }
+  //audio.setBufsize(30000,600000);
+  audio.setVolumeSteps(100);
+  audio.setVolume(audio_vol);
+  audio_set_app(Off);
+
+#ifdef USE_AUDIO_RADIO
+  last_app = Radio;
+#else
+//  last_app = Settings;
+#endif
+//  audio.setAudioTaskCore(1);
+  obj_html_info =  String("\"tab_head_audio\":\"I2S: MA98357\"")+
+                   String(",\"tab_line1_audio\":\"DOUT:#GPIO: ")+String(I2S_DOUT)+ String("\"")+
+                   String(",\"tab_line2_audio\":\"BCLK:#GPIO: ")+String(I2S_BCLK)+ String("\"")+
+                   String(",\"tab_line3_audio\":\"LRC:#GPIO: ")+String(I2S_LRC)+ String("\"");
+#ifdef USE_AUDIODISPLAY                   
+#ifdef USE_AUDIODISPLAY_GC9A01A
+  obj_html_info += String(",\"tab_head_display\":\"Display: GC9A01A\"");
+#endif
+#ifdef USE_AUDIODISPLAY_ST7789
+  obj_html_info += String(",\"tab_head_display\":\"Display: ST7789\"");
+#endif
+  obj_html_info += String(",\"tab_line1_display\":\"SCK:#GPIO: ")+String(TFT_SCK)+ String("\"")+
+                   String(",\"tab_line2_display\":\"MOSI:#GPIO: ")+String(TFT_MOSI)+ String("\"")+
+                   String(",\"tab_line3_display\":\"CS:#GPIO: ")+String(TFT_CS)+ String("\"")+
+                   String(",\"tab_line4_display\":\"DC:#GPIO: ")+String(TFT_DC)+ String("\"");
+#endif
+#ifdef USE_ROTARY
+  obj_html_info += String(",\"tab_head_rotary\":\"Rotary\"")+
+                   String(",\"tab_line1_rotary\":\"A-Pin:#GPIO: ")+String(ROTARY_A)+ String("\"")+
+                   String(",\"tab_line2_rotary\":\"B-Pin:#GPIO: ")+String(ROTARY_B)+ String("\"")+
+                   String(",\"tab_line3_rotary\":\"SW-Pin:#GPIO: ")+String(ROTARY_SW)+ String("\"");
+#endif
+#ifdef USE_AUDIO_MEDIA
+  // The jpeg image can be scaled by a factor of 1, 2, 4, or 8
+  TJpgDec.setJpgScale(JPG_SCALE);
+  // The byte order can be swapped (set true for TFT_eSPI)
+  TJpgDec.setSwapBytes(false);
+  // The decoder must be given the exact name of the mcu buffer function above
+  TJpgDec.setCallback(tft_output);
+#endif
+}
+
+void AudioModul::html_create(String& tmpstr) {
+  Switch_OnOff::html_create(tmpstr);
+  tmpstr += String(",\"audio_show\":1");
+// Höhen und Bässe  derzeit deaktiviert 
+  tmpstr += String(",\"audio_trebas_enable\":0");
+#ifdef USE_AUDIO_RADIO
+  tmpstr += String(",\"audio_radio_show\":1");
+#endif
+#ifdef USE_AUDIO_MEDIA
+  tmpstr += String(",\"audio_media_show\":1");
+#endif
+#ifdef USE_AUDIO_SPEAKER
+  tmpstr = String(",\"audio_speak_show\":1");
+#endif
+  switch(app) {
+#ifdef USE_AUDIO_RADIO
+    case Radio:  
+      // Radio ist vorhanden und wird im Web angezeigt
+      tmpstr += String(",\"audio_radio\":1");
+      audio_radio_web_init();
+    break;
+#endif
+#ifdef USE_AUDIO_MEDIA
+    case Media:
+      tmpstr += String(",\"audio_media_active\":1");
+    break;
+#endif
+#ifdef USE_AUDIO_SPEAKER
+    case Speaker:
+      tmpstr += String(",\"audio_speak\":1");
+      audio_speak_web_init();
+    break;
+#endif
+    case Off:
+      tmpstr += String(",\"audio_radio\":0");
+      tmpstr += String(",\"audio_media\":0");
+    break;
+    default:
+
+    break;
+  }
+  tmpstr += String(",\"audio_vol\":") + String(audio_vol);
+//  tmpstr += String(",\"audio_bas\":") + String(audio_bas);
+//  tmpstr += String(",\"audio_tre\":") + String(audio_tre);
+  if (audiomsg1.length() >2) tmpstr += String(",\"audiomsg1\":\"")+audiomsg1+String("\"");
+  if (audiomsg2.length() >2) tmpstr += String(",\"audiomsg2\":\"")+audiomsg2+String("\"");
+  if (audiomsg3.length() >2) tmpstr += String(",\"audiomsg3\":\"")+audiomsg3+String("\"");
+  if (audiomsg4.length() >2) tmpstr += String(",\"audiomsg4\":\"")+audiomsg4+String("\"");
+  if (audiomsg5.length() >2) tmpstr += String(",\"audiomsg5\":\"")+audiomsg5+String("\"");
+  ws.textAll(tmpstr.c_str());
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+#ifdef USE_AUDIO_MEDIA
+//  if (app == Media) allAlbum2Web();
+#endif
+}
+
+bool AudioModul::set(const String& keyword, const String& value) {
+  bool retval = false;
+  String tmpstr;
+  String myvalue = value;
+  write2log(LOG_MODULE,2,keyword.c_str(),value.c_str());
+  if ( ! Switch_OnOff::set(keyword, value) ) {
+    std::replace(myvalue.begin(),myvalue.end(),'\n',' ');
+    // Lautstärke ändern
+    if ( keyword == String("audio_vol") ) {
+      audio_vol = value.toInt();
+      if (audio_vol < 2) {
+        if (app != Off) audio_set_app(Off);
+      } else {
+        if (app == Off) audio_set_app(last_app);
+      }
+      // Weboberfläche einstellen
+      tmpstr = "{\"audio_vol\":";
+      tmpstr += audio_vol;
+      tmpstr += "}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
+      // Audiomodul einstellen
+      audio.setVolume(audio_vol);
+#ifdef USE_ROTARY
+      // Rotarymodul einstellen - nur wenn Änderungen nicht von dort kommen!
+      if (! change_from_rotary) rotary.val_set(audio_vol);
+#endif
+#ifdef USE_AUDIODISPLAY
+      // Lautstärke auf Display anzeigen
+      audiodisplay.vol(audio_vol);
+#endif
+      retval = true;
+    }
+#ifdef USE_AUDIO_RADIO
+    // Set for radio
+    // Radio einschalten => Wiiedergabe
+    if ( keyword == String(AUDIO_RADIO) || keyword == String("audio_radio") ) {
+      if ( audio_vol < 3 ) {
+        audio_vol = 3;
+        // Weboberfläche einstellen
+        tmpstr = String("{\"audio_vol\":") + String(audio_vol) + String("}");
+        write2log(LOG_MODULE,1,tmpstr.c_str());
+        ws.textAll(tmpstr.c_str());
+      }
+      audio_set_app(Radio);
+      retval = true;
+    }
+    // Radio: Sender einstellen hier ueber command "station 2"
+    if ( keyword == String(AUDIO_RADIO_SET_STATION) ) {
+      uint8_t newstation = value.toInt();
+      if ( newstation < MAXSTATIONS) audio_radio_cur_station = newstation;
+      audiodisplay.radio_station(audio_radio_station[audio_radio_cur_station].name);
+      retval = true;
+    }
+    // Radio: Sender einstellen ueber Webinterface
+    if ( keyword == String("audio_radio_set_stn") ) {
+      for (int i=0; i<MAXSTATIONS; i++) {
+        if (String(audio_radio_station[i].name) == value) audio_radio_cur_station = i;  
+      }
+      audio_radio_on();
+      audio_radio_web_init();
+      audiodisplay.radio_station(audio_radio_station[audio_radio_cur_station].name);
+    }
+    // Radio: Sender Name speichern ueber Webinterface
+    if ( keyword == String("audio_radio_save_stn_name") ) {
+      snprintf(audio_radio_station[audio_radio_cur_station].name,STATION_NAME_LENGTH,"%s",value.c_str());
+      audio_radio_save_stations();
+      audio_radio_web_init();
+    }
+    // Radio: Sender URL speichern ueber Webinterface
+    if ( keyword == String("audio_radio_save_stn_url") ) {
+      snprintf(audio_radio_station[audio_radio_cur_station].url,STATION_URL_LENGTH,"%s",value.c_str());
+      audio_radio_save_stations();
+      audio_radio_web_init();
+    }
+#endif
+#ifdef USE_AUDIO_MEDIA
+    // Set for mediaplayer
+    // Radio einschalten => Wiiedergabe
+    if ( keyword == String(AUDIO_MEDIA) || keyword == String("audio_media") ) {
+      //audio_set_app(Media);
+      audio_media_play(audio_media_cur_dir, audio_media_cur_file);
+      retval = true;
+    }
+    if ( keyword == String("audio_media_sel_album") ) {
+      audiodisplay.screen(Disp_Media);
+      rotary.app_set(2,1);
+      rotary.max_set(100); //Durch die maximale Anzahl der Alben ersetzen
+      show_album(value.toInt());
+//      audio_set_app(Media);
+      retval = true;
+    }
+    if ( keyword == String("audio_media_sd_init") ) {
+      rotary.app_set(2,0);
+      audio_media_sd_init_file = -1;
+      audio_media_sd_init_do = true;
+    }
+    audiodisplay.screen(Disp_Media);
+
+
+#endif
+  } else {
+    // Ein- und Ausschalten erfolgt im Elternobjekt
+    if ((! obj_value) && (app != Off)) audio_set_app(Off);
+    if (( obj_value) && (app == Off)) audio_set_app(last_app);
+    if ( obj_value) {
+      // Wenn eingeschaltet dann Lautstärke auf 3 und Weboberfläche einstellen
+      // ToDo Display einstellen
+      audio_vol = 3;
+      tmpstr = "{\"audio_vol\":";
+      tmpstr += audio_vol;
+      tmpstr += "}";
+      write2log(LOG_MODULE,1,tmpstr.c_str());
+      ws.textAll(tmpstr.c_str());
+    }
+    retval = true;
+  }
+  return retval;
+}
+
+void AudioModul::start_timeout() {
+  timeout_set = true;
+  timeout_start = now;
+}
+
+void AudioModul::audio_set_app(app_t _app) {
+  String tmpstr;
+  last_app = app;
+  audio_off();
+  app = _app;
+  switch (app) {
+#ifdef USE_AUDIO_RADIO
+    case Radio:
+      write2log(LOG_MODULE,1,"audio_set_app: case Radio");
+#ifdef USE_ROTARY
+      rotary.app_set((uint8_t)Radio,0);
+      rotary.val_set(audio_vol);
+#endif
+      app = Radio;
+      do_switch(true);
+      audio_radio_on();
+      audio_radio_web_init();
+      // Radio: Wiedergabe im Display
+#ifdef USE_AUDIODISPLAY                   
+      audiodisplay.screen(Disp_RadioPlay);
+      audiodisplay.vol(audio_vol);
+      audiodisplay.radio_station(audio_radio_station[audio_radio_cur_station].name);
+#endif
+    break;
+#endif  //USE_AUDIO_RADIO
+#ifdef USE_AUDIO_MEDIA
+    case Media:
+      audiodisplay.screen(Disp_Media);
+      rotary.app_set(2,0);
+      rotary.max_set(100);
+    break;
+    case MusicUpdate:
+      audiodisplay.screen(Disp_MusicUpdate);
+      Serial.println("audio_set_app: MusicUpdate");
+      audio_media_init_sd();
+      audiodisplay.screen(Disp_Media);
+      rotary.app_set(2,0);
+      rotary.max_set(100);
+    break;
+#endif //USE_AUDIO_MEDIA
+    case Off: 
+    default:
+      write2log(LOG_MODULE,1,"audio_set_app: case Off");
+      ws.textAll("{\"audio_vol\":0}");
+#ifdef USE_ROTARY
+      rotary.app_set(0,0);
+#endif
+      audio_vol=0;
+      do_switch(false);
+      app = Off;
+      audiomsg1 = "";
+      audiomsg2 = "";
+      audiomsg3 = "";
+      audiomsg4 = "";
+      audiomsg5 = "";
+
+#ifdef USE_AUDIODISPLAY
+      audiodisplay.screen(Disp_Off);              
+#endif
+    break;
+  } //switch
+}
+
+void AudioModul::audio_show_app(app_t _app) {
+#ifdef USE_AUDIODISPLAY                   
+//  if (_app == Off) audiodisplay.show_icon("Off");
+//  if (_app == Settings) audiodisplay.show_icon("Settings");
+#ifdef USE_AUDIO_RADIO
+//  if (_app == Radio) audiodisplay.show_icon("Radio");
+#endif
+#ifdef USE_AUDIO_MEDIA
+//  if (_app == Media) audiodisplay.show_icon("Media");
+#endif
+#ifdef USE_AUDIO_SPEAKER
+//  if (_app == Speaker) audiodisplay.show_icon("Speaker");
+#endif
+#endif
+}
+
+void AudioModul::audio_off() {
+  switch(app) {
+    case Radio:
+      audio_radio_off();
+    break;
+  }
+  app = Off;
+}
+
+void AudioModul::loop(time_t now) {
+  //Die "loop" Funktion des Displays muss eingebunden werden damit sich die Uhr aktualisieren kann
+#ifdef USE_AUDIO_MEDIA
+  if (audio_media_sd_init_do) {
+    audio_media_sd_init_file = audio_media_sd_init(audio_media_sd_init_file);
+    if (audio_media_sd_init_file == 99999) audio_media_sd_init_do = false;
+    Serial.printf("loop file#: %i\n", audio_media_sd_init_file);
+  }
+#endif
+#ifdef USE_AUDIODISPLAY                   
+  audiodisplay.loop(now);  
+#endif
+  if (app != Off) {
+    audio.loop();
+    if (!audio.isRunning()) {
+#ifdef USE_AUDIO_RADIO
+      if (app == Radio) {
+        audio_radio_off();
+        audio_radio_on();
+      }
+#endif
+    }
+  }
+#ifdef USE_ROTARY
+// Hier wird der Klickstream definiert
+  if ( timeout_set ) {
+    if ((now - timeout_start) > KLICK_TIMEOUT) {
+      //TODO: Anzeige zurücksetzen
+      rotary.lev_set(0);
+      timeout_set = false;
+      switch (rotary.app()) {
+        case Radio:
+          audio_radio_disp_play();
+        break;
+      }
+    }
+  }
+  if (rotary.valChanged()) {
+    Serial.printf("Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+    switch(rotary.app()) {
+      case Off:
+        if (rotary.lev() == 0) {
+          if (rotary.val() > 1) {
+            set(String(AUDIO_RADIO),String("1"));
+          }
+        } 
+      break;
+      case Radio:
+        switch(rotary.lev()) {
+          case 0:
+        // Lautstärke einstellen
+            change_from_rotary = true;
+            set("audio_vol",String(rotary.val()));
+            change_from_rotary = false;
+            Serial.println(rotary.val());
+          break;
+          case 1:
+        // Sender wechseln
+            start_timeout();
+            audiodisplay.selStation(rotary.val()>(uint16_t)0 ? audio_radio_station[rotary.val()-1].name : " ",
+                                    audio_radio_station[rotary.val()].name,
+                                    rotary.val()<MAXSTATIONS-1 ? audio_radio_station[rotary.val()+1].name : " ");
+            rot_last_val = rotary.val();
+        }
+      break;
+      case Media:
+      switch(rotary.lev()) {
+        case 0:
+      // Lautstärke einstellen
+          change_from_rotary = true;
+          set("audio_vol",String(rotary.val()));
+          change_from_rotary = false;
+        break;
+        case 1:
+      // Album wechseln
+          start_timeout();
+          set(String("audio_media_sel_album"),String(rotary.val()));
+          rot_last_val = rotary.val();
+      }
+      break;
+      case Settings:
+      Serial.printf("---Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+      start_timeout();
+        switch(rotary.lev()) {
+          case 0:
+          // App oder Eigenschaft auswählen
+/*          Serial.printf("-1-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+          Serial.printf("-x-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+*/
+          switch(rotary.val()) {
+              case 0:
+                audiodisplay.show_set_icon("Off");
+              break;
+              case 1:
+                audiodisplay.show_set_icon("Radio");
+              break;
+              case 2:
+                audiodisplay.show_set_icon("Media");
+                Serial.println("Media select");
+                Serial.printf("-1a-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+                break;
+              case 3:
+                audiodisplay.show_set_icon("Speaker");
+              break;
+              case 4:
+                audiodisplay.show_set_icon("Settings");
+              break;
+              case 5:
+                audiodisplay.show_set_icon("MusicUpdate");
+              break;
+            }
+            rot_last_val = rotary.val();
+            Serial.printf("-2-Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+            break;
+          case 1: 
+          // Auswahl bestätigen
+            switch(rot_last_val) {
+              case 0:
+                set(obj_keyword,String("0"));
+              break;
+              case 1:
+                set(String(AUDIO_RADIO),String("1"));
+              break;
+              case 2:
+                Serial.println("Media set");
+                //set(String(AUDIO_MEDIA),String("1"));
+              break;
+              case 3:
+                audiodisplay.show_set_icon("Speaker");
+              break;
+              case 4:
+                audiodisplay.show_set_icon("Settings");
+              break;
+              case 5:
+                audiodisplay.show_set_icon("MusicUpdate");
+              break;
+            }
+//            rot_last_val = rotary.val();
+          break;
+        }
+      break;
+    }
+    Serial.printf(">>>Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+    rotary.unlock();
+  }  //Ende rotary.valChanged
+  if (rotary.buttonShortPressed) {
+    rotary.buttonShortPressed = false;
+    Serial.printf("Rotary short Pressed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+    start_timeout();
+    switch(rotary.app()) {
+      break;
+      case Radio:
+        switch(rotary.lev_up()) {
+          // Radio: Neuen Sender auswählen
+          case 1:
+            audiodisplay.screen(Disp_RadioSel);
+            rotary.val_set(audio_radio_cur_station);
+            audiodisplay.selStation(rotary.val()>(uint16_t)0 ? audio_radio_station[rotary.val()-1].name : " ",
+                                    audio_radio_station[rotary.val()].name,
+                                    rotary.val()<MAXSTATIONS-1 ? audio_radio_station[rotary.val()+1].name : " ");
+          break;
+          // Radio: Neuen Sender übernehmen und Level zurück auf 0 => Play
+          case 2:
+            if (audio_radio_cur_station != rot_last_val)
+                set(String(AUDIO_RADIO_SET_STATION),String(rot_last_val));
+            audio_radio_disp_play();
+            rotary.lev_set(0);
+          break;
+        }
+      break;
+      case Media:
+      switch(rotary.lev_up()) {
+        // Media: Album auswählen
+        case 1:
+          set(String("audio_media_sel_album"),String("1"));
+          //rot_last_val = rotary.val();
+        break;
+        // Media: Musikstück auswählen
+        case 2:
+          rotary.lev_set(0);
+        break;
+      }
+    break;
+      case Settings:
+        switch(rotary.lev_up()) {
+          // Off: Ausschalten
+          case 1:
+            switch(rot_last_val){
+              case Off:
+                set(obj_keyword, "0");
+              break;
+              case Radio:
+                set(String(AUDIO_RADIO),String("1"));
+              break;
+              case Media:
+                set(String(AUDIO_MEDIA),String("1"));
+              break;
+              case MusicUpdate:
+                set(String("audio_media_sd_init"),String("1"));
+              break;
+              default:
+                Serial.printf("Shortpress case: %u\n",rot_last_val);
+              break;
+            }
+          break;
+        }
+      break;
+    }
+  }
+  if (rotary.buttonLongPressed) {
+    rotary.buttonLongPressed = false;
+    Serial.printf("Rotary Long Pressed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+    start_timeout();
+    rotary.set(Settings,0,0,LastApp-1,app);
+    rotary.app_set(Settings,0);
+    audiodisplay.screen(Disp_Settings);
+    switch (app) {
+      case 0:
+        audiodisplay.show_set_icon("Off");
+      break;
+      case 1:
+        audiodisplay.show_set_icon("Radio");
+      break;
+      case 2:
+        audiodisplay.show_set_icon("Media");
+      break;
+    }
+    rot_last_val = app;
+  }
+#endif //USE_ROTARY
+// Ende Klickstream Definition  
+}
+
+/************************************************************************************
+// Die folgenden Funktionen ergänzen die Lib: ESP32-audioI2S
+// Die Funktionsnamen sind dort festgelegt
+************************************************************************************/
+
+void audio_info(const char *info){
+  char str2[30];
+  int j=0;
+  bool tz_found = false;
+  write2log(LOG_MODULE,2,"Info:", info);
+  for (int i=0; i<strlen(info) && i<40; i++) {
+    if (! tz_found) {
+      if (info[i] == ':') {
+        tz_found = true;
+        i++;
+        i++;
+      }
+    }
+    if(tz_found && j<30) {
+      str2[j] = info[i];
+      j++;
+    }
+  }
+  str2[j]=0;
+  if (info[0] == 'B' && info[1] == 'i' && info[3] == 'R') {
+    if (strlen(str2) == 6) {
+      str2[3]=' ';
+      str2[4]='K';
+      str2[5]='B';
+      str2[6]='s';
+      str2[7]=0;
+    }
+    if (strlen(str2) == 5) {
+      str2[2]=' ';
+      str2[3]='K';
+      str2[4]='B';
+      str2[5]='s';
+      str2[6]=0;
+    }
+#ifdef USE_AUDIODISPLAY                   
+    audiodisplay.set_bps(str2);
+#endif
+  }
+}
+
+void audio_id3data(const char *info){
+  size_t infoSize = strlen(info);
+  char str2[infoSize];
+  int j=0;
+  bool tz_found = false;
+  write2log(LOG_MODULE,2,"MP3 data:", info);
+  for (int i=0; i<strlen(info); i++) {
+    if (! tz_found) {
+      if (info[i] == ':') {
+        tz_found = true;
+        i++;
+        i++;
+      }
+    }
+    if(tz_found) {
+      str2[j] = info[i];
+      j++;
+    }
+  }
+  str2[j]=0;
+  String tmpstr = "{";
+  if (info[0] == 'A' && info[1] == 'r' && info[2] == 't') {
+#ifdef USE_AUDIODISPLAY                   
+    audiodisplay.radio_now_playing(str2);
+#endif
+    audiomsg1 = String(str2);
+    tmpstr += String("\"audiomsg1\":\"Artist: ")+audiomsg1+String("\"");
+  }
+  if (info[0] == 'T' && info[1] == 'i' && info[2] == 't') {
+#ifdef USE_AUDIODISPLAY                   
+    audiodisplay.radio_now_playing(str2);
+#endif
+    if (tmpstr.length() > 5) tmpstr += ",";
+    audiomsg2 = String(str2);
+    tmpstr += String("\"audiomsg2\":\"Title: ")+audiomsg2+String("\"");
+  }
+  if (info[0] == 'A' && info[1] == 'l' && info[2] == 'b') {
+    if (tmpstr.length() > 5) tmpstr += ",";
+    audiomsg3 = String(str2);
+    tmpstr += String("\"audiomsg3\":\"Album: ")+audiomsg3+String("\"");
+  }
+  tmpstr += "}";
+  if (tmpstr.length() > 5) {
+    ws.textAll(tmpstr);
+    write2log(LOG_MODULE,1,tmpstr.c_str());
+  }
+}
+
+void audio_showstreamtitle(const char *info){
+  String tmpstr;
+  audiomsg2 = info;
+#ifdef USE_AUDIODISPLAY                   
+  audiodisplay.radio_now_playing(info);
+#endif
+  tmpstr = String("{\"audiomsg2\":\"") + audiomsg2 + "\"}";
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
+}
+
+void audio_bitrate(const char *info) {
+  String tmpstr;
+  bps_str[0] = info[0];
+  bps_str[1] = info[1];
+  bps_str[2] = info[2];
+  bps_str[3] = ' ';
+  bps_str[4] = 'K';
+  bps_str[5] = 'B';
+  bps_str[6] = 'p';
+  bps_str[7] = 's';
+  bps_str[8] = 0;
+  tmpstr = String("{\"audiomsg4\":\"") + String(bps_str) + String("\"}");
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
+#ifdef USE_AUDIODISPLAY
+  audiodisplay.bps();
+#endif
+}
+
+void audio_showstation(const char *info){
+  String tmpstr;
+  audiomsg1 = info;
+  tmpstr = String("{\"audiomsg1\":\"") + audiomsg1 + String("\"}");
+  write2log(LOG_MODULE,1,tmpstr.c_str());
+  ws.textAll(tmpstr.c_str());
+}
+
+/*********************************************************************************************************
+ * 
+ *  Ab hier alles fürs Radio
+ * 
+ * 
+**********************************************************************************************************/
+#ifdef USE_AUDIO_RADIO
+
+void AudioModul::audio_radio_off() {
+  write2log(LOG_MODULE,1,"Radio off");
+  audio.stopSong();
+  ws.textAll("{\"audio_radio\":0}");
+}
+
+void AudioModul::audio_radio_on() {
+  write2log(LOG_MODULE,1,"Radio on");
+  if ( strlen(audio_radio_station[audio_radio_cur_station].url) > 10 ) {
+    audio.connecttohost(audio_radio_station[audio_radio_cur_station].url);
+    write2log(LOG_MODULE,2,"Switch to ",audio_radio_station[audio_radio_cur_station].url);
+  }
+  app = Radio;
+}
+
+//Wiedergabe eines Radiosenders auf dem Display.
+void AudioModul::audio_radio_disp_play() {
+#ifdef USE_AUDIODISPLAY                   
+  audiodisplay.screen(Disp_RadioPlay);
+  audiodisplay.vol(audio_vol);
+  audiodisplay.radio_station(audio_radio_station[audio_radio_cur_station].name);
+#endif
+}
+
+void AudioModul::audio_radio_web_init() {
+  String tmpstr;
+  ws.textAll("{\"audio_radio\":1}");
+  for (int i=0; i<MAXSTATIONS; i++) {
+    tmpstr = "{\"audio_radio_add_stn\":\"";
+    tmpstr += audio_radio_station[i].url;
+    tmpstr += ";";
+    tmpstr += audio_radio_station[i].name;
+    tmpstr += "\"}";
+    write2log(LOG_MODULE,1,tmpstr.c_str());
+    ws.textAll(tmpstr.c_str());
+  }
+}
+
+void AudioModul::audio_radio_load_stations() {
+  File f = LittleFS.open( "/sender.txt", "r" );
+  if (f) {
+    for (int i=0; i<MAXSTATIONS; i++) {
+      snprintf(audio_radio_station[i].name,STATION_NAME_LENGTH,"%s",f.readStringUntil('\n').c_str());
+      snprintf(audio_radio_station[i].url,STATION_URL_LENGTH,"%s",f.readStringUntil('\n').c_str());
+      write2log(LOG_MODULE,2,audio_radio_station[i].name,audio_radio_station[i].url);
+    }
+    f.close();
+  }
+}
+
+void AudioModul::audio_radio_save_stations() {
+  File f = LittleFS.open( "/sender.txt", "w" );
+  if (f) {
+    for (int i=0; i<MAXSTATIONS; i++) {
+      write2log(LOG_MODULE,3,"Save Station: ",audio_radio_station[i].name,audio_radio_station[i].url);
+      f.printf("%s\n",audio_radio_station[i].name);
+      f.printf("%s\n",audio_radio_station[i].url);
+    }
+    delay(5);
+    f.close();
+  }
+}
+#endif  //USE_AUDIO_RADIO
+
+/*********************************************************************************************************
+ * 
+ *  Ab hier alles für den Mediaplayer
+ * 
+ * 
+**********************************************************************************************************/
+#ifdef USE_AUDIO_MEDIA
+
+void AudioModul::audio_media_on() {
+  audio_media_play(audio_media_cur_dir,audio_media_cur_file);
+  audiodisplay.screen(Disp_Media);
+  ws.textAll("{\"audio_media\":1}");
+//  write2log(LOG_MODULE,2,"Anzahl Songs: ",String(allSongs).c_str());
+}
+
+void AudioModul::audio_media_off() {
+  ws.textAll("{\"audio_media\":0}");
+}
+
+void AudioModul::audio_media_play(uint16_t _albumNo, uint16_t _songNo) {
+/*  String sdName = "";
+  char* dirName;
+  char* fileName;
+  bool dir_found = false;
+  bool file_found = false;
+  sdName = String("/")+String(dirName)+String("/")+String(fileName);
+  if (sdName.length() > 5) audio.connecttoFS(SD,sdName);
+  audiodisplay.show_info1(" ");
+  audiodisplay.show_info2(" ");
+  song_started = 0; */
+  char dirname[125];
+  audio_media_sd_get_dir(_albumNo, dirname);
+  Serial.printf(">>>audio_media_play: %s",dirname);
+}
+
+void AudioModul::audio_media_sd_get_dir(uint16_t dirNo, char* dirname) {
+  dirdata_t dirData;
+  unsigned char dirData_c[sizeof(dirdata_t)];
+  File dataFile = SD.open("/dirdatasort.txt","r");
+  if (dataFile) {
+    for (uint16_t i=0; i<5; i++) {
+      dataFile.read(dirData_c,sizeof(dirdata_t));
+      memcpy(&dirData_c, &dirData, sizeof(dirdata_t));
+      sprintf(dirname,"%u Dir: %s",i,dirData.dirName);
+      Serial.println(dirname);
+    }
+    memcpy(&dirData_c, &dirData, sizeof(dirdata_t));
+    Serial.println(dirData.dirName);
+    sprintf(dirname,"Dir: %s",dirData.dirName);
+    dataFile.close();
+  } else {
+    sprintf(dirname,"SD Error");
+  }
+}
+
+void AudioModul::audio_media_init_sd() {
+  dirdata_t dirData1;
+  dirdata_t dirData2;
+  unsigned char dirData_c[sizeof(dirdata_t)];
+  File dataFile = SD.open("/dirdata.txt","w", true);
+  File root = SD.open("/");
+  File dir = root.openNextFile();
+  uint32_t dircnt = 0;
+  bool doit = true;
+  while(dir && doit) {
+    if(dir.isDirectory()) {
+      dirData1.lfdNo = 0;
+      dirData1.dirNo = dircnt;
+      strncpy(dirData1.dirName, dir.name(), FILENAMELENGTH);
+      memcpy(&dirData_c, &dirData1, sizeof(dirdata_t));
+      dataFile.write(dirData_c,sizeof(dirdata_t));
+      dircnt++;
+    }
+    dir = root.openNextFile();
+//   if (dircnt >= 200) doit = false;
+  }
+  dataFile.close();
+  Serial.println("dirdata.txt komplete");
+  dataFile = SD.open("/dirdatasort.txt","w",true);
+
+// Sort Data
+// 1. "kleinsten" DS finden
+  findFirstDirData(&dirData1);
+  Serial.print("First Filename: ");
+  Serial.println(dirData1.dirName);
+  dirData1.lfdNo = 0;
+  memcpy(&dirData_c, &dirData1, sizeof(dirdata_t));
+  dataFile.write(dirData_c,sizeof(dirdata_t));
+
+// 2. Jeweils den nächsten DS finden
+  memcpy(&dirData2, &dirData1, sizeof(dirdata_t));
+  for (uint32_t i = 1; i < dircnt; i++) {
+    findNextDirData(&dirData1, &dirData2);
+    dirData2.lfdNo = i;
+    memcpy(&dirData_c, &dirData2, sizeof(dirdata_t));
+    dataFile.write(dirData_c,sizeof(dirdata_t));
+    memcpy(&dirData1, &dirData2, sizeof(dirdata_t));
+  }
+  dataFile.close();
+  Serial.println("dirdatasort.txt komplete");
+  convert_jpg_files();
+}
+
+// Findet das erste Directory in Sortierreihenfolge 
+// Var: firstDirData ist bei Aufruf leer und wird gefüllt zurückgegeben.
+void AudioModul::findFirstDirData(dirdata_t * firstDirData) {
+  dirdata_t dirData1;
+  unsigned char dirData_c[sizeof(dirdata_t)];
+  File inFile = SD.open("/dirdata.txt");
+  if (inFile.available()) {
+    inFile.read(dirData_c,sizeof(dirdata_t));
+    memcpy(firstDirData,&dirData_c,sizeof(dirdata_t));
+  }
+  while (inFile.available()) {
+    inFile.read(dirData_c,sizeof(dirdata_t));
+    memcpy(&dirData1,&dirData_c,sizeof(dirdata_t));
+    if (strcmp(firstDirData->dirName,dirData1.dirName) > 0) {
+      memcpy(firstDirData,dirData_c,sizeof(dirdata_t));
+    }
+  }
+  inFile.close();
+}
+
+// Findet das erste Directory in Sortierreihenfolge 
+// Var: firstDirData ist bei Aufruf leer und wird gefüllt zurückgegeben.
+void AudioModul::findNextDirData(dirdata_t * startDirData, dirdata_t * nextDirData) {
+  dirdata_t dirData1;
+  unsigned char dirData_c[sizeof(dirdata_t)];
+  File inFile = SD.open("/dirdata.txt");
+  while (inFile.available()) {
+    inFile.read(dirData_c,sizeof(dirdata_t));
+    memcpy(&dirData1,&dirData_c,sizeof(dirdata_t));
+      // startDirData < dirData1
+    if (strcmp(startDirData->dirName,dirData1.dirName) < 0) {
+      if (strcmp(startDirData->dirName,nextDirData->dirName) == 0) {
+        memcpy(nextDirData,&dirData_c,sizeof(dirdata_t));
+      } else {
+        if (strcmp(nextDirData->dirName,dirData1.dirName) > 0) {
+          memcpy(nextDirData,&dirData_c,sizeof(dirdata_t));
+        }
+      }
+    }
+  }
+  inFile.close();
+}
+
+void AudioModul::convert_jpg_files() {
+  uint16_t jpg_w;
+  uint16_t jpg_h;
+  File bmpFile;
+  unsigned char dirData_c[sizeof(dirdata_t)];
+  File inFile = SD.open("/dirdatasort.txt");
+  File jpgFile;
+  dirdata_t dirData;
+  char filename[FILENAMELENGTH];
+  bmpBuffer = (uint16_t*)malloc(BMPSIZE);
+  while (inFile.available()) {
+    yield();
+    inFile.read(dirData_c,sizeof(dirdata_t));
+    memcpy(&dirData,&dirData_c,sizeof(dirdata_t));
+    sprintf(filename,"/%s/cover.jpg",dirData.dirName);
+    jpgFile = SD.open(filename);
+    if(jpgFile) {
+      TJpgDec.getSdJpgSize(&jpg_w,&jpg_h,filename);
+      if ( (jpg_w <= 320) && (jpg_h <= 320) ) { 
+        sprintf(filename,"/%s/cover.bmp",dirData.dirName);
+        Serial.println(filename);
+        memset(bmpBuffer,0,BMPSIZE);
+        bmpFile = SD.open(filename, FILE_WRITE, true);
+        if ( bmpFile ) {
+          TJpgDec.drawSdJpg(0, 0, jpgFile);
+          bmpFile.write((uint8_t*)bmpBuffer,BMPSIZE);
+          bmpFile.close();
+        }
+      }
+    }
+  }
+  inFile.close();
+  free(bmpBuffer);  
+}
+
+void AudioModul::show_album(uint16_t albumno) {
+  bool got_ds = false;
+  uint16_t dsno = 0;
+  dirdata_t dirData;
+  File bmpFile;
+  char filename[FILENAMELENGTH];
+  unsigned char dirData_c[sizeof(dirdata_t)];
+  File inFile = SD.open("/dirdatasort.txt");
+  bmpBuffer = (uint16_t*)malloc(BMPSIZE);
+  while (inFile.available() && ! got_ds) {
+    inFile.read(dirData_c,sizeof(dirdata_t));
+    dsno++;
+    if (albumno == dsno) got_ds = true;
+  }
+  memcpy(&dirData,&dirData_c,sizeof(dirdata_t));
+  bmpBuffer = (uint16_t*)malloc(BMPSIZE);
+  sprintf(filename,"/%s/cover.bmp",dirData.dirName);
+  memset(bmpBuffer,0,BMPSIZE);
+  bmpFile = SD.open(filename, FILE_READ);
+  if ( bmpFile ) {
+    bmpFile.read((uint8_t*)bmpBuffer,BMPSIZE);
+    bmpFile.close();
+  }
+  audiodisplay.show_album((uint16_t*)bmpBuffer,"Titel");
+}
+
+File AudioModul::audio_media_sd_read_dir(/*File root,*/ int dirNo) {
+  File retval;
+  File root;
+  int i = -1;
+  if (dirNo >= 0) {
+    root = SD.open("/");
+    root.rewindDirectory();
+    if (root) {
+      do {
+      retval = root.openNextFile();
+      while (! retval.isDirectory()) retval = root.openNextFile();
+      i++;
+      } while (i < dirNo && retval);
+    }
+    root.close();
+  }
+  Serial.printf("audio_media_sd_read_dir: %s \n",retval.name());
+  return retval;
+}
+
+int AudioModul::audio_media_sd_init(int _dirNo) {
+//  char* dirName1;
+//  char* dirName2;
+  int retval = 1;
+  int dircnt = 1;
+  int dirNo =_dirNo;
+  int dirCnt2 = 0;
+  int dirCnt3 = 0;
+  bool file2_was_greater = false;
+//  dirName1 = (char*)malloc(FILENAMELENGTH);
+//  dirName2 = (char*)malloc(FILENAMELENGTH);
+  File root = SD.open("/");
+  File dir1;
+  File dir2;
+  File dir3;
+  bool finished = false;
+
+  if (dirNo < 0) {
+    Serial.println("####### Übersicht SD #######");
+    if (root) {
+      dir3;
+      do {
+        dir3 = root.openNextFile();
+        if (dir3 && dir3.isDirectory()) {
+          Serial.println(dir3.name());
+        }
+      } while (dir3);
+    }
+    root.rewindDirectory();
+    Serial.println("------- Ende SD ------------");
+//    root.close();
+  }
+  yield();
+  // Fall 1: dirNo < 0 => dir1 leer und dir2 ist das namentlich kleinste dir
+//  root = SD.open("/");
+  if (root) {
+    root.rewindDirectory();
+    if (dirNo < 0) {
+      Serial.println("x0");
+      dir2 = root.openNextFile();
+      dirCnt2++;
+      dirCnt3++;
+      while (dir2 && ! dir2.isDirectory()) {
+        dir2 = root.openNextFile();
+        Serial.println("x1");
+      }
+      dir3 = root.openNextFile();
+      dirCnt3++;
+      while (dir3) {
+        while (dir3 && ! dir3.isDirectory()) {
+          dir3 = root.openNextFile();
+          Serial.println("x2");
+        }
+        if (dir2 && dir3 && strcmp(dir2.name(),dir3.name()) >= 0) {
+          dir2 = dir3;
+          dirCnt2 = dirCnt3;
+          Serial.println("x3");
+        }
+        dir3 = root.openNextFile();
+        dirCnt3++;
+      }
+      Serial.printf("%s at %i\n",dir2.name(),dirCnt2);
+    } else {
+      dir1 = audio_media_sd_read_dir(dirNo);
+      Serial.printf("+++ %s",dir1.name())
+      Serial.println("x0");
+      dir2 = root.openNextFile();
+      dirCnt2++;
+      dirCnt3++;
+      while (dir2 && ! dir2.isDirectory()) {
+        dir2 = root.openNextFile();
+        Serial.println("x1");
+      }
+      dir3 = root.openNextFile();
+      dirCnt3++;
+      while (dir3) {
+        while (dir3 && ! dir3.isDirectory()) {
+          dir3 = root.openNextFile();
+          Serial.println("x2");
+        }
+        if (dir2 && dir3 && strcmp(dir2.name(),dir3.name()) >= 0) {
+          dir2 = dir3;
+          dirCnt2 = dirCnt3;
+          Serial.println("x3");
+        }
+        dir3 = root.openNextFile();
+        dirCnt3++;
+      }
+      Serial.printf("%s at %i\n",dir2.name(),dirCnt2);
+    }
+    Serial.println("x4");
+    Serial.println(dir2.name());
+    if (dir1) dir1.close();
+    if (dir2) dir2.close();
+    if (dir3) dir3.close();
+    root.close();
+  }
+  Serial.printf("audio_media_sd_init returns %i",retval);
+  if (! file2_was_greater) retval = 99999;
+  return dirCnt2;
+}
+/*
+void AudioModul::audio_media_select_album() {
+  String album[3];
+  music_dir_t *p_search;
+  music_dir_t *p_last = NULL;
+  bool finished = false;
+  album[0] = " ";
+  album[1] = " ";
+  album[2] = " ";
+  if (p_music_dir_initial) {
+    p_search = p_music_dir_initial;
+    while (p_search && ! finished) {
+      if (p_search->albumNo == audio_media_cur_album) {
+        if (p_last) album[0] = p_last->dirName;
+        album[1] = p_search->dirName;
+        if (p_search->p_next) album[2] = (p_search->p_next)->dirName;
+      }
+      p_last = p_search;
+      p_search = p_search->p_next;
+    }
+  }
+  Serial.println(String("Display-select:")+album[0]+String(" ")+album[1]+String(" ")+album[2]);
+  audiodisplay.select(album[0].c_str(),album[1].c_str(),album[2].c_str());
+}
+
+void AudioModul::audio_media_select_song() {
+  String song[3];
+  music_file_t *p_search;
+  uint16_t act_file;
+  int idx = 0;
+  song[0] = " ";
+  song[1] = " ";
+  song[2] = " ";
+  if (audio_media_cur_file > 0) {
+    act_file= audio_media_cur_file -1;
+  } else {
+    act_file = 0;
+    idx = 1;
+  }
+  if (p_music_file_initial) {
+    p_search = p_music_file_initial;
+    while (p_search) {
+      if (p_search->dirNo == audio_media_cur_dir && p_search->fileNo == act_file) {
+        if (idx < 3) {
+          song[idx] = p_search->fileName;
+          act_file++;
+          idx++;
+        }
+      }
+      p_search = p_search->p_next;
+    }
+  }
+#if defined(DEBUG_SERIAL_MODULE)
+  Serial.println(String("DirNo: ")+String(audio_media_cur_dir)+String(" FileNo: ")+String(audio_media_cur_file)+String(" ")+song[0]+String(" ")+song[1]+String(" ")+song[2]);
+#endif
+  audiodisplay.select(song[0].c_str(),song[1].c_str(),song[2].c_str());
+}
+
+void AudioModul::allAlbum2Web() {
+  String tmpstr1;
+  String tmpstr2;
+  uint8_t dircnt = 0;
+  music_dir_t *p_dir_search;
+  if (p_music_dir_initial) {
+    p_dir_search = p_music_dir_initial;
+    while (p_dir_search) {
+      tmpstr1 = String("\"audio_media_add_album_d")+String(p_dir_search->dirNo)+String("f0")
+              + String("\":\"A#")+String(p_dir_search->dirNo)+String("#0#")+String(p_dir_search->dirName)+String("\"");
+      switch (dircnt) {
+        case 0:
+          tmpstr2 = String("{") + tmpstr1;
+        break;
+        default:
+          tmpstr2 += String(",") + tmpstr1;
+          if (dircnt == 9) {
+            tmpstr2 += "}";
+            ws.textAll(tmpstr2);
+            write2log(LOG_MODULE,1,tmpstr2.c_str());
+          }
+        break;
+      }
+      dircnt++;
+      if (dircnt>9) dircnt=0;
+      p_dir_search = p_dir_search->p_next;
+    }
+  }
+  tmpstr2 += "}";
+  ws.textAll(tmpstr2);
+  write2log(LOG_MODULE,1,tmpstr2.c_str());
+}
+*/
+
+#endif //USE_AUDIO_MEDIA
+
+#endif  //USE_AUDIOMODUL

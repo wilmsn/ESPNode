@@ -1,4 +1,3 @@
-#ifdef USE_SENSOR_BOSCH
 #ifndef _SENSOR_BOSCH_H_
 #define _SENSOR_BOSCH_H_
 
@@ -130,5 +129,4 @@ private:
     String humi = String("---");
 };
 
-#endif
 #endif

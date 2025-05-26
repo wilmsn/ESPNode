@@ -1,0 +1,251 @@
+#ifdef USE_AUDIOMODUL
+
+#ifndef _AUDIOMODUL_H_
+#define _AUDIOMODUL_H_
+
+/***************************************************************************************
+
+
+
+
+
+Klickstream (App und Level):
+
+1) Kurzer Klick
+Ein kurzer Klick dient zur Bestätigung der Auswahl im aktuellen Level und erhöht danach das Level um 1. 
+Erfolgt keine weitere Aktion wird nach einer definierten Zeit (KLICK_TIMEOUT) das Level wieder auf 0 gesetzt. 
+Im Startzustand wird das Radio (wenn USE_AUDIO_RADIO gesetzt) gestartet.
+App 0 = Off   Level = 0 Pos = (0 bis 5)   ==> Anlage aus
+                Level = 0 Pos > 5           ==> Anlage ein -> Radio
+App 1 = Radio   Level = 0 Pos = (0 bis 5)   ==> Anlage aus
+                Level = 0 Pos > 5           ==> Anlage ein -> Radio
+                Level = 1 Pos = beliebig    ==> Radio: Senderwahl; Nach (KLICK_TIMEOUT) Sprung zu Level 0
+                Level = 2 Pos = beliebig    ==> Radio: Senderwahl durchführen danah Sprung zu Level 0
+App 2 = Media   Level = 0 Pos = beliebig    ==> Media: Musikstück wird gespielt (Lautstärkeregelung)
+                Level = 1 Pos = beliebig    ==> Media: Albenwahl; Nach (KLICK_TIMEOUT) Sprung zu Level 0
+                Level = 2 Pos = beliebig    ==> Media: Musikstückwahl; Nach (KLICK_TIMEOUT) Sprung zu Level 0
+App 3 = Speaker Level = 0 Pos = beliebig    ==> Speaker: Musikstück wird gespielt (Lautstärkeregelung)
+App 4 = Setting Level = 0 Pos = beliebig    ==> tbd.
+                Level = 1 Pos = beliebig    ==> tbd.
+App 5 = SelApp  Level = 0 Pos = 0           ==> Anlage ausschalten
+                Level = 0 Pos = 1           ==> Radio einschalten
+                Level = 0 Pos = 2           ==> Mediaplayer einschalten
+                Level = 0 Pos = 3           ==> Bluetooth Lautsprecher einschalten
+                Level = 0 Pos = 4           ==> Settings TBD
+                Level = 0 Pos = 5           ==> MusicUpdate ausführen
+
+2) Langer Klick
+Ein langer Klick startet die Applicationswahl. Drehen wählt die Application aus und ein kurzer Klick bestätigt die Wahl
+App 5 = SelApp  Level = 0 Pos = beliebig    ==> Application wird ausgewählt; Nach einer definierten Zeit (KLICK_TIMEOUT)
+                                                Sprung zum alten Application.
+                Level = 1 Pos = beliebig    ==> Application wird gewechselt
+
+
+
+
+
+ ***************************************************************************************/
+#define USE_SWITCH_ONOFF
+#include "switch_onoff.h"
+
+#ifdef USE_AUDIO_MEDIA
+#include "FS.h"
+#include "SD.h"
+#include "TJpg_Decoder.h"
+//#define JPG_SCALE       2
+//#define BMPSIZE         51200      //160*160*2
+#define JPG_SCALE       4
+#define BMPSIZE         12800      //80*80*2
+#define FILENAMELENGTH  127
+typedef struct {
+    uint16_t          lfdNo;
+    uint16_t          dirNo;
+    char              dirName[FILENAMELENGTH]; 
+} dirdata_t;
+#endif
+
+// Settings for general use
+#define KLICK_TIMEOUT             60
+// Settings for Webradio-Stations definitions
+#define MAXSTATIONS               10
+#define STATION_NAME_LENGTH       30
+#define STATION_URL_LENGTH        128
+// Settings for Mediaplayer
+#define MAXALBUM                  100
+#define ALBUMLENGTH               40
+#define SONGLENGTH                40
+
+/// @brief Eine Struktur für die Radiosender
+typedef struct {
+    /// @brief Der Sendername so wie er im Display angezeigt wird
+    char    name[STATION_NAME_LENGTH];
+    /// @brief Die URL zum Stream des Senders
+    char    url[STATION_URL_LENGTH];
+} station_t;
+
+/// @brief Ein ENUM für die verschiedenen Apps
+typedef enum { Off = 0, Radio, Media, Speaker, Settings, MusicUpdate, LastApp } app_t;
+
+// Die Keywordliste auf die in der "set" Funktion reagiert wird:
+#define AUDIO_RADIO_SET_STATION "station"
+#define AUDIO_RADIO             "radio"
+#define AUDIO_MEDIA             "media"
+#define AUDIO_SPEAKER           "speaker"
+
+// Konfigurationsdaten für den ESP32S3
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#warning "Compiling Audiomodule with Settings for ESP32-S3"
+#define I2S_DOUT                        6
+#define I2S_BCLK                        5
+#define I2S_LRC                         4
+#define ROTARY_SW                       3
+#define ROTARY_A                        1
+#define ROTARY_B                        2
+#define TFT_SCK                         12
+#define TFT_MOSI                        11
+#define TFT_CS                          8
+#define TFT_DC                          9
+#define TFT_ROT                         3
+#endif
+
+// Konfigurationsdaten für den ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
+#warning "Compiling Audiomodule with Settings for ESP32"
+#define I2S_LRC                         26
+#define I2S_BCLK                        27
+#define I2S_DOUT                        25
+#define ROTARY_SW                       32
+#define ROTARY_A                        27
+#define ROTARY_B                        26
+#define TFT_SCK                         18
+#define TFT_MOSI                        23
+#define TFT_CS                          17
+#define TFT_DC                          16
+#define TFT_ROT                         3
+#endif
+
+/// @brief Das Audiomodul ist eine Ableitung der Klasse "Switch_OnOff" 
+class AudioModul : public Switch_OnOff {
+
+public:
+    /// @brief Die Initialisierung als logischer Schalter ohne HW-Pin
+    /// @param html_place Der Einbauort in der Webseite
+    /// @param label Ein Bezeichner für diesen Schalter
+    /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
+    /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
+    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
+ 
+    /// @brief Die normale Set Funktion aus de Grundmodul erweitert um feste Schlüsselwörter 
+    /// @brief zur Einspeicherung von Radiostationen und zur Senderwahl.
+    /// @brief station[0..9]_url; station[0..9]_name; play;
+    /// @param keyword Das zu testende "keyword"
+    /// @param value Folgende Strings als **value** übergeben schalten **aus**:\n 
+    /// @return "true" bei Übereinstimmung der Keywörter sonst false
+    bool set(const String& keyword, const String& value);
+ 
+    /// @brief Alles was zum Aufbau der Webseite benötigt wird, wird in dieser Prozedur an den 
+    /// @brief übergebenen String angehängt.
+    /// @param tmpstr String zur Aufnahme der HTML-Konfigurationsdaten. Achtung: Kann vorbefüllt sein, neuen Inhalt anhängen.
+    void html_create(String& tmpstr);
+
+    /// @brief Die "loop" Funktion dieses Moduls. Wird in die "loop" Funktion des Hauptprogrammes eingehängt.
+    /// @param now Stellt die Systemzeit bereit.
+    void loop(time_t now);
+    
+
+private:
+
+    /// @brief Die Variable "app" ist zu jeder Zeit mit der gerade aktiven "app" gefüllt
+    app_t     app;
+    /// @brief Die letzte verwendete "app"
+    app_t     last_app;
+    /// @brief Die aktuelle Lautstärke
+    uint16_t   audio_vol;
+/*    
+    uint16_t   audio_bas;
+    uint16_t   audio_tre;
+*/
+#ifdef USE_ROTARY
+    /// @brief Ein Schalter für die Timeoutfunktion des Drehreglers. Wird durch den Drehregler die Ebene 0 verlassen 
+    /// @brief wird ein Timeout gesetzt. Nach Ablau des Timers kehrt das System in die Ebene 0 zurück.
+    bool      timeout_set = false;
+    /// @brief Die Startzeit des Timers
+    time_t    timeout_start;
+#endif
+    /// @brief ????
+    time_t    song_started;
+    /// @brief ????
+    time_t    old_now;
+#ifdef USE_ROTARY
+    /// @brief Wird "true" wenn eine Änderung durch den Rotary veranlasst wird. In diesem Falle muss der Rotary nicht gesetzt werden.
+    bool      change_from_rotary = false;
+    /// @brief Zwischenspeicher für den Rotary Val z.B. beim Wechsel des Levels.
+    uint16_t  rot_last_val;
+
+#endif
+// Radio
+#ifdef USE_AUDIO_RADIO
+    /// @brief Ein Array mit den Sendern
+    station_t audio_radio_station[MAXSTATIONS];
+    /// @brief Der aktuell ausgewählte Sender
+    uint8_t   audio_radio_cur_station;
+    /// @brief Eine Variable zur Zwischenspeicherung des ausgewählten Senders.
+    
+    /// @brief Schaltet das Radio aus.
+    void audio_radio_off();
+
+    /// @brief Schaltet das Radio an.
+    void audio_radio_on();
+
+    /// @brief Die gesamte Initialisierung dieser Anwendung auf der Weboberfläche.
+    void audio_radio_web_init();
+
+    /// @brief Schaltet die Anzeige auf "Wiedergabe des aktuellen Senders"
+    void audio_radio_disp_play();
+
+
+//    void audio_radio_set_station();
+
+//    void audio_radio_show();
+
+    void audio_radio_save_stations();
+
+    /// @brief Lädt die Textdatei data/sender.txt in das Array audio_radio_station[]
+    void audio_radio_load_stations();
+#endif
+#ifdef USE_AUDIO_MEDIA
+    void audio_media_init_sd();
+    void findNextDirData(dirdata_t * startDirData, dirdata_t * nextDirData);
+    void findFirstDirData(dirdata_t * firstDirData);
+    void convert_jpg_files();
+    /// @brief Zeigt ein Cover auf dem Display an 
+    /// @param albumno Das anzuzeigende Album
+    void show_album(uint16_t albumno);
+    uint16_t audio_media_cur_dir;
+    uint16_t audio_media_cur_file;
+    void audio_media_on();
+    void audio_media_off();
+    void audio_media_play(uint16_t _albumNo, uint16_t _songNo);
+    void audio_media_sd_get_dir(uint16_t dirNo, char* dirname);
+    int  audio_media_sd_init(int dirNo);
+    bool audio_media_sd_init_do = false;
+    int  audio_media_sd_init_file = -1;
+    File audio_media_sd_read_dir(int dirNo);
+
+#endif //USE_AUDIO_MEDIA
+    /// @brief Schaltet die Anlage aus
+    void audio_off();
+    /// @brief Zentrale Funktion zum Wechseln der App
+    /// @param _app Die neu ausgewählte App
+    void      audio_set_app(app_t _app);
+    /// @brief ????
+    /// @param _app 
+    void      audio_show_app(app_t _app);
+    /// @brief 
+    void      start_timeout();
+
+};
+
+
+#endif
+#endif

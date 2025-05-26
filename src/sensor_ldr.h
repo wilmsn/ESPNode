@@ -1,4 +1,3 @@
-#ifdef USE_SENSOR_LDR
 #ifndef _SENSOR_LDR_H_
 #define _SENSOR_LDR_H_
 /***************************************************************************************
@@ -54,5 +53,4 @@ private:
 
 };
 
-#endif
 #endif

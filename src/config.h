@@ -21,10 +21,10 @@
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
-//#define NODE_TERASSE
+#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
-#define NODE_KUECHENRADIO
+//#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
@@ -239,96 +239,147 @@
 
 #define DEBUGFILE                    "/debugfile.txt"
 
-///Anschlusspin für den CE Pin des Funkmodules
 #ifndef RF24_RADIO_CE_PIN
+///Anschlusspin für den CE Pin des Funkmodules
 #define RF24_RADIO_CE_PIN              15
 #endif
-///Anschlusspin für den CSN Pin des Funkmodules
+
 #ifndef RF24_RADIO_CSN_PIN
+///Anschlusspin für den CSN Pin des Funkmodules
 #define RF24_RADIO_CSN_PIN             16
 #endif
-///Der verwendete RF24 Funkkanal
+
 #ifndef RF24_CHANNEL
+///Der verwendete RF24 Funkkanal
 #define RF24_CHANNEL                   92
 #endif
-/// Die Übertragungsgeschwindigkeit
+
 #ifndef RF24_SPEED
+/// Die Übertragungsgeschwindigkeit
 #define RF24_SPEED                     RF24_250KBPS
 #endif
-/// Der Netzwerkschlüssel Hub zum Node
+
 #ifndef RF24_HUB2NODE
+/// Der Netzwerkschlüssel Hub zum Node
 #define RF24_HUB2NODE       { 0xf0, 0xcc, 0xfc, 0xcc, 0xcc}
 #endif
-/// Der Netzwerkschlüssel Node zum Hub
+
 #ifndef RF24_NODE2HUB
+/// Der Netzwerkschlüssel Node zum Hub
 #define RF24_NODE2HUB       { 0x33, 0xcc, 0xfc, 0xcc, 0xcc}
 #endif
-/// Der Datentyp für die Node_ID. Ist aktuell auf 1...255 festgelegt. Werden mehr Nodes benötigt, kann der Datentyp hier zentral umgestellt werden.
+
 #ifndef NODE_DATTYPE
+/// Der Datentyp für die Node_ID. Ist aktuell auf 1...255 festgelegt. Werden mehr Nodes benötigt, kann der Datentyp hier zentral umgestellt werden.
 #define NODE_DATTYPE        uint8_t
 #endif
-/// Der Datentyp für die Ordernummer. Auch hier eine zentrale Festlegung des Datentyps, der ggf. die Umstellung vereinfacht.
+
 #ifndef ONR_DATTYPE
+/// Der Datentyp für die Ordernummer. Auch hier eine zentrale Festlegung des Datentyps, der ggf. die Umstellung vereinfacht.
 #define ONR_DATTYPE         uint8_t
 #endif
 
 
-/// @brief Die Datenstruktur des payloads in dem RF24 Netzwerk. Sie wird nur benötigt wenn der RF24Gateway genutzt
-/// wird und auch dies nur damit Logging-Informationen angezeigt werden können.
+/**
+ * @brief Die Datenstruktur des payloads in dem RF24 Netzwerk. Sie wird nur benötigt wenn der RF24Gateway genutzt
+ * wird und auch dies nur damit Logging-Informationen angezeigt werden können.
+ */
 typedef struct {
-/// Die Node_ID ist der eindeutige Identifizierer für einen Node.
-/// Aktuell können hier die Nodes 1..255 genutzt werden (8 Bit Begrenzung)
-/// Damit der Datentyp einfach gewechselt werden kann ist er nur indirekt festgelegt.   
+    /**
+     * @brief Der eindeutige Identifizierer für einen Node
+     * Die Node_ID ist der eindeutige Identifizierer für einen Node.
+     * Aktuell können hier die Nodes 1..255 genutzt werden (8 Bit Begrenzung)
+     * Damit der Datentyp einfach gewechselt werden kann ist er nur indirekt festgelegt.
+     */
     NODE_DATTYPE    node_id;         
-/// Die MSG_ID ist der eindeutige Identifizierer einer Nachricht.
-/// Muss einen Nachricht wiederholt werden, wird sie hochgezählt.
+    /**
+     * @brief Eindeutige Identifizierer einer Nachricht
+     * Die MSG_ID ist der eindeutige Identifizierer einer Nachricht.
+     * Muss einen Nachricht wiederholt werden, wird sie hochgezählt.
+     */
     uint8_t         msg_id;          
-/// Art der Nachricht, Definition siehe Nachrichtentyp.
+    /**
+     * @brief Der Nachrichtentyp
+     * Art der Nachricht, Definition siehe Nachrichtentyp.
+     */
     uint8_t         msg_type;        
-/// Nachrichtenflag, Definition siehe Nachrichtenflags.
+    /**
+     * @brief Nachrichtenflags
+     * Nachrichtenflag, Definition siehe Nachrichtenflags.
+     */
     uint8_t         msg_flags;   
-/// Ordernummern werden im Hub verwaltet und dort nach jeder Order hochgezählt.
-/// Auf eine Anfrage vom Hub wird immer mit der selben Ordernummer geantwortet.
-/// Nachrichten, die ihren Ursprung im Node haben ( z.B. Heatbeatmessages ) 
-/// erhalten die Ordernummer "0", Ordernummern größer 250 diesen zur Messung des PA Levels.    
+    /**
+     * @brief Die Ordernummer
+     * Ordernummern werden im Hub verwaltet und dort nach jeder Order hochgezählt.
+     * Auf eine Anfrage vom Hub wird immer mit der selben Ordernummer geantwortet.
+     * Nachrichten, die ihren Ursprung im Node haben ( z.B. Heatbeatmessages )
+     * erhalten die Ordernummer "0", Ordernummern größer 250 diesen zur Messung des PA Levels.
+     */
     ONR_DATTYPE     orderno;         
-/// Die heartbeatno wird bei jedem neuen Heartbeat hochgezählt
-/// Da es sich um eine 8 Bit Zahl handelt wird der gültige Bereich für normale Heartbeats von 1...200 festgelegt
-/// Der Bereich 201...255 gilt für besondere Nachrichten (z.B. Initialisierung )
+    /**
+     * @brief Die Heartbeatnummer
+     * Die Heartbeatno wird bei jedem neuen Heartbeat hochgezählt
+     * Da es sich um eine 8 Bit Zahl handelt wird der gültige Bereich für normale Heartbeats von 1...200 festgelegt
+     * Der Bereich 201...255 gilt für besondere Nachrichten (z.B. Initialisierung )
+     */
     uint8_t         heartbeatno;      
-/// noch nicht genutzt
+    /**
+     * noch nicht genutzt
+     */
     uint8_t         reserved1;      
-/// noch nicht genutzt
+    /**
+     * noch nicht genutzt
+     */
     uint8_t         reserved2;      
-/// Datenpaket 1 (32Bit)
+    /**
+     * Datenpaket 1 (32Bit)
+     */
     uint32_t        data1;         
-/// Datenpaket 2 (32Bit)
+    /**
+     * Datenpaket 2 (32Bit)
+     */
     uint32_t        data2;         
-/// Datenpaket 3 (32Bit)
+    /**
+     * Datenpaket 3 (32Bit)
+     */
     uint32_t        data3;         
-/// Datenpaket 4 (32Bit)
+    /**
+     * Datenpaket 4 (32Bit)
+     */
     uint32_t        data4;         
-/// Datenpaket 5 (32Bit)
+    /**
+     * Datenpaket 5 (32Bit)
+     */
     uint32_t        data5;         
-/// Datenpaket 6 (32Bit)
+    /**
+     * Datenpaket 6 (32Bit)
+     */
     uint32_t        data6;         
 } payload_t;
 
 
-/// @brief Die Datenstructur zur Übertragung der Daten zwischen Gateway und Hub
-///Im Prinzig ebtspricht diese Struktur der payload_t Struktur erweitert um ein Feld zur Aufnahme der Gateway_id.
-
+/**
+ * @brief Die Datenstructur zur Übertragung der Daten zwischen Gateway und Hub
+ * Im Prinzig ebtspricht diese Struktur der payload_t Struktur erweitert um ein Feld zur Aufnahme der Gateway_id.
+ */
 typedef struct {
-/// Die eindeutige Gateway ID
+/**
+ * Die eindeutige Gateway ID
+ */
   uint16_t          gw_no;         // the number of the sending gateway
-/// Die Payloadstruktur wie unter payload_t definiert.
+/**
+ * Die Payloadstruktur wie unter payload_t definiert.
+ */
   payload_t         payload;      // the payload to send forward
-/// Der Unix Timestamp
+/**
+ * Der Unix Timestamp
+ */
   time_t            utime;
 } udpdata_t;
 
-/// Definition der LogTypen
+// Definition der LogTypen
 #ifndef LOG_RF24
+/// 
 #define  LOG_RF24      0
 #endif
 #ifndef LOG_SYSTEM

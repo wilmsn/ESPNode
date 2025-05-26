@@ -1,24 +1,47 @@
 #include "config.h"
 #ifdef USE_AUDIODISPLAY_GC9A01A
 #include "audiodisplay_GC9A01A.h"
-#include "audiomodul.h"
+//#include "audiomodul.h"
 #include "common.h"
 
 AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot ) :
               Adafruit_GC9A01A(_cs, _dc) {
   begin();
   setRotation(_rot);
+  cur_screen = Screen_Off;
+  fillScreen(GC9A01A_BLACK);
+  setTextColor(GC9A01A_WHITE); 
+  setTextSize(7);
+  setCursor(30,100);
+  print("Init");
+}
+
+void AudioDisplay::screen(screenmode_t _screen) {
+  cur_screen = _screen;
+  switch (cur_screen) {
+  case Screen_Off:
+    clear();
+    offscreen();
+  break;
+  case Screen_Radio:
+    clear();
+    ip();
+  break;
+  default:
+    break;
+  }
 }
 
 void AudioDisplay::clear() {
   fillScreen(GC9A01A_BLACK);
 }
 
-void AudioDisplay::show_ip(const char* myip) {
+void AudioDisplay::ip() {
   setTextColor(GC9A01A_WHITE);  
+  switch(cur_screen);
   setTextSize(1);
-  setCursor(75, 225);
-  println(myip);
+  setCursor(75,225);
+  print(WiFi.localIP().toString());
 }
 
 void AudioDisplay::show_bps(const char* mybps) {
@@ -28,7 +51,7 @@ void AudioDisplay::show_bps(const char* mybps) {
   println(mybps);
 }
 
-void AudioDisplay::show_vol(uint8_t vol) {
+void AudioDisplay::vol(uint8_t vol) {
   if (vol > 90) vol=90;
   fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
   fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
@@ -160,35 +183,30 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
   } while (start_pos < strlen(in_text));
 }
 
-void AudioDisplay::show_modus(const char* _modusStr) {
-  String modusStr = String(_modusStr);
+void AudioDisplay::offscreen() {
+  setTextColor(GC9A01A_WHITE); 
   clear();
-  setTextSize(3);
-  setCursor(TEXT_UNDER_BMP_X, TEXT_UNDER_BMP_Y);
-  if (modusStr == "Off") {
-      drawRGBBitmap(BMP_LEFT,BMP_DOWN,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
-      setTextColor(GC9A01A_RED);  
-      println(modusStr);
+  setTextSize(7);
+  if ( timeinfo.tm_hour < 10) { setCursor(60,100); } else { setCursor(20,100); }
+  if ( timeinfo.tm_min < 10) {
+    printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
+  } else {
+    printf("%d:%d",timeinfo.tm_hour, timeinfo.tm_min);
   }
-  if (modusStr == "Radio") {
-      drawRGBBitmap(BMP_LEFT,BMP_DOWN,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
-      setTextColor(GC9A01A_ORANGE);  
-      println(modusStr);
-  }
-  if (modusStr == "Media") {
-      drawRGBBitmap(BMP_LEFT,BMP_DOWN,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
-      setTextColor(GC9A01A_GREEN);  
-      println(modusStr);
-  }
-  if (modusStr == "Speaker") {
-      drawRGBBitmap(BMP_LEFT,BMP_DOWN,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
-      setTextColor(GC9A01A_BLUE);  
-      println(modusStr);
-  }
-  if (modusStr == "Settings") {
-      drawRGBBitmap(BMP_LEFT,BMP_DOWN,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
-      setTextColor(GC9A01A_RED);  
-      println(modusStr);
+  ip();
+}
+
+void AudioDisplay::loop(time_t now) {
+  if (timeinfo.tm_min != last_min) {
+    last_min = timeinfo.tm_min;
+    switch(cur_screen) {
+      case Screen_Off:
+        offscreen();
+      break;
+      default:
+      // nothing to do
+      break;
+    }
   }
 }
 

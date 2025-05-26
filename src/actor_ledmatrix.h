@@ -1,4 +1,3 @@
-#ifdef USE_ACTOR_LEDMATRIX
 #ifndef _ACTOR_LEDMATRIX_H_
 #define _ACTOR_LEDMATRIX_H_
 #define USE_SWITCH_ONOFF
@@ -143,5 +142,4 @@ private:
     time_t graph_change_time;
 };
 
-#endif
 #endif

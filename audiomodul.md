@@ -1,7 +1,7 @@
 #Audiomodul
 ##Bedienung
 ###Allgemein:
-Das Modul startet im Zustand ausgeshaltet- Das Einschalten erfolgt durch Drehung des Lautstärkereglers in Richtung "lauter", Ausschalten erfolgt durch den Lautstärkeregler durch drehen in Richtung "leiser", bei Lautstärke 0 wird ausgeschaltet..
+Das Modul startet im Zustand ausgeschaltet- Das Einschalten erfolgt durch Drehung des Lautstärkereglers in Richtung "lauter", Ausschalten erfolgt durch den Lautstärkeregler durch drehen in Richtung "leiser", bei Lautstärke 0 wird ausgeschaltet..
 Durch Druck auf den Lautstärkeregler sind weitere Funktionen verfügbar. Dabei wird zwischen kurzem Druck (kleiner 1 Sekunde) und langer Druck (größer 1 Sekunde) unterschieden. Wird der Grundzustand verlassen und ca. 1 Minute nichts gemacht wird automatisch in den Grundzustand zurückgeschaltet.
 
 ###Modus
@@ -22,6 +22,7 @@ Grundzustand: Der aktuelle Sender wird gespielt und angezeigt.
 1* kurz drücken: Senderwahl. Durch kurzen Druck auf den Lautstärkeregler wird auf Senderwahl umgeschaltet. Durch drehen wird der Sender gewechselt.
 
 2* kurz drücken: Rückkehr in den Grundzustand
+
  
 ###Modus: Mediaplayer
 Gndzustand: Wiedergabe, das aktuelle Stück wird gespielt und angezeigt.

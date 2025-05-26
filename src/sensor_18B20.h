@@ -1,5 +1,3 @@
-
-#ifdef USE_SENSOR_18B20
 #ifndef _SENSOR_18B20_H_
 #define _SENSOR_18B20_H_
 
@@ -67,5 +65,4 @@ private:
 
 };
 
-#endif
 #endif

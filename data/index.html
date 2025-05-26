@@ -8,7 +8,7 @@
 <script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.999 beta3 (4/2025)";
+var htmlversion = "0.999 beta3 (21.4.2025)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -428,15 +428,18 @@ function prozessJS( key, val ) {
       }
     break;
     case "show_matrix":
-    // Aufbau der LED Matrix
-      for (let y = 0; y < ledmatrix_y; y++) {
-        $("#display").append("<div id='disp_line_"+y+"' class='ledmatrix_line'><div>");
-        for (let x = 0; x < ledmatrix_x; x++) {
-          var z = ledmatrix_x * y + x;
-          $("#disp_line_"+y).append("<div id='disp_dot_"+z+"' class='ledmatrix_dot'><div>");
+      if (ledmatrix_active == 0) {
+        // Aufbau der LED Matrix
+        for (let y = 0; y < ledmatrix_y; y++) {
+          $("#display").append("<div id='disp_line_"+y+"' class='ledmatrix_line'><div>");
+          for (let x = 0; x < ledmatrix_x; x++) {
+            var z = ledmatrix_x * y + x;
+            $("#disp_line_"+y).append("<div id='disp_dot_"+z+"' class='ledmatrix_dot'><div>");
+          }
         }
+        $("#ledmatrix").show();
+        ledmatrix_active = 1;
       }
-      $("#ledmatrix").show();
     break;
 // Ab hier Audiomodul    
     case "audio_show":

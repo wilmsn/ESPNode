@@ -373,10 +373,16 @@ Der Einbau in den ESPNode mittels Precompilerdirektive wurde bereits behandelt.
 Hier werden alle Anweisungen für dieses Modul umgesetzt. Diese Funktion muss bei Bedarf im abgeleiteten Modul gefüllt werden.
 Innerhalb des Hauptprogrammes werden alle Befehle (Format "comand"="value") durch jede set funktion der eingebauten Module geschleust. Die Module prüfen innerhalb der **"set"** Funktion ob das "comand" für sie ein keyword ist und sie handeln müssen. Die benötigte Funktion für diese Prüfung ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. Alle nötigen Handlungen für einen "Keyword Match" sind hier zu hinterlegen.
 
-###Funktion "html_init()"###
+####Funktion "html_init()"####
 Stellt alle Konfigurationsdaten (als JSON Teilstring) bereit, die für dieses Modul beim Aufruf der Webseite benötigt werden. Die Daten werden in die Variable "html_json" geschrieben. Um dem Hauptprogramm mitzuteilen das Daten zur Verfügung stehen wird der Schalter "html_json_filled" auf "true" gesetzt.
 
-###Funktion loop(time_t now)###
+####Funktion loop(time_t now)####
 In dieser Funktion steht dem Modul Rechenzeit zur Verfügung. Hier werden alle Aktionen durchgeführt die nicht durch ein "comand" veranlasst worden sind z.B. regelmäßige Messungen mit Sensoren.
 ZU beachten ist folgendes: Rechenzeit ist ein knappes Gut. Es findet seitens des Hauptprogrammes keine Kontrolle/Zeitbegrenzung statt. Die Loop Funktionen aller Module wird nah dem "Round Robin" Prinzip angesteuert. Verwendung von "delay()" ist unbedingt zu vermeiden. Um eine Wartefunktion zu realisieren gbt es den übergebenen Zeitstempel.
+ 
+ 
+(Modul Switch On Off)[./modul_switch_onoff.md]
+ 
+(technische Doku)[./technischedoku.md]
+ 
  

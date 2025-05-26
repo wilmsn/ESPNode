@@ -65,7 +65,7 @@ void Sensor_18B20::loop(time_t now) {
         html_init();
         html_update();
         mqtt_stat = String("\"") + mqtt_name + String("\":") + tempC;
-        mqtt_stat_changed = true;
+        //mqtt_stat_changed = true;
       }
     }
   } else {

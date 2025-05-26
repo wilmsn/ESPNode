@@ -58,7 +58,7 @@ public:
      * auf das übergebene Keywort reagiert.
      * @return true wenn das Modul für den übergebenen Befehl zuständig ist, sonst false.
      */
-    bool set(const String& _keyword, const String& _value);
+    bool set(const String& _cmnd, const String& _val);
 
     /**
      * @brief Prüft ob das übergebene keyword dem hinterlegten keyword entspricht

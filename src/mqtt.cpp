@@ -91,7 +91,7 @@ void send_mqtt_dev_state() {
 }
 
 void send_mqtt_stat() {
-  String tmpstr = "{";
+  String tmpstr = String("{");
   bool set_komma = false;
 #ifdef MODULE1
   if (module1.mqtt_has_stat) {
@@ -101,35 +101,35 @@ void send_mqtt_stat() {
   }
 #ifdef MODULE2
   if (module2.mqtt_has_stat) {
-    if(set_komma) tmpstr += ",";
+    if(set_komma) tmpstr += String(",");
     tmpstr += module2.mqtt_stat;
     module2.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE3
   if (module3.mqtt_has_stat) {
-    if(set_komma) tmpstr += ",";
+    if(set_komma) tmpstr += String(",");
     tmpstr += module3.mqtt_stat;
     module3.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE4
   if (module4.mqtt_has_stat) {
-    if(set_komma) tmpstr += ",";
+    if(set_komma) tmpstr += String(",");
     tmpstr += module4.mqtt_stat;
     module4.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE5
   if (module5.mqtt_has_stat) {
-    if(set_komma) tmpstr += ",";
+    if(set_komma) tmpstr += String(",");
     tmpstr += module5.mqtt_stat;
     module5.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE6
   if (module6.mqtt_has_stat) {
-    if(set_komma) tmpstr += ",";
+    if(set_komma) tmpstr += String(",");
     tmpstr += module6.mqtt_stat;
     module6.mqtt_stat_changed = false;
     set_komma = true;
@@ -140,7 +140,7 @@ void send_mqtt_stat() {
 #endif
 #endif
 #endif
-  tmpstr += "}";
+  tmpstr += String("}");
   mqttClient.publish(mk_topic(MQTT_STATUS, "stat"), tmpstr.c_str());
   write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
   send_mqtt_dev_state();
@@ -163,7 +163,7 @@ void send_mqtt_tele() {
     Serial.println("Sending Mqtt Tele");
 #endif
     if (mqttClient.connected()) {
-      tmpstr = "{";
+      tmpstr =  String("{");
       tmpstr += String("\"IP\":\"") + WiFi.localIP().toString() + String("\"");
       tmpstr += String(",\"SSID\":\"") + WiFi.SSID()+String(" (") + String(rssi)+String("dBm / ") + String(rssi_quality) + String("%)\"");
       tmpstr += String(",\"BSSID\":\"") + WiFi.BSSIDstr() + String("\"");
@@ -190,13 +190,13 @@ void send_mqtt_tele() {
       tmpstr += String(",\"RF24GW-Port\":") + String(RF24GW_GW_UDP_PORTNO);
       tmpstr += String(",\"RF24GW-No\":") + String(RF24GW_NO);  
 #endif
-      tmpstr += "}";
+      tmpstr += String("}");
       mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"netinfo"), tmpstr.c_str());
       if (do_log_mqtt) {
         write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
       }
 
-      tmpstr = "{";
+      tmpstr =  String("{");
       tmpstr += String("\"CpuFreq\":\"") + String((int)(F_CPU / 1000000)) + String(" Mhz\"");
       tmpstr += String(",\"FlashSize\":\"")+String((int)(ESP.getFlashChipSize() / 1024 / 1024))+String(" MB\"");
       tmpstr += String(",\"FlashFreq\":\"")+String((int)(ESP.getFlashChipSpeed() / 1000000))+String(" Mhz\"");
@@ -247,13 +247,13 @@ void send_mqtt_tele() {
       tmpstr += String(",\"SW\":\"") + String(SWVERSION) + String(" (") + String(__DATE__) + String(")\"");
       tmpstr += String(",\"UpTime\":\"") + String(uptime.uptimestr()) + String("\"");
 
-      tmpstr += "}";
+      tmpstr += String("}");
       mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"sysinfo"), tmpstr.c_str());
       if (do_log_mqtt) {
         write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
       }
 
-      tmpstr = "{";
+      tmpstr = String("{");
 #ifdef MODULE1
       if (module1.mqtt_has_info) {
         tmpstr += module1.mqtt_info;
@@ -261,31 +261,31 @@ void send_mqtt_tele() {
       }
 #ifdef MODULE2  
       if (module2.mqtt_has_info) {
-        if(set_komma) tmpstr += ",";
+        if(set_komma) tmpstr += String(",");
         tmpstr += module2.mqtt_info;
         set_komma = true;
       }
 #ifdef MODULE3
       if (module3.mqtt_has_info) {
-        if(set_komma) tmpstr += ",";
+        if(set_komma) tmpstr += String(",");
         tmpstr += module3.mqtt_info;
         set_komma = true;
       }
 #ifdef MODULE4
       if (module4.mqtt_has_info) {
-        if(set_komma) tmpstr += ",";
+        if(set_komma) tmpstr += String(",");
         tmpstr += module4.mqtt_info;
         set_komma = true;
       }
 #ifdef MODULE5
       if (module5.mqtt_has_info) {
-        if(set_komma) tmpstr += ",";
+        if(set_komma) tmpstr += String(",");
         tmpstr += module5.mqtt_info;
         set_komma = true;
       }
 #ifdef MODULE6
       if (module6.mqtt_has_info) {
-        if(set_komma) tmpstr += ",";
+        if(set_komma) tmpstr += String(",");
         tmpstr += module6.mqtt_info;
         set_komma = true;
       }
@@ -295,7 +295,7 @@ void send_mqtt_tele() {
 #endif  //Module3
 #endif  //Module2
 #endif  //Module1
-      tmpstr += "}";
+      tmpstr += String("}");
       mqttClient.publish(mk_topic(MQTT_TELEMETRIE,"modinfo"), tmpstr.c_str());
       if (do_log_mqtt) {
         write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
