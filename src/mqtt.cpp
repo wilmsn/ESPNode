@@ -202,10 +202,10 @@ void send_mqtt_tele() {
       tmpstr += String(",\"FlashFreq\":\"")+String((int)(ESP.getFlashChipSpeed() / 1000000))+String(" Mhz\"");
       tmpstr += String(",\"Sketchsize\":\"")+String(ESP.getSketchSize() / 1024.0)+String(" kB\"");
       tmpstr += String(",\"Freespace\":\"")+String((float)ESP.getFreeSketchSpace() / 1024.0)+String(" kB\"");
-#ifdef USE_SDCARD
+#ifdef USE_AUDIO_MEDIA
       tmpstr += String(",\"SDCard_size\":\"")+String(sd_cardsize/1024/1024)+String("\"");
       tmpstr += String(",\"SDCard_used\":\"")+String(sd_usedbytes/1024/1024)+String("\"");
-#endif
+#endif //USE_AUDIO MEDIA / SD-Card
       tmpstr += String(",\"Vcc\":\""); getVcc(tmpstr); tmpstr += String("\"");
       tmpstr += String(",\"Heap_free\":\"")+String((float)free / 1024.0)+String(" kB\"");
       tmpstr += String(",\"Heap_max\":\"")+String((float)max / 1024.0)+String(" kB\"");

@@ -54,7 +54,30 @@ Das Webradio und/oder der Medienplayer wurden von mir auf einem ESP32-S3 konzipi
 | 9 |  |  |  | DC | lila |
 | 10 |  |  |  | CS | grau |
 | 11 |  |  |  | SDA | orange |
-| 12 |  |  |  | SCL | grün |
+| 12 |  |  |  | SCK | grün |
+| RST |  |  |  | RST | blau |
+| GND | GND | GND | GND | GND | schwarz |
+| 3V3 | VIN |  | 5V | VCC | weiss |
+| 5V |  | VCC |  |  | weiss |
+
+###Bauteile und deren Verbindung beim ESP32:
+
+| ESP32|MAX08357|SD Adapter|Rotary Encoder|Display|Kabelfarbe|
+|--|--|--|--|--|--|
+| 26 | LRC |  |  |  | braun|
+| 27 | BCLK |  |  |  | rot|
+| 25 | DIN |  |  |  | gelb|
+| 5 |  | CS |  |  | lila |
+| 23 |  | MOSI |  |  | orange |
+| 18 |  | SCK |  |  | grün |
+| 19 |  | MISO |  |  | gelb |
+| 36 |  |  | Key |  | lila |
+| 34 |  |  | S1 |  | blau |
+| 35 |  |  | S2 |  | grau |
+| 16 |  |  |  | DC | lila |
+| 17 |  |  |  | CS | grau |
+| 23 |  |  |  | SDA | orange |
+| 18 |  |  |  | SCK | grün |
 | RST |  |  |  | RST | blau |
 | GND | GND | GND | GND | GND | schwarz |
 | 3V3 | VIN |  | 5V | VCC | weiss |
@@ -86,5 +109,12 @@ Hier wird nur das Audiomodul betrachtet! Alle hier genannten Funktionen sind Fun
 0. Browser verbindet sich
 1. html_create_json_part();
 2. 
+
+###Verwendete Algorithem
+####Mediaplayerdatenbank
+#####Funktionsprinzip
+<b>Vorraussetzung:</b>Die benutze SD-Karte wird wie folgt beschrieben: Im Root Verzeichnis wird je Album ein Unterordner mit dem Name des Albums angelegt. Dieser Name wird als Auswahl angezeigt. Innerhalb des Album Ordners wird je Musikstück eine mp3 Datei angelegt. Der Name diese Datei wird ebenfalls als Anzeigename genutzt. Vorhandene ID Tags werden nicht genutzt. Zusätzlich kann im Albumverzeichnis eine Coverdatei mit dem Namen "cover.jpg" angelegt werden. Die Auflösung <b>MUSS</b> 300 * 300 Pixel betragen. Diese Datei wird dann als Coverbild genutzt.
+
+Damit Alben und Titel zur Laufzeit mittels Drehregler im Display dargestellt und ausgewählt werden können müssen diese vorbereitet werden. Unter der Aktion "Mediaupdate" wird die 
 
 

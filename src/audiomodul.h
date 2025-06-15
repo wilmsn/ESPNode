@@ -5,13 +5,16 @@
 
 #define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
+#include "SD.h"
 
 // Settings for Webradio-Stations definitions
 #define MAXSTATIONS               10
 #define STATION_NAME_LENGTH       30
 #define STATION_URL_LENGTH        128
-
-
+// Settings for Mediaplayer
+#define SD_DIR_LENGTH             50
+#define SD_FILE_LENGTH            50
+#define JPG_SCALE                 4
 
 #if defined(CONFIG_IDF_TARGET_ESP32) 
 #ifdef USE_AUDIODISPLAY_GC9A01A
@@ -30,36 +33,36 @@
 #endif
 #endif //USE_Display_GC9A01A
 
-#ifdef USE_SDCARD
+#ifdef USE_AUDIO_MEDIA
 #ifndef SD_CS
-#define SD_CS                   8
+#define SD_CS                   5
 #endif
 #ifndef SD_SCK
-#define SD_SCK                  12
+#define SD_SCK                  18
 #endif
 #ifndef SD_MOSI
-#define SD_MOSI                 11
+#define SD_MOSI                 23
 #endif
 #ifndef SD_MISO
-#define SD_MISO                 13
+#define SD_MISO                 19
 #endif
-#endif  //Use_SDCard
+#endif  //Use_AUDIO_MEDIA / SD-Card
 
 #ifdef USE_ROTARY
-#ifndef ROT_KEY
-#define ROT_KEY                 35
+#ifndef ROT_SW
+#define ROT_SW                  33
 #endif
-#ifndef ROT_S!
-#define ROT_S1                  36
+#ifndef ROT_S1
+#define ROT_S1                  34
 #endif
 #ifndef ROT_S2
-#define ROT_S2                  37
+#define ROT_S2                  35
 #endif
 #endif //USE_Rotary
 
-#define I2S_BCLK                5
-#define I2S_LRC                 4
-#define I2S_DOUT                6
+#define I2S_BCLK                27
+#define I2S_LRC                 26
+#define I2S_DOUT                25
 #endif  //CONFIG_IDF_TARGET_ESP32
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -84,7 +87,7 @@
 #endif
 #endif //USE_Display_GC9A01A
 
-#ifdef USE_SDCARD
+#ifdef USE_AUDIO_MEDIA
 #ifndef SD_CS
 #define SD_CS                   8
 #endif
@@ -203,7 +206,41 @@ private:
     void audio_radio_save_stations();
 
 #endif
+#ifdef USE_AUDIO_MEDIA
+    void audio_media_on();
 
+    void audio_media_off();
+    
+    /**
+     * Startet den Mediaupdate. Der Update selber läuft innerhalb der loop() Funktion.
+     */
+    void audio_media_start_update();
+
+    /**
+     * Wird auf "true" gesetz wenn ein "Media update" durchgeführt werden soll.
+     */
+    bool audio_media_do_update = false;
+
+    /**
+     * Wird auf "true" gesetz wenn ein "Media update" durchgeführt werden soll.
+     */
+    bool audio_media_update_running = false;
+    char* audio_media_update_lowstr;
+    char* audio_media_update_highstr;
+    bool audio_media_update_found = false;
+    File sd_root;
+    File sd_dir;
+    File sd_out;
+
+    /**
+     * @brief Die zentrale Sortierfunktion.
+     * @param s0 Die unter Grenze, kann entweder leer sein oder den kleinsten String beinhalten
+     * @param s1 Die obere Grenze, kann entweder leer sein oder den größten String beinhalten
+     * @param s2 Der zu testende String
+     * @return "true" wenn s2 zwischen s0 und s1 liegt, sonst "false"
+     */
+    bool audio_media_sort(const char* s0, const char* s1, const char* s2);
+#endif //USE_AUDIO_RADIO
 
 };
 

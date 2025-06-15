@@ -33,7 +33,7 @@ void rf24gw_setup() {
   radio.openWritingPipe(rf24_hub2node);
   radio.openReadingPipe(1, rf24_node2hub);
   radio.startListening();
-  radio.printDetails();
+//  radio.printDetails();
   if (udp.begin(rf24gw_gw_port) == 1) {
     if (do_log_rf24) {
       write2log(LOG_CRITICAL,2, "RF24: Opened UDP Port:", String(rf24gw_gw_port).c_str() );
@@ -47,13 +47,15 @@ void rf24gw_setup() {
 void rf24gw_loop() {
   if ( radio.available() ) {
     radio.read(&payload, sizeof(payload));
-    udpdata.gw_no = rf24gw_gw_no;
-    udpdata.utime = time(0);
-    if (do_log_rf24) writeRf242log("N>G", payload);
-    memcpy(&udpdata.payload, &payload, sizeof(payload));
-    udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);
-    udp.write((const unsigned char*)&udpdata, sizeof(udpdata));
-    udp.endPacket();
+    if (payload.node_id != 0) {
+      udpdata.gw_no = rf24gw_gw_no;
+      udpdata.utime = time(0);
+      if (do_log_rf24) writeRf242log("N>G", payload);
+      memcpy(&udpdata.payload, &payload, sizeof(payload));
+      udp.beginPacket(rf24gw_hub_server.c_str(), rf24gw_hub_port);
+      udp.write((const unsigned char*)&udpdata, sizeof(udpdata));
+      udp.endPacket();
+    }
   }
   if (udp.parsePacket() > 0 ) {
     udp.read((char*)&udpdata, sizeof(udpdata));

@@ -5,6 +5,7 @@
  ****************************************************************/
 #ifndef _COMMON_H_
 #define _COMMON_H_
+#include "version.h"
 #include "config.h"
 #include <Arduino.h>
 #include <stdlib.h>

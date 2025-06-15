@@ -8,27 +8,33 @@ AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot ) :
               Adafruit_GC9A01A(_cs, _dc) {
   begin();
   setRotation(_rot);
-  cur_screen = Screen_Off;
+  cur_screen = AudioDisplay::screenmode_t::Screen_Off;
   fillScreen(GC9A01A_BLACK);
   setTextColor(GC9A01A_WHITE); 
   setTextSize(7);
   setCursor(30,100);
-  print("Init");
+  html_info = String(",\"tab_head_display\":\"Display: GC9A01A\"") +
+              String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
+              String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
+              String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
+              String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"");
 }
 
-void AudioDisplay::screen(screenmode_t _screen) {
-  cur_screen = _screen;
-  switch (cur_screen) {
-  case Screen_Off:
-    clear();
-    offscreen();
-  break;
-  case Screen_Radio:
-    clear();
-    ip();
-  break;
-  default:
-    break;
+void AudioDisplay::loop(time_t now) {
+  if (timeinfo.tm_min != last_min) {
+    last_min = timeinfo.tm_min;
+    switch(cur_screen) {
+      case AudioDisplay::screenmode_t::Screen_Off:
+        clear();
+        clock_big();
+      break;
+      case AudioDisplay::screenmode_t::Screen_Radio:
+        clock_small();
+      break;
+      default:
+      // nothing to do
+      break;
+    }
   }
 }
 
@@ -36,70 +42,113 @@ void AudioDisplay::clear() {
   fillScreen(GC9A01A_BLACK);
 }
 
+void AudioDisplay::vol(uint8_t vol) {
+  if (vol > 90) vol=90;
+  if (cur_screen == AudioDisplay::screenmode_t::Screen_Radio || cur_screen == AudioDisplay::screenmode_t::Screen_Media) {
+    fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
+    fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
+  }
+}
+
+void AudioDisplay::screen_off() {
+  cur_screen = AudioDisplay::screenmode_t::Screen_Off;
+  clear();
+  clock_big();
+}
+
+void AudioDisplay::screen_radio() {
+  cur_screen = AudioDisplay::screenmode_t::Screen_Radio;
+  clear();
+  clock_small();
+  ip();
+}
+
+void AudioDisplay::screen_settings() {
+  cur_screen = AudioDisplay::screenmode_t::Screen_Settings;
+  clear();
+  clock_small();
+}
+
+void AudioDisplay::screen_media_update() {
+  cur_screen = AudioDisplay::screenmode_t::Screen_MediaUpdate;
+  clear();
+}
+
+void AudioDisplay::screen_media() {
+  cur_screen = AudioDisplay::screenmode_t::Screen_Media;
+  clear();
+}
+
+void AudioDisplay::clock_big() {
+  clear();
+  setTextColor(GC9A01A_WHITE); 
+  setTextSize(7);
+  setCursor(30,100);
+  clock_print();
+}
+
+void AudioDisplay::clock_small() {
+  fillRect(80, 30, 90, 23, GC9A01A_BLACK);
+  setTextColor(GC9A01A_WHITE); 
+  setTextSize(3);
+  setCursor(80,30);
+  clock_print();
+}
+
+void AudioDisplay::clock_print() {
+  if ( timeinfo.tm_hour < 10) printf(" ");
+  printf("%d:",timeinfo.tm_hour);
+  if ( timeinfo.tm_min < 10) printf("0");
+  printf("%d",timeinfo.tm_min);
+}
+
 void AudioDisplay::ip() {
   setTextColor(GC9A01A_WHITE);  
-  switch(cur_screen);
-  setTextSize(1);
-  setCursor(75,225);
+  setTextSize(IP_FONTSIZE);
+  setCursor(IP_POS_X,IP_POS_Y);
   print(WiFi.localIP().toString());
 }
 
-void AudioDisplay::show_bps(const char* mybps) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void AudioDisplay::radio_bps(const char* mybps) {
   setTextColor(GC9A01A_RED);  
   setTextSize(1);
   setCursor(75, 205);
   println(mybps);
 }
 
-void AudioDisplay::vol(uint8_t vol) {
-  if (vol > 90) vol=90;
-  fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
-  fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
-}
-
-void AudioDisplay::show_time(bool big) {
-  setTextColor(GC9A01A_WHITE); 
-  if (big) {
-    clear();
-    setTextSize(7);
-    if ( timeinfo.tm_hour < 10) {
-      setCursor(60,100);
-    } else {
-      setCursor(20,100);
-    }
-  } else {
-    fillRect(80, 30, 90, 23, GC9A01A_BLACK);
-    setTextSize(3);
-    if ( timeinfo.tm_hour < 10) {
-      setCursor(90,30);
-    } else {
-      setCursor(80,30);
-    }
-  }
-  if ( timeinfo.tm_min < 10) {
-    printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
-  } else {
-    printf("%d:%d",timeinfo.tm_hour, timeinfo.tm_min);
-  }
-}
-
-void AudioDisplay::show_info1(const char* myinfo) {
+void AudioDisplay::radio_station(const char* mystation) {
   fillRect(25, 65, 190, 55, GC9A01A_BLACK);
-  show_text(myinfo, 25, 65, GC9A01A_ORANGE);
+  show_text(mystation, 25, 65, GC9A01A_ORANGE);
 }
 
-void AudioDisplay::show_info2(const char* myinfo) {
+void AudioDisplay::radio_streamtitle(const char* myplayinfo) {
   fillRect(0, 130, 240, 60, GC9A01A_BLACK);
-  show_text(myinfo, 25, 130, GC9A01A_GREEN);
+  show_text(myplayinfo, 25, 130, GC9A01A_GREEN);
 }
 
-void AudioDisplay::select(const char* s0, const char* s1, const char* s2) {
+void AudioDisplay::radio_select_station(const char* s0, const char* s1, const char* s2) {
   clear();
   if (strlen(s0) > 0) show_text_s2(s0,40,50,GC9A01A_LIGHTGREY);
   if (strlen(s1) > 0) show_text_s2(s1,10,110,GC9A01A_ORANGE);
   if (strlen(s2) > 0) show_text_s2(s2,40,170,GC9A01A_LIGHTGREY);
 }
-
+/*
 void AudioDisplay::select(const char* s0, uint16_t * pic) {
   clear();
   if (strlen(s0) > 0) show_text_s2(s0,10,110,GC9A01A_ORANGE);
@@ -135,6 +184,7 @@ void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const 
     println(s4);
   }
 }
+*/
 
 void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t color) {
   int mypos = 0;
@@ -183,37 +233,12 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
   } while (start_pos < strlen(in_text));
 }
 
-void AudioDisplay::offscreen() {
-  setTextColor(GC9A01A_WHITE); 
-  clear();
-  setTextSize(7);
-  if ( timeinfo.tm_hour < 10) { setCursor(60,100); } else { setCursor(20,100); }
-  if ( timeinfo.tm_min < 10) {
-    printf("%d:0%d",timeinfo.tm_hour, timeinfo.tm_min);
-  } else {
-    printf("%d:%d",timeinfo.tm_hour, timeinfo.tm_min);
-  }
-  ip();
-}
 
-void AudioDisplay::loop(time_t now) {
-  if (timeinfo.tm_min != last_min) {
-    last_min = timeinfo.tm_min;
-    switch(cur_screen) {
-      case Screen_Off:
-        offscreen();
-      break;
-      default:
-      // nothing to do
-      break;
-    }
-  }
-}
-
+/*
 void AudioDisplay::show_jpg(String& jpgFile) {
 // todo
 }
-
+*/
 int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* resultStr) {
   int char2cut = 0;
   int retval = 0;

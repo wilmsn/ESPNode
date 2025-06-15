@@ -21,18 +21,17 @@
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
-#define NODE_TERASSE
+//#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
 //#define NODE_KUECHENRADIO
-//#define NODE_WOHNZIMMERRADIO
+#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
 // Die folgende Einstellungen müssen an die aktuelle Umgebung angepasst werden.
 //---------------------------
 // Change below to your requirements and infrastructure.
 //---------------------------
-#define SWVERSION   "0.999 beta3"
 // Network Time Protocoll
 #define NTP_SERVER  "de.pool.ntp.org"
 #define TZ_INFO     "CET-1CEST,M3.5.0/03,M10.5.0/03"

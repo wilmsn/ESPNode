@@ -1,6 +1,5 @@
 #ifndef _NODE_SETTINGS_H_
 #define _NODE_SETTINGS_H_
-#include "config.h"
 
 /******************************************************
 The following settings ca be used for the individual node:
@@ -55,7 +54,7 @@ RF24 Gateway:
 #define USE_SENSOR_18B20
 #include "sensor_18B20.h"
 
-#define MAGICNO                  269
+#define MAGICNO                  212
 
 #define HOSTNAME                 "TerassenNode"
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
@@ -72,8 +71,8 @@ RF24 Gateway:
 #define MQTT_CLIENT              "terassennode"
 #define MQTT_TOPICP2             "terassennode"
 
-//#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-//#define RF24GW_NO                104
+#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
+#define RF24GW_NO                104
 
 #endif
 //*****************************************************
@@ -138,7 +137,6 @@ RF24 Gateway:
 #define USE_ROTARY
 #define USE_AUDIODISPLAY_GC9A01A
 #define TFT_ROT   3
-//#define USE_SDCARD
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
 //#define USE_FTP
@@ -177,9 +175,7 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
-#define USE_AUDIODISPLAY
 #define USE_AUDIODISPLAY_GC9A01A
-//#define USE_SDCARD
 #define USE_ROTARY
 
 #define TFT_ROT                  4
@@ -396,7 +392,6 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define USE_AUDIODISPLAY_ST7789
 #define USE_AUDIODISPLAY
-//#define USE_SDCARD
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
 //#define USE_FTP
