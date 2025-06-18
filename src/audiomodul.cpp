@@ -4,6 +4,10 @@
 #include "common.h"
 #include "Audio.h"
 
+#ifndef KLICK_TIMEOUT
+#define KLICK_TIMEOUT       20
+#endif
+
 #ifdef USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIODISPLAY
 #include "audiodisplay_GC9A01A.h"
@@ -172,34 +176,24 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
       if ( mode != Radio ) audio_set_mode(Radio);
       retval = true;
     }
-    // Radio: Sender einstellen hier ueber command "station 2"
-    if ( _cmnd == String("station") ) {
-      uint8_t newstation = myvalue.toInt();
-      if ( newstation < MAXSTATIONS) audio_radio_cur_station = newstation;
-#ifdef USE_AUDIODISPLAY
-      audiodisplay.radio_station(audio_radio_station[audio_radio_cur_station].name);
-#endif
-      retval = true;
-    }
-    // Radio: Sender einstellen ueber Webinterface
-    if ( keyword == String("audio_radio_set_stn") ) {
-      for (int i=0; i<MAXSTATIONS; i++) {
-        if (String(audio_radio_station[i].name) == myvalue) audio_radio_cur_station = i;  
-      }
+    // Radio: Sender einstellen
+    if ( _cmnd == String("audio_radio_set_stn") ) {
+      audio_radio_cur_station = myvalue.toInt();
+      Serial.printf("Radio set Station to %d: %s\n", audio_radio_cur_station, audio_radio_station[audio_radio_cur_station].name);
       audio_radio_on();
-      html_upd_data();
 #ifdef USE_AUDIODISPLAY
       audiodisplay.radio_station(audio_radio_station[audio_radio_cur_station].name);
 #endif
+      html_upd_data();
     }
     // Radio: Sender Name speichern ueber Webinterface
-    if ( keyword == String("audio_radio_save_stn_name") ) {
+    if ( _cmnd == String("audio_radio_save_stn_name") ) {
       snprintf(audio_radio_station[audio_radio_cur_station].name,STATION_NAME_LENGTH,"%s",myvalue.c_str());
       audio_radio_save_stations();
 //      audio_web_stat();
         }
     // Radio: Sender URL speichern ueber Webinterface
-    if ( keyword == String("audio_radio_save_stn_url") ) {
+    if ( _cmnd == String("audio_radio_save_stn_url") ) {
       snprintf(audio_radio_station[audio_radio_cur_station].url,STATION_URL_LENGTH,"%s",myvalue.c_str());
       audio_radio_save_stations();
 //      audio_web_stat();
@@ -208,12 +202,12 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
 #ifdef USE_AUDIO_MEDIA
     // Set for mediaplayer
     // Radio einschalten => Wiiedergabe
-    if ( keyword == String("audio_media") ) {
+    if ( _cmnd == String("audio_media") ) {
       if ( mode != Media ) audio_set_mode(Media);
 //      audio_media_play(audio_media_cur_dir, audio_media_cur_file);
       retval = true;
     }
-    if ( keyword == String("audio_media_sel_album") ) {
+    if ( _cmnd == String("audio_media_sel_album") ) {
       audiodisplay.screen_media();
       rotary.app_set(2,1);
       rotary.max_set(100); //Durch die maximale Anzahl der Alben ersetzen
@@ -221,7 +215,7 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
 //      audio_set_app(Media);
       retval = true;
     }
-    if ( keyword == String("audio_media_sd_init") ) {
+    if ( _cmnd == String("audio_media_sd_init") ) {
       audiodisplay.screen_media_update();
       audio_media_start_update();
       rotary.app_set(2,0);
@@ -407,18 +401,18 @@ void AudioModul::loop(time_t now) {
   }
 #ifdef USE_ROTARY
   // Hier wird der Klickstream definiert
-/*  if ( timeout_set ) {
+  if ( timeout_set ) {
     if ((now - timeout_start) > KLICK_TIMEOUT) {
         //TODO: Anzeige zurücksetzen
         rotary.lev_set(0);
         timeout_set = false;
         switch (rotary.app()) {
           case Radio:
-            audio_radio_disp_play();
+            audiodisplay.screen_radio();
           break;
         }
       }
-  }*/
+  }
   if (rotary.valChanged()) {
     Serial.printf("Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
     switch(rotary.app()) {
@@ -439,10 +433,11 @@ void AudioModul::loop(time_t now) {
               Serial.println(rotary.val());
             break;
             case 1:
-          // Sender wechseln
+          // Sender Auswahl
               start_timeout();
 #ifdef USE_AUDIODISPLAY
-              audiodisplay.radio_select_station(rotary.val()>(uint16_t)0 ? audio_radio_station[rotary.val()-1].name : " ",
+              audiodisplay.radio_select_station(
+                                  rotary.val()>(uint16_t)0 ? audio_radio_station[rotary.val()-1].name : " ",
                                   audio_radio_station[rotary.val()].name,
                                   rotary.val()<MAXSTATIONS-1 ? audio_radio_station[rotary.val()+1].name : " ");
 #endif
@@ -538,15 +533,19 @@ void AudioModul::loop(time_t now) {
     Serial.printf(">>>Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
   }  //Ende rotary.valChanged
   if (rotary.buttonShortPressed) {
+    uint8_t new_lev;
     rotary.buttonShortPressed = false;
-    Serial.printf("Rotary short Pressed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
+    Serial.printf("Rotary short Pressed App: %u Lev: %u (Max: %u) Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary.app(), rotary.lev(), rotary.lev_max(), rotary.val(), rotary.min(), rotary.max(), rot_last_val);
     start_timeout();
     switch(rotary.app()) {
         break;
         case Radio:
-          switch(rotary.lev_up()) {
+          new_lev = rotary.lev_up();
+          Serial.printf("Rotary nev Lev %u\n", new_lev);
+          switch(new_lev) {
             // Radio: Neuen Sender auswählen
             case 1:
+              Serial.println("Radio Senderwahl");
               rotary.val_set(audio_radio_cur_station);
 #ifdef USE_AUDIODISPLAY
               audiodisplay.screen_radio();
@@ -557,6 +556,7 @@ void AudioModul::loop(time_t now) {
             break;
             // Radio: Neuen Sender übernehmen und Level zurück auf 0 => Play
             case 2:
+              Serial.println("Radio neuer Sender");
               if (audio_radio_cur_station != rot_last_val)
                   set(String("audio_radio_set_stn"),String(rot_last_val));
 //              audio_radio_disp_play();
@@ -820,6 +820,9 @@ void AudioModul::audio_radio_on() {
   if ( strlen(audio_radio_station[audio_radio_cur_station].url) > 10 ) {
     audio.connecttohost(audio_radio_station[audio_radio_cur_station].url);
     write2log(LOG_MODULE,2,"Switch to ",audio_radio_station[audio_radio_cur_station].url);
+#ifdef USE_AUDIODISPLAY
+    audiodisplay.screen_radio();
+#endif
   }
 }
 

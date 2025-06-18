@@ -64,14 +64,14 @@ Das Webradio und/oder der Medienplayer wurden von mir auf einem ESP32-S3 konzipi
 
 | ESP32|MAX08357|SD Adapter|Rotary Encoder|Display|Kabelfarbe|
 |--|--|--|--|--|--|
-| 26 | LRC |  |  |  | braun|
+| 26 | LRC / WSEL |  |  |  | braun|
 | 27 | BCLK |  |  |  | rot|
 | 25 | DIN |  |  |  | gelb|
 | 5 |  | CS |  |  | lila |
 | 23 |  | MOSI |  |  | orange |
 | 18 |  | SCK |  |  | grün |
 | 19 |  | MISO |  |  | gelb |
-| 36 |  |  | Key |  | lila |
+| 36 od. 33 |  |  | Key |  | lila |
 | 34 |  |  | S1 |  | blau |
 | 35 |  |  | S2 |  | grau |
 | 16 |  |  |  | DC | lila |
