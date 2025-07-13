@@ -134,7 +134,7 @@ void prozess_cmd(const String cmd, const String value)  {
   if ( cmd == "rf24hubport" ) {
     rf24gw_hub_port = value.toInt();
     preferences.begin("settings",false);
-    preferences.putInt("rf24gw_hub_port", rf24gw_hub_port);
+    preferences.putUInt("rf24gw_hub_port", rf24gw_hub_port);
     preferences.end();
     cmd_valid = true;
     cmd_no++;
@@ -142,7 +142,7 @@ void prozess_cmd(const String cmd, const String value)  {
   if ( cmd == "rf24gwport" ) {
     rf24gw_gw_port = value.toInt();
     preferences.begin("settings",false);
-    preferences.putInt("rf24gw_gw_port", rf24gw_gw_port);
+    preferences.putUInt("rf24gw_gw_port", rf24gw_gw_port);
     preferences.end();
     cmd_valid = true;
     cmd_no++;
@@ -150,7 +150,7 @@ void prozess_cmd(const String cmd, const String value)  {
   if ( cmd == "rf24gwno" ) {
     rf24gw_gw_no = value.toInt();
     preferences.begin("settings",false);
-    preferences.putInt("rf24gw_gw_no", rf24gw_gw_no);
+    preferences.putUInt("rf24gw_gw_no", rf24gw_gw_no);
     preferences.end();
     cmd_valid = true;
     cmd_no++;

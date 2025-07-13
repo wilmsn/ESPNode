@@ -41,6 +41,8 @@ public:
   void screen_off();
   /// @brief Schaltet die Anzeige in den "Radio" Modus
   void screen_radio();
+  /// @brief Schaltet die Anzeige in den "Radio Senderwahl" Modus
+  void screen_radio_select();
   /// @brief Schaltet die Anzeige in den "Mediaplayer" Modus
   void screen_media();
   /// @brief Schaltet die Anzeige in den "Settings" Modus
@@ -49,11 +51,11 @@ public:
   /// @param mybps Ein c-String mit den bps Werten
   void radio_bps(const char* mybps);
   /// @brief Anzeige des eingestellten Senders
-  /// @param Ein c-String mit dem Sender 
+  /// @param Ein String mit dem Sender 
   void radio_station(const char* mystation);
   /// @brief Anzeige des übermittelten Streamtitles
-  /// @param Ein c-String mit dem Streamtitle
-  void radio_streamtitle(const char* myplayinfo);
+  /// @param Ein String mit dem Streamtitle
+  void radio_streamtitle(String& myplayinfo);
   void radio_select_station(const char* s0, const char* s1, const char* s2);
   void screen_media_update();
 
@@ -67,21 +69,20 @@ public:
   void select(const char* s0, uint16_t * pic);
 */
 /// @brief Ein ENUM für die verschiedenen Modi
-enum class screenmode_t {Screen_Off = 0, Screen_Radio, Screen_Media, Screen_Speaker, Screen_Settings, Screen_MediaUpdate};
-/*
-enum  screenmode_t { 
+enum class screenmode_t {
   Screen_Off = 0, 
   Screen_Radio, 
+  Screen_RadioSel, 
   Screen_Media, 
   Screen_Speaker, 
   Screen_Settings, 
-  Screen_MusicUpdate, 
-  Screen_Last 
+  Screen_MediaUpdate
 };
-*/
+
 enum screenmode_t cur_screen;
 
 //  void screen(screenmode_t _screen);
+
 
 private:
   void clock_small();
@@ -89,10 +90,31 @@ private:
   void clock_print();
   void ip();
   void fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour);
-  int splitStr(const char* inStr, int startPos, int maxLen, char* resultStr);
-  void show_text(const char* mytext, int posx, int posy, uint16_t color);
-  void show_text_s2(const char* mytext, int posx, int posy, uint16_t color);
+  // int splitStr(const char* inStr, int startPos, int maxLen, char* resultStr);
+  //void show_text(String& in_text, int posx, int posy, uint16_t color);
+  //void show_text_s2(const char* mytext, int posx, int posy, uint16_t color);
+  //void showRadioStation();
   int last_min;
+//  String radioStation;
+//  String radioTitle;
+  int getPartStringEnd(String data, int startAt, int minLen, int maxLen);
+  void show_radio_streamtitle();
+  void show_radio_station();
+  void show_radio_bps();
+  void show_vol();
+  String replaceNonAscii(String inputString);
+
+/// @brief Variable zur Steuerung der Anzeige Steaminhalte im Display
+
+/// @brief Speichert den aktuelle Streamtitle damit dieser nach Displayänderung schnell dargestellt werden kann.
+String cur_streamtitle;
+String cur_station;
+String cur_bps;
+String cur_artist;
+String cur_title;
+String cur_album;
+uint8_t cur_vol;
+
 };
 
 #endif

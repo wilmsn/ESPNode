@@ -4,6 +4,9 @@
 //#include "audiomodul.h"
 #include "common.h"
 
+#define FONT2_MIN_CHAR     7
+#define FONT2_MAX_CHAR    17
+
 AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot ) :
               Adafruit_GC9A01A(_cs, _dc) {
   begin();
@@ -42,11 +45,16 @@ void AudioDisplay::clear() {
   fillScreen(GC9A01A_BLACK);
 }
 
-void AudioDisplay::vol(uint8_t vol) {
-  if (vol > 90) vol=90;
+void AudioDisplay::vol(uint8_t _vol) {
+  cur_vol= _vol;
+  if (_vol > 90) cur_vol=90;
+  show_vol();
+}
+
+void AudioDisplay::show_vol() {
   if (cur_screen == AudioDisplay::screenmode_t::Screen_Radio || cur_screen == AudioDisplay::screenmode_t::Screen_Media) {
     fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
-    fillArc(119,119,-90,vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
+    fillArc(119,119,-90,cur_vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
   }
 }
 
@@ -61,6 +69,15 @@ void AudioDisplay::screen_radio() {
   clear();
   clock_small();
   ip();
+  show_radio_bps();
+  show_radio_station();
+  show_radio_streamtitle();
+  show_vol();
+}
+
+void AudioDisplay::screen_radio_select() {
+  cur_screen = AudioDisplay::screenmode_t::Screen_RadioSel;
+  clear();
 }
 
 void AudioDisplay::screen_settings() {
@@ -83,7 +100,7 @@ void AudioDisplay::clock_big() {
   clear();
   setTextColor(GC9A01A_WHITE); 
   setTextSize(7);
-  setCursor(30,100);
+  setCursor(20,100);
   clock_print();
 }
 
@@ -126,28 +143,121 @@ void AudioDisplay::ip() {
 
 
 void AudioDisplay::radio_bps(const char* mybps) {
+  cur_bps = String(mybps);
+  show_radio_bps();
+}
+
+void AudioDisplay::show_radio_bps() {
   setTextColor(GC9A01A_RED);  
   setTextSize(1);
   setCursor(75, 205);
-  println(mybps);
+  println(cur_bps);
 }
 
+/// @brief Zeigt den Sender auf dem Display an
+/// Benutzter Displaybereich 25,65 bis 215,130
+/// Mögliche Ausgabe: 2 Zeilen in Schriftgröße 2 a 10 Zeichen
+/// @param mystation Der Sendername als Array of Char
 void AudioDisplay::radio_station(const char* mystation) {
-  fillRect(25, 65, 190, 55, GC9A01A_BLACK);
-  show_text(mystation, 25, 65, GC9A01A_ORANGE);
+  cur_station = String(mystation);
+  show_radio_station();
 }
 
-void AudioDisplay::radio_streamtitle(const char* myplayinfo) {
-  fillRect(0, 130, 240, 60, GC9A01A_BLACK);
-  show_text(myplayinfo, 25, 130, GC9A01A_GREEN);
+void AudioDisplay::show_radio_station() {
+  fillRect(25, 65, 190, 55, GC9A01A_BLACK);
+  int startAt = 0;
+  int strLen = cur_station.length();
+  int splitAt = 0;
+  int lineNo = 0;
+  setTextColor(GC9A01A_ORANGE);
+  if (strLen < 10) {
+    setTextSize(3);
+    setCursor(25, 75);
+    print(cur_station);
+  } else {
+    setTextSize(2);
+    while (splitAt < strLen && lineNo < 2) {
+      splitAt = getPartStringEnd(cur_station, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
+      if (lineNo <= 1) setCursor(25, 75 + (lineNo * 20));
+      print(cur_station.substring(startAt,splitAt));
+      startAt = splitAt + 1;
+      lineNo++;
+    }
+  }
+}
+
+void AudioDisplay::radio_streamtitle(String& myplayinfo) {
+  cur_streamtitle = replaceNonAscii(myplayinfo);
+  if ( cur_screen == AudioDisplay::screenmode_t::Screen_Radio ) show_radio_streamtitle();
+}
+
+void AudioDisplay::show_radio_streamtitle() {
+  fillRect(25, 130, 240, 60, GC9A01A_BLACK);
+  int startAt = 0;
+  int splitAt = 0;
+  int lineNo = 0;
+  setTextColor(GC9A01A_GREEN);
+  if (cur_streamtitle.length() < 10) {
+    setTextSize(3);
+    setCursor(25, 130);
+    print(cur_streamtitle);
+  } else {
+    setTextSize(2);
+    while (splitAt < cur_streamtitle.length() && lineNo < 3) {
+      splitAt = getPartStringEnd(cur_streamtitle, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
+      setCursor(25, 130 + (lineNo * 20));
+      print(cur_streamtitle.substring(startAt,splitAt));
+      startAt = splitAt + 1;
+      lineNo++;
+    }
+  }
 }
 
 void AudioDisplay::radio_select_station(const char* s0, const char* s1, const char* s2) {
   clear();
-  if (strlen(s0) > 0) show_text_s2(s0,40,50,GC9A01A_LIGHTGREY);
-  if (strlen(s1) > 0) show_text_s2(s1,10,110,GC9A01A_ORANGE);
-  if (strlen(s2) > 0) show_text_s2(s2,40,170,GC9A01A_LIGHTGREY);
+  String tmpstr;
+  setTextSize(2);
+  tmpstr = String(s0);
+  int startAt = 0;
+  int splitAt = 0;
+  int lineNo = 0;
+  setTextColor(GC9A01A_LIGHTGREY);
+  while (splitAt < tmpstr.length() && lineNo < 2) {
+    splitAt = getPartStringEnd(tmpstr, startAt, 4, 15);
+    if (lineNo <= 1) setCursor(40, 50 + (lineNo * 20));
+    print(tmpstr.substring(startAt,splitAt));
+    startAt = splitAt + 1;
+    lineNo++;
+  }
+  tmpstr = String(s1);
+  startAt = 0;
+  splitAt = 0;
+  lineNo = 0;
+  setTextColor(GC9A01A_ORANGE);
+  while (splitAt < tmpstr.length() && lineNo < 2) {
+    splitAt = getPartStringEnd(tmpstr, startAt, 4, 15);
+    if (lineNo <= 1) setCursor(10, 110 + (lineNo * 20));
+    print(tmpstr.substring(startAt,splitAt));
+    startAt = splitAt + 1;
+    lineNo++;
+  }
+  tmpstr = String(s2);
+  startAt = 0;
+  splitAt = 0;
+  lineNo = 0;
+  setTextColor(GC9A01A_LIGHTGREY);
+  while (splitAt < tmpstr.length() && lineNo < 2) {
+    splitAt = getPartStringEnd(tmpstr, startAt, 4, 15);
+    if (lineNo <= 1) setCursor(40, 170 + (lineNo * 20));
+    print(tmpstr.substring(startAt,splitAt));
+    startAt = splitAt + 1;
+    lineNo++;
+  }
+//  if (strlen(s0) > 0) show_text_s2(s0,40,50,GC9A01A_LIGHTGREY);
+//  if (strlen(s1) > 0) show_text_s2(s1,10,110,GC9A01A_ORANGE);
+//  if (strlen(s2) > 0) show_text_s2(s2,40,170,GC9A01A_LIGHTGREY);
 }
+
 /*
 void AudioDisplay::select(const char* s0, uint16_t * pic) {
   clear();
@@ -185,7 +295,7 @@ void AudioDisplay::select(const char* s0, const char* s1, const char* s2, const 
   }
 }
 */
-
+/*
 void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t color) {
   int mypos = 0;
   int mytxtlength = strlen(mytext);
@@ -204,14 +314,15 @@ void AudioDisplay::show_text_s2(const char* mytext, int posx, int posy, uint16_t
   setCursor(posx, posy + pixel_to_next_line);
   println(mystr);
 }
-
-void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t color) {
+*/
+/*
+void AudioDisplay::show_text(String& in_text, int posx, int posy, uint16_t color) {
   int start_pos = 0;
   int chars_per_line;
   int pixel_to_next_line;
   int linecnt = 0;
   setTextColor(color);
-  if (strlen(in_text) > 20) {
+  if (in_text.length() > 20) {
     chars_per_line = 18;
     setTextSize(2);
     pixel_to_next_line = 20;
@@ -221,24 +332,25 @@ void AudioDisplay::show_text(const char* in_text, int posx, int posy, uint16_t c
     pixel_to_next_line = 30;
   }
   setCursor(posx, posy);
-  char result_str[chars_per_line+3];
-  do {
-    start_pos = splitStr(in_text,start_pos,chars_per_line,result_str);
+//  char result_str[chars_per_line+3];
+//  do {
+//    start_pos = splitStr(in_text,start_pos,chars_per_line,result_str);
     if (start_pos >= 0) {
       setCursor(posx, posy);
       if (linecnt < 2) println(result_str);
       posy += pixel_to_next_line;
       linecnt++;
     }
-  } while (start_pos < strlen(in_text));
+  } while (start_pos < in_text.length());
 }
-
+*/
 
 /*
 void AudioDisplay::show_jpg(String& jpgFile) {
 // todo
 }
 */
+/*
 int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* resultStr) {
   int char2cut = 0;
   int retval = 0;
@@ -267,7 +379,7 @@ int AudioDisplay::splitStr(const char* inStr, int startPos, int maxLen, char* re
   }
   return retval;
 }
-
+*/
 void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour) {
 
   byte seg = ARC_SIGMENT_DEGREES; // Segments are 3 degrees wide = 120 segments for 360 degrees
@@ -301,6 +413,71 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
     x1 = x3;
     y1 = y3;
   }
+}
+
+/* Muster aus Internet
+String getValue(String data, char separator, int index) {
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length()-1;
+
+  for(int i=0; i<=maxIndex && found<=index; i++){
+    if(data.charAt(i)==separator || i==maxIndex){
+        found++;
+        strIndex[0] = strIndex[1]+1;
+        strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+  }
+
+  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+*/
+
+/// @brief Teilt einen String in Teilstrings auf
+/// Bei der Aufteilung des Strings gibt es folgende Regeln:
+/// Der String wird - wenn möglich - bei einem Leerzeichen aufgetrennt.
+/// Das Ergebnis hat eine Länge von mindestens <minLen>
+/// Das Ergebnis hat maximal eine Länge von <maxLen>
+/// Das Ergebnis startet an Zeichen <StartAT>
+/// @param data Der Quellstring
+/// @param startAt Die Position des ersten Zeichens vom Ergebnisstring im Quellstring
+/// @param minLen Minimale Länge des Ergebnisstrings
+/// @param maxLen Maximale Länge des Ergebnisstrings
+/// @return Die Position des letzten benutzten Zeichens im Quellstring
+int AudioDisplay::getPartStringEnd(String data, int startAt, int minLen, int maxLen) {
+  int retval = -1;
+  int maxLenData = data.length()-1;
+  for ( int i = startAt + minLen; i <= startAt + maxLen && i < maxLenData; i++ ) {
+    if ( data.charAt(i) == ' ' ) {
+      retval = i;
+    }
+  }
+  if (retval == -1) retval = startAt + maxLen - 1;
+  return retval;
+}
+
+String AudioDisplay::replaceNonAscii(String inputString) {
+  String result = "";
+  for (size_t i = 0; i < inputString.length(); i++) {
+    char c = inputString.charAt(i);
+    if (c >= 0 && c <= 127) {
+      result += c;
+    } else {
+      // Hier können Ersetzungen für bestimmte nicht-ASCII-Zeichen vorgenommen werden
+      switch (c) {
+        case 'ä': result += 'a'; break;
+        case 'ö': result += 'o'; break;
+        case 'ü': result += 'u'; break;
+        case 'Ä': result += 'A'; break;
+        case 'Ö': result += 'O'; break;
+        case 'Ü': result += 'U'; break;
+        case 'ß': result += 'ss'; break;
+        // Füge weitere Ersetzungen hinzu, falls nötig
+        default: result += '?'; // Oder ein anderes Ersatzzeichen
+      }
+    }
+  }
+  return result;
 }
 
 #endif

@@ -8,7 +8,7 @@
 <script src="jquery.js"></script>
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.999 beta3 (21.4.2025)";
+var htmlversion = "0.999 beta4 (Jul 12 2025)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -192,7 +192,7 @@ $(document).ready(function(){
   $('#audio_radio_sel').click(function() {
     $("#audio_radio_stn_name").val($('#audio_radio_sel option:selected').text());
     $("#audio_radio_stn_url").val($('#audio_radio_sel option:selected').val());
-    do_cmd("audio_radio_set_stn",$('#audio_radio_sel option:selected').text());
+    do_cmd("audio_radio_set_stn",$('#audio_radio_sel option:selected').val());
   });
   $('#audio_media_but').click(function () {
     do_cmd("audio_media","1");
@@ -587,9 +587,9 @@ function prozessJS( key, val ) {
       $("#audiomsg4div").show();
       $("#audiomsg4").html(val).css("fontSize", 10);
     break;
-    case "audio_radio_empty":
+    case "audio_radio_del_stn":
       $('#audio_radio_sel').empty();
-    break;
+      break;
     case "audio_radio_add_stn":
       const valArray = val.split(";");
       $('#audio_radio_sel').append($('<option>', {
@@ -1010,16 +1010,31 @@ function store() {
       rf24hubname_old = $("#rf24hubname").val();
     }
     if ( rf24hubport_old != $("#rf24hubport").val() ) {
-      do_cmd("rf24hubport", $("#rf24hubport").val());
-      rf24hubport_old = $("#rf24hubport").val();
+      if ($("#rf24hubport").val() < 65536) {
+        do_cmd("rf24hubport", $("#rf24hubport").val());
+        rf24hubport_old = $("#rf24hubport").val();
+      } else {
+        $("#rf24hubport").val(rf24hubport_old);
+        alert("RF24 Hub Port > 65535");
+      }
     }
     if ( rf24gwport_old != $("#rf24gwport").val() ) {
-      do_cmd("rf24gwport", $("#rf24gwport").val());
-      rf24gwport_old = $("#rf24gwport").val();
+      if ($("#rf24gwport").val() < 65536) {
+        do_cmd("rf24gwport", $("#rf24gwport").val());
+        rf24gwport_old = $("#rf24gwport").val();
+      } else {
+        $("#rf24gwport").val(rf24gwport_old);
+        alert("RF24 GW Port > 65535");
+      }
     }
     if ( rf24gwno_old != $("#rf24gwno").val() ) {
-      do_cmd("rf24gwno", $("#rf24gwno").val());
-      rf24gwno_old = $("#rf24gwno").val();
+      if ($("#rf24gwno").val() < 65536) {
+        do_cmd("rf24gwno", $("#rf24gwno").val());
+        rf24gwno_old = $("#rf24gwno").val();
+      } else {
+        $("#rf24gwno").val(rf24gwno_old);
+        alert("RF24 Gateway No > 65535");
+      }
     }
   } else {
     if ( rf24gw_active_old ) {
@@ -1040,7 +1055,7 @@ function store() {
       mqttserver_old = $("#mqttserver").val();
     }
     if ( mqtttopicp2_old != $("#mqtttopicp2").val() ) {
-      do_cmd("mqtttopic2", $("#mqtttopic2").val());
+      do_cmd("mqtttopicp2", $("#mqtttopicp2").val());
       mqtttopicp2_old = $("#mqtttopicp2").val();
     }
   } else {
@@ -1190,11 +1205,6 @@ function audio_mediaswitch() {
 function audio_radio_stn_update() {
   do_cmd("audio_radio_save_stn_name",$("#audio_radio_stn_name").val());
   do_cmd("audio_radio_save_stn_url",$("#audio_radio_stn_url").val());
-  $('#audio_radio_sel')
-    .find('option')
-    .remove()
-    .end()
-  ;
 }
 
 </script>

@@ -32,7 +32,7 @@ RF24 Gateway:
 
 #define HOSTNAME                 "FlurNode"
 #define HOST_DISCRIPTION         "Der Node im Flur: Hintergrundbeleuchtung"
-#define MAGICNO                  321
+#define MAGICNO                  344
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity");
@@ -44,7 +44,7 @@ RF24 Gateway:
 #define MQTT_TOPICP2             "flurnode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO                103
+#define RF24GW_NO                102
 
 #endif
 //****************************************************
@@ -54,7 +54,10 @@ RF24 Gateway:
 #define USE_SENSOR_18B20
 #include "sensor_18B20.h"
 
-#define MAGICNO                  212
+//#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_WEB
+
+#define MAGICNO                  200
 
 #define HOSTNAME                 "TerassenNode"
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
@@ -123,7 +126,7 @@ RF24 Gateway:
 #define MQTT_TOPICP2             "wohnzimmernode"
 
 #define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-#define RF24GW_NO                102
+#define RF24GW_NO                103
 #define DO_LOG_RF24              true
 
 #endif
@@ -138,8 +141,6 @@ RF24 Gateway:
 #define USE_AUDIODISPLAY_GC9A01A
 #define TFT_ROT   3
 #define USE_AUDIO_RADIO
-//#define USE_AUDIO_MEDIA
-//#define USE_FTP
 //#define USE_WIFIMULTI
 
 #include "audiomodul.h"
@@ -147,9 +148,9 @@ RF24 Gateway:
 #define ROTARY_ENCODER_A_PIN     1
 #define ROTARY_ENCODER_B_PIN     2
 #define ROTARY_ENCODER_SW_PIN    3
-#define I2S_BCLK                 0
-#define I2S_LRC                  0
-#define I2S_DOUT                 0
+//#define I2S_BCLK                 0
+//#define I2S_LRC                  0
+//#define I2S_DOUT                 0
 
 #define DEBUG_SERIAL_MODULE
 //#define DEBUG_SERIAL_WEB

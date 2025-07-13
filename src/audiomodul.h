@@ -155,9 +155,21 @@ public:
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
+
+    /// @brief Die normale Set Funktion aus dem Grundmodul erweitert um feste Schlüsselwörter 
+    /// @brief zur Steuerung dieses Audiomodules..
+    /// @brief station[0..9]_url; station[0..9]_name; play; ... <ToDo>
+    /// @param _cmnd Das zu testende "keyword"
+    /// @param _val Die übergebenen Befehlsinhalte. 
+    /// @return "true" bei Übereinstimmung der Keywörter sonst false
     bool set(const String& _cmnd, const String& _val);
-    void html_init();    
+
+    /// @brief Die Loopfunktion für den eriodischen Aufruf.
+    /// @param now Der Unix Zeitstempel. 
     void loop(time_t now);
+
+    void html_init();
+
 private:
     /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
     mymode_t   mode;
@@ -189,10 +201,7 @@ private:
 
 #ifdef USE_AUDIO_RADIO
 
-    /// @brief Ein Array mit den Sendern
-    station_t audio_radio_station[MAXSTATIONS];
-    /// @brief Der aktuell ausgewählte Sender
-    uint8_t   audio_radio_cur_station;
+// private Funktionen für das Radio
 
     /// @brief Schaltet das Radio an.
     void audio_radio_on();
@@ -200,12 +209,27 @@ private:
     /// @brief Schaltet das Radio aus.
     void audio_radio_off();
 
+    /// @brief Spielt den aktuellen Sender.
+    void audio_radio_play();
+
+    /// @brief Sendet die Senderliste an die Weboberfläche.
+    void audio_radio_send_stn2web();
+
     /// @brief Lädt die Textdatei data/sender.txt in das Array audio_radio_station[]
     void audio_radio_load_stations();
 
     void audio_radio_save_stations();
 
-#endif
+// private Variablen für das Radio
+
+    /// @brief Ein Array mit den Sendern
+    station_t audio_radio_station[MAXSTATIONS];
+
+    /// @brief Der aktuell ausgewählte Sender, entspricht der Indexnummer im Array.
+    uint8_t   audio_radio_cur_station;
+   
+#endif //USE_AUDIO_RADIO
+
 #ifdef USE_AUDIO_MEDIA
     void audio_media_on();
 

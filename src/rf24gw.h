@@ -5,7 +5,9 @@
 #include <RF24.h>
 
 /// @brief Der Payload vom Typ payload_t
-payload_t payload;
+payload_t rf24_payload;
+/// @brief 
+size_t   rf24_payload_size;
 /// @brief Funkkennung Node in Richtung Hub
 uint8_t  rf24_node2hub[] = RF24_NODE2HUB;
 /// @brief Funkkennung Hub in Richtung Node
@@ -18,12 +20,17 @@ bool         do_rf24gw;
 String       rf24gw_hub_server;
 uint16_t     rf24gw_hub_port;
 uint16_t     rf24gw_gw_port;
-uint8_t      rf24gw_gw_no;
+uint16_t     rf24gw_gw_no;
 bool         do_log_rf24;
+
+
 /// @brief Eine Variable zur Aufnahme der UDP Daten Struktur
-udpdata_t udpdata;
+udpdata_t rf24_udpdata;
+
+size_t rf24_udpdata_size;
+
 /// @brief Ein Objekt für udp Daten
-WiFiUDP udp;
+WiFiUDP rf24_udp;
 
 
 #endif

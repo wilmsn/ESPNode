@@ -397,9 +397,9 @@ void setup() {
     do_log_rf24       = DO_LOG_RF24;
     preferences.putBool("do_rf24gw", do_rf24gw);
     preferences.putString("rf24gw_hub_server", rf24gw_hub_server);
-    preferences.putUShort("rf24gw_hub_port", rf24gw_hub_port);
-    preferences.putUShort("rf24gw_gw_port", rf24gw_gw_port);
-    preferences.putUChar("rf24gw_gw_no", rf24gw_gw_no);
+    preferences.putUInt("rf24gw_hub_port", rf24gw_hub_port);
+    preferences.putUInt("rf24gw_gw_port", rf24gw_gw_port);
+    preferences.putUInt("rf24gw_gw_no", rf24gw_gw_no);
     preferences.putBool("do_log_rf24", do_log_rf24);
 #endif
     do_log_module   = DO_LOG_MODULE;
@@ -433,9 +433,9 @@ void setup() {
 #if defined(RF24GW)
     do_rf24gw         = preferences.getBool("do_rf24gw");
     rf24gw_hub_server = preferences.getString("rf24gw_hub_server");
-    rf24gw_hub_port   = preferences.getUShort("rf24gw_hub_port");
-    rf24gw_gw_port    = preferences.getUShort("rf24gw_gw_port");
-    rf24gw_gw_no      = preferences.getUChar("rf24gw_gw_no");
+    rf24gw_hub_port   = preferences.getUInt("rf24gw_hub_port");
+    rf24gw_gw_port    = preferences.getUInt("rf24gw_gw_port");
+    rf24gw_gw_no      = preferences.getUInt("rf24gw_gw_no");
     do_log_rf24       = preferences.getBool("do_log_rf24");
 #endif
     do_log_module     = preferences.getBool("do_log_module");
