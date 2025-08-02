@@ -185,10 +185,10 @@ void prozess_sysinfo() {
       tmpstr += ",\"Heap_max\":\"";
       tmpstr += String((float)max / 1024.0);
       tmpstr += " kB\"";
-      tmpstr += ",\"Heap_frag\":\"";
 #ifdef ESP32
-      tmpstr += "n.a.\"";
+//      tmpstr += "";
 #else
+      tmpstr += ",\"Heap_frag\":\"";
       tmpstr += String((float)frag / 1024.0);
       tmpstr += "%\"";
 #endif
@@ -202,7 +202,12 @@ void prozess_sysinfo() {
       tmpstr += "\"";
       tmpstr += ",\"Vcc\":\"";
       getVcc(tmpstr);
+      tmpstr += "\"";     
+#ifdef ESP32
+      tmpstr += ",\"MBTemp\":\"";
+      tmpstr += temperatureRead();
       tmpstr += "\"";
+#endif
       tmpstr += ",\"UpTime\":\"";
       tmpstr += uptime.uptimestr();
       tmpstr += "\"";

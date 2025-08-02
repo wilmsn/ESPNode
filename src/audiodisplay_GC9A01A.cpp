@@ -7,15 +7,18 @@
 #define FONT2_MIN_CHAR     7
 #define FONT2_MAX_CHAR    17
 
-AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot ) :
-              Adafruit_GC9A01A(_cs, _dc) {
+AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot ) :
+              Adafruit_GC9A01A(_cs, _dc, _rst) {
   begin();
   setRotation(_rot);
   cur_screen = AudioDisplay::screenmode_t::Screen_Off;
   fillScreen(GC9A01A_BLACK);
-  setTextColor(GC9A01A_WHITE); 
-  setTextSize(7);
-  setCursor(30,100);
+  setTextColor(GC9A01A_WHITE);
+  setTextSize(3);
+  setCursor(80,25);
+  println("init");
+  fillRect(30,50,180,140,GC9A01A_DARKGREEN);
+  boot_line = 40;
   html_info = String(",\"tab_head_display\":\"Display: GC9A01A\"") +
               String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
               String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
@@ -39,6 +42,17 @@ void AudioDisplay::loop(time_t now) {
       break;
     }
   }
+}
+
+void AudioDisplay::boot_msg(uint8_t txtsize, const char* msg) {
+  uint8_t pixeldiff = 16;
+  if (txtsize == 1) {
+    pixeldiff = 20;
+  }
+  boot_line += pixeldiff;
+  setCursor(35,boot_line);
+  setTextSize(txtsize);
+  println(msg);
 }
 
 void AudioDisplay::clear() {
@@ -464,17 +478,52 @@ String AudioDisplay::replaceNonAscii(String inputString) {
       result += c;
     } else {
       // Hier können Ersetzungen für bestimmte nicht-ASCII-Zeichen vorgenommen werden
-      switch (c) {
-        case 'ä': result += 'a'; break;
-        case 'ö': result += 'o'; break;
-        case 'ü': result += 'u'; break;
-        case 'Ä': result += 'A'; break;
-        case 'Ö': result += 'O'; break;
-        case 'Ü': result += 'U'; break;
-        case 'ß': result += 'ss'; break;
-        // Füge weitere Ersetzungen hinzu, falls nötig
-        default: result += '?'; // Oder ein anderes Ersatzzeichen
-      }
+      String cmpstr;
+      bool replaced = false;
+      cmpstr = String("ä");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("ae");
+        replaced = true;
+      } 
+      cmpstr = String("ü");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("ue");
+        replaced = true;
+      } 
+      cmpstr = String("ö");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("oe");
+        replaced = true;
+      } 
+      cmpstr = String("Ä");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("Ae");
+        replaced = true;
+      } 
+      cmpstr = String("Ü");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("ue");
+        replaced = true;
+      } 
+      cmpstr = String("Ö");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("oe");
+        replaced = true;
+      } 
+      cmpstr = String("ß");
+      if (inputString.charAt(i) == cmpstr.charAt(0) && inputString.charAt(i+1) == cmpstr.charAt(1)) {
+        i++;
+        result += String("ss");
+        replaced = true;
+      } 
+      // Füge weitere Ersetzungen hinzu, falls nötig
+      if ( ! replaced ) result += '?'; // Oder ein anderes Ersatzzeichen
     }
   }
   return result;

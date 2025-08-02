@@ -27,7 +27,7 @@ public:
   /// @param _cs Der CS Pin
   /// @param _dc der DC Pin
   /// @param _rot Die Rotation
-  AudioDisplay(int8_t _cs, int8_t _dc, uint8_t _rot);
+  AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot);
   /// @brief Die Loop Funktion wird regelmäßig aufgerufen
   /// @param now Der Unix Zeitstempel
   void loop(time_t now);
@@ -58,6 +58,7 @@ public:
   void radio_streamtitle(String& myplayinfo);
   void radio_select_station(const char* s0, const char* s1, const char* s2);
   void screen_media_update();
+  void boot_msg(uint8_t txtsize, const char* msg);
 
 /*
   // App Auswahl
@@ -114,6 +115,7 @@ String cur_artist;
 String cur_title;
 String cur_album;
 uint8_t cur_vol;
+uint8_t boot_line;
 
 };
 

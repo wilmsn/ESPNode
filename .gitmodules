@@ -56,3 +56,6 @@
 [submodule "lib/ESP32-audioI2S"]
 	path = lib/ESP32-audioI2S
 	url = https://github.com/wilmsn/ESP32-audioI2S.git
+[submodule "lib/Adafruit-ST7735-Library"]
+	path = lib/Adafruit-ST7735-Library
+	url = https://github.com/wilmsn/Adafruit-ST7735-Library.git

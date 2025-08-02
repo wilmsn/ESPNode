@@ -1,0 +1,75 @@
+~/projekte/ESPNode/lib/ESP32-audioI2S
+
+ommit 1ed56d090ee8234554a5fdb287cb7ae88b5134b4 (HEAD)
+Author: Wolle <schreibfaul1@t-online.de>
+Date:   Sat Mar 23 08:01:04 2024 +0100
+
+    A small piece at the beginning of an MP3 track is not played back in a certain constellation (Issue #705)
+
+==> Kompiliert fehlerfrei !!!!
+
+
+commit cf51f5bbca5f1c0cc12fac336018bd81180602b1 (HEAD)
+Author: schreibfaul1 <schreibfaul1@t-online.de>
+Date:   Sun Sep 22 07:19:09 2024 +0200
+
+    Can't play an MP3 file from an SD card more than once.
+    #847
+
+==> Kompiliert fehlerfrei !!!!
+
+commit da62bc5d399f87d68f0f1904bdec4cdf96a613d3 (HEAD)
+Author: Wolle <schreibfaul1@t-online.de>
+Date:   Sat Nov 23 10:00:30 2024 +0100
+
+    Update Audio.cpp
+
+==> Kompiliert fehlerfrei !!!!
+
+commit 28c18ec3a8b977746ef89e01065993dea4381bbe (HEAD)
+Author: schreibfaul1 <schreibfaul1@t-online.de>
+Date:   Thu Dec 26 17:54:27 2024 +0100
+
+    stop if connection could not be establshed
+
+==> Kompiliert fehlerfrei !!!!
+
+commit d5e4b74c6715fbb3616fe38a89feaee4be87e3d9 (HEAD)
+Author: schreibfaul1 <schreibfaul1@t-online.de>
+Date:   Wed Jan 1 21:28:49 2025 +0100
+
+    x_ps_free() for every data types
+
+==> Kompiliert fehlerfrei !!!!
+
+commit 6278ef440084177eacf36fcc3083386925aca090 (HEAD)
+Author: schreibfaul1 <schreibfaul1@t-online.de>
+Date:   Fri Jan 3 12:44:50 2025 +0100
+
+    determine ts chunksize
+
+==> Kompiliert fehlerfrei !!!!
+
+commit 6a848940f0d4848eb72b972e64590bc62ffa916f (HEAD)
+Author: schreibfaul1 <schreibfaul1@t-online.de>
+Date:   Tue Jan 7 11:16:43 2025 +0100
+
+    delete example internal dac
+
+==> Kompiliert fehlerfrei !!!! (letzter)
+
+commit f9f01685b42cabaf218a97c9d3ce80c6b3f58feb (HEAD)
+Author: schreibfaul1 <schreibfaul1@t-online.de>
+Date:   Tue Jan 7 11:38:50 2025 +0100
+
+    delete old stuff
+
+==> Erste fehlerhafte Version !!!!!
+
+git diff --no-color 6a848940f0d..f9f01685b42c
+
+
+
+
+
+

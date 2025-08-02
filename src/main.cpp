@@ -327,6 +327,11 @@ void setup() {
 #endif
   }
 #endif
+
+#ifdef DISPLAY
+  bootMessage(2,"init prefs");
+#endif
+
   // Zunächst werden die Preferences im Schreibmodus geöffnet.
   // Sollte die "magicno" nicht mit der gespeicherten übereinstimmen
   // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
@@ -472,6 +477,10 @@ void setup() {
   Serial.println(do_log_critical?"ja":"nein");
 #endif
 
+#ifdef DISPLAY
+  bootMessage(2,"mount FS");
+#endif
+
   if (!LittleFS.begin()) {
     ESP.restart();
     return;
@@ -479,19 +488,35 @@ void setup() {
     write2log(LOG_SYSTEM,1, "++ Begin Startup: LittleFS mounted ++");
   }
 
+#ifdef DISPLAY
+  bootMessage(2,"connect WiFi");
+#endif
+
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
     start_AP();
   } else {
+    
+#ifdef DISPLAY
+  bootMessage(1,WiFi.localIP().toString().c_str());
+#endif
 #if defined(DEBUG_SERIAL)
     write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
 #endif
+#ifdef DISPLAY
+  bootMessage(2,"get Time");
+#endif
     setupTime();
-    if ( !getNTPtime(10) ) {
+    if ( !getNTPtime(20) ) {
       write2log(LOG_SYSTEM,1, "Error getting NTP Time");
     }
     lastDay = timeinfo.tm_mday;
     write2log(LOG_DAYBREAK, 0);
+#ifdef DISPLAY
+  char timestr[20];
+  sprintf(timestr,"%d.%d.%d %02d:%02d",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year,  timeinfo.tm_hour, timeinfo.tm_min);
+  bootMessage(2,timestr);
+#endif
 #ifdef ESP32
     //ToDo
 #else
@@ -554,6 +579,10 @@ void setup() {
 #endif
 #ifdef USE_FTP
   ftp.begin("ftp","ftp");    //username, password for ftp.   (default 21, 50009 for PASV)
+#endif
+#ifdef DISPLAY
+  bootMessage(2,"Ende Setup");
+  delay(3000);
 #endif
   write2log(LOG_SYSTEM,1, "Setup Ende");
 }

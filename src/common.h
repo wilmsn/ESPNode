@@ -18,6 +18,7 @@
 #include <time.h>
 #include <Uptime.h>
 #include <ElegantOTA.h>
+//#include "audiodisplay_GC9A01A.h"
 
 #ifdef ESP32
 #include <Preferences.h>
@@ -48,7 +49,9 @@ extern time_t now;
 
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
-
+#ifdef DISPLAY
+extern void bootMessage(uint8_t txtsize, const char* myMsg);
+#endif
 
 // Modul: webserver
 extern AsyncWebSocket ws;
@@ -90,11 +93,13 @@ void rf24gw_loop();
 extern bool rebootflag;
 extern String wifi_ssid;
 extern String wifi_pass;
+#ifdef USE_WIFIMULTI
 #ifdef ESP32
 extern String wifi_ssid1;
 extern String wifi_pass1;
 extern String wifi_ssid2;
 extern String wifi_pass2;
+#endif
 #endif
 extern int cmd_no;
 extern Preferences preferences;

@@ -207,42 +207,50 @@ void prozess_cmd(const String cmd, const String value)  {
   }
 #ifdef ESP32
   if ( cmd == "wifi_ssid1" ) {
+#ifdef USE_WIFIMULTI
     if ( wifi_ssid1 != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_ssid1", value);
       preferences.end();
       rebootflag = true;
     }
+#endif
     cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "wifi_pass1" ) {
+#ifdef USE_WIFIMULTI
     if ( wifi_pass1 != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_pass1", value);
       preferences.end();
       rebootflag = true;
     }
+#endif
     cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "wifi_ssid2" ) {
+#ifdef USE_WIFIMULTI
     if ( wifi_ssid2 != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_ssid2", value);
       preferences.end();
       rebootflag = true;
     }
+#endif
     cmd_valid = true;
     cmd_no++;
   }
   if ( cmd == "wifi_pass2" ) {
+#ifdef USE_WIFIMULTI
     if ( wifi_pass2 != value ) {
       preferences.begin("settings",false);
       preferences.putString("wifi_pass2", value);
       preferences.end();
       rebootflag = true;
     }
+#endif
     cmd_valid = true;
     cmd_no++;
   }

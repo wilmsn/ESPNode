@@ -144,16 +144,19 @@ RF24 Gateway:
 //#define USE_WIFIMULTI
 
 #include "audiomodul.h"
-#define MAGICNO                  77
-#define ROTARY_ENCODER_A_PIN     1
-#define ROTARY_ENCODER_B_PIN     2
-#define ROTARY_ENCODER_SW_PIN    3
+#define MAGICNO                    89
+#define ROTARY_ENCODER_A_PIN       1
+#define ROTARY_ENCODER_B_PIN       2
+#define ROTARY_ENCODER_SW_PIN      3
+#define ROTARY_ENCODER_VCC_PIN     -1
+#define ROTARY_ENCODER_STEPS       4
+#define ROTARY_ENCODER_R_PULLDOWN  false
 //#define I2S_BCLK                 0
 //#define I2S_LRC                  0
 //#define I2S_DOUT                 0
 
 #define DEBUG_SERIAL_MODULE
-//#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_WEB
 
 #define HOSTNAME                 "Kuechenradio"
 #define HOST_DISCRIPTION         "Radio in der Kueche"
@@ -357,15 +360,22 @@ RF24 Gateway:
 
 #ifdef ESP32
 #define USE_AUDIOMODUL
-//#define USE_AUDIODISPLAY_GC9A01A
+#define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
 //#define USE_FTP
-#define USE_WIFIMULTI
-//#define USE_ROTARY
+//#define USE_WIFIMULTI
+#define USE_ROTARY
+//#define ROTARY_ENCODER_VCC_PIN     -1
+//#define ROTARY_ENCODER_STEPS       4
+//#define ROTARY_ENCODER_R_PULLDOWN  false
+#define TFT_ROT                 0
+//#define ROT_SW                  33
+#define ROT_S1                  35
+#define ROT_S2                  34
 
 #include "audiomodul.h"
-#define MAGICNO                  61
+#define MAGICNO                 61
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB

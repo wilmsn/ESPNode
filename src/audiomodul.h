@@ -31,6 +31,9 @@
 #ifndef TFT_DC
 #define TFT_DC                  16
 #endif
+#ifndef TFT_RES
+#define TFT_RES                 13
+#endif
 #endif //USE_Display_GC9A01A
 
 #ifdef USE_AUDIO_MEDIA
@@ -85,6 +88,9 @@
 #ifndef TFT_ROT
 #define TFT_ROT                 3
 #endif
+#ifndef TFT_RES
+#define TFT_RES                 -1
+#endif
 #endif //USE_Display_GC9A01A
 
 #ifdef USE_AUDIO_MEDIA
@@ -112,6 +118,16 @@
 #ifndef ROT_S2
 #define ROT_S2                  2
 #endif
+#ifndef ROTARY_ENCODER_VCC_PIN
+#define ROTARY_ENCODER_VCC_PIN     -1
+#endif
+#ifndef ROTARY_ENCODER_STEPS
+#define ROTARY_ENCODER_STEPS       4
+#endif
+#ifndef ROTARY_ENCODER_R_PULLDOWN
+#define ROTARY_ENCODER_R_PULLDOWN  false
+#endif
+
 #endif //USE_Rotary
 
 #define I2S_BCLK                5

@@ -66,7 +66,7 @@ Der Einbau in den ESPNode mittels Precompilerdirektive siehe:
 **Einbindung eines Modules**
 
 ###Funktion loop(time_t now)
-Wärend des Laufs wird die loop Funktion regelmäßig aufgerufen. Alle loop Funktionen aller Module und die im Hauptprogramm aufgerufenen periodischen Funktionen werden nach dem "round Robin" Prinzip nacheinander aufgerufen. Erst wenn wenn sie beendet ist folgt die nächtse. Es gibt keine zeitliche Begrenzung, dies liegt in der Verantwortung des Moduls! Durch Übergabe des Zeitstempels sind Zeitmessungen (z.B. für Wartezeit) möglich.
+Wärend des Laufs wird die loop Funktion regelmäßig aufgerufen. Alle loop Funktionen aller Module und die im Hauptprogramm aufgerufenen periodischen Funktionen werden nach dem "round Robin" Prinzip nacheinander aufgerufen. Erst wenn eine loop Funktion beendet ist folgt die nächtse. Es gibt keine zeitliche Begrenzung, dies liegt in der Verantwortung des Moduls! Durch Übergabe des Zeitstempels sind Zeitmessungen (z.B. für Wartezeit) möglich.
 
 ###Funktion set( keyword, value)
 Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion aller eingebauten Module geschleust. Jedes Module prüft eigenverantwortlich ob das Item für dieses Modul ein Keyword ist und das Modul handeln muss. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. 
@@ -80,60 +80,32 @@ Diese Funktion wird vom Hauptrogramm aus aufgerufen wenn ein neuer Webclient sic
 
 **Aufgabe**
 
-Liefert eine Websocketmessage mit allen benötigten Daten zur Initialisierung und dem aktuellen Werten der Webseite (für dieses Modul) 
+Liefert eine Websocketmessage mit allen benötigten Daten zur Initialisierung und dem aktuellen Werten der Webseite (für dieses Modul).Das versenden der Websocketmessage erfolgt eigenständig durch das Modul. Die Methode zum Versenden "ws.textAll()" ist in allen Modulen verfügbar.
 
 **Umsetzung**
 
-Die Variable "obj_html_has_stat" wird auf "true" gesetzt wenn das Modul Inhalte für die Webseite liefert.
- 
-Standardmäßig werden die Variablen obj_html_init (für die einmaligen Initialisierungsdaten) und obj_html_stat (für die aktuellen Daten) als Websocketnachricht übermittelt.
-
-"obj_html_init" wird idR. innerhalb der Funktion begin() gefüllt und muss danach idR. nicht mehr verändert werden..
-
-"obj_html_stat" wird nach jeder Zustandsänderung mit aktuellen Werten angepasst.
+Es kann je Modul entschieden werden ob es sinnvoller ist die Websocketnachricht jeweils neu aufzubauen oder sie in Form eines Strings abzulegen. 
 
 **Rückgabewert:**
 
 Keine.
 
-**sonstige Infos**
-
-Auszug aus der KLasse "Base_Generic"
-
-	void Base_Generic::html_init() {
-	  if (obj_html_has_stat) {
-	    if (obj_html_init.length() > 0) {
-	      ws.textAll( String("{") + obj_html_init + String(",") + obj_html_stat + String("}") );
-	    } else {
-	      ws.textAll( String("{") + obj_html_stat + String("}") );
-	    }
-	  }
-	}
-
-Auszug aus dem Hauptprogramm:
-
-	#ifdef MODULE1
-	      module1.html_init();
-	#endif
-	
-Hier wird ersichtlich das die Funktion html_create() immer midestens ein Wertepaar liefern muss, da sonst durch die Kommatrennung das gesamte Statement ungültig wird.
-
-###Funktion html_sysinfo(String&)
-Diese Funktion wird augerufen wenn im HTML Client die Systeminfo Seite aufgerufen wird. Hier werden nähere Infos zur Hardware angezeigt (falls gewünscht). 
+###Zulieferung zu den Systeminfos
+Es besteht dieMöglichkeit im HTML Client die Systeminfo Seite mit Infos z.B. zur verwendeten Hardware, genutzter Ports, etc zu befüllen. Dazu muss die Variable "html_info" gefüllt werden. Zusätlich muss die Variable "html_has_info" a "true" gesetzt werden.
 
 **Umsetzung**
 
-Die Systeminfoseite wird dynamisch mittels Javascript erstellt. Um für ein Modul einen oder mehrere Eintäge auszugeben muss zunächst eine Headerzeile erzeugt werden. Dies geschieht durch das item "tab_head_xyz" (wobei xyz durch einen modulspeziefischen Ausdruck ersetzt wird) und einen value der in der Systeminfotabelle angezeigt wird.
+Die Systeminfoseite wird auf der Webseite dynamisch mittels Javascript erstellt. Um für ein Modul einen oder mehrere Eintäge auszugeben muss zunächst eine Headerzeile erzeugt werden. Dies geschieht durch das item "tab_head_xyz" (wobei xyz durch einen modulspeziefischen Ausdruck ersetzt wird) und einen value der in der Systeminfotabelle angezeigt wird.
 
 Danach folgt für jede Zeile ein item "tab_lineX_xyz" (Dabei ist "X" durch die Zeilennummer zu ersetzen und "xyz" durch den modulspeziefischen Ausdruck) und ein value. Das Value besteht aus einem Tabellenlabel (linke Spalte), dem Trennzeichen "#" und einem dazugehörigen Wert (rechte Spalte)
 
 Beispiel:
 
-	obj_html_info =  String("\"tab_head_18b20\":\"Sensor\"")+
-	obj_html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
-	obj_html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")
+	html_info =  String("\"tab_head_18b20\":\"Sensor\"")+
+	html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
+	html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")
   	
-###mqtt_json_part()
+###mqtt_json
 Diese Funktion liefert einen Teil-JSON zurück der vom Hauptprogramm zu einer MQTT-Nachricht zusammengebaut wird:
 **stat/TOPIC2/data JSON-Statement**
 
