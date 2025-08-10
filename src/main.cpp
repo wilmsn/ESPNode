@@ -1,14 +1,9 @@
 #include "main.h"
 
-
+#ifdef USE_WIFIMULTI
 #ifdef ESP32
 WiFiMulti wifiMulti;
-#else
-
 #endif
-
-#ifdef USE_FTP
-FtpServer        ftp;
 #endif
 
 #if defined(MODULE1)
@@ -546,19 +541,6 @@ void setup() {
   Serial.println(ESP.getCycleCount());
 #endif
 #endif
-#ifdef USE_AUDIO_MEDIA
-  if (SD.begin(SD_CS)) {
-    sd_cardsize = SD.cardSize();
-    sd_cardType = SD.cardType();
-    sd_usedbytes = SD.usedBytes();
-#if defined(DEBUG_SERIAL)
-#endif
-  } else {
-#if defined(DEBUG_SERIAL)
-  Serial.println("Error mounting SD Card");
-#endif        
-  }
-#endif
 #if defined(MODULE1)
   MODULE1_BEGIN_STATEMENT
 #endif
@@ -577,9 +559,6 @@ void setup() {
 #if defined(MODULE6)
   MODULE6_BEGIN_STATEMENT
 #endif
-#ifdef USE_FTP
-  ftp.begin("ftp","ftp");    //username, password for ftp.   (default 21, 50009 for PASV)
-#endif
 #ifdef DISPLAY
   bootMessage(2,"Ende Setup");
   delay(3000);
@@ -592,9 +571,6 @@ void setup() {
 *************************************************/
 void loop() {
   ElegantOTA.loop();
-#ifdef USE_FTP
-  ftp.handleFTP();
-#endif
   if ( rebootflag ) {
     preferences.end();
     write2log(LOG_CRITICAL,1,"Reboot Flag gesetzt => reboot");

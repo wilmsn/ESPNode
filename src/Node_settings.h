@@ -362,7 +362,7 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
-//#define USE_AUDIO_MEDIA
+#define USE_AUDIO_MEDIA
 //#define USE_FTP
 //#define USE_WIFIMULTI
 #define USE_ROTARY
@@ -375,7 +375,7 @@ RF24 Gateway:
 #define ROT_S2                  34
 
 #include "audiomodul.h"
-#define MAGICNO                 61
+#define MAGICNO                 66
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB

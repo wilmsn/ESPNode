@@ -97,7 +97,6 @@ void AudioDisplay::screen_radio_select() {
 void AudioDisplay::screen_settings() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Settings;
   clear();
-  clock_small();
 }
 
 void AudioDisplay::screen_media_update() {
@@ -108,6 +107,9 @@ void AudioDisplay::screen_media_update() {
 void AudioDisplay::screen_media() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Media;
   clear();
+  show_media_album();
+  show_media_song();
+  show_vol();
 }
 
 void AudioDisplay::clock_big() {
@@ -271,6 +273,83 @@ void AudioDisplay::radio_select_station(const char* s0, const char* s1, const ch
 //  if (strlen(s1) > 0) show_text_s2(s1,10,110,GC9A01A_ORANGE);
 //  if (strlen(s2) > 0) show_text_s2(s2,40,170,GC9A01A_LIGHTGREY);
 }
+
+void AudioDisplay::media_select_album(String& album, const uint16_t * pic) {
+  clear();
+  drawRGBBitmap(80,20,pic,70,70);
+  setTextSize(2);
+  setTextColor(GC9A01A_ORANGE);
+  setCursor(10, 110);
+  println(album);
+}
+
+void AudioDisplay::media_select_song(String& album, String& song, const uint16_t * pic) {
+  clear();
+  drawRGBBitmap(80,20,pic,70,70);
+  setTextSize(2);
+  setTextColor(GC9A01A_ORANGE);
+  setCursor(10, 110);
+  println(album);
+  setTextColor(GC9A01A_LIGHTGREY);
+  setCursor(40, 170);
+  println(song);
+}
+
+void AudioDisplay::media_album(String& albumName) {
+  cur_album = albumName;
+}
+
+void AudioDisplay::media_song(String& songName) {
+  cur_song = songName;
+}
+
+void AudioDisplay::show_media_album() {
+  fillRect(25, 85, 190, 55, GC9A01A_BLACK);
+  int startAt = 0;
+  int strLen = cur_album.length();
+  int splitAt = 0;
+  int lineNo = 0;
+  setTextColor(GC9A01A_ORANGE);
+  if (strLen < 10) {
+    setTextSize(3);
+    setCursor(25, 75);
+    print(cur_album);
+  } else {
+    setTextSize(2);
+    while (splitAt < strLen && lineNo < 2) {
+      splitAt = getPartStringEnd(cur_album, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
+      if (lineNo <= 1) setCursor(25, 75 + (lineNo * 20));
+      print(cur_album.substring(startAt,splitAt));
+      startAt = splitAt + 1;
+      lineNo++;
+    }
+  }
+}
+
+void AudioDisplay::show_media_song() {
+  fillRect(25, 140, 240, 60, GC9A01A_BLACK);
+  int startAt = 0;
+  int splitAt = 0;
+  int lineNo = 0;
+  setTextColor(GC9A01A_GREEN);
+  if (cur_song.length() < 10) {
+    setTextSize(3);
+    setCursor(25, 130);
+    print(cur_song);
+  } else {
+    setTextSize(2);
+    while (splitAt < cur_song.length() && lineNo < 3) {
+      splitAt = getPartStringEnd(cur_song, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
+      setCursor(25, 130 + (lineNo * 20));
+      print(cur_song.substring(startAt,splitAt));
+      startAt = splitAt + 1;
+      lineNo++;
+    }
+  }
+}
+
+
+
 
 /*
 void AudioDisplay::select(const char* s0, uint16_t * pic) {

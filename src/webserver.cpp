@@ -34,16 +34,16 @@ void prozess_wifishow() {
     switch (numberOfNetworks) {
       case -1:
         tmpstr = "{\"wifi_network\": \"Scan not finished\"}";
-        sendWsMessage(tmpstr,LOG_WEB);
+        sendWsMessage(tmpstr);
      break;
       case -2:
         tmpstr = "{\"wifi_network\": \"Scan not started\"}";
-        sendWsMessage(tmpstr, LOG_WEB);
+        sendWsMessage(tmpstr);
       break;
     }
   } else {
     tmpstr = String("{\"wifi_network\":\"") + String(numberOfNetworks) + String(" Networks:<br>\"}");
-    sendWsMessage(tmpstr, LOG_WEB);
+    sendWsMessage(tmpstr);
     for (int i = 0; i < numberOfNetworks; i++) {
       tmpstr = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(", Ch:") + String(WiFi.channel(i))
                + String(" (") + String(WiFi.RSSI(i)) + String(" dBm ");
@@ -103,7 +103,7 @@ void prozess_wifishow() {
       }
 #endif
       tmpstr += ")\"}";
-      sendWsMessage(tmpstr, LOG_WEB);
+      sendWsMessage(tmpstr);
     }
 //#endif
   }
@@ -212,7 +212,7 @@ void prozess_sysinfo() {
       tmpstr += uptime.uptimestr();
       tmpstr += "\"";
       tmpstr += "}";
-      sendWsMessage(tmpstr, LOG_WEB);
+      sendWsMessage(tmpstr);
 
 // Teil 2
       tmpstr = "{\"IP\":\"";
@@ -262,16 +262,9 @@ void prozess_sysinfo() {
       tmpstr += __DATE__;
       tmpstr += ")\"";
       tmpstr += "}";
-      sendWsMessage(tmpstr, LOG_WEB);
+      sendWsMessage(tmpstr);
 // Teil 3
-      tmpstr = "{\"ws_teil2\":2,";
-#ifdef USE_AUDIO_MEDIA
-      tmpstr += "\"sdcard_enable\":1";
-      tmpstr += ",\"sdcard_size\":"+String(sd_cardsize);
-      tmpstr += ",\"sdcard_used\":"+String(sd_usedbytes);
-#else
-      tmpstr += "\"sdcard_enable\":0";
-#endif
+      tmpstr = "{\"ws_teil2\":2";
 #if defined(MQTT)  
       tmpstr += ",\"mqttserver\":\"";
       tmpstr += mqtt_server;
@@ -292,7 +285,7 @@ void prozess_sysinfo() {
       tmpstr += String(rf24gw_gw_no);  
 #endif
       tmpstr += "}";
-      sendWsMessage(tmpstr, LOG_WEB);
+      sendWsMessage(tmpstr);
       tmpstr = "{";
 #ifdef MODULE1
       if (module1.html_has_info) {
@@ -336,7 +329,7 @@ void prozess_sysinfo() {
 #endif
 #endif
   tmpstr += "}";
-  sendWsMessage(tmpstr, LOG_WEB);
+  sendWsMessage(tmpstr);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -409,7 +402,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
   tmpstr += String(",\"set_rf24gw_enable\":0");
 #endif
   tmpstr += String("}");
-  sendWsMessage(tmpstr, LOG_WEB);
+  sendWsMessage(tmpstr);
   tmpstr = "{";
 #ifdef MODULE1
   module1.html_init();
@@ -459,13 +452,17 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
 #endif  //Module2
 #endif  //module1
   tmpstr += String("}");
-  sendWsMessage(tmpstr, LOG_WEB);
+  sendWsMessage(tmpstr);
 }
 
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                 void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
+#ifdef DEBUG_SERIAL_WEB
+      Serial.printf("WebSocket client #%u connected from %s\n", client->id(),
+                    client->remoteIP().toString().c_str());
+#endif
       handleWebSocketInit(arg, data, len);
     break;  //    case WS_EVT_CONNECT
     case WS_EVT_DISCONNECT:

@@ -16,7 +16,7 @@
 //#define NODE18B20
 //#define NODEBOSCH
 //#define WITTYNODE
-//#define NODE_AUDIO
+#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
@@ -24,7 +24,7 @@
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
-#define NODE_KUECHENRADIO
+//#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 

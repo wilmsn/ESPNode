@@ -18,7 +18,7 @@
 
 #if defined(CONFIG_IDF_TARGET_ESP32) 
 #ifdef USE_AUDIODISPLAY_GC9A01A
-#warning "Compiling Display GC9A01A with Settings for ESP32"
+//#warning "Compiling Display GC9A01A with Settings for ESP32"
 #ifndef TFT_SCK
 #define TFT_SCK                 18
 #endif
@@ -70,7 +70,7 @@
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
 #ifdef USE_AUDIODISPLAY_GC9A01A
-#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
+//#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
 #ifndef TFT_SCK
 // SCL
 #define TFT_SCK                 12
@@ -190,7 +190,7 @@ private:
     /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
     mymode_t   mode;
     /// @brief Der letzte verwendete "mode"
-    mymode_t   last_mode;
+    mymode_t   last_mode = Radio;
     /// @brief Der letzte verwendete "mode" aus (Radio, Media und Speaker) wird hier gespeichert und nach dem Einschalten aktiviert.
     mymode_t   default_mode;
 
@@ -247,10 +247,38 @@ private:
 #endif //USE_AUDIO_RADIO
 
 #ifdef USE_AUDIO_MEDIA
-    void audio_media_on();
+    /// @brief Das aktuelle Album
+    uint16_t audio_media_cur_album = 1;
+    /// @brief Das aktuelle Lied
+    uint16_t audio_media_cur_song = 0;
+    /// @brief Das aktuelle Album
+    uint16_t audio_media_sel_album = 1;
+    /// @brief Das aktuelle Lied
+    uint16_t audio_media_sel_song = 0;
+    /// @brief Der Name des aktuellen Ordners / Name des Albums
+    String audio_media_album_name;
+    //albumName;
+    /// @brief Der Name des aktuellen Files / Name des Liedes
+    String audio_media_song_name;
+    //songName;
 
+    time_t    song_started;
+
+    bool audio_media_changemode = false;
+
+    void audio_media_get_album();
+
+    void audio_media_get_songs(uint16_t reqDirNo);
+    /// @brief Schaltet den Mediaplayer an.
+    void audio_media_on();
+    /// @brief Schaltet den Mediaplayer aus.
     void audio_media_off();
     
+    void audio_media_play(uint16_t _albumNo, uint16_t _songNo);
+
+    void appendFile(fs::FS &fs, const char *path, const char *message);
+    void readFile(fs::FS &fs, const char *path);
+    void deleteFile(fs::FS &fs, const char *path);
     /**
      * Startet den Mediaupdate. Der Update selber läuft innerhalb der loop() Funktion.
      */
@@ -262,12 +290,28 @@ private:
     bool audio_media_do_update = false;
 
     /**
+     * @brief: Hier wird je Album(Ordner) die Datei songs.txt mit den Albumtiteln gefüllt.
+     */
+
+    bool audio_media_sd_init_songs = false;
+
+    /**
+     * @brief Hier wird für alle Alben die Datei album.txt mit den Verzeichnisnamen gefüllt.
+     */
+
+    bool audio_media_sd_init_album = false;
+
+    bool getAlbumByNumber(fs::FS &fs, uint16_t albumNo);
+    bool getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo);
+
+    /**
      * Wird auf "true" gesetz wenn ein "Media update" durchgeführt werden soll.
      */
     bool audio_media_update_running = false;
     char* audio_media_update_lowstr;
     char* audio_media_update_highstr;
     bool audio_media_update_found = false;
+    bool audio_media_update_outfile = false;
     File sd_root;
     File sd_dir;
     File sd_out;
@@ -280,7 +324,7 @@ private:
      * @return "true" wenn s2 zwischen s0 und s1 liegt, sonst "false"
      */
     bool audio_media_sort(const char* s0, const char* s1, const char* s2);
-#endif //USE_AUDIO_RADIO
+#endif //USE_AUDIO_MEDIA
 
 };
 

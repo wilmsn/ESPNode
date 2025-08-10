@@ -5,7 +5,6 @@
 
 #include "Adafruit_GFX.h"
 #include "Adafruit_GC9A01A.h"
-#include "audiodisplay_bmps.h"
 
 #define ARC_SIGMENT_DEGREES 3
 #define ARC_WIDTH 5
@@ -45,6 +44,8 @@ public:
   void screen_radio_select();
   /// @brief Schaltet die Anzeige in den "Mediaplayer" Modus
   void screen_media();
+  /// @brief Schaltet die Anzeige in den "Media Update" Modus
+  void screen_media_update();
   /// @brief Schaltet die Anzeige in den "Settings" Modus
   void screen_settings();
   /// @brief Anzeige der bps im Radiobetrieb
@@ -57,8 +58,13 @@ public:
   /// @param Ein String mit dem Streamtitle
   void radio_streamtitle(String& myplayinfo);
   void radio_select_station(const char* s0, const char* s1, const char* s2);
-  void screen_media_update();
   void boot_msg(uint8_t txtsize, const char* msg);
+  void media_select_album(String& album, const uint16_t * pic);
+  void media_select_song(String& album, String& song, const uint16_t * pic);
+  void media_album(String& albumName);
+  void media_song(String& songName);
+  void show_media_album();
+  void show_media_song();
 
 /*
   // App Auswahl
@@ -112,7 +118,7 @@ String cur_streamtitle;
 String cur_station;
 String cur_bps;
 String cur_artist;
-String cur_title;
+String cur_song;
 String cur_album;
 uint8_t cur_vol;
 uint8_t boot_line;
