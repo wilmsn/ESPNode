@@ -308,10 +308,12 @@ void start_AP() {
  * Setup
  *****************************************************/
 void setup() {
-
-#if defined(DEBUG_SERIAL)
+//delay(5000);
   // Serial port for debugging purposes
+  // Achtung: Wenn das Derielle Debugging nicht eingeschaltet ist gibt es einen Feler bei den Preferences!
+  //          DieWerte werden nicht ausgelesen, das Programm steht!!!!!!!
   Serial.begin(115200);
+//#ifdef DEBUG_SERIAL
   Serial.println("Available Networks: ");
   int numberOfNetworks = WiFi.scanNetworks();
   for (int i = 0; i < numberOfNetworks; i++) {
@@ -321,24 +323,27 @@ void setup() {
     Serial.printf("%d: %s, Ch:%d (%ddBm) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
 #endif
   }
-#endif
+//#endif
 
 #ifdef DISPLAY
-  bootMessage(2,"init prefs");
+  bootMessage(0,"init prefs",false);
 #endif
 
   // Zunächst werden die Preferences im Schreibmodus geöffnet.
   // Sollte die "magicno" nicht mit der gespeicherten übereinstimmen
   // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
   preferences.begin("settings",true);
-  magicno = preferences.getInt("magicno");
+  magicno = preferences.getUShort("magicno");
   preferences.end();
-#if defined(DEBUG_SERIAL)
+#ifdef DISPLAY
+  bootMessage(1,"mg#",false);
+#endif
+#ifdef DEBUG_SERIAL
   Serial.print("MagicNo(Prefs) = ");
   Serial.println(magicno);
   Serial.print("MagicNo(Prg) = ");
   Serial.println(MAGICNO);
-#if defined(MQTT)
+#ifdef MQTT
   Serial.print("MQTT_SERVER = ");
   Serial.println(MQTT_SERVER);
 #endif
@@ -361,16 +366,15 @@ void setup() {
 #if defined(MQTT)
 #endif
 // Save the defaults for the next start!
+    preferences.clear();
     preferences.begin("settings",false);
-    preferences.putInt("magicno", MAGICNO);
+    preferences.putUShort("magicno", MAGICNO);
     preferences.putString("wifi_ssid", wifi_ssid); 
     preferences.putString("wifi_pass", wifi_pass);
 #ifdef ESP32
-#ifdef WIFI_SSID1
+#ifdef USE_WIFIMULTI
     preferences.putString("wifi_ssid1", wifi_ssid1); 
     preferences.putString("wifi_pass1", wifi_pass1);
-#endif
-#ifdef WIFI_SSID2
     preferences.putString("wifi_ssid2", wifi_ssid2); 
     preferences.putString("wifi_pass2", wifi_pass2);
 #endif
@@ -413,14 +417,22 @@ void setup() {
     preferences.end();
   } else {
     preferences.begin("settings",true);
+#ifdef DISPLAY
+  bootMessage(1,"open",true);
+#endif
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
     wifi_ssid         = preferences.getString("wifi_ssid"); 
     wifi_pass         = preferences.getString("wifi_pass");
 #ifdef ESP32
+#ifdef USE_WIFIMULTI
     if (preferences.isKey("wifi_ssid1")) wifi_ssid1 = preferences.getString("wifi_ssid1"); 
     if (preferences.isKey("wifi_pass1")) wifi_pass1 = preferences.getString("wifi_pass1");
     if (preferences.isKey("wifi_ssid2")) wifi_ssid2 = preferences.getString("wifi_ssid2"); 
     if (preferences.isKey("wifi_pass1")) wifi_pass2 = preferences.getString("wifi_pass2");
+#endif
+#endif
+#ifdef DISPLAY
+  bootMessage(1,"wifi",false);
 #endif
     loop_time_alarm   = preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
@@ -471,12 +483,16 @@ void setup() {
   Serial.print("Critical: ");
   Serial.println(do_log_critical?"ja":"nein");
 #endif
-
 #ifdef DISPLAY
-  bootMessage(2,"mount FS");
+  bootMessage(1,"ok",true);
+  bootMessage(0,"mount FS",false);
 #endif
 
   if (!LittleFS.begin()) {
+#ifdef DISPLAY
+    bootMessage(2,"Error",true);
+    bootMessage(2,"REBOOT",false);
+#endif
     ESP.restart();
     return;
   } else {
@@ -484,34 +500,43 @@ void setup() {
   }
 
 #ifdef DISPLAY
-  bootMessage(2,"connect WiFi");
+  bootMessage(1,"ok",true);
+  bootMessage(0,"con WiFi",false);
 #endif
 
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
+#ifdef DISPLAY
+    bootMessage(2,"Error",true);
+    bootMessage(2,"Start AP",true);
+#endif
     start_AP();
   } else {
     
 #ifdef DISPLAY
-  bootMessage(1,WiFi.localIP().toString().c_str());
+    bootMessage(1,WiFi.localIP().toString().c_str(),true);
 #endif
 #if defined(DEBUG_SERIAL)
     write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
 #endif
 #ifdef DISPLAY
-  bootMessage(2,"get Time");
+  bootMessage(0,"get Time",false);
 #endif
     setupTime();
-    if ( !getNTPtime(20) ) {
+    if ( ! getNTPtime(30) ) {
       write2log(LOG_SYSTEM,1, "Error getting NTP Time");
+#ifdef DISPLAY
+      bootMessage(2,"Error",true);
+#endif
+    } else {
+#ifdef DISPLAY
+      char timestr[20];
+      sprintf(timestr,"%d.%d.%d %02d:%02d",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year,  timeinfo.tm_hour, timeinfo.tm_min);
+      bootMessage(1,timestr,true);
+#endif
     }
     lastDay = timeinfo.tm_mday;
     write2log(LOG_DAYBREAK, 0);
-#ifdef DISPLAY
-  char timestr[20];
-  sprintf(timestr,"%d.%d.%d %02d:%02d",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year,  timeinfo.tm_hour, timeinfo.tm_min);
-  bootMessage(2,timestr);
-#endif
 #ifdef ESP32
     //ToDo
 #else
@@ -560,7 +585,7 @@ void setup() {
   MODULE6_BEGIN_STATEMENT
 #endif
 #ifdef DISPLAY
-  bootMessage(2,"Ende Setup");
+  bootMessage(0,"Ende Setup",false);
   delay(3000);
 #endif
   write2log(LOG_SYSTEM,1, "Setup Ende");

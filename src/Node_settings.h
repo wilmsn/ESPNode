@@ -138,7 +138,7 @@ RF24 Gateway:
 #ifdef ESP32
 #define USE_AUDIOMODUL
 #define USE_ROTARY
-#define USE_AUDIODISPLAY_GC9A01A
+#define USE_DISPLAY_GC9A01A
 #define TFT_ROT   3
 #define USE_AUDIO_RADIO
 //#define USE_WIFIMULTI
@@ -175,19 +175,19 @@ RF24 Gateway:
 //-------------------------------------------------------
 #if defined(NODE_WOHNZIMMERRADIO)
 
-#define USE_WIFIMULTI
+//#define USE_WIFIMULTI
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
-#define USE_AUDIODISPLAY_GC9A01A
+#define USE_DISPLAY_GC9A01A
 #define USE_ROTARY
 
 #define TFT_ROT                  4
 
-#define MAGICNO                  69
+#define MAGICNO                  45
 
-#define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_WEB
+//#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_WEB
 
 #define DO_LOG_WEB               true
 #define DO_LOG_MODULE            true
@@ -360,7 +360,7 @@ RF24 Gateway:
 
 #ifdef ESP32
 #define USE_AUDIOMODUL
-#define USE_AUDIODISPLAY_GC9A01A
+#define USE_DISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
 //#define USE_FTP

@@ -16,7 +16,7 @@
 //#define NODE18B20
 //#define NODEBOSCH
 //#define WITTYNODE
-#define NODE_AUDIO
+//#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
@@ -25,7 +25,7 @@
 //#define NODE_TEICH
 //#define NODE_FLUR
 //#define NODE_KUECHENRADIO
-//#define NODE_WOHNZIMMERRADIO
+#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
 // Die folgende Einstellungen müssen an die aktuelle Umgebung angepasst werden.
@@ -400,5 +400,10 @@ typedef struct {
 #define  LOG_DAYBREAK  6
 #endif
 
+#ifdef USE_DISPLAY_GC9A01A
+#ifndef DISPLAY
+#define DISPLAY "GC9A01A"
+#endif
+#endif
 
 #endif

@@ -17,7 +17,7 @@
 #define JPG_SCALE                 4
 
 #if defined(CONFIG_IDF_TARGET_ESP32) 
-#ifdef USE_AUDIODISPLAY_GC9A01A
+#ifdef USE_DISPLAY_GC9A01A
 //#warning "Compiling Display GC9A01A with Settings for ESP32"
 #ifndef TFT_SCK
 #define TFT_SCK                 18
@@ -69,7 +69,7 @@
 #endif  //CONFIG_IDF_TARGET_ESP32
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-#ifdef USE_AUDIODISPLAY_GC9A01A
+#ifdef USE_DISPLAY_GC9A01A
 //#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
 #ifndef TFT_SCK
 // SCL
@@ -183,8 +183,14 @@ public:
     /// @brief Die Loopfunktion für den eriodischen Aufruf.
     /// @param now Der Unix Zeitstempel. 
     void loop(time_t now);
-
-    void html_init();
+    
+/**
+ * @brief Initialisierung einer Webseite
+ * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+ * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+ * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+ */
+void html_init();
 
 private:
     /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
@@ -206,7 +212,7 @@ private:
     uint16_t   audio_bas;
     uint16_t   audio_tre;
 */
-    void html_upd_data();
+    void html_update();
     void audio_set_mode(mymode_t new_mode);
     void audio_off();
     String print_mode(mode_t mymode);
@@ -252,7 +258,7 @@ private:
     /// @brief Das aktuelle Lied
     uint16_t audio_media_cur_song = 0;
     /// @brief Das aktuelle Album
-    uint16_t audio_media_sel_album = 1;
+    uint16_t audio_media_sel_album = 0;
     /// @brief Das aktuelle Lied
     uint16_t audio_media_sel_song = 0;
     /// @brief Der Name des aktuellen Ordners / Name des Albums
@@ -266,9 +272,9 @@ private:
 
     bool audio_media_changemode = false;
 
-    void audio_media_get_album();
+    void audio_media_get_album_for_web();
 
-    void audio_media_get_songs(uint16_t reqDirNo);
+    void audio_media_get_songs_for_web(uint16_t reqDirNo);
     /// @brief Schaltet den Mediaplayer an.
     void audio_media_on();
     /// @brief Schaltet den Mediaplayer aus.

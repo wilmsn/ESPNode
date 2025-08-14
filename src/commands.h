@@ -10,7 +10,7 @@ void prozess_cmd(const String cmd, const String value);
 
 void show_settings();
 
-
+void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline);
 
 
 

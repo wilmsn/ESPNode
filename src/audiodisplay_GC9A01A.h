@@ -1,4 +1,4 @@
-#ifdef USE_AUDIODISPLAY_GC9A01A
+#ifdef USE_DISPLAY_GC9A01A
 
 #ifndef _AUDIODISPLAY_GC9A01A_H_
 #define _AUDIODISPLAY_GC9A01A_H_
@@ -58,7 +58,15 @@ public:
   /// @param Ein String mit dem Streamtitle
   void radio_streamtitle(String& myplayinfo);
   void radio_select_station(const char* s0, const char* s1, const char* s2);
-  void boot_msg(uint8_t txtsize, const char* msg);
+/// @brief Zeigt eine Bootmeldung auf dem Display an
+/// @details Diese Funktion wird beim Booten des Gerätes aufgerufen, um eine Nachricht auf
+/// dem Display anzuzeigen. Der Text wird in der angegebenen Farbe dargestellt. Dabei gilt folgende Festlegung:
+/// - txtcolor: 0 = grau, 1 = grün, 2 = rot
+/// @param txtcolor Die Textfarbe für die Bootmeldung
+/// @param myMsg Die anzuzeigende Nachricht
+/// @note Diese Funktion ist für die Anzeige auf dem Display zuständig und wird in der Regel
+///       beim Start des Geräts aufgerufen, um den Benutzer über den Bootvorgang zu informieren.
+  void bootMessage(uint8_t txtcolor, const char* msg, bool newline = true);
   void media_select_album(String& album, const uint16_t * pic);
   void media_select_song(String& album, String& song, const uint16_t * pic);
   void media_album(String& albumName);
@@ -121,7 +129,8 @@ String cur_artist;
 String cur_song;
 String cur_album;
 uint8_t cur_vol;
-uint8_t boot_line;
+uint8_t boot_line = 0;
+bool    boot_last_nl = true;
 
 };
 

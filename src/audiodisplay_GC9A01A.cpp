@@ -1,5 +1,5 @@
 #include "config.h"
-#ifdef USE_AUDIODISPLAY_GC9A01A
+#ifdef USE_DISPLAY_GC9A01A
 #include "audiodisplay_GC9A01A.h"
 //#include "audiomodul.h"
 #include "common.h"
@@ -17,8 +17,9 @@ AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot ) :
   setTextSize(3);
   setCursor(80,25);
   println("init");
-  fillRect(30,50,180,140,GC9A01A_DARKGREEN);
-  boot_line = 40;
+  fillRect(30,50,180,140,GC9A01A_DARKGREY);
+  setCursor(35,60);
+  setTextSize(1);
   html_info = String(",\"tab_head_display\":\"Display: GC9A01A\"") +
               String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
               String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
@@ -44,15 +45,32 @@ void AudioDisplay::loop(time_t now) {
   }
 }
 
-void AudioDisplay::boot_msg(uint8_t txtsize, const char* msg) {
-  uint8_t pixeldiff = 16;
-  if (txtsize == 1) {
-    pixeldiff = 20;
+// - txtcolor: 0 = weiss, 1 = grün, 2 = rot
+void AudioDisplay::bootMessage(uint8_t txtcolor, const char* msg, bool newline) {
+  switch (txtcolor) {
+  case 0:
+    setTextColor(GC9A01A_WHITE);
+    break;
+  case 1:
+    setTextColor(GC9A01A_GREEN);
+    break;
+  case 2:
+    setTextColor(GC9A01A_RED);
+    break;
   }
-  boot_line += pixeldiff;
-  setCursor(35,boot_line);
-  setTextSize(txtsize);
-  println(msg);
+  if ( ! boot_last_nl ) {
+    if (newline) {
+      setCursor(190 - (strlen(msg) * 6), (boot_line * 10) + 60);
+    } else {
+      print("  ");
+    }
+  }
+  print(msg);
+  if (newline) {
+    boot_line++;
+    setCursor(35, boot_line * 10 + 60);
+  }
+  boot_last_nl = newline;
 }
 
 void AudioDisplay::clear() {

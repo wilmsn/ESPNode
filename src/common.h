@@ -50,7 +50,15 @@ extern time_t now;
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
 #ifdef DISPLAY
-extern void bootMessage(uint8_t txtsize, const char* myMsg);
+/// @brief Zeigt eine Bootmeldung auf dem Display an
+/// @details Diese Funktion wird beim Booten des Gerätes aufgerufen, um eine Nachricht auf
+/// dem Display anzuzeigen. Der Text wird in der angegebenen Farbe dargestellt. Dabei gilt folgende Festlegung:
+/// - txtcolor: 0 = grau, 1 = grün, 2 = rot
+/// @param txtcolor Die Textfarbe für die Bootmeldung
+/// @param myMsg Die anzuzeigende Nachricht
+/// @note Diese Funktion ist für die Anzeige auf dem Display zuständig und wird in der Regel
+///       beim Start des Geräts aufgerufen, um den Benutzer über den Bootvorgang zu informieren.
+extern void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline = true);
 #endif
 
 // Modul: webserver
