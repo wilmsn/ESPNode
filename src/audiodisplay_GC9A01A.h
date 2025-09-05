@@ -17,6 +17,8 @@
 #define IP_POS_Y          225
 #define IP_FONTSIZE       1
 
+extern uint16_t* bmpBuffer;
+
 /**
  * @brief Anzeige für das Audiomodul spezialisiert auf das Display GC9A01A
  */
@@ -70,8 +72,15 @@ public:
   void media_select_album(String& album, const uint16_t * pic);
   void media_select_song(String& album, String& song, const uint16_t * pic);
   void media_album(String& albumName);
+  void media_artist(String& artistName);
   void media_song(String& songName);
+  /// @brief Anzeige der bps im Mediabetrieb
+  /// @param mybps Ein c-String mit den bps Werten
+  void media_bps(String& mybps);
+  void media_update();
+  void show_media_bps();
   void show_media_album();
+  void show_media_artist();
   void show_media_song();
 
 /*
@@ -125,9 +134,9 @@ private:
 String cur_streamtitle;
 String cur_station;
 String cur_bps;
+String cur_album;
 String cur_artist;
 String cur_song;
-String cur_album;
 uint8_t cur_vol;
 uint8_t boot_line = 0;
 bool    boot_last_nl = true;

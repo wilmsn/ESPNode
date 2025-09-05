@@ -178,23 +178,23 @@ RF24 Gateway:
 //#define USE_WIFIMULTI
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
-//#define USE_AUDIO_MEDIA
+#define USE_AUDIO_MEDIA
 #define USE_DISPLAY_GC9A01A
 #define USE_ROTARY
 
 #define TFT_ROT                  4
 
-#define MAGICNO                  45
+#define MAGICNO                  77
 
-//#define DEBUG_SERIAL_MODULE
-//#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_WEB
 
-#define DO_LOG_WEB               true
-#define DO_LOG_MODULE            true
-#define DO_LOG_SYSTEM            true
+#define DO_LOG_WEB               false
+#define DO_LOG_MODULE            false
+#define DO_LOG_SYSTEM            false
 
 #define HOSTNAME                 "Wohnzimmerradio"
-#define HOST_DISCRIPTION         "Ein Radionode im Wohnzimmer"
+#define HOST_DISCRIPTION         "Ein Mediaplayer im Wohnzimmer"
 
 #include "audiomodul.h"
 #define MODULE1_DEFINITION       AudioModul module1;
@@ -379,7 +379,7 @@ RF24 Gateway:
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
-#define DEBUG_SERIAL
+//#define DEBUG_SERIAL
 
 #define HOSTNAME                 "Audiotestnode"
 #define HOST_DISCRIPTION         "Ein Audio Testnode"

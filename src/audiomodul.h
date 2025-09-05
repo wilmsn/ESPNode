@@ -14,7 +14,6 @@
 // Settings for Mediaplayer
 #define SD_DIR_LENGTH             50
 #define SD_FILE_LENGTH            50
-#define JPG_SCALE                 4
 
 #if defined(CONFIG_IDF_TARGET_ESP32) 
 #ifdef USE_DISPLAY_GC9A01A
@@ -95,7 +94,7 @@
 
 #ifdef USE_AUDIO_MEDIA
 #ifndef SD_CS
-#define SD_CS                   8
+#define SD_CS                   10
 #endif
 #ifndef SD_SCK
 #define SD_SCK                  12
@@ -184,13 +183,15 @@ public:
     /// @param now Der Unix Zeitstempel. 
     void loop(time_t now);
     
-/**
- * @brief Initialisierung einer Webseite
- * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
- * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
- * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
- */
-void html_init();
+    /**
+    * @brief Initialisierung bzw. Neuladen einer Webseite
+    * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft bzw. die Reload-Taste gedrückt wird,
+    * wird diese Funtion durch das Hauptprogramm aufgerufen. 
+    * Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+    * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+    */
+    void html_init();
+
 
 private:
     /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
@@ -212,7 +213,7 @@ private:
     uint16_t   audio_bas;
     uint16_t   audio_tre;
 */
-    void html_update();
+//    void html_update();
     void audio_set_mode(mymode_t new_mode);
     void audio_off();
     String print_mode(mode_t mymode);
@@ -249,7 +250,8 @@ private:
 
     /// @brief Der aktuell ausgewählte Sender, entspricht der Indexnummer im Array.
     uint8_t   audio_radio_cur_station;
-   
+
+
 #endif //USE_AUDIO_RADIO
 
 #ifdef USE_AUDIO_MEDIA
@@ -261,12 +263,6 @@ private:
     uint16_t audio_media_sel_album = 0;
     /// @brief Das aktuelle Lied
     uint16_t audio_media_sel_song = 0;
-    /// @brief Der Name des aktuellen Ordners / Name des Albums
-    String audio_media_album_name;
-    //albumName;
-    /// @brief Der Name des aktuellen Files / Name des Liedes
-    String audio_media_song_name;
-    //songName;
 
     time_t    song_started;
 
@@ -281,14 +277,6 @@ private:
     void audio_media_off();
     
     void audio_media_play(uint16_t _albumNo, uint16_t _songNo);
-
-    void appendFile(fs::FS &fs, const char *path, const char *message);
-    void readFile(fs::FS &fs, const char *path);
-    void deleteFile(fs::FS &fs, const char *path);
-    /**
-     * Startet den Mediaupdate. Der Update selber läuft innerhalb der loop() Funktion.
-     */
-    void audio_media_start_update();
 
     /**
      * Wird auf "true" gesetz wenn ein "Media update" durchgeführt werden soll.
@@ -330,6 +318,11 @@ private:
      * @return "true" wenn s2 zwischen s0 und s1 liegt, sonst "false"
      */
     bool audio_media_sort(const char* s0, const char* s1, const char* s2);
+
+
+    void initMedia();
+
+    void convert_jpg_files();
 #endif //USE_AUDIO_MEDIA
 
 };

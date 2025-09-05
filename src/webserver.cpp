@@ -482,7 +482,7 @@ void setup_webserver() {
   initWebSocket();
   write2log(LOG_WEB,1, "initWebsocket ok");
   // This serves all static web content
-  httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+  httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setCacheControl("max-age=3600");
   // Start Elegant OTA
   ElegantOTA.begin(&httpServer);
   // Start server

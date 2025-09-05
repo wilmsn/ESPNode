@@ -125,9 +125,12 @@ void AudioDisplay::screen_media_update() {
 void AudioDisplay::screen_media() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Media;
   clear();
-  show_media_album();
+//  drawRGBBitmap(80,20,bmpBuffer,80,80);
+  show_media_artist();
   show_media_song();
+  show_media_bps();
   show_vol();
+  ip();
 }
 
 void AudioDisplay::clock_big() {
@@ -313,8 +316,16 @@ void AudioDisplay::media_select_song(String& album, String& song, const uint16_t
   println(song);
 }
 
+void AudioDisplay::media_bps(String& mybps) {
+  cur_bps = mybps;
+} 
+
 void AudioDisplay::media_album(String& albumName) {
   cur_album = albumName;
+}
+
+void AudioDisplay::media_artist(String& artistName) {
+  cur_artist = artistName;
 }
 
 void AudioDisplay::media_song(String& songName) {
@@ -322,21 +333,20 @@ void AudioDisplay::media_song(String& songName) {
 }
 
 void AudioDisplay::show_media_album() {
-  fillRect(25, 85, 190, 55, GC9A01A_BLACK);
   int startAt = 0;
   int strLen = cur_album.length();
   int splitAt = 0;
   int lineNo = 0;
-  setTextColor(GC9A01A_ORANGE);
+  setTextColor(GC9A01A_LIGHTGREY);
   if (strLen < 10) {
     setTextSize(3);
-    setCursor(25, 75);
+    setCursor(25, 80);
     print(cur_album);
   } else {
     setTextSize(2);
     while (splitAt < strLen && lineNo < 2) {
       splitAt = getPartStringEnd(cur_album, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
-      if (lineNo <= 1) setCursor(25, 75 + (lineNo * 20));
+      if (lineNo <= 1) setCursor(25, 80 + (lineNo * 20));
       print(cur_album.substring(startAt,splitAt));
       startAt = splitAt + 1;
       lineNo++;
@@ -344,21 +354,42 @@ void AudioDisplay::show_media_album() {
   }
 }
 
+void AudioDisplay::show_media_artist() {
+  int startAt = 0;
+  int strLen = cur_artist.length();
+  int splitAt = 0;
+  int lineNo = 0;
+  setTextColor(GC9A01A_ORANGE);
+  if (strLen < 10) {
+    setTextSize(3);
+    setCursor(25, 120);
+    print(cur_artist);
+  } else {
+    setTextSize(2);
+    while (splitAt < strLen && lineNo < 2) {
+      splitAt = getPartStringEnd(cur_album, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
+      if (lineNo <= 1) setCursor(25, 120 + (lineNo * 20));
+      print(cur_artist.substring(startAt,splitAt));
+      startAt = splitAt + 1;
+      lineNo++;
+    }
+  }
+}
+
 void AudioDisplay::show_media_song() {
-  fillRect(25, 140, 240, 60, GC9A01A_BLACK);
   int startAt = 0;
   int splitAt = 0;
   int lineNo = 0;
   setTextColor(GC9A01A_GREEN);
   if (cur_song.length() < 10) {
     setTextSize(3);
-    setCursor(25, 130);
+    setCursor(25, 160);
     print(cur_song);
   } else {
     setTextSize(2);
     while (splitAt < cur_song.length() && lineNo < 3) {
       splitAt = getPartStringEnd(cur_song, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
-      setCursor(25, 130 + (lineNo * 20));
+      setCursor(25, 160 + (lineNo * 20));
       print(cur_song.substring(startAt,splitAt));
       startAt = splitAt + 1;
       lineNo++;
@@ -366,7 +397,12 @@ void AudioDisplay::show_media_song() {
   }
 }
 
-
+void AudioDisplay::show_media_bps() {
+  setTextColor(GC9A01A_RED);  
+  setTextSize(1);
+  setCursor(75, 205);
+  println(cur_bps);
+}
 
 
 /*

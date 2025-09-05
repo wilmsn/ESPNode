@@ -308,12 +308,13 @@ void start_AP() {
  * Setup
  *****************************************************/
 void setup() {
-//delay(5000);
   // Serial port for debugging purposes
-  // Achtung: Wenn das Derielle Debugging nicht eingeschaltet ist gibt es einen Feler bei den Preferences!
-  //          DieWerte werden nicht ausgelesen, das Programm steht!!!!!!!
+  // Achtung: Wenn die Prefs zu schnell nach Systemstart aufgerufen werden gibt es einen Feler bei den Preferences!
+  //          Die Werte werden nicht ausgelesen, das Programm steht!!!!!!!
+  // !!!!!!!! Diesn DELAY nicht entfernen !!!!!!!!!
+  delay(1000);
+#ifdef DEBUG_SERIAL
   Serial.begin(115200);
-//#ifdef DEBUG_SERIAL
   Serial.println("Available Networks: ");
   int numberOfNetworks = WiFi.scanNetworks();
   for (int i = 0; i < numberOfNetworks; i++) {
@@ -323,21 +324,30 @@ void setup() {
     Serial.printf("%d: %s, Ch:%d (%ddBm) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
 #endif
   }
-//#endif
+#endif
 
 #ifdef DISPLAY
-  bootMessage(0,"init prefs",false);
+  bootMessage(0,"Prefs",false);
 #endif
 
   // Zunächst werden die Preferences im Schreibmodus geöffnet.
   // Sollte die "magicno" nicht mit der gespeicherten übereinstimmen
   // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
-  preferences.begin("settings",true);
-  magicno = preferences.getUShort("magicno");
-  preferences.end();
+  if (preferences.begin("settings",true)) {
+    magicno = preferences.getUShort("magicno", 0);
 #ifdef DISPLAY
-  bootMessage(1,"mg#",false);
+    bootMessage(1,"MagicNo:",false);
+    bootMessage(1,String(magicno).c_str(),false);
+    bootMessage(1,"OK",true);
 #endif
+    preferences.end();
+  } else {
+#ifdef DISPLAY
+    bootMessage(2,"Error",true);
+    bootMessage(2,"Reboot !!!",true);
+#endif
+    ESP.restart();
+  }
 #ifdef DEBUG_SERIAL
   Serial.print("MagicNo(Prefs) = ");
   Serial.println(magicno);
@@ -350,6 +360,9 @@ void setup() {
 #endif
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
+#ifdef DISPLAY
+    bootMessage(1,"Using default Environment",true);
+#endif
     wifi_ssid = WIFI_SSID;
     wifi_pass = WIFI_PASS;
 #ifdef ESP32
@@ -416,10 +429,10 @@ void setup() {
     preferences.putBool("do_log_critical", do_log_critical);
     preferences.end();
   } else {
-    preferences.begin("settings",true);
 #ifdef DISPLAY
-  bootMessage(1,"open",true);
+    bootMessage(1,"Using Env. from Prefs",true);
 #endif
+    preferences.begin("settings",true);
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
     wifi_ssid         = preferences.getString("wifi_ssid"); 
     wifi_pass         = preferences.getString("wifi_pass");
@@ -430,9 +443,6 @@ void setup() {
     if (preferences.isKey("wifi_ssid2")) wifi_ssid2 = preferences.getString("wifi_ssid2"); 
     if (preferences.isKey("wifi_pass1")) wifi_pass2 = preferences.getString("wifi_pass2");
 #endif
-#endif
-#ifdef DISPLAY
-  bootMessage(1,"wifi",false);
 #endif
     loop_time_alarm   = preferences.getUInt("loop_time_alarm");
 #if defined(MQTT)
@@ -484,7 +494,6 @@ void setup() {
   Serial.println(do_log_critical?"ja":"nein");
 #endif
 #ifdef DISPLAY
-  bootMessage(1,"ok",true);
   bootMessage(0,"mount FS",false);
 #endif
 
@@ -500,8 +509,8 @@ void setup() {
   }
 
 #ifdef DISPLAY
-  bootMessage(1,"ok",true);
-  bootMessage(0,"con WiFi",false);
+  bootMessage(1,"OK",true);
+  bootMessage(0,"Con WiFi",false);
 #endif
 
   // Connect to Wi-Fi
