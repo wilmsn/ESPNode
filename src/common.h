@@ -46,6 +46,7 @@ extern bool do_log_system;
 extern bool do_log_critical;
 extern bool do_log_web;
 extern time_t now;
+extern unsigned long minutes;
 
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);

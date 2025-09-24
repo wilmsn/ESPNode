@@ -9,13 +9,13 @@
  * 1) der zu erzeugende Node ausgewählt
  * 2) grundlegende Konfigurationen festgelegt 
 */
-//#if ESP_IDF_VERSION_MAJOR == 5
+//#warning ESP_IDF_VERSION_MAJOR
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODESIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
-//#define WITTYNODE
+#define WITTYNODE
 //#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
@@ -25,7 +25,7 @@
 //#define NODE_TEICH
 //#define NODE_FLUR
 //#define NODE_KUECHENRADIO
-#define NODE_WOHNZIMMERRADIO
+//#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
 // Die folgende Einstellungen müssen an die aktuelle Umgebung angepasst werden.
@@ -401,8 +401,8 @@ typedef struct {
 #endif
 
 #ifdef USE_DISPLAY_GC9A01A
-#ifndef DISPLAY
-#define DISPLAY "GC9A01A"
+#ifndef USE_DISPLAY
+#define USE_DISPLAY "GC9A01A"
 #endif
 #endif
 

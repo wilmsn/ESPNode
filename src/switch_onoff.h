@@ -4,6 +4,8 @@
  ***************************************************************************************/
 #include "base_generic.h"
 
+// Entwicklungsversion start 21.09.25: neu: Timerversion; Diagrammversion
+
 /**
  * @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.
  * Der Schalter reagiert nur wenn es in der **set** Funktion mit dem Schlüsselwort aufgerufen 
@@ -20,6 +22,11 @@
  * Folgende Strings als **value** übergeben schalten **um**:
  * 
  * **2** **umschalten** **Umschalten** **toggle** **Toggle**
+ * 
+ * Folgende Strings schalten den Timer ein:
+ * 
+ * **1h** (1 Stunde) **2h** (2 Stunden) **3h** (3 Stunden) 
+ * **4h** (4 Stunden) **5h** (5 Stunden) **6h** (6 Stunden)
  */
 
 class Switch_OnOff : public Base_Generic {
@@ -37,9 +44,10 @@ public:
      * @param _start_value Die initiale Schaltposition des Schalters
      * @param _on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
      * @param _is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state);
+               bool _start_value, bool _on_value, bool _is_state, bool _show_diagramm = false);
 
     /**
      * @brief Die Initialisierung des Schalters für einen HW-Pin
@@ -51,9 +59,10 @@ public:
      * @param _on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
      * @param _is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
      * @param _hw_pin Der Hardware Pin
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin);
+               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin, bool _show_diagramm = false);
 
     /**
      * @brief Die Initialisierung des Schalters für zwei HW-Pins
@@ -66,9 +75,10 @@ public:
      * @param _is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
      * @param _hw_pin1 Der erste Hardware Pin
      * @param _hw_pin2 Der zweite Hardware Pin
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2);
+               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2, bool _show_diagramm = false);
 
     /**
      * @brief Die Initialisierung des Schalters mit Regler ohne HW-Pin
@@ -85,10 +95,11 @@ public:
      * @param _slider_label Die Beschriftung für den Schieberegler
      * @param _slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
      * @param _slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
                bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
-               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword);
+               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword, bool _show_diagramm = false);
 
     /**
      * @brief Die Initialisierung des Schalters für einen HW-Pin und PWM Steuerung
@@ -106,10 +117,11 @@ public:
      * @param _slider_label Die Beschriftung für den Schieberegler
      * @param _slider_mqtt_name Der MQTT Bezeichner für den Schieberegler
      * @param _slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
                bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
-               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword);
+               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword, bool _show_diagramm = false);
 
     /**
      * @brief Schaltet den Schalter auf den übergebenen Zustand wenn das übergebene "keyword" mit dem hinterlegten "keyword" übereinstimmt.
@@ -125,6 +137,12 @@ public:
      * Folgende Strings als **value** übergeben schalten **um**:
      * 
      * **2** **umschalten** **Umschalten** **toggle** **Toggle**
+     *
+     * Folgende Strings schalten den Timer ein:
+     * 
+     * **1h** (1 Stunde) **2h** (2 Stunden) **3h** (3 Stunden) 
+     * **4h** (4 Stunden) **5h** (5 Stunden) **6h** (6 Stunden)
+     *
      * @return "true" bei Übereinstimmung der Keywörter sonst false
      */
     bool set(const String& _cmnd, const String& _val);
@@ -178,6 +196,11 @@ public:
      * @param _new_state Der neue Zustand des Schalters ("true" = Ein, "false" = Aus).
      */
     void do_switch(bool _new_state);
+
+    /**
+     * @brief In der Loop Funktion wird hier geprüft ob ein Timer abgelaufen ist und der Schalter ausgeschaltet werden muss.
+     */
+    void loop(time_t now);
 
     /**
      * @brief Der aktuelle Zustand des Schalters
@@ -254,7 +277,25 @@ public:
      */
     uint8_t    hw_pin2;
 
+
 private:
+    /**
+     * @brief Bei Schalten über den Timer wird hier die Ausschaltzeit hinterlegt.
+     */
+    unsigned long off_minute = 0;
+
+    /**
+     * @brief "true" wenn ein Diagramm genutzt wird, sonst "false"
+     */
+    bool diagramm_used = false;
+
+    void diagramm2web();
+
+    void store_diagramm(bool invalue);
+
+    void * diagrammstore = NULL;
+
+    int old_min = 0;
 
 };
 

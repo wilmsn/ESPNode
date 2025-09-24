@@ -87,6 +87,7 @@ unsigned long mqtt_last_tele = 0;
 unsigned long loop_starttime = 0;
 /// @brief
 unsigned long wifi_ap_starttime = 0;
+int lastMinute = 0;
 int lastHour = 0;
 int lastDay  = 0;
 unsigned long loop_time_alarm;
@@ -99,6 +100,9 @@ Uptime uptime;
 tm timeinfo;
 /// @brief Eine Variable für Zeitinformationen
 time_t now;
+/// @brief Eine Variable zur Aufnahme der Minuten seit Start
+/// Achtung: Ungenauigkeit wird hier tolleriert
+unsigned long minutes = 0; 
 
 #ifdef USE_AUDIO_MEDIA
 #include "FS.h"

@@ -37,7 +37,6 @@ void setupTime() {
   // Zeitzone einstellen https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 }
 
-// Kommentiert in main.h
 void getVcc(String& json) {
 #if defined(ANALOGINPUT)
   json += "n.a.";
@@ -140,7 +139,6 @@ void write2log(uint8_t kat, int count, ...) {
   }
 }
 
-// Kommentiert in main.h
 // todo Schleifen maximaldauer könnte kritisch sein
 bool getNTPtime(long unsigned int sec) {
   bool retval = true;
@@ -156,7 +154,6 @@ bool getNTPtime(long unsigned int sec) {
 
 bool do_wifi_con(void) {
   bool retval = false;
-//  write2log(LOG_SYSTEM, 4, "Try to connect to ", wifi_ssid1.c_str(), " with password ", wifi_pass1.c_str());
   WiFi.mode(WIFI_STA);
 #ifdef ESP32
 // Wichtig fuer ESP32S3, sonst wird der Hostname nicht gesetzt!
@@ -199,7 +196,6 @@ bool do_wifi_con(void) {
 #endif
   if ( WiFi.status() == WL_CONNECTED ) {
     retval = true;
-//    write2log(LOG_SYSTEM, 2, " OK connected!", wifi_ssid.c_str());
   } else {
     write2log(LOG_SYSTEM, 1, " ERROR WiFi not connected!");
 #ifdef USE_WIFIMULTI
@@ -208,13 +204,11 @@ bool do_wifi_con(void) {
     write2log(LOG_SYSTEM,2, "Tested SSID: ",wifi_ssid.c_str());
 #endif
     retval = false;
-  }
-  
+  } 
   return retval;
 }
 
 #ifdef ESP32
-// dokumentiert in main.h
 char *getResetReason(char *tmp)
 {
 #if defined(DEBUG_SERIAL_WEB)
@@ -311,7 +305,7 @@ void setup() {
   // Serial port for debugging purposes
   // Achtung: Wenn die Prefs zu schnell nach Systemstart aufgerufen werden gibt es einen Feler bei den Preferences!
   //          Die Werte werden nicht ausgelesen, das Programm steht!!!!!!!
-  // !!!!!!!! Diesn DELAY nicht entfernen !!!!!!!!!
+  // !!!!!!!! Diesen DELAY nicht entfernen !!!!!!!!!
   delay(1000);
 #ifdef DEBUG_SERIAL
   Serial.begin(115200);
@@ -326,7 +320,7 @@ void setup() {
   }
 #endif
 
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
   bootMessage(0,"Prefs",false);
 #endif
 
@@ -335,14 +329,14 @@ void setup() {
   // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
   if (preferences.begin("settings",true)) {
     magicno = preferences.getUShort("magicno", 0);
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(1,"MagicNo:",false);
     bootMessage(1,String(magicno).c_str(),false);
     bootMessage(1,"OK",true);
 #endif
     preferences.end();
   } else {
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(2,"Error",true);
     bootMessage(2,"Reboot !!!",true);
 #endif
@@ -360,7 +354,7 @@ void setup() {
 #endif
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(1,"Using default Environment",true);
 #endif
     wifi_ssid = WIFI_SSID;
@@ -429,7 +423,7 @@ void setup() {
     preferences.putBool("do_log_critical", do_log_critical);
     preferences.end();
   } else {
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(1,"Using Env. from Prefs",true);
 #endif
     preferences.begin("settings",true);
@@ -493,12 +487,12 @@ void setup() {
   Serial.print("Critical: ");
   Serial.println(do_log_critical?"ja":"nein");
 #endif
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
   bootMessage(0,"mount FS",false);
 #endif
 
   if (!LittleFS.begin()) {
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(2,"Error",true);
     bootMessage(2,"REBOOT",false);
 #endif
@@ -508,37 +502,37 @@ void setup() {
     write2log(LOG_SYSTEM,1, "++ Begin Startup: LittleFS mounted ++");
   }
 
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
   bootMessage(1,"OK",true);
   bootMessage(0,"Con WiFi",false);
 #endif
 
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(2,"Error",true);
     bootMessage(2,"Start AP",true);
 #endif
     start_AP();
   } else {
     
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
     bootMessage(1,WiFi.localIP().toString().c_str(),true);
 #endif
 #if defined(DEBUG_SERIAL)
     write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
 #endif
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
   bootMessage(0,"get Time",false);
 #endif
     setupTime();
     if ( ! getNTPtime(30) ) {
       write2log(LOG_SYSTEM,1, "Error getting NTP Time");
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
       bootMessage(2,"Error",true);
 #endif
     } else {
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
       char timestr[20];
       sprintf(timestr,"%d.%d.%d %02d:%02d",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year,  timeinfo.tm_hour, timeinfo.tm_min);
       bootMessage(1,timestr,true);
@@ -593,7 +587,7 @@ void setup() {
 #if defined(MODULE6)
   MODULE6_BEGIN_STATEMENT
 #endif
-#ifdef DISPLAY
+#ifdef USE_BOOTMESSAGE
   bootMessage(0,"Ende Setup",false);
   delay(3000);
 #endif
@@ -737,6 +731,13 @@ void loop() {
       write2log(LOG_CRITICAL,1,tmp_str.c_str());
       uptime.update();
       lastHour = timeinfo.tm_hour;
+    }
+// Dinge die minütlich erledigt werden sollen
+    if (timeinfo.tm_min != lastMinute) {
+      minutes++;
+      Serial.print("Minutes: ");
+      Serial.println(minutes);
+      lastMinute = timeinfo.tm_min;
     }
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(loopmsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));

@@ -13,21 +13,22 @@ Switch_OnOff::Switch_OnOff(){
 // Startet als Schalter mit Regler der einen HW-Pin mittels PWM steuert
 // Fall 5
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
-                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
-                         const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword) {
+                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _slider_val, 
+                         uint8_t _slider_max_val, uint8_t _slider_no, const char* _slider_label, 
+                         const char* _slider_mqtt_name, const char* _slider_keyword, bool _show_diagramm) {
   hw_pin1 = _hw_pin1;                    
   pinMode(hw_pin1, OUTPUT);
   hw_pin1_used =true;
   // Imitialisierung über  Fall 4
   begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _slider_val, _slider_max_val, _slider_no,
-        _slider_label, _slider_mqtt_name, _slider_keyword);
+        _slider_label, _slider_mqtt_name, _slider_keyword, _show_diagramm);
 }
 
 // Startet als Schalter mit Regler ohne HW Bezug
 // Fall 4
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
                          bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
-                         const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword) {
+                         const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword, bool _show_diagramm) {
   slider_used = true;
   slider_value = _slider_val;
   slider_no = _slider_no;
@@ -36,41 +37,47 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
   slider_mqtt_name = _slider_mqtt_name;
   slider_keyword = _slider_keyword;
   // Initialisierung über Fall 1
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state);
+  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _show_diagramm);
 }
 
 // Startet als Schalter der zwei HW-Pins steuert
 // Fall 3
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
-                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2) {
+                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2,
+                         bool _show_diagramm) {
   hw_pin2 = _hw_pin2;
   hw_pin2_used = true;
   pinMode(hw_pin2, OUTPUT);
   // Initialisierung über Fall 2
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _hw_pin1);
+  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _hw_pin1, _show_diagramm);
 }
 
 // Startet als Schalter der einen HW-Pin steuert
 // Fall 2
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
-                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1) {
+                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, bool _show_diagramm) {
   hw_pin1 = _hw_pin1;
   pinMode(hw_pin1, OUTPUT);
   hw_pin1_used = true;
   // Initialisierung über Fall 1
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state);
+  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _show_diagramm);
 }
 
 // Startet als Schalter ohne HW-Pin
 // Fall 1
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
-                         bool _start_value, bool _on_value, bool _is_state) {
+                         bool _start_value, bool _on_value, bool _is_state, bool _show_diagramm) {
   Base_Generic::begin(_html_place, _label, _mqtt_name, _keyword);
   switch_mqtt_name = _mqtt_name;
   mqtt_has_stat = true;
   on_value = _on_value;
   switch_value = _start_value;
   is_state = _is_state;
+  if ( _show_diagramm ) {
+    diagramm_used = true;
+    diagrammstore = malloc(24);
+    memset(diagrammstore,0,24);
+  }
   do_switch(switch_value);
   if (hw_pin1_used && hw_pin2_used ) {
 
@@ -149,16 +156,58 @@ void Switch_OnOff::do_switch(bool new_state) {
 bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
   bool retval = false;
   if ( keyword_match(_cmnd) || _cmnd == mqtt_name ) {
+// Ausschalten
     if ( (_val == "0") || (_val == String("aus")) || (_val == String("Aus")) || (_val == String("off")) | (_val == String("Off")) ) {
       do_switch(false);
+      off_minute = 0;
       retval = true;
     }
+// Einschalten
     if ( (_val == String("1")) || (_val == String("ein")) || (_val == String("Ein")) || (_val == String("on")) | (_val == String("On")) ) {
       do_switch(true);
+      off_minute = 0;
       retval = true;
     }
+// Umschalten
     if ( (_val == String("2")) || (_val == String("umschalten")) || (_val == String("Umschalten")) || (_val == String("toggle")) | (_val == String("Toggle")) ) {
       do_switch(! switch_value);
+      off_minute = 0;
+      retval = true;
+    }
+// Fuer 1 Stunde einschalten
+    if ( (_val == String("1h")) ) {
+      do_switch(true);
+      off_minute = minutes + 60;
+      retval = true;
+    }
+// Fuer 2 Stunde einschalten
+    if ( (_val == String("2h")) ) {
+      do_switch(true);
+      off_minute = minutes + 120;
+      retval = true;
+    }
+// Fuer 3 Stunde einschalten
+    if ( (_val == String("3h")) ) {
+      do_switch(true);
+      off_minute = minutes + 180;
+      retval = true;
+    }
+// Fuer 4 Stunde einschalten
+    if ( (_val == String("4h")) ) {
+      do_switch(true);
+      off_minute = minutes + 240;
+      retval = true;
+    }
+// Fuer 5 Stunde einschalten
+    if ( (_val == String("5h")) ) {
+      do_switch(true);
+      off_minute = minutes + 300;
+      retval = true;
+    }
+// Fuer 1 Stunde einschalten
+    if ( (_val == String("6h")) ) {
+      do_switch(true);
+      off_minute = minutes + 360;
       retval = true;
     }
   } else {
@@ -212,5 +261,121 @@ void Switch_OnOff::html_init() {
     html_json += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
   }
   html_json_filled = true;
+  diagramm2web();
 }
+
+void Switch_OnOff::store_diagramm(bool invalue) {
+  if (diagramm_used) {
+    uint8_t myhour =  ((uint8_t *)diagrammstore)[timeinfo.tm_hour];
+    if (timeinfo.tm_min >= 0 && timeinfo.tm_min <= 7) {
+      if (invalue) {
+        myhour = myhour | 0b00000001;  
+      } else {
+        myhour = myhour & 0b11111110;
+      }
+    }
+    if (timeinfo.tm_min >= 8 && timeinfo.tm_min <= 14) {
+      if (invalue) {
+        myhour = myhour | 0b00000010;  
+      } else {
+        myhour = myhour & 0b11111101;
+      }
+    }
+    if (timeinfo.tm_min >= 15 && timeinfo.tm_min <= 22) {
+      if (invalue) {
+        myhour = myhour | 0b00000100;  
+      } else {
+        myhour = myhour & 0b11111011;
+      }
+    }
+    if (timeinfo.tm_min >= 23 && timeinfo.tm_min <= 29) {
+      if (invalue) {
+        myhour = myhour | 0b00001000;  
+      } else {
+        myhour = myhour & 0b11110111;
+      }
+    }
+    if (timeinfo.tm_min >= 30 && timeinfo.tm_min <= 37) {
+      if (invalue) {
+        myhour = myhour | 0b00010000;  
+      } else {
+        myhour = myhour & 0b11101111;
+      }
+    }
+    if (timeinfo.tm_min >= 38 && timeinfo.tm_min <= 44) {
+      if (invalue) {
+        myhour = myhour | 0b00100000;  
+      } else {
+        myhour = myhour & 0b11011111;
+      }
+    }
+    if (timeinfo.tm_min >= 45 && timeinfo.tm_min <= 52) {
+      if (invalue) {
+        myhour = myhour | 0b01000000;  
+      } else {
+        myhour = myhour & 0b10111111;
+      }
+    }
+    if (timeinfo.tm_min >= 53 && timeinfo.tm_min <= 59) {
+      if (invalue) {
+        myhour = myhour | 0b10000000;  
+      } else {
+        myhour = myhour & 0b01111111;
+      }
+    }
+    ((uint8_t *)diagrammstore)[timeinfo.tm_hour] = myhour;
+  }
+}
+
+void Switch_OnOff::diagramm2web() {
+  if (diagramm_used) {
+    String myjson = String("{\"") + html_place + String("_label\":\"") + label + String("\"") +
+                    String(",\"") + html_place + String("_dia\":\"");
+    for(int n=0; n<24; n++) {
+      uint8_t myhour =  ((uint8_t *)diagrammstore)[n];
+      if (myhour & 0b00000001) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b00000010) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b00000100) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b00001000) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b00010000) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b00100000) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b01000000) myjson += String("1"); else myjson += String("0"); 
+      if (myhour & 0b10000000) myjson += String("1"); else myjson += String("0"); 
+    }
+    myjson += String("\"}");
+    Serial.println(myjson);
+    ws.textAll(myjson);
+  }
+}
+
+void Switch_OnOff::loop(time_t now) {
+  if (timeinfo.tm_min != old_min) {
+    if (off_minute > 0) {
+      Serial.print(html_place);
+      Serial.print(" Time left: ");
+      Serial.println(off_minute - minutes);
+    }
+    if (off_minute > 0 && off_minute <= minutes) {
+      do_switch(false);
+      off_minute = 0;
+    }
+    if (diagramm_used) {
+      switch (timeinfo.tm_min)  {
+        case 0:
+        case 8:
+        case 15:
+        case 23:
+        case 30:
+        case 38:
+        case 45:
+        case 53:
+          store_diagramm(switch_value);
+          diagramm2web();
+        break;
+      }
+    }
+    old_min = timeinfo.tm_min;
+  }
+}
+
 #endif
