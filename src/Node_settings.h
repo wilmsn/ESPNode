@@ -35,7 +35,7 @@ RF24 Gateway:
 #define MAGICNO                  344
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity", false);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
@@ -63,10 +63,10 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Terasse", "terasse", "terasse", false, false, false, 2);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Terasse", "terasse", "terasse", false, false, false, 2, false);
 
 #define MODULE2_DEFINITION       Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "Balkon", "balkon", "balkon", false, false, false, 0);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "Balkon", "balkon", "balkon", false, false, false, 0, false);
 
 #define MODULE3_DEFINITION       Sensor_18B20 module3;
 #define MODULE3_BEGIN_STATEMENT  module3.begin("out1","Temperatur","Temperatur");
@@ -90,7 +90,7 @@ RF24 Gateway:
 #define MAGICNO                  416
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, true, 0, 2);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, true, 0, 2, true);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
@@ -254,7 +254,7 @@ RF24 Gateway:
 #define MQTT_TOPICP2             "node18b20"
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", "led", false, false, false, 2);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", "led", false, false, false, 2, false);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
@@ -283,10 +283,10 @@ RF24 Gateway:
 #define MODULE1_BEGIN_STATEMENT  module1.begin("out1","Temperatur","Temperatur","out2","Luftdruck","Luftdruck","out3","Luftfeuchte","Luftfeuchte");
 
 #define MODULE2_DEFINITION       Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("sw1", "interne LED", "led1", "led1", false, false, false, 2);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("sw1", "interne LED", "led1", "led1", false, false, false, 2, false);
 
 #define MODULE3_DEFINITION       Switch_OnOff module3;
-#define MODULE3_BEGIN_STATEMENT  module3.begin("sw2", "zweite LED", "led2", "led2", false, false, true, 0);
+#define MODULE3_BEGIN_STATEMENT  module3.begin("sw2", "zweite LED", "led2", "led2", false, false, true, 0, false);
 
 #define MQTT_CLIENT              "BoschNode"
 

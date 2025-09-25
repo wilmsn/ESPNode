@@ -42,9 +42,9 @@ bool Base_Generic::keyword_match(const String& _keyword) {
   return retval;
 }
 
-void Base_Generic::html_update() {
-  write2log(LOG_MODULE,2,"html_json: ",html_json.c_str());
-  ws.textAll( String("{") + html_json + String("}") );    
+void Base_Generic::html_update(String& myjson) {
+  write2log(LOG_MODULE,2,"myjson: ",myjson.c_str());
+  ws.textAll( String("{") + myjson + String("}") );    
 }
 
 void Base_Generic::html_init() {

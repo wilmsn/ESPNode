@@ -72,9 +72,9 @@ public:
      * Sendet alle benötigten Daten um eine Zustandsänderung auf der Webseite für dieses Modul darzustellen. 
      * Kann von der abgeleiteten Klasse genutzt weden, muss aber nicht. 
      * Um die Funktion zu nutzen müssen die zu sendenden Daten als Teil-JSON (ohne geschweifte Klammern)
-     * in der Variablen "html_json" hinterlegt sein. 
+     * in einer Variablen vom Typ "String" übergeben werden. 
      */
-    void html_update();
+    void html_update(String& myjson);
     
     /**
      * @brief Initialisierung einer Webseite

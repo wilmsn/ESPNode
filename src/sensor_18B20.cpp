@@ -63,9 +63,7 @@ void Sensor_18B20::loop(time_t now) {
         measure_started = false;
         // Hier gibt es keine spezielle Initialisierung, deshalb können init Daten auch als Updatedaten geschickt werden
         html_init();
-        html_update();
         mqtt_stat = String("\"") + mqtt_name + String("\":") + tempC;
-        //mqtt_stat_changed = true;
       }
     }
   } else {

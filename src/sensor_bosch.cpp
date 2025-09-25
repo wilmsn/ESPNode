@@ -74,7 +74,6 @@ void Sensor_Bosch::loop(time_t now) {
       }
       // Hier gibt es keine spezielle Initialisierung, deshalb können init Daten auch als Updatedaten geschickt werden
       html_init();
-      html_update();
       mqtt_stat = String("\"") + mqtt_name1 + String("\":\"") + String(bmx_sensor.getTemperature(),1) +
                   String("\",\"") + mqtt_name2 + String("\":\"") + String(bmx_sensor.getPressure(),0) + String("\"");
       if ( bmx_sensor.hasHumidity() ) {

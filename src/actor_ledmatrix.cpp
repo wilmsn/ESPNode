@@ -11,7 +11,7 @@ void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const c
                const char* _mqtt_line, const char* _mqtt_graph) {
   Switch_OnOff::begin(_html_place, _label, _mqtt_name, _keyword, 
                       _start_value, _on_value, _is_state, _slider_val, 15, _slider_no, 
-                      _slider_label, _slider_mqtt_name, _slider_keyword);
+                      _slider_label, _slider_mqtt_name, _slider_keyword, false);
   mqtt_line = _mqtt_line;
   mqtt_graph = _mqtt_graph;
   matrix.begin();
@@ -75,24 +75,24 @@ void Actor_LEDMatrix::html_init() {
   html_json += String(",\"matrix_x\":") + String(matrix.getNumDevicesX() * 8) +
               String(",\"matrix_y\":") + String(matrix.getNumDevicesY() * 8) + 
               String(",\"show_matrix\":1,");
-  html_upd_data();
+  html_upd_data(html_json);
   html_json_filled = true;
 }
 
-void Actor_LEDMatrix::html_upd_data() {
-  html_json += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
-               String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
-               String("\"") + String(",\"matrix\":\"");
-  getMatrixFB(html_json);
-  html_json += String("\"");
+void Actor_LEDMatrix::html_upd_data(String& myjson) {
+  myjson += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
+            String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
+            String("\"") + String(",\"matrix\":\"");
+  getMatrixFB(myjson);
+  myjson += String("\"");
 }
 
 void Actor_LEDMatrix::loop(time_t now) {
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
     matrix.display();
     html_json = "";
-    html_upd_data();
-    html_update();
+    html_upd_data(html_json);
+    html_update(html_json);
     graph_change_time = 0;
   }
 }

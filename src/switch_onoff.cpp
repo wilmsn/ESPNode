@@ -109,8 +109,9 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
 }
 
 void Switch_OnOff::do_switch(bool new_state) {
-  Serial.println("do_switch");
+  String myjson;
   if ( new_state ) {
+    store_diagramm(new_state);
     if ( slider_used ) {
       if ( hw_pin1_used ) {
         analogWrite(hw_pin1, slider_value);
@@ -140,11 +141,11 @@ void Switch_OnOff::do_switch(bool new_state) {
   switch_value = new_state;
   state = String(switch_value?"1":"0");
   
-  html_json = String("\"") + html_place + String("\":") + String(switch_value?"1":"0");
+  myjson = String("\"") + html_place + String("\":") + String(switch_value?"1":"0");
   if (slider_used) {
-    html_json += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
+    myjson += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
   }
-  html_update();
+  html_update(myjson);
   
   mqtt_stat = String("\"") + switch_mqtt_name+String("\":") + String(switch_value? "1":"0");
   if (slider_used) {
@@ -343,18 +344,12 @@ void Switch_OnOff::diagramm2web() {
       if (myhour & 0b10000000) myjson += String("1"); else myjson += String("0"); 
     }
     myjson += String("\"}");
-    Serial.println(myjson);
-    ws.textAll(myjson);
+    html_update(myjson);
   }
 }
 
 void Switch_OnOff::loop(time_t now) {
   if (timeinfo.tm_min != old_min) {
-    if (off_minute > 0) {
-      Serial.print(html_place);
-      Serial.print(" Time left: ");
-      Serial.println(off_minute - minutes);
-    }
     if (off_minute > 0 && off_minute <= minutes) {
       do_switch(false);
       off_minute = 0;

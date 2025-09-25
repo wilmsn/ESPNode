@@ -98,7 +98,8 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) 
 Audio            audio;
 
 void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true);
+// Startet als Schalter ohne HW-Pin ohne Diagramm => Fall 1  
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true, false);
   uint8_t this_app;
   uint8_t this_lev;
   html_info = "";
@@ -519,8 +520,12 @@ void AudioModul::audio_set_mode(mymode_t new_mode) {
     case Off: 
     default:
       write2log(LOG_MODULE,1,"audio_set_app: case Off");
+#ifdef USE_AUDIO_RADIO     
       if ( last_mode == Radio ) audio_radio_off();
+#endif
+#ifdef USE_AUDIO_MEDIA     
       if ( last_mode == Media ) audio_media_off();
+#endif
 #ifdef USE_ROTARY
       rotary.app_set(0,0);
 #endif

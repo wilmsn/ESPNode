@@ -13,12 +13,12 @@ void Sensor_LDR::begin(const char* _html_place, const char* _label) {
 
 void Sensor_LDR::loop(time_t now) {
   if ((now - measure_starttime) > REFRESHTIME) {
+    String myjson;
     measure_starttime = now;
     value = analogRead(A0);
     mqtt_stat = String("\"LDR\":") + String(value);
-    html_json = String("\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"");
-    html_json_filled = true;
-    html_update();
+    myjson = String("\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"");
+    html_update(myjson);
   }
 }
 

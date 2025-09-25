@@ -94,9 +94,9 @@ public:
 
 private:
     /**
-     * @brief Erweitert den Inhalt der Variablen html_json um die aktuellen dynamischen Daten.
+     * @brief Erweitert den Inhalt der übergebenen Variablen myjson um die aktuellen dynamischen Daten.
      */    
-    void html_upd_data();
+    void html_upd_data(String& myjson);
 
     /**
      * @brief Gibt eine Zeile im Display aus
