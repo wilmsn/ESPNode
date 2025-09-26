@@ -735,8 +735,6 @@ void loop() {
 // Dinge die minütlich erledigt werden sollen
     if (timeinfo.tm_min != lastMinute) {
       minutes++;
-      Serial.print("Minutes: ");
-      Serial.println(minutes);
       lastMinute = timeinfo.tm_min;
     }
     if ((millis() - loop_starttime) > loop_time_alarm) {

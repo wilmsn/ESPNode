@@ -3,6 +3,11 @@
 
 #include "common.h"
 
+String stat_str;
+
+unsigned int stat_no;
+
+void json_stat_header(String& mystr);
 
 bool cmd_valid = false;
 

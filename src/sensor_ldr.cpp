@@ -17,7 +17,7 @@ void Sensor_LDR::loop(time_t now) {
     measure_starttime = now;
     value = analogRead(A0);
     mqtt_stat = String("\"LDR\":") + String(value);
-    myjson = String("\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"");
+    myjson = String("{\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"}");
     html_update(myjson);
   }
 }

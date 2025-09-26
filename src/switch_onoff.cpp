@@ -109,7 +109,7 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
 }
 
 void Switch_OnOff::do_switch(bool new_state) {
-  String myjson;
+//  String myjson = String("{");
   if ( new_state ) {
     store_diagramm(new_state);
     if ( slider_used ) {
@@ -141,11 +141,20 @@ void Switch_OnOff::do_switch(bool new_state) {
   switch_value = new_state;
   state = String(switch_value?"1":"0");
   
-  myjson = String("\"") + html_place + String("\":") + String(switch_value?"1":"0");
+  html_json = String("{\"") + html_place + String("\":") + String(switch_value?"1":"0");
   if (slider_used) {
-    myjson += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
+    html_json += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
   }
-  html_update(myjson);
+  if (timer_min > 0) {
+    if ( new_state ) {
+      html_json += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
+    } else {
+      html_json += String(",\"") + html_place + String("_progress\":\"0\"");
+      timer_min = 0;
+    }
+  }
+  html_json += String("}");
+  html_update(html_json);
   
   mqtt_stat = String("\"") + switch_mqtt_name+String("\":") + String(switch_value? "1":"0");
   if (slider_used) {
@@ -177,38 +186,44 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
     }
 // Fuer 1 Stunde einschalten
     if ( (_val == String("1h")) ) {
-      do_switch(true);
       off_minute = minutes + 60;
+      timer_min = 60;
+      do_switch(true);
       retval = true;
     }
-// Fuer 2 Stunde einschalten
+// Fuer 2 Stunden einschalten
     if ( (_val == String("2h")) ) {
-      do_switch(true);
       off_minute = minutes + 120;
+      timer_min = 120;
+      do_switch(true);
       retval = true;
     }
-// Fuer 3 Stunde einschalten
+// Fuer 3 Stunden einschalten
     if ( (_val == String("3h")) ) {
-      do_switch(true);
       off_minute = minutes + 180;
+      timer_min = 180;
+      do_switch(true);
       retval = true;
     }
-// Fuer 4 Stunde einschalten
+// Fuer 4 Stunden einschalten
     if ( (_val == String("4h")) ) {
-      do_switch(true);
       off_minute = minutes + 240;
+      timer_min = 240;
+      do_switch(true);
       retval = true;
     }
-// Fuer 5 Stunde einschalten
+// Fuer 5 Stunden einschalten
     if ( (_val == String("5h")) ) {
-      do_switch(true);
       off_minute = minutes + 300;
+      timer_min = 300;
+      do_switch(true);
       retval = true;
     }
-// Fuer 1 Stunde einschalten
+// Fuer 6 Stunden einschalten
     if ( (_val == String("6h")) ) {
-      do_switch(true);
       off_minute = minutes + 360;
+      timer_min = 360;
+      do_switch(true);
       retval = true;
     }
   } else {
@@ -218,6 +233,19 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
         do_switch(switch_value); 
         retval = true;
       }
+    }
+    if ( _cmnd == String("?") || _cmnd == String("help")) {
+      json_stat_header(stat_str);
+      stat_str += String("\"Schalten:\"");
+      json_stat_header(stat_str);
+      stat_str += String("\"<") + html_place + String("|") + keyword + String(">:<1|ein|0|aus|2|umschalten|<1..6>h>\"");
+      if (slider_used) {
+        json_stat_header(stat_str);
+        stat_str += String("\"Dimmen:\"");
+        json_stat_header(stat_str);
+        stat_str += String("\"") + slider_keyword + String(":<0 ... 100>\"");
+      }
+      retval = false;
     }
   }
   return retval;
@@ -261,8 +289,8 @@ void Switch_OnOff::html_init() {
   if (slider_used) {
     html_json += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
   }
+  diagramm2web(html_json);
   html_json_filled = true;
-  diagramm2web();
 }
 
 void Switch_OnOff::store_diagramm(bool invalue) {
@@ -328,10 +356,10 @@ void Switch_OnOff::store_diagramm(bool invalue) {
   }
 }
 
-void Switch_OnOff::diagramm2web() {
+void Switch_OnOff::diagramm2web(String& myjson) {
   if (diagramm_used) {
-    String myjson = String("{\"") + html_place + String("_label\":\"") + label + String("\"") +
-                    String(",\"") + html_place + String("_dia\":\"");
+    if (myjson.length() > 3) myjson += String(",");
+    myjson +=  String("\"") + html_place + String("_dia\":\"");
     for(int n=0; n<24; n++) {
       uint8_t myhour =  ((uint8_t *)diagrammstore)[n];
       if (myhour & 0b00000001) myjson += String("1"); else myjson += String("0"); 
@@ -343,16 +371,19 @@ void Switch_OnOff::diagramm2web() {
       if (myhour & 0b01000000) myjson += String("1"); else myjson += String("0"); 
       if (myhour & 0b10000000) myjson += String("1"); else myjson += String("0"); 
     }
-    myjson += String("\"}");
-    html_update(myjson);
+    myjson += String("\"");
+    if (timer_min > 0) {
+      myjson += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
+    }
   }
 }
 
 void Switch_OnOff::loop(time_t now) {
   if (timeinfo.tm_min != old_min) {
-    if (off_minute > 0 && off_minute <= minutes) {
+    if (off_minute > 0 && off_minute <= minutes && timer_min > 0) {
       do_switch(false);
       off_minute = 0;
+      timer_min = 0;
     }
     if (diagramm_used) {
       switch (timeinfo.tm_min)  {
@@ -365,12 +396,27 @@ void Switch_OnOff::loop(time_t now) {
         case 45:
         case 53:
           store_diagramm(switch_value);
-          diagramm2web();
         break;
+      }
+      if (timer_min > 0) {
+        html_json = String("{");
+        diagramm2web(html_json);
+        html_json += String("}");
+        html_update(html_json);
       }
     }
     old_min = timeinfo.tm_min;
   }
+}
+
+uint8_t Switch_OnOff::timer_progress() {
+  uint8_t retval = 0;
+  if (timer_min > 0) {
+    uint16_t progress = off_minute - minutes;
+    progress = (100 * progress) / timer_min;
+    retval = progress;
+  }
+  return retval;
 }
 
 #endif

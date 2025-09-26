@@ -285,13 +285,20 @@ private:
     unsigned long off_minute = 0;
 
     /**
+     * @brief Bei Schalten über den Timer wird hier die Laufzeit für den Timer hinterlegt.
+     */
+    uint16_t timer_min = 0;
+
+    /**
      * @brief "true" wenn ein Diagramm genutzt wird, sonst "false"
      */
     bool diagramm_used = false;
 
-    void diagramm2web();
+    void diagramm2web(String& myjson);
 
     void store_diagramm(bool invalue);
+
+    uint8_t timer_progress();
 
     void * diagrammstore = NULL;
 

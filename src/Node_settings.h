@@ -343,7 +343,7 @@ RF24 Gateway:
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, true, WITTY_LED_PIN, true);
 
 #define MODULE2_DEFINITION      Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot-Helligkeit", "rot_sl", "rot_sl", true);
+#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot Helligkeit", "rot_sl", "rot_sl", true);
 
 #define MODULE3_DEFINITION      Switch_OnOff module3;
 #define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, false, WITTY_RGB_GN, 100, 100, 2, "Grün Helligkeit", "gruen_sl", "gruen_sl", true);

@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<link rel='stylesheet' type='text/css' href='style.css' />
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<!-- script src="jquery.js"></script -->
+<script type="text/javascript">
+var title="Hauptmenü";
+var htmlversion = "0.999 beta4 (Sep 26 2025)";
+var ledmatrix_active = 0;
+var mqtt_active = 0;
+var rf24gw_active = 0;
+var ledmatrix_x = 8;
+var ledmatrix_y = 8;
+var gateway = `ws://${window.location.hostname}/ws`;
+var websocket;
+var sw1_diadata = "";
+var sw1_label;
+var sw2_diadata = "";
+var sw2_label;
+var sw3_diadata = "";
+var sw3_label;
+var sw4_diadata = "";
+var sw4_label;
+var slider1val;
+var slider1name;
+var slider1label;
+var slider2val;
+var slider2name;
+var slider2label;
+var slider3val;
+var slider3name;
+var slider3label;
+var temp;
+var mqtt_active_old;
+var mqttserver_old;
+var mqttclient_old;
+var mqtttopicp2_old;
+var log_module_old;
+var log_web_old;
+var log_system_old;
+var log_critical_old;
+var log_mqtt_old;
+var rf24hubname_old;
+var rf24hubport_old;
+var rf24gw_active_old;
+var rf24gwno_old;
+var rf24gwport_old;
+var log_rf24_old;
+var wifi_ssid_old;
+var wifi_pass_old;
+var tab_active;
+var audio_apps = 0;
+const logs = [];
+const stats = [];
+
+window.addEventListener('load', onLoad);
+
+function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage; // <-- add this line
+}
+
+function onOpen(event) {
+    console.log('Connection opened');
+//    alert(JSON.stringify(event.data));
+    const json = JSON.parse(event.data, function (key, val) {
+      prozessJS( key, val );
+    });
+}
+
+function onClose(event) {
+    console.log('Connection closed');
+//    setTimeout(initWebSocket, 2000);
+}
+
+function onMessage(event) {
+//  alert(JSON.stringify(event.data));
+  const json = JSON.parse(event.data, function (key, val) {
+    if (key.startsWith("audio_radio_add_stn") ) {
+      prozessJS( "audio_radio_add_stn", val);
+    } else
+    if (key.startsWith("audio_media_add_album") ) {
+      prozessJS( "audio_media_add_album", val);
+    } else
+    if (key.startsWith("stat") ) {
+      prozessJS( "stat", val);
+    } else
+    if (key.startsWith("tab_head") ) {
+      prozessJS( "tab_head", val);
+    } else
+    if (key.startsWith("tab_line") ) {
+      prozessJS( "tab_line", val);
+    } else prozessJS( key, val );
+  });
+}
+
+function onLoad(event) {
+    initWebSocket();
+}
+
+function do_cmd(cmd, attr) {
+  var mycmd = cmd + ":" + attr;
+  websocket.send(mycmd);
+}
+
+$(document).ready(function(){
+  switch_main();
+  $("#titel2").hide();
+  $("#rf24div").hide();
+  $("#rf24log_div").hide();
+  $("#out1div").hide();
+  $("#out2div").hide();
+  $("#out3div").hide();
+  $("#out4div").hide();
+  $("#sw1_div").hide();
+  $("#sw2_div").hide();
+  $("#sw3_div").hide();
+  $("#sw4_div").hide();
+  $("#sw1_progressbox").hide();
+  $("#sw2_progressbox").hide();
+  $("#sw3_progressbox").hide();
+  $("#sw4_progressbox").hide();
+  $("#myCanvas").hide();
+  $("#slider1div").hide();
+  $("#slider2div").hide();
+  $("#slider3div").hide();
+  $("#ledmatrix").hide();
+  $("#audio_div").hide();
+  $("#audio_sel").hide();
+  $("#audiomsg1div").hide();
+  $("#audiomsg2div").hide();
+  $("#audiomsg3div").hide();
+  $("#audiomsg4div").hide();
+  $("#audio_radio_txt").hide();
+  $("#audio_radio_but").hide();
+  $("#audio_media_txt").hide();
+  $("#audio_media_but").hide();
+  $("#audio_speak_txt").hide();
+  $("#audio_speak_but").hide();
+  $("#audio_settings").hide();
+  $("#audio_radio_settings").hide();
+  $("#audio_media_settings").hide();
+  $("#audio_speak_settings").hide();
+  $("#audio_trebas").removeClass("change");
+  $("#audio_menu").removeClass("change");
+  $('#rf24gw').click(function() {
+    if (!$(this).is(':checked')) {
+      $("#rf24gw_div").hide();
+      $("#rf24log_div").hide();
+      rf24gw_active = 0;
+    } else {
+      $("#rf24gw_div").show();
+      $("#rf24log_div").show();
+      rf24gw_active = 1;
+    }
+  });
+  $('#mqtt').click(function() {
+    if (!$(this).is(':checked')) {
+      $("#mqtt_div").hide();
+      $("#mqttlog_div").hide();
+      mqtt_active = 0;
+    } else {
+      $("#mqtt_div").show();
+      $("#mqttlog_div").show();
+      mqtt_active = 1;
+    }
+  });
+  $('#console_tab1').click(function () {
+    show_tab1();
+    $.get("/debugfile.txt", function(data) {
+      $("#console").html(data);
+    });
+  });
+
+  $('#console_tab2').click(function () {
+    show_tab2();
+    $("#console").html(logs.join("\r\n"));
+  });
+
+  $('#console_tab3').click(function () {
+    show_tab3();
+    $("#console").html(stats.join("\r\n"));
+  });
+
+  $('#console_cmd').keypress(function(e) {
+    // Enter pressed?
+    if(e.which == 10 || e.which == 13) {
+      var mycmd = $('#console_cmd').val();
+      websocket.send(mycmd);
+      $('#console_cmd').val("");
+    }
+  });
+
+  $('#audio_radio_but').click(function () {
+    do_cmd("audio_radio","1");
+  });
+
+  $('#audio_radio_sel').click(function() {
+    $("#audio_radio_stn_name").val($('#audio_radio_sel option:selected').text());
+    $("#audio_radio_stn_url").val($('#audio_radio_sel option:selected').val());
+    do_cmd("audio_radio_set_stn",$('#audio_radio_sel option:selected').val());
+  });
+
+  $('#audio_media_but').click(function () {
+    do_cmd("audio_media","1");
+  });
+
+  $('#audio_speak_but').click(function () {
+    do_cmd("audio_speak","1");
+  });
+
+  $("#audio_vol").change(function() {
+    do_cmd("audio_vol",$(this).val());
+  });
+
+  $("#audio_tre").change(function() {
+    do_cmd("audio_tre",$(this).val());
+  });
+
+  $("#audio_bas").change(function() {
+    do_cmd("audio_bas",$(this).val());
+  });
+
+//  draw_sw_diagramm();
+});
+
+function show_tab1() {
+  $("#console_tab1").removeClass("tab_passive").addClass("tab_active");
+  $("#console_tab2").removeClass("tab_active").addClass("tab_passive");
+  $("#console_tab3").removeClass("tab_active").addClass("tab_passive");
+  tab_active = 1;
+}
+
+function show_tab2() {
+  $("#console_tab2").removeClass("tab_passive").addClass("tab_active");
+  $("#console_tab1").removeClass("tab_active").addClass("tab_passive");
+  $("#console_tab3").removeClass("tab_active").addClass("tab_passive");
+  tab_active = 2;
+}
+
+function show_tab3() {
+  $("#console_tab3").removeClass("tab_passive").addClass("tab_active");
+  $("#console_tab1").removeClass("tab_active").addClass("tab_passive");
+  $("#console_tab2").removeClass("tab_active").addClass("tab_passive");
+  tab_active = 3;
+}
+
+function prozessJS( key, val ) {
+//alert(key + " : " + JSON.stringify(val));
+  switch(key) {
+// Alle Seiten    
+    case "titel1":
+      $("#titel1").html(val);
+      $("#titel").html(val+" - "+title);
+    break;
+    case "titel2":
+      $("#titel2").html(val);
+      $("#titel2").show();
+    break;
+// Hauptseite 
+    case "out1":
+      $("#out1").html(val);
+      $("#out1div").show();
+    break;
+    case "out2":
+      $("#out2").html(val);
+      $("#out2div").show();
+    break;
+    case "out3":
+      $("#out3").html(val);
+      $("#out3div").show();
+    break;
+    case "out4":
+      $("#out4").html(val);
+      $("#out4div").show();
+    break;
+    case "sw1":
+      if ( val > 0.5 ) {
+        $("#sw1_but").css("color","black").css("background-color","yellow");
+        $("#sw1_but").html("ein");
+      } else {
+        $("#sw1_but").css("color","white").css("background-color","black");
+        $("#sw1_but").html("aus");
+      }
+    break;
+    case "sw1_format":
+      $("#sw1_div").css("width","100%");
+      $("#sw1_div").show();
+    break;
+    case "sw1_label":
+      sw1_label = val;
+      $("#sw1_lab").html(sw1_label);
+    break;
+    case "sw1_dia":
+      sw1_diadata = val;
+      draw_sw_diagramm();
+    break;
+    case "sw1_progress":
+      if (parseInt(val) > 0) {
+        $("#sw1_progressbox").show();
+        $("#sw1_progressbar").css("width",val + "%");
+      } else {
+        $("#sw1_progressbox").hide();
+      }
+    break;
+    case "sw2":
+      if ( val > 0.5 ) {
+        $("#sw2_but").css("color","black").css("background-color","yellow");
+        $("#sw2_but").html("ein");
+      } else {
+        $("#sw2_but").css("color","white").css("background-color","black");
+        $("#sw2_but").html("aus");
+      }
+    break;
+    case "sw2_format":
+      $("#sw1_div").css("width","50%");
+      $("#sw2_div").css("width","50%");
+      $("#sw2_div").show();
+    break;
+    case "sw2_label":
+      sw2_label = val;
+      $("#sw2_lab").html(sw2_label);
+    break;
+    case "sw2_dia":
+      sw2_diadata = val;
+      draw_sw_diagramm();
+    break;
+    case "sw2_progress":
+      if (parseInt(val) > 0) {
+        $("#sw2_progressbox").show();
+        $("#sw2_progressbar").css("width",val + "%");
+      } else {
+        $("#sw2_progressbox").hide();
+      }
+    break;
+    case "sw3":
+      if ( val > 0.5 ) {
+        $("#sw3_but").css("color","black").css("background-color","yellow");
+        $("#sw3_but").html("ein");
+      } else {
+        $("#sw3_but").css("color","white").css("background-color","black");
+        $("#sw3_but").html("aus");
+      }
+    break;
+    case "sw3_format":
+      $("#sw1_div").css("width","33%");
+      $("#sw2_div").css("width","33%");
+      $("#sw3_div").css("width","33%");
+      $("#sw3_div").show();
+    break;
+    case "sw3_label":
+      sw3_label = val;
+      $("#sw3_lab").html(sw3_label);
+    break;
+    case "sw3_dia":
+      sw3_diadata = val;
+      draw_sw_diagramm();
+    break;
+    case "sw3_progress":
+      if (parseInt(val) > 0) {
+        $("#sw3_progressbox").show();
+        $("#sw3_progressbar").css("width",val + "%");
+      } else {
+        $("#sw3_progressbox").hide();
+      }
+    break;
+    case "sw4":
+      if ( val > 0.5 ) {
+        $("#sw4_but").css("color","black").css("background-color","yellow");
+        $("#sw4_but").html("ein");
+      } else {
+        $("#sw4_but").css("color","white").css("background-color","black");
+        $("#sw4_but").html("aus");
+      }
+    break;
+    case "sw4_format":
+      $("#sw1_div").css("width","25%");
+      $("#sw2_div").css("width","25%");
+      $("#sw3_div").css("width","25%");
+      $("#sw4_div").css("width","25%");
+      $("#sw4_div").show();
+    break;
+    case "sw4_label":
+      sw4_label = val;
+      $("#sw4_lab").html(sw4_label);
+    break;
+    case "sw4_dia":
+      sw4_diadata = val;
+      draw_sw_diagramm();
+    break;
+    case "sw4_progress":
+      if (parseInt(val) > 0) {
+        $("#sw4_progressbox").show();
+        $("#sw4_progressbar").css("width",val + "%");
+      } else {
+        $("#sw4_progressbox").hide();
+      }
+    break;
+    case "slider1":
+      $("#slider1div").show();
+      $("#slider1").change(function() {
+        var mycmd = slider1name;
+        mycmd = mycmd + "=";
+        mycmd = mycmd + $(this).val();
+        websocket.send(mycmd);
+      });
+    break;
+    case "slider1name":
+      slider1name = val;
+    break;
+    case "slider1label":
+      slider1label = val;
+      $("#slider1label").html(val);
+    break;
+    case "slider1max":
+      $("#slider1").attr('max', val);
+    break;
+    case "slider1val":
+      slider1val = val;
+      $("#slider1").val(val);
+      $("#slider1label").html(slider1label+": "+slider1val);
+    break;
+    case "slider2":
+      $("#slider2div").show();
+      $("#slider2").change(function() {
+        var mycmd = slider2name;
+        mycmd = mycmd + "=";
+        mycmd = mycmd + $(this).val();
+        websocket.send(mycmd);
+      });
+    break;
+    case "slider2name":
+      slider2name = val;
+    break;
+    case "slider2label":
+      slider2label = val;
+      $("#slider2label").html(val);
+    break;
+    case "slider2max":
+      $("#slider2").attr('max', val);
+    break;
+    case "slider2val":
+      slider2val = val;
+      $("#slider2").val(val);
+      $("#slider2label").html(slider2label+": "+slider2val);
+    break;
+    case "slider3":
+      $("#slider3div").show();
+      $("#slider3").change(function() {
+        var mycmd = slider3name;
+        mycmd = mycmd + "=";
+        mycmd = mycmd + $(this).val();
+        websocket.send(mycmd);
+      });
+    break;
+    case "slider3name":
+      slider3name = val;
+    break;
+    case "slider3label":
+      slider3label = val;
+      $("#slider3label").html(val);
+    break;
+    case "slider3max":
+      $("#slider3").attr('max', val);
+    break;
+    case "slider3val":
+      slider3val = val;
+      $("#slider3").val(val);
+      $("#slider3label").html(slider3label+": "+slider3val);
+    break;
+    case "matrix_x":
+      ledmatrix_x = val;
+    break;
+    case "matrix_y":
+      ledmatrix_y = val;
+    break;
+    case "matrix":
+    // Matrix mit daten füllen
+      for (let i = 0; i < val.length; i++) {
+        if ( val[i] == "1" ) {
+          $("#disp_dot_"+i).css("background","white");
+        } else {
+          $("#disp_dot_"+i).css("background","gray");
+        }
+      }
+    break;
+    case "show_matrix":
+      if (ledmatrix_active == 0) {
+        // Aufbau der LED Matrix
+        for (let y = 0; y < ledmatrix_y; y++) {
+          $("#display").append("<div id='disp_line_"+y+"' class='ledmatrix_line'><div>");
+          for (let x = 0; x < ledmatrix_x; x++) {
+            var z = ledmatrix_x * y + x;
+            $("#disp_line_"+y).append("<div id='disp_dot_"+z+"' class='ledmatrix_dot'><div>");
+          }
+        }
+        $("#ledmatrix").show();
+        ledmatrix_active = 1;
+      }
+    break;
+// Ab hier Audiomodul    
+    case "audio_show":
+      $("#audio_div").show();
+    break;
+    case "audio_settings":
+      if ( val > 0.5 ) {
+        $("#audio_settings").show();
+      } else {
+        $("#audio_settings").hide();
+      }
+    break;
+    case "audio_trebas_enable":
+    if ( val > 0.5 ) {
+        $("#audio_trebas_enable").show();
+      } else {
+        $("#audio_trebas_enable").hide();
+      }
+    break;
+    case "audio_radio_show":
+      if ( val > 0.5 ) {
+        $("#audio_radio_txt").show();
+        $("#audio_radio_but").show();
+        audio_apps++;
+        if (audio_apps > 1) {
+          $("#audio_sel").show();
+        }
+      }
+    break;
+    case "audio_radio_sw":
+      $("#audio_settings").hide();  
+      if ( val > 0.5 ) {
+        $("#audio_radio_but").css("color","black").css("background-color","yellow");
+        $("#audio_radio_but").html("ein");
+        $("#audio_radio_settings").show();
+      } else {
+        $("#audio_radio_but").css("color","white").css("background-color","black");
+        $("#audio_radio_but").html("aus");
+        $("#audio_radio_settings").hide();
+      }
+    break;
+    case "audio_media_show":
+    // Zeigt den Mediaplayerbutton an wenn val = 1 sonst wird er ausgeblendet
+      if ( val > 0.5 ) {
+        $("#audio_media_txt").show();
+        $("#audio_media_but").show();
+        audio_apps++;
+        if (audio_apps > 1) {
+          $("#audio_sel").show();
+        }
+      }
+    break;
+    case "audio_media_sw":
+      $("#audio_settings").hide();  
+      // Schaltet den Mediaplayer ein
+      if ( val > 0.5 ) {
+        audio_mediaswitch("audio_media");
+        $("#audio_media_but").css("color","black").css("background-color","yellow");
+        $("#audio_media_but").html("ein");
+        $("#audio_media_settings").show();
+        $("#audio_media_alben").html(" ");
+      } else {
+        $("#audio_media_but").css("color","white").css("background-color","black");
+        $("#audio_media_but").html("aus");
+        $("#audio_media_settings").hide();
+        $("#audio_media_alben").html(" ");
+      }
+    break;
+    case "audio_media_add_album":
+// Syntax: Typ: A=Album, T=Titel; Albumnummer; Titelnummer (0 bei Album); Titel
+//      $("#audio_media_alben").append("...");
+      const AlbumData = val.split("#");
+      if (AlbumData[0] == "A") {
+        $("#audio_media_alben").append("<img id='mp_album"+AlbumData[1]+"_play' src='play.png' height=#50px' width='50px'>"+
+                                   "<img id='mp_album"+AlbumData[1]+"_img' src='dir_close.png' height='50px' width='50px'>"+
+                                   "<div style='width: 200px;float: right;'>"+AlbumData[3]+"</div><br>"+
+                                   "<div id='mp_album"+AlbumData[1]+"'></div");
+        $("#mp_album"+AlbumData[1]).hide();
+        $("#mp_album"+AlbumData[1]+"_img").click(function() {
+          if ($("#mp_album"+AlbumData[1]).is(':hidden')) {
+            $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_open.png");
+            $("#mp_album"+AlbumData[1]).show();
+            $("#mp_album"+AlbumData[1]+"_play").attr("src","leer.png");
+//            alert("Now request Albumdata");
+            do_cmd("audio_media_get_songs",AlbumData[1]);
+          } else {
+            $("#mp_album"+AlbumData[1]+"_img").attr("src","dir_close.png");
+            $("#mp_album"+AlbumData[1]).hide();
+            $("#mp_album"+AlbumData[1]+"_play").attr("src","play.png");
+          }
+        });
+        $("#mp_album"+AlbumData[1]+"_play").click(function() {
+          //alert("Play_dir:"+AlbumData[1]);
+          do_cmd("audio_media_play_album",AlbumData[1]);
+        });
+        } else {
+        $("#mp_album"+AlbumData[1]).append("<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play' src='play.png' height='50px' width='50px'>"+
+                                  "<img src='leer.png' height='50px' width='50px'>"+
+                                  "<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_img' src='mp3file.png' height='50px' width='50px'>"+
+                                  "<div style='width: 150px;float: right;'>"+AlbumData[3]+"</div><br>");
+        $("#mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play").click(function() {
+          //alert("Play_dir:"+AlbumData[1]+" File:"+AlbumData[2]);
+          do_cmd("audio_media_play_song",AlbumData[1]+"#"+AlbumData[2]);
+        });
+      }
+
+    break;
+    case "audio_speak_show":
+      if ( val > 0.5 ) {
+        $("#audio_speak_txt").show();
+        $("#audio_speak_but").show();
+        audio_apps++;
+        if (audio_apps > 1) {
+          $("#audio_sel").show();
+        }
+      }
+    break;
+    case "audio_speak_sw":
+//      audio_mediaswitch();
+      if ( val > 0.5 ) {
+//        audio_mediaswitch();
+        $("#audio_speak_but").css("color","black").css("background-color","yellow");
+        $("#audio_speak_but").html("ein");
+        $("#audio_speak_settings").show();
+      }
+    break;
+    case "audio_vol":
+      $("#audio_vol").val(val);
+    break;
+    case "audio_tre":
+      $("#audio_tre").val(val);
+    break;
+    case "audio_bas":
+      $("#audio_bas").val(val);
+    break;
+    case "audiomsg1":
+      if ( val == "" ) {
+        $("#audiomsg1div").hide();
+      } else {
+        $("#audiomsg1div").show();
+        $("#audiomsg1").html(val);
+      }
+    break;
+    case "audiomsg2":
+      if ( val == "" ) {
+        $("#audiomsg2div").hide();
+      } else {
+        $("#audiomsg2div").show();
+        $("#audiomsg2").html(val);
+      }
+    break;
+    case "audiomsg3":
+      if ( val == "" ) {
+        $("#audiomsg3div").hide();
+      } else {
+        $("#audiomsg3div").show();
+        $("#audiomsg3").html(val);
+      }
+    break;
+    case "audiomsg4":
+      if ( val == "" ) {
+        $("#audiomsg4div").hide();
+      } else {
+        $("#audiomsg4div").show();
+        $("#audiomsg4").html(val).css("fontSize", 10);
+      }
+    break;
+    case "audio_radio_del_stn":
+      $('#audio_radio_sel').empty();
+      break;
+    case "audio_radio_add_stn":
+      const valArray = val.split(";");
+      $('#audio_radio_sel').append($('<option>', {
+        value: valArray[0],
+        text: valArray[1]
+      }));
+    break;
+    case "audio_radio_stn_name":
+      $("#audio_radio_stn_name").val(val);
+    break;
+    case "audio_radio_stn_url":
+      $("#audio_radio_stn_url").val(val);
+    break;
+    //Ab hier Konsole
+    case "log":
+      logs[logs.length]=val;
+      if ( tab_active == 2 ) {
+        $('#console').html(logs.join("\r\n"));
+      }
+    break;
+    case "logclear":
+      if ( tab_active == 2 ) {
+        $('#console').html(" ");
+      }
+      logs.length = 0;
+    break;
+    case "stat":
+      show_tab3();
+      stats[stats.length]=val;
+      if ( tab_active == 3 ) {
+        $('#console').html(stats.join("\r\n"));
+      }
+    break;
+    case "clear_stat":
+      if ( tab_active == 3 ) {
+        $('#console').html(" ");
+      }
+      stats.length = 0;
+    break;
+
+// Ab hier für Einstellungen
+case "wifi_ssid":
+      $("#wifi_ssid").val(val);
+      wifi_ssid_old = val;
+    break;
+    case "wifi_pass":
+      $("#wifi_pass").val(val);
+      wifi_pass_old = val;
+    break;
+    case "set_rf24gw_enable":
+      if ( val == 1 ) { 
+        $('#rf24gw_fs').show();
+      } else { 
+        $('#rf24gw_fs').hide(); 
+      }
+    break;
+    case "set_rf24gw_active":
+      if ( val == 1 ) {
+        rf24gw_active = true;
+        rf24gw_active_old = true;
+        $("#rf24gw_div").show(); 
+        $("#rf24log_div").show();
+	      $('#rf24gw').prop('checked', true);
+      } else {
+        rf24gw_active = false;
+        rf24gw_active_old = false;
+        $("#rf24gw_div").hide();
+        $("#rf24log_div").hide();
+	      $('#rf24gw').prop('checked', false);
+      }
+    break;
+    case "set_RF24HUB-Server":
+      rf24hubname_old = val;
+      $('#rf24hubname').val(val);
+    break;
+    case "set_RF24HUB-Port":
+      rf24hubport_old = val;
+      $('#rf24hubport').val(val);
+    break;
+    case "set_RF24GW-Port":
+      rf24gwport_old = val;
+      $('#rf24gwport').val(val);
+    break;
+    case "set_RF24GW-No":
+      rf24gwno_old = val;
+      $('#rf24gwno').val(val);
+    break;
+    case "set_mqtt_enable":
+      if (val == 1) {
+        $('#mqtt_fs').show();
+      } else {
+        $('#mqtt_fs').hide();
+        $('#mqttlog_div').hide();
+      }
+    break;
+    case "set_mqtt_active":
+      if (val == 1) {
+        mqtt_active_old = true;
+        $('#mqtt_div').show();
+        $('#mqttlog_div').show();
+	      $('#mqtt').prop('checked', true);
+        mqtt_active = true;
+      } else {
+        mqtt_active_old = false;
+        $('#mqtt_div').hide();
+        $('#mqttlog_div').hide();
+	      $('#mqtt').prop('checked', false);
+        mqtt_active = false;
+      }
+    break;
+    case "set_mqttserver":
+      mqttserver_old = val;
+      $('#mqttserver').val(val);
+    break;
+    case "set_mqttclient":
+      mqttclient_old = val;
+      $('#mqttclient').val(val);
+    break;
+    case "set_mqtttopicp2":
+      mqtttopicp2_old = val;
+      $('#mqtttopicp2').val(val);
+    break;
+    case "log_module":
+      if ( val == 1 ) {
+        log_module_old = true;
+        $('#log_module').prop('checked', true);
+      } else {
+        log_module_old = false;
+        $('#log_module').prop('checked', false);
+      }
+    break;
+    case "log_rf24":
+      if ( val == 1 ) {
+        log_rf24_old = true;
+        $('#log_rf24').prop('checked', true);
+      } else {
+        log_rf24_old = false;
+        $('#log_rf24').prop('checked', false);
+      }
+    break;
+    case "log_mqtt":
+      if ( val == 1 ) {
+        log_mqtt_old = true;
+        $('#log_mqtt').prop('checked', true);
+      } else {
+        log_mqtt_old = false;
+        $('#log_mqtt').prop('checked', false);
+      }
+    break;
+    case "log_web":
+      if ( val == 1 ) {
+        log_web_old = true;
+        $('#log_web').prop('checked', true);
+      } else {
+        log_web_old = false;
+        $('#log_web').prop('checked', false);
+      }
+    break;
+    case "log_system":
+      if ( val == 1 ) {
+        log_system_old = true;
+        $('#log_system').prop('checked', true);
+      } else {
+        log_system_old = false;
+        $('#log_system').prop('checked', false);
+      }
+    break;
+    case "log_critical":
+      if ( val == 1 ) {
+        log_critical_old = true;
+        $('#log_critical').prop('checked', true);
+      } else {
+        log_critical_old = false;
+        $('#log_critical').prop('checked', false);
+      }
+    break;
+
+// Ab hier für Sysinfo
+    case "wifi_network":
+      $("#wifinw2").append(" "+val+"<br>");
+    break;
+    case "Platform":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Host:</td></tr>"+
+                       "<tr><td class='tab_left'> Platform: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Cores":
+      $("#Tab").append("<tr><td class='tab_left'> Cores: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Hostname":
+      $("#Tab").append("<tr><td class='tab_left'> Hostname: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "CpuFreq":
+      $("#Tab").append("<tr><td class='tab_left'> CPU Speed: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "FlashSize":
+      $("#Tab").append("<tr><td class='tab_left'> Flash Size: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "FlashFreq":
+      $("#Tab").append("<tr><td class='tab_left'> Flash Speed: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Sketchsize":
+      $("#Tab").append("<tr><td class='tab_left'> Sketch Size: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Freespace":
+      $("#Tab").append("<tr><td class='tab_left'> Free Space: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Heap_free":
+      $("#Tab").append("<tr><td class='tab_left'> Heap Free: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Heap_max":
+      $("#Tab").append("<tr><td class='tab_left'> Heap Max: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Heap_frag":
+      $("#Tab").append("<tr><td class='tab_left'> Heap Fragmentation: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "PSRamSize":
+      $("#Tab").append("<tr><td class='tab_left'> PSRAM Size: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "PsRamFree":
+      $("#Tab").append("<tr><td class='tab_left'> PSRAM Free: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "ResetReason":
+      $("#Tab").append("<tr><td class='tab_left'> Reset Reason: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Vcc":
+      $("#Tab").append("<tr><td class='tab_left'> Vcc: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "MBTemp":
+      $("#Tab").append("<tr><td class='tab_left'> Board Temp: </td><td class='tab_right'>"+val+"&deg;C</td></tr>");
+    break;
+    case "UpTime":
+      $("#Tab").append("<tr><td class='tab_left'> Uptime: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "IP":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Network:</td></tr>"+
+                       "<tr><td class='tab_left'> IP Address: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SubNetMask":
+      $("#Tab").append("<tr><td class='tab_left'> Sub Net Mask: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "GW-IP":
+      $("#Tab").append("<tr><td class='tab_left'> Gateway IP: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "DnsIP":
+      $("#Tab").append("<tr><td class='tab_left'> DNS Server IP: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SSID":
+      $("#Tab").append("<tr><td class='tab_left'> SSID: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "Channel":
+      $("#Tab").append("<tr><td class='tab_left'> Channel: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "BSSID":
+      $("#Tab").append("<tr><td class='tab_left'> BSSID: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "MAC":
+      $("#Tab").append("<tr><td class='tab_left'> MAC Address: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "IdeVer":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Build System:</td></tr>"+
+                       "<tr><td class='tab_left'> IDE Version: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "CoreVer":
+      $("#Tab").append("<tr><td class='tab_left'> Core Version: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SdkVer":
+      $("#Tab").append("<tr><td class='tab_left'> SDK Version: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "SW":
+      $("#Tab").append("<tr><td class='tab_left'> Software Version: </td><td class='tab_right'>"+val+"</td></tr>");
+      $("#Tab").append("<tr><td class='tab_left'> HTML Version: </td><td class='tab_right'>"+htmlversion+"</td></tr>");
+    break;
+    case "mqttserver":
+      if (mqtt_active == 1)
+        $("#Tab").append("<tr><td colspan=2 class='tab_head'>MQTT:</td></tr>"
+			  +"<tr><td class='tab_left'> MQTT Server: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "mqttclient":
+      if (mqtt_active == 1)
+        $("#Tab").append("<tr><td class='tab_left'> MQTT Client: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "mqtttopicp2":
+      if (mqtt_active == 1)
+        $("#Tab").append("<tr><td class='tab_left'> MQTT Topic Part2: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24HUB-Server":
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td colspan=2 class='tab_head'>RF24 Gateway:</td></tr>"
+            +"<tr><td class='tab_left'> RF24 Hub Server: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24HUB-Port":
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td class='tab_left'> RF24 Hub UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24GW-Port":
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td class='tab_left'> RF24 GW UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "RF24GW-No":
+      if ( rf24gw_active == 1 ) 
+        $("#Tab").append("<tr><td class='tab_left'> RF24 GW Nummer: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "sens-hw":
+      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensor:</td></tr>");
+      $("#Tab").append("<tr><td class='tab_left'> Hardware: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;  
+    case "sens-res":
+      $("#Tab").append("<tr><td class='tab_left'> Resolution: </td><td class='tab_right'>"+val+"</td></tr>");
+    break;
+    case "tab_head":
+      $("#Tab tr:last").after("<tr><td colspan=2 class='tab_head'>"+val+"</td></tr>");
+    break;
+    case "tab_line":
+      tabline = val.split("#");
+      $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
+    break;
+    case "alert":
+      alert(val);
+    break;
+    default:
+//      alert("nicht zugeordnet "+ JSON.stringify(key) + " : " + JSON.stringify(val));
+    break; 
+  }
+}
+
+function draw_sw_diagramm() {
+  var num_graph = 0;
+  var act_graph = 0;
+  var oldval = 0;
+  var actval = 0;
+  $("#myCanvas").show();
+  var c=document.getElementById("myCanvas");
+  var ctx=c.getContext("2d");
+  var c_w = c.width;
+  var c_h = c.height;
+  let x_off = c_w - 192;
+  let y_off = 20;
+  if (sw1_diadata.length > 0) num_graph++;
+  if (sw2_diadata.length > 0) num_graph++;
+  if (sw3_diadata.length > 0) num_graph++;
+  if (sw4_diadata.length > 0) num_graph++;
+  graph_hight = parseInt((c_h - 20) / num_graph);
+  // fill the background in light gray
+  ctx.fillStyle = "#c6c6c6";
+  ctx.fillRect(0,0,c_w,c_h);
+  if (num_graph >0) {
+    // draw the X-axes and label
+    ctx.beginPath();
+    ctx.font = "10px Arial";
+    ctx.strokeStyle = "black";
+    ctx.strokeText("Uhrzeit -->",x_off - 60, c_h - y_off + 15);
+    ctx.moveTo(x_off, 0);
+    ctx.lineTo(x_off, c_h - y_off + 5);
+    ctx.strokeText("0",x_off + 2,c_h - y_off + 15);
+    ctx.moveTo(x_off + 48, 0);
+    ctx.lineTo(x_off + 48, c_h - y_off + 5);
+    ctx.strokeText("6",x_off + 48 + 2,c_h - y_off + 15);
+    ctx.moveTo(x_off + 96, 0);
+    ctx.lineTo(x_off + 96, c_h - y_off + 5);
+    ctx.strokeText("12",x_off + 96 + 2,c_h - y_off + 15);
+    ctx.moveTo(x_off + 144, 0);
+    ctx.lineTo(x_off + 144, c_h - y_off + 5);
+    ctx.strokeText("18",x_off + 144 + 2,c_h - y_off + 15);
+    ctx.moveTo(x_off + 192, 0);
+    ctx.lineTo(x_off + 192, c_h - y_off + 5);
+    for (let i=1; i < num_graph; i++) {
+      ctx.moveTo(x_off, i * graph_hight);
+      ctx.lineTo(c_w, i * graph_hight);
+    }
+    ctx.moveTo(0, num_graph * graph_hight);
+    ctx.lineTo(c_w, num_graph * graph_hight);
+    ctx.stroke();
+    ctx.font = "lighter 12px serif";
+    // graph for sw1
+    if (sw1_diadata.length > 0) {
+      act_graph++;
+      ctx.beginPath();
+      ctx.strokeStyle = "red";
+      ctx.fillStyle = "red";
+      ctx.strokeText(sw1_label, 10, (act_graph * graph_hight) - 4);
+      for (let i=0; i < sw1_diadata.length; i++) {
+        if (sw1_diadata.charAt(i) == "1") { 
+          ctx.fillRect(x_off+i,(act_graph-1) * graph_hight,1,graph_hight);
+        }
+      }
+      ctx.stroke();
+    }
+    // graph for sw2
+    if (sw2_diadata.length > 0) {
+      act_graph++;
+      ctx.beginPath();
+      ctx.strokeStyle = "green";
+      ctx.fillStyle = "green";
+      ctx.strokeText(sw2_label, 10, (act_graph * graph_hight) - 4);
+      for (let i=0; i < sw2_diadata.length; i++) {
+        if (sw2_diadata.charAt(i) == "1") { 
+          ctx.fillRect(x_off+i,(act_graph-1) * graph_hight,1,graph_hight);
+        }
+      } 
+      ctx.stroke();
+    }
+    // graph for sw3
+    if (sw3_diadata.length > 0) {
+      act_graph++;
+      ctx.beginPath();
+      ctx.strokeStyle = "blue";
+      ctx.fillStyle = "blue";
+      ctx.strokeText(sw3_label, 10, (act_graph * graph_hight) - 4);
+      for (let i=0; i < sw3_diadata.length; i++) {
+        if (sw3_diadata.charAt(i) == "1") { 
+          ctx.fillRect(x_off+i,(act_graph-1) * graph_hight,1,graph_hight);
+        }
+      } 
+      ctx.stroke();
+    }
+    // graph for sw4
+    if (sw4_diadata.length > 0) {
+      act_graph++;
+      ctx.beginPath();
+      ctx.strokeStyle = "#444444";
+      ctx.fillStyle = "#444444";
+      ctx.strokeText(sw4_label, 10, (act_graph * graph_hight) - 4);
+      for (let i=0; i < sw4_diadata.length; i++) {
+        if (sw4_diadata.charAt(i) == "1") { 
+          ctx.fillRect(x_off+i,(act_graph-1) * graph_hight,1,graph_hight);
+        }
+      } 
+      ctx.stroke();
+    }
+  } else {
+    ctx.beginPath();
+    ctx.font = "50px Arial";
+    ctx.strokeStyle = "red";
+    ctx.fillStyle = "red";
+    ctx.fillText("No DATA",70 , c_h/2 +15);
+    ctx.stroke();
+  }
+}
+
+function hide_all() {
+  $("#page_main").hide();
+  $("#page_console").hide();
+  $("#page_settings").hide();
+  $("#page_sysinfo").hide();
+  $("#page_logfile").hide();
+  $("#but_main").hide();
+  $("#but_cons").hide();
+  $("#but_sett").hide();
+  $("#but_stor").hide();
+  $("#but_logd").hide();
+  $("#but_uhtm").hide();
+  $("#but_boot").hide();
+  $("#but_sysi").hide();
+  $("#but_logs").hide();
+}
+
+function switch_main() {
+  hide_all();
+  $("#page_main").show();
+  $("#but_cons").show();
+  $("#but_sett").show();
+  $("#but_sysi").show();
+}
+
+function switch_console() {
+  hide_all();
+  show_logs = 1;
+  $("#page_console").show();
+  $("#but_main").show();
+  $("#but_sett").show();
+  $("#but_sysi").show();
+  $('#console').html(logs.join("\r\n"));
+  show_tab2();
+}
+
+function switch_settings() {
+  hide_all();
+  $("#page_settings").show();
+  $("#but_main").show();
+  $("#but_cons").show();
+  $("#but_stor").show();
+  $("#but_uhtm").show();
+  $("#but_boot").show();
+  $("#but_sysi").show();
+  $("#but_logs").show();
+  $("#but_logd").show();
+}
+
+function switch_update() {
+  window.location.pathname = "/update"
+}
+
+function switch_sysinfo() {
+  hide_all();
+  $("#Tab").html("<tr><td colspan=2 class=\"tab_head\">WiFi Networks</td></tr><tr><td colspan=2><div id=\"wifinw2\"></div></td></tr><tr><td colspan=2 class=\"tab_right\"><div id=\"wifinw1\"><button id=\"wifiscan\" class=\"button bg_gr\">Scan</button></div></td></tr>");
+  $('#wifiscan').on('click', function () {
+//    alert("Wifi Scan");
+    do_cmd("wifiscan","1");
+    $("#wifinw2").html("Scanning ... please wait").show();
+    $("#wifinw1").hide();
+    window.setTimeout(function(){
+      $("#wifinw2").html("");
+      $("#wifinw1").show();
+      do_cmd("wifishow","1");
+    }, 20000);
+  });
+  $("#page_sysinfo").show();
+  $("#but_main").show();
+  $("#but_cons").show();
+  $("#but_sett").show();
+  do_cmd("ws_sysinfo", "1");
+}
+
+function store() {
+  if ( $("#rf24gw").is(":checked") ) {
+    if ( ! rf24gw_active_old ) {
+      do_cmd("rf24gw_active", "1");
+      rf24gw_active_old = true;
+    }
+    if ( rf24hubname_old != $("#rf24hubname").val() ) {
+      do_cmd("rf24hubname", $("#rf24hubname").val());
+      rf24hubname_old = $("#rf24hubname").val();
+    }
+    if ( rf24hubport_old != $("#rf24hubport").val() ) {
+      if ($("#rf24hubport").val() < 65536) {
+        do_cmd("rf24hubport", $("#rf24hubport").val());
+        rf24hubport_old = $("#rf24hubport").val();
+      } else {
+        $("#rf24hubport").val(rf24hubport_old);
+        alert("RF24 Hub Port > 65535");
+      }
+    }
+    if ( rf24gwport_old != $("#rf24gwport").val() ) {
+      if ($("#rf24gwport").val() < 65536) {
+        do_cmd("rf24gwport", $("#rf24gwport").val());
+        rf24gwport_old = $("#rf24gwport").val();
+      } else {
+        $("#rf24gwport").val(rf24gwport_old);
+        alert("RF24 GW Port > 65535");
+      }
+    }
+    if ( rf24gwno_old != $("#rf24gwno").val() ) {
+      if ($("#rf24gwno").val() < 65536) {
+        do_cmd("rf24gwno", $("#rf24gwno").val());
+        rf24gwno_old = $("#rf24gwno").val();
+      } else {
+        $("#rf24gwno").val(rf24gwno_old);
+        alert("RF24 Gateway No > 65535");
+      }
+    }
+  } else {
+    if ( rf24gw_active_old ) {
+      do_cmd("rf24gw_active", "0");
+    }
+    rf24gw_active_old = false;
+  }
+  if ( $("#mqtt").is(":checked") ) {
+    if ( ! mqtt_active_old ) {
+      do_cmd("mqtt_active", "1");
+    }
+    if ( mqttclient_old != $("#mqttclient").val() ) {
+      do_cmd("mqttclient", $("#mqttclient").val());
+      mqttclient_old = $("#mqttclient").val();
+    }
+    if ( mqttserver_old != $("#mqttserver").val() ) {
+      do_cmd("mqttserver", $("#mqttserver").val());
+      mqttserver_old = $("#mqttserver").val();
+    }
+    if ( mqtttopicp2_old != $("#mqtttopicp2").val() ) {
+      do_cmd("mqtttopicp2", $("#mqtttopicp2").val());
+      mqtttopicp2_old = $("#mqtttopicp2").val();
+    }
+  } else {
+    if ( mqtt_active_old ) {
+      do_cmd("mqtt_active", "0");
+    }
+  }
+  if ( $("#log_rf24").is(":checked") ) {
+    if ( ! log_rf24_old ) {
+      do_cmd("log_rf24", "1");
+      log_rf24_old = true;
+    }
+  } else {
+    if ( log_rf24_old ) {
+      do_cmd("log_rf24", "0");
+      log_rf24_old = false;
+    }
+  }
+  if ( $("#log_module").is(":checked") ) {
+    if ( ! log_module_old ) {
+      do_cmd("log_module", "1");
+      log_module_old = true;
+    }
+  } else {
+    if ( log_module_old ) {
+      do_cmd("log_module", "0");
+      log_module_old = false;
+    }
+  }
+  if ( $("#log_mqtt").is(":checked") ) {
+    if ( ! log_mqtt_old ) {
+      do_cmd("log_mqtt", "1");
+      log_mqtt_old = true;
+    }
+  } else {
+    if (   log_mqtt_old ) {
+      do_cmd("log_mqtt", "0");
+      log_mqtt_old = flase;
+    }
+  }
+  if ( $("#log_web").is(":checked") ) {
+    if ( ! log_web_old ) {
+      do_cmd("log_web", "1");
+      log_web_old = true;
+    }
+  } else {
+    if (   log_web_old ) {
+      do_cmd("log_web", "0");
+      log_web_old = false;
+    }
+  }
+  if ( $("#log_system").is(":checked") ) {
+    if ( ! log_system_old ) {
+      do_cmd("log_system", "1");
+      log_system_old = true;
+    }
+  } else {
+    if (   log_system_old ) {
+      do_cmd("log_system", "0");
+      log_system_old = false;
+    }
+  }
+  if ( $("#log_critical").is(":checked") ) {
+    if ( ! log_critical_old ) {
+      do_cmd("log_critical", "1");
+      log_critical_old = true;
+    }
+  } else {
+    if (   log_critical_old ) {
+      do_cmd("log_critical", "0");
+      log_critical_old = false;
+    }
+  }
+  if ( $("#wifi_ssid").val() != wifi_ssid_old && $("#wifi_ssid").val().length > 0 ) {
+    do_cmd("wifi_ssid", $("#wifi_ssid").val());
+  }
+  if ( $("#wifi_pass").val() != wifi_pass_old && $("#wifi_pass").val().length > 0 ) {
+    do_cmd("wifi_pass", $("#wifi_pass").val());
+  }
+  alert("Werte gespeichert");
+}
+
+function do_restart() {
+  var r = confirm("Wirklich neustarten?");
+  if (r == true) {
+    do_cmd("restart", "1");
+    setTimeout(function(){
+      window.location.reload();
+    }, 15000);
+  }
+}
+
+function dellog() {
+  var r = confirm("Logfile löschen?");
+  if (r == true) {
+    do_cmd("dellogfile", "1");
+  }
+}
+
+// Ab hier Funktionen fuer das Audio Modul
+// Öffnet die Einstellung für Bässe und Höhen 
+// über das "Hamburger"-Menü 
+function audio_trebas() {
+  if ($("#audio_trebas").hasClass("change")) {
+    $("#audio_trebas").removeClass("change");
+    $("#audio_trebas_settings").hide();
+  } else {
+    $("#audio_trebas").addClass("change");
+    $("#audio_trebas_settings").show();
+  }
+}
+
+function audio_menu() {
+  if ($("#audio_menu").hasClass("change")) {
+    $("#audio_menu").removeClass("change");
+    $("#audio_settings").hide();
+  } else {
+    $("#audio_menu").addClass("change");
+    $("#audio_settings").show();
+    $("#audio_media_alben").html(" ");
+    $("#audio_radio_sel").empty();
+    do_cmd("audio_get_settings","1");
+  }
+}
+
+function audio_mediaswitch( myapp ) {
+  if ( myapp == "audio_radio" ) {
+    $("#audio_radio_but").css("color","black").css("background-color","yellow");
+    $("#audio_radio_but").html("ein");
+    $("#audio_radio_settings").show();  
+  } else {
+    $("#audio_radio_but").css("color","white").css("background-color","black");
+    $("#audio_radio_but").html("aus");
+    $("#audio_radio_settings").hide();
+  }
+  if ( myapp == "audio_media" ) {
+    $("#audio_media_but").css("color","black").css("background-color","yellow");
+    $("#audio_media_but").html("ein");
+    $("#audio_media_settings").show();  
+  } else {
+    $("#audio_media_but").css("color","white").css("background-color","black");
+    $("#audio_media_but").html("aus");
+    $("#audio_media_settings").hide();
+  }
+  if ( myapp != "audio_speak" ) {
+    $("#audio_speak_but").css("color","black").css("background-color","yellow");
+    $("#audio_speak_but").html("ein");
+    $("#audio_speak_settings").show();  
+  } else {
+    $("#audio_speak_but").css("color","white").css("background-color","black");
+    $("#audio_speak_but").html("aus");
+    $("#audio_speak_settings").hide();
+  }
+//  alert("Mediaswitch");
+  $("#audio_trebas").removeClass("change");
+  $("#audio_menu").removeClass("change");
+  $("#audiomsg1div").hide();
+  $("#audiomsg2div").hide();
+  $("#audiomsg3div").hide();
+  $("#audiomsg4div").hide();
+  $("#audio_trebas_settings").hide();
+  $("#audio_settings").hide();
+  $("#audio_radio_settings").hide();
+  $("#audio_media_settings").hide();
+  $("#audio_speak_settings").hide();
+}
+
+// Ab hier Funktionen fuer das Audio Modul Radio
+
+function audio_radio_stn_update() {
+  do_cmd("audio_radio_save_stn_name",$("#audio_radio_stn_name").val());
+  do_cmd("audio_radio_save_stn_url",$("#audio_radio_stn_url").val());
+  $("#audio_radio_sel").empty();
+  do_cmd("audio_get_settings","1");
+}
+
+</script>
+
+<title id="titel"></title>
+</head>
+<body>
+<div class="wrapper">
+  <div class="div_header">
+    <h2 id="titel1" class="titel1">Titel1</h2>
+    <h3 id="titel2" class="titel2">Titel2</h3>
+    <hr>
+  </div>
+  <div id="page_main" class="div_content">
+    <canvas id="myCanvas" width="335" height="100" style="border:1px solid black;">
+      Sorry, your browser does not support canvas.
+    </canvas>
+    <div id="rf24div">
+      <div id="rf24" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="out1div">
+      <div id="out1" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="out2div">
+      <div id="out2" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="out3div">
+      <div id="out3" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="out4div">
+      <div id="out4" class="msg_div"></div>
+      <hr>
+    </div>
+    <div id="sw1_div" class="sw_div">
+      <div id='sw1_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw1_but' class='sw_button' onclick='do_cmd("sw1","2");'>
+          ???
+        </button>
+      </div>
+      <div id="sw1_progressbox" class="progressbox">
+        <div id="sw1_progressbar" class="progressbar"></div>
+      </div>
+    </div>
+    <div id="sw2_div" class="sw_div">
+      <div id='sw2_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw2_but' class='sw_button' onclick='do_cmd("sw2","2");'>
+          ???
+        </button>
+      </div>
+      <div id="sw2_progressbox" class="progressbox">
+        <div id="sw2_progressbar" class="progressbar"></div>
+      </div>
+    </div>
+    <div id="sw3_div" class="sw_div">
+      <div id='sw3_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw3_but' class='sw_button' onclick='do_cmd("sw3","2");'>
+          ???
+        </button>
+      </div>
+      <div id="sw3_progressbox" class="progressbox">
+        <div id="sw3_progressbar" class="progressbar"></div>
+      </div>
+    </div>
+    <div id="sw4_div" class="sw_div">
+      <div id='sw4_lab' class='sw_label'>
+      </div>
+      <div>
+        <button id='sw4_but' class='sw_button' onclick='do_cmd("sw4","2");'>
+          ???
+        </button>
+      </div>
+      <div id="sw4_progressbox" class="progressbox">
+        <div id="sw4_progressbar" class="progressbar"></div>
+      </div>
+    </div>
+    <hr>
+    <div id="slider1div" class="slidecontainer">
+      <label for='slider1' id='slider1label'></label>
+      <input type='range' name='slider1' class="slider" id='slider1' min='0' max='255' value='0'>	
+    </div>
+    <div id="slider2div" class="slidecontainer">
+      <label for='slider2' id='slider2label'></label>
+      <input type='range' name='slider2' class="slider" id='slider2' min='0' max='255' value='0'>	
+    </div>
+    <div id="slider3div" class="slidecontainer">
+      <label for='slider3' id='slider3label'></label>
+      <input type='range' name='slider3' class="slider" id='slider3' min='0' max='255' value='0'>	
+    </div>
+    <div id="ledmatrix" class="ledmatrix_div">
+	    <div style="width:10px;"></div>
+	    <div id="display" class="display"></div>
+    </div>
+    <div id="audio_div" class="audio_div">
+      <div id="audiomsg1div">
+        <div id="audiomsg1" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg2div">
+        <div id="audiomsg2" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg3div">
+        <div id="audiomsg3" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audiomsg4div">
+        <div id="audiomsg4" class="msg_div"></div>
+        <hr>
+      </div>
+      <div id="audio_sel">
+        <div id="audio_radio" class="audio_sw_div">
+          <p id="audio_radio_txt">Radio</p>
+          <button id='audio_radio_but' class='sw_button'>
+            aus
+          </button>
+        </div>
+        <div id="audio_media" class="audio_sw_div">
+          <p id="audio_media_txt">Media</p>
+          <button id='audio_media_but' class='sw_button'>
+            aus
+          </button>
+        </div>
+        <div id="audio_speak" class="audio_sw_div">
+          <p id="audio_speak_txt">BT</p>
+          <button id='audio_speak_but' class='sw_button'>
+            aus
+          </button>
+        </div>
+      </div>
+      <div class="slidecontainer">
+        <p style="margin-top: 2cm;">Lautstärke</p>
+        <input type='range' name='audio_vol' class='slider' id='audio_vol' min='0' max='100' value='0' onchange='do_cmd("audio_vol",this.value);'>
+      </div>
+      <div id="audio_trebas_enable" style="height: 50px;">
+        <div id="audio_trebas" class="menu" onclick="audio_trebas()">
+          <div class="bar1"></div>
+          <div class="bar2"></div>
+          <div class="bar3"></div>
+        </div>
+        <div class="menu_text">Höhen und Bässe</div>
+        <div id="audio_trebas_settings">
+          <div class="slidecontainer">
+            <p>Bass</p>
+            <input type='range' name='audio_bas' class='slider' id='audio_bas' min='0' max='100' value='0' onchange='do_cmd("audio_bas",this.value);'>
+          </div>
+          <div class="slidecontainer">
+            <p>Höhen</p>
+            <input type='range' name='audio_tre' class='slider' id='audio_tre' min='0' max='100' value='0' onchange='do_cmd("audio_tre",this.value);'>
+          </div>
+        </div>
+      </div>
+      <div style="height: 50px;">
+        <div id="audio_menu" class="menu" onclick="audio_menu()">
+          <div class="bar1"></div>
+          <div class="bar2"></div>
+          <div class="bar3"></div>
+        </div>
+        <div class="menu_text">Erweiterte Einstellungen</div>
+      </div>
+      <div id="audio_settings">
+        <div id="audio_radio_settings">
+          <p id="audio_radio_sel_div">Senderwahl:</p>
+          <select id="audio_radio_sel" class="custom-select" size="5"></select>
+          <table><tr>
+            <td>Sendername:</td>
+            <td><input name="Sendername" id="audio_radio_stn_name" size="30" maxlength="30"></td>
+            </tr><tr>
+            <td>URL:</td>
+            <td><input name="SenderURL" id="audio_radio_stn_url" size="30" maxlength="125"></td></tr>
+          </table>  
+          <button id="audio_radio_but_st_upd" class="button bg_rt" onclick="audio_radio_stn_update();">Sender speichern</button>
+        </div>
+        <div id="audio_media_settings">
+          <div id="audio_media_alben">
+            Alben DIV
+          </div>
+        </div>
+        <div id="audio_speak_settings">
+          Speaker Menu TBD.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page_console" class="div_content">
+    <div id="console_tab1">Logfile</div>
+    <div id="console_tab2">Logs</div>
+    <div id="console_tab3">Meldungen</div>
+    <textarea readonly id='console' cols='340' wrap='off'></textarea>
+    <br>
+    <input id='console_cmd' placeholder='Befehl eingeben' autofocus class="input"><br>
+  </div>
+
+  <div id="page_settings"  class="div_content">
+    <fieldset id="wifi"> 
+      <legend>WiFi Settings:</legend> 
+      <input type="text" value="WiFi SSID" class="input_30a" disabled>
+      <input type="text" id="wifi_ssid" name="wifi_ssid" value="" class="input_30b">
+      <br>
+      <input type="text" value="WiFi Passwort" class="input_30a" disabled>
+      <input type="password" id="wifi_pass" name="wifi_pass" value="" class="input_30b">
+    </fieldset>
+    <fieldset id="rf24gw_fs"> 
+      <legend>RF24 Gateway:</legend> 
+      <input type="checkbox" name="rf24gw" id="rf24gw" class="checkbox">
+      <label for="rf24gw">RF24 Gateway</label>
+      <div id="rf24gw_div">
+        <hr>
+        <input type="text" value="RF24 Hub Server:"  class="input_50a" disabled>
+        <input type="text" name="rf24hubname" value="" id="rf24hubname" class="input_50b">
+        <br>
+        <input type="text" value="RF24 Hub Port:"  class="input_50a" disabled>
+        <input type="text" name="rf24hubport" value="" id="rf24hubport" class="input_50b">
+        <br>
+        <input type="text" value="RF24 GW Port:"  class="input_50a" disabled>
+        <input type="text" name="rf24gwport" value="" id="rf24gwport" class="input_50b">
+        <br>
+        <input type="text" value="RF24 Gateway No:"  class="input_50a" disabled>
+        <input type="text" name="rf24gwno" value="" id="rf24gwno" class="input_50b">
+        <br>
+      </div>
+    </fieldset>
+        
+    <fieldset id="mqtt_fs"> 
+      <legend>MQTT:</legend> 
+      <input type="checkbox" name="mqtt" id="mqtt" class="checkbox">
+      <label for="mqtt">MQTT Client</label>
+      <div id="mqtt_div">
+        <hr>
+        <input type="text" value="MQTT Server:"  class="input_50a" disabled>
+        <input type="text" name="mqttserver" value="" id="mqttserver" class="input_50b">
+        <br>
+        <input type="text" value="MQTT Client:"  class="input_50a" disabled>
+        <input type="text" name="mqttclient" value="" id="mqttclient" class="input_50b">
+        <br>
+        <input type="text" value="MQTT Topic Part2:"  class="input_50a" disabled>
+        <input type="text" name="mqtttopicp2" value="" id="mqtttopicp2" class="input_50b">
+        <br>
+      </div>
+    </fieldset>
+      
+    <fieldset> 
+      <legend>Log to /debugfile.txt</legend> 
+      <input type="checkbox" name="log_critical" id="log_critical" class="checkbox">
+      <label for="log_critical">System Informationen</label><br>
+    </fieldset>
+    
+    <fieldset> 
+      <legend>Log to Console</legend> 
+      <div id="rf24log_div">
+        <input type="checkbox" name="log_rf24" id="log_rf24" class="checkbox">
+        <label for="log_rf24" id="log_rf24l">RF24</label><br>
+      </div>
+      <input type="checkbox" name="log_module" id="log_module" class="checkbox">
+      <label for="log_module">Modul</label><br>
+      <div id="mqttlog_div">
+        <input type="checkbox" name="log_mqtt" id="log_mqtt" class="checkbox">
+        <label for="log_mqtt">MQTT</label><br>
+      </div>
+      <input type="checkbox" name="log_web" id="log_web" class="checkbox">
+      <label for="log_web">Web / HTML</label><br>
+      <input type="checkbox" name="log_system" id="log_system" class="checkbox">
+      <label for="log_system">System</label><br>
+    </fieldset>
+    
+  </div>
+
+  <div id="page_sysinfo" class="div_content">
+    <table style='width:100%;' id='Tab'>
+    </table> 
+</div>
+
+  <button id="but_stor" class="button bg_gr" onclick="store();">Speichern</button>
+  <button id="but_logd" class="button bg_gr" onclick="dellog();">Logfile löschen</button>
+  <button id="but_uhtm" class="button bg_rt" onclick="switch_update();">Update</button>
+  <button id="but_boot" class="button bg_rt" onclick="do_restart();">Neustart</button>
+  <button id="but_cons" class="button bg_bk" onclick="switch_console();">Konsole</button>
+  <button id="but_sett" class="button bg_bk" onclick="switch_settings();">Einstellungen</button>
+  <button id="but_sysi" class="button bg_gr" onclick="switch_sysinfo();">Systeminfo</button>
+  <button id="but_main" class="button bg_gr" onclick="switch_main();">Hauptseite</button>
+  <div class="div_footer">
+    <hr>
+    ESPNode von Norbert Wilms
+  </div>
+</div>
+</body>
+</html>

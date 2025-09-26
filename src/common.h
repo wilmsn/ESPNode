@@ -62,6 +62,11 @@ extern void sendWsMessage(String& _myMsg, uint8_t kat);
 extern void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline = true);
 #endif
 
+// Modul: commands
+extern String stat_str;
+extern unsigned int stat_no;
+extern void json_stat_header(String& mystr);
+
 // Modul: webserver
 extern AsyncWebSocket ws;
 extern uint64_t sd_cardsize;

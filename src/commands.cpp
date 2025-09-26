@@ -8,11 +8,22 @@ void show_settings() {
   sendWsMessage(tmpstr,LOG_SYSTEM);
 }
 
+void json_stat_header(String& mystr) {
+  mystr += String(",\"stat_") + String(stat_no) + String("\":");
+  stat_no++;
+}
+
+void console_clean() {
+  stat_str += String("\"clear_stat\":1");
+}
+
 void console_help() {
-  String tmpstr;
-  tmpstr = String("{\"stat_1\":\"settings >>> Zeigt aktuelle Einstellungen\"") +
-           String(",\"stat_2\":\"looptimealarm=<Maximalzeit in ms>\"}");
-  sendWsMessage(tmpstr,LOG_SYSTEM);
+  json_stat_header(stat_str);
+  stat_str += String("\"settings >>> Zeigt aktuelle Einstellungen\"");
+  json_stat_header(stat_str);
+  stat_str += String("\"looptimealarm=<Maximalzeit in ms>\"");
+  stat_str += String("}");
+  sendWsMessage(stat_str,LOG_SYSTEM);
 }
 
 // Kommentiert in main.h
@@ -20,6 +31,11 @@ void prozess_cmd(const String cmd, const String value)  {
   String tmpstr;
   write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
+  if ( cmd == "?" || cmd == "help" ) {
+    stat_str = String("{");
+    stat_no = 1;
+    console_clean();
+  }
 #if defined(MODULE1)
   if ( module1.set( cmd, value ) ) {
     cmd_valid = true;
