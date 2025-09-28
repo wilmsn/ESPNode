@@ -12,20 +12,13 @@ void initWebSocket() {
   httpServer.addHandler(&ws);
 }
 
-void sendWsMessage(String& _myMsg) {
-  String myMsg = _myMsg;
+void sendWsMessage(String& myMsg) {
   ws.textAll(myMsg);
   write2log(LOG_WEB,2,"[WEB]",myMsg.c_str());
 }
 
-void sendWsMessage(String& _myMsg, uint8_t kat) {
-  String myMsg = _myMsg;
-  ws.textAll(myMsg);
-  write2log(kat,1,myMsg.c_str());
-}
-
 void prozess_wifishow() {
-  String tmpstr;
+  String myjson;
 #if defined(DEBUG_SERIAL_WEB)
   Serial.print("Generiere wifishow ... ");
 #endif
@@ -33,77 +26,77 @@ void prozess_wifishow() {
   if (numberOfNetworks < 0) {
     switch (numberOfNetworks) {
       case -1:
-        tmpstr = "{\"wifi_network\": \"Scan not finished\"}";
-        sendWsMessage(tmpstr);
+        myjson = String("{\"wifi_network\": \"Scan not finished\"}");
+        sendWsMessage(myjson);
      break;
       case -2:
-        tmpstr = "{\"wifi_network\": \"Scan not started\"}";
-        sendWsMessage(tmpstr);
+        myjson = String("{\"wifi_network\": \"Scan not started\"}");
+        sendWsMessage(myjson);
       break;
     }
   } else {
-    tmpstr = String("{\"wifi_network\":\"") + String(numberOfNetworks) + String(" Networks:<br>\"}");
-    sendWsMessage(tmpstr);
+    myjson = String("{\"wifi_network\":\"") + String(numberOfNetworks) + String(" Networks:<br>\"}");
+    sendWsMessage(myjson);
     for (int i = 0; i < numberOfNetworks; i++) {
-      tmpstr = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(", Ch:") + String(WiFi.channel(i))
-               + String(" (") + String(WiFi.RSSI(i)) + String(" dBm ");
+      myjson = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(", Ch:") + String(WiFi.channel(i)) +
+               String(" (") + String(WiFi.RSSI(i)) + String(" dBm ");
 #ifdef ESP32
       switch (WiFi.encryptionType(i)) {
       case  WIFI_AUTH_OPEN:
-          tmpstr += String("open");
+          myjson += String("open");
         break;
       case WIFI_AUTH_WEP:
-          tmpstr += String("WEP");
+          myjson += String("WEP");
         break;
       case WIFI_AUTH_WPA_PSK:
-          tmpstr += String("WPA PSK");
+          myjson += String("WPA PSK");
         break;
       case WIFI_AUTH_WPA2_PSK:
-          tmpstr += String("WPA2 PSK");
+          myjson += String("WPA2 PSK");
         break;
       case WIFI_AUTH_WPA_WPA2_PSK:
-          tmpstr += String("WPA WPA2 PSK");
+          myjson += String("WPA WPA2 PSK");
         break;
       case WIFI_AUTH_WPA2_ENTERPRISE:
-          tmpstr += String("WPA2 Enterprise");
+          myjson += String("WPA2 Enterprise");
         break;
       case WIFI_AUTH_WPA3_PSK:
-          tmpstr += String("WPA3 PSK");
+          myjson += String("WPA3 PSK");
         break;
       case WIFI_AUTH_WPA2_WPA3_PSK:
-          tmpstr += String("WPA2 WPA3 PSK");
+          myjson += String("WPA2 WPA3 PSK");
         break;
       case WIFI_AUTH_WAPI_PSK:
-          tmpstr += String("WAPI PSK");
+          myjson += String("WAPI PSK");
         break;
       case WIFI_AUTH_MAX:
-          tmpstr += String("MAX");
+          myjson += String("MAX");
         break;
       }
 #else
       switch (WiFi.encryptionType(i)) {
       case ENC_TYPE_WEP:
-          tmpstr += String("WEP");
+          myjson += String("WEP");
         break;
       case ENC_TYPE_TKIP:
-          tmpstr += String("TKIP");
+          myjson += String("TKIP");
         break;
       case ENC_TYPE_CCMP:
-          tmpstr += String("CCMP");
+          myjson += String("CCMP");
         break;
       case ENC_TYPE_AUTO:
-          tmpstr += String("Auto");
+          myjson += String("Auto");
         break;
       case ENC_TYPE_NONE:
-          tmpstr += String("None");
+          myjson += String("None");
         break;
       default:
-          tmpstr += String("unknown");
+          myjson += String("unknown");
         break;
       }
 #endif
-      tmpstr += ")\"}";
-      sendWsMessage(tmpstr);
+      myjson += String(")\"}");
+      sendWsMessage(myjson);
     }
 //#endif
   }
@@ -124,7 +117,7 @@ void prozess_wifiscan() {
 }
 
 void prozess_sysinfo() {
-  String tmpstr;
+  String myjson;
   bool set_comma = false;
 // Daten für Sysinfo
 // Teil 1
@@ -137,189 +130,147 @@ void prozess_sysinfo() {
 #else
       ESP.getHeapStats(&free, &max, &frag);
 #endif
-      tmpstr = String("{");
+      myjson = String("{");
 #ifdef ESP32
-      tmpstr += String("\"Platform\":\"");
-      tmpstr += String(ESP.getChipModel());
-      tmpstr += String("\"");
+      myjson += String("\"Platform\":\"") + String(ESP.getChipModel()) + String("\"");
 #else
-      tmpstr += String("\"Platform\":\"ESP8266\"");
+      myjson += String("\"Platform\":\"ESP8266\"");
 #endif
 #ifdef ESP32
-      tmpstr += String(",\"Cores\":");
-      tmpstr += String(ESP.getChipCores());
-      tmpstr += ",\"PSRamSize\":\"";
-      tmpstr += String((float)ESP.getPsramSize()/1024.0);
-      tmpstr += " KB\"";
-      tmpstr += ",\"PsRamFree\":\"";
-      tmpstr += String((float)ESP.getFreePsram()/1024.0);
-      tmpstr += " KB\"";
+      myjson += String(",\"Cores\":") + String(ESP.getChipCores()) +
+                String(",\"PSRamSize\":\"") + String((float)ESP.getPsramSize()/1024.0) + String(" KB\"") +
+                String(",\"PsRamFree\":\"") + String((float)ESP.getFreePsram()/1024.0) + String(" KB\"");
 #else
-      tmpstr += ",\"Cores\":\"1\"";
+      myjson += String(",\"Cores\":\"1\"");
 #endif
-      tmpstr += ",\"Hostname\":\"";
+      myjson += String(",\"Hostname\":\"");
 #ifdef ESP32
-      tmpstr += HOSTNAME;
+      myjson += HOSTNAME;
 #else
-      tmpstr += WiFi.hostname();
+      myjson += WiFi.hostname();
 #endif
-      tmpstr += "\"";
-      tmpstr += ",\"CpuFreq\":\"";
-      tmpstr += String((int)(F_CPU / 1000000));
-      tmpstr += " Mhz\"";
-      tmpstr += ",\"FlashSize\":\"";
-      tmpstr += String((int)(ESP.getFlashChipSize() / 1024 / 1024));
-      tmpstr += " MB \"";
-      tmpstr += ",\"FlashFreq\":\"";
-      tmpstr += String((int)(ESP.getFlashChipSpeed() / 1000000));
-      tmpstr += " Mhz\"";
-      tmpstr += ",\"Sketchsize\":\"";
-      tmpstr += String(ESP.getSketchSize() / 1024.0);
-      tmpstr += " kB\"";
-      tmpstr += ",\"Freespace\":\"";
-      tmpstr += String(ESP.getFreeSketchSpace() / 1024.0);
-      tmpstr += " kB\"";
-      tmpstr += ",\"Heap_free\":\"";
-      tmpstr += String((float)free / 1024.0);
-      tmpstr += " kB\"";
-      tmpstr += ",\"Heap_max\":\"";
-      tmpstr += String((float)max / 1024.0);
-      tmpstr += " kB\"";
+      myjson += String("\"") + String(",\"CpuFreq\":\"") + String((int)(F_CPU / 1000000)) + String(" Mhz\"") +
+                String(",\"FlashSize\":\"") + String((int)(ESP.getFlashChipSize() / 1024 / 1024)) + String(" MB \"") +
+                String(",\"FlashFreq\":\"") + String((int)(ESP.getFlashChipSpeed() / 1000000)) + String(" Mhz\"") +
+                String(",\"Sketchsize\":\"") + String(ESP.getSketchSize() / 1024.0) + String(" kB\"") +
+                String(",\"Freespace\":\"") + String(ESP.getFreeSketchSpace() / 1024.0) + String(" kB\"") +
+                String(",\"Heap_free\":\"") + String((float)free / 1024.0) + String(" kB\"") +
+                String(",\"Heap_max\":\"") + String((float)max / 1024.0) + String(" kB\"");
 #ifdef ESP32
-//      tmpstr += "";
+//      myjson += "";
 #else
-      tmpstr += ",\"Heap_frag\":\"";
-      tmpstr += String((float)frag / 1024.0);
-      tmpstr += "%\"";
+      myjson += String(",\"Heap_frag\":\"") + String((float)frag / 1024.0) + String("%\"");
 #endif
-      tmpstr += ",\"ResetReason\":\"";
+      myjson += String(",\"ResetReason\":\"");
 #ifdef ESP32
-      char tmp1[20];
-      tmpstr += getResetReason(tmp1);
+      getResetReason(myjson);
 #else
-      tmpstr += ESP.getResetReason();
+      myjson += ESP.getResetReason();
 #endif
-      tmpstr += "\"";
-      tmpstr += ",\"Vcc\":\"";
-      getVcc(tmpstr);
-      tmpstr += "\"";     
+      myjson += String("\"") + String(",\"Vcc\":\"");
+      getVcc(myjson);
+      myjson += String("\"");     
 #ifdef ESP32
-      tmpstr += ",\"MBTemp\":\"";
-      tmpstr += temperatureRead();
-      tmpstr += "\"";
+      myjson += String(",\"MBTemp\":\"");
+      myjson += temperatureRead();
+      myjson += String("\"");
 #endif
-      tmpstr += ",\"UpTime\":\"";
-      tmpstr += uptime.uptimestr();
-      tmpstr += "\"";
-      tmpstr += "}";
-      sendWsMessage(tmpstr);
+      myjson += String(",\"UpTime\":\"");
+      myjson += uptime.uptimestr();
+      myjson += String("\"}");
+      sendWsMessage(myjson);
 
 // Teil 2
-      tmpstr = "{\"IP\":\"";
-      tmpstr += WiFi.localIP().toString();
-      tmpstr += "\"";
-      tmpstr += ",\"SubNetMask\":\"";
-      tmpstr += WiFi.subnetMask().toString();
-      tmpstr += "\"";
-      tmpstr += ",\"GW-IP\":\"";
-      tmpstr += WiFi.gatewayIP().toString();
-      tmpstr += "\"";
-      tmpstr += ",\"DnsIP\":\"";
-      tmpstr += WiFi.dnsIP().toString();
-      tmpstr += "\"";
-      tmpstr += ",\"SSID\":\"";
-      tmpstr += WiFi.SSID();
-      tmpstr += " (";
-      tmpstr += String(rssi);
-      tmpstr += "dBm / ";
-      tmpstr += String(rssi_quality);
-      tmpstr += "%)\"";
-      tmpstr += ",\"Channel\":\"";
-      tmpstr += String(WiFi.channel());
-      tmpstr += "\"";
-      tmpstr += ",\"BSSID\":\"";
-      tmpstr += WiFi.BSSIDstr();
-      tmpstr += "\"";
-      tmpstr += ",\"MAC\":\"";
-      tmpstr += WiFi.macAddress();
-      tmpstr += "\"";
-      tmpstr += ",\"IdeVer\":\"";
-      tmpstr += String(ARDUINO);
-      tmpstr += "\"";
+      myjson = String("{\"IP\":\"");
+      myjson += WiFi.localIP().toString();
+      myjson += String("\"") +
+                String(",\"SubNetMask\":\"");
+      myjson += WiFi.subnetMask().toString();
+      myjson += String("\"") +
+                String(",\"GW-IP\":\"");
+      myjson += WiFi.gatewayIP().toString();
+      myjson += String("\"") +
+                String(",\"DnsIP\":\"");
+      myjson += WiFi.dnsIP().toString();
+      myjson += String("\"") +
+                String(",\"SSID\":\"");
+      myjson += WiFi.SSID();
+      myjson += String(" (");
+      myjson += String(rssi);
+      myjson += String("dBm / ");
+      myjson += String(rssi_quality);
+      myjson += String("%)\"") +
+                String(",\"Channel\":\"");
+      myjson += String(WiFi.channel());
+      myjson += String("\"") +
+                String(",\"BSSID\":\"");
+      myjson += WiFi.BSSIDstr();
+      myjson += String("\"") +
+                String(",\"MAC\":\"");
+      myjson += WiFi.macAddress();
+      myjson += String("\"") +
+                String(",\"IdeVer\":\"") + String(ARDUINO) + String("\"");
 #ifdef ESP32
-      tmpstr += ",\"CoreVer\":\"unknown\"";
+      myjson += String(",\"CoreVer\":\"unknown\"");
 #else
-      tmpstr += ",\"CoreVer\":\"";
-      tmpstr += ESP.getCoreVersion();
-      tmpstr += "\"";
+      myjson += String(",\"CoreVer\":\"");
+      myjson += ESP.getCoreVersion();
+      myjson += String("\"");
 #endif
-      tmpstr += ",\"SdkVer\":\"";
-      tmpstr += ESP.getSdkVersion();
-      tmpstr += "\"";
-      tmpstr += ",\"SW\":\"";
-      tmpstr += SWVERSION;
-      tmpstr += " (";
-      tmpstr += __DATE__;
-      tmpstr += ")\"";
-      tmpstr += "}";
-      sendWsMessage(tmpstr);
+      myjson += String(",\"SdkVer\":\"");
+      myjson += ESP.getSdkVersion();
+      myjson += String("\"") +
+                String(",\"SW\":\"") + String(SWVERSION) + String(" (") + String(__DATE__) + String(")\"}");
+      sendWsMessage(myjson);
 // Teil 3
-      tmpstr = "{\"ws_teil2\":2";
+      myjson = String("{\"ws_teil2\":2");
 #if defined(MQTT)  
-      tmpstr += ",\"mqttserver\":\"";
-      tmpstr += mqtt_server;
-      tmpstr += "\",\"mqttclient\":\"";
-      tmpstr += mqtt_client;
-      tmpstr += "\",\"mqtttopicp2\":\"";
-      tmpstr += mqtt_topicP2;
-      tmpstr += "\"";
+      myjson += String(",\"mqttserver\":\"") + mqtt_server +
+                String("\",\"mqttclient\":\"") + mqtt_client +
+                String("\",\"mqtttopicp2\":\"") + mqtt_topicP2 + String("\"");
 #endif
 #if defined(RF24GW)  
-      tmpstr += ",\"RF24HUB-Server\":\"";
-      tmpstr += rf24gw_hub_server;
-      tmpstr += "\",\"RF24HUB-Port\":";
-      tmpstr += String(rf24gw_hub_port);
-      tmpstr += ",\"RF24GW-Port\":";
-      tmpstr += String(rf24gw_gw_port);
-      tmpstr += ",\"RF24GW-No\":";
-      tmpstr += String(rf24gw_gw_no);  
+      myjson += String(",\"RF24HUB-Server\":\"") + rf24gw_hub_server +
+                String("\",\"RF24HUB-Port\":") + String(rf24gw_hub_port) +
+                String(",\"RF24GW-Port\":") + String(rf24gw_gw_port) +
+                String(",\"RF24GW-No\":") + String(rf24gw_gw_no);  
 #endif
-      tmpstr += "}";
-      sendWsMessage(tmpstr);
-      tmpstr = "{";
+      myjson += String("}");
+      sendWsMessage(myjson);
+      myjson = String("{");
 #ifdef MODULE1
       if (module1.html_has_info) {
-        tmpstr += module1.html_info;
+        myjson += module1.html_info;
         set_comma = true;
       }
 #ifdef MODULE2
       if (module2.html_has_info) {
-        if (set_comma) tmpstr += ",";
-        tmpstr += module2.html_info;
+        if (set_comma) myjson += String(",");
+        myjson += module2.html_info;
         set_comma = true;
       }
 #ifdef MODULE3
       if (module3.html_has_info) {
-        if (set_comma) tmpstr += ",";
-        tmpstr += module3.html_info;
+        if (set_comma) myjson += String(",");
+        myjson += module3.html_info;
         set_comma = true;
       }
 #ifdef MODULE4
       if (module4.html_has_info) {
-        if (set_comma) tmpstr += ",";
-        tmpstr += module4.html_info;
+        if (set_comma) myjson += String(",");
+        myjson += module4.html_info;
         set_comma = true;
       }
 #ifdef MODULE5
       if (module5.html_has_info) {
-        if (set_comma) tmpstr += ",";
-        tmpstr += module5.html_info;
+        if (set_comma) myjson += String(",");
+        myjson += module5.html_info;
         set_comma = true;
       }
 #ifdef MODULE6
       if (module6.html_has_info) {
-        if (set_comma) tmpstr += ",";
-        tmpstr += module6.html_info;
+        if (set_comma) myjson += String(",");
+        myjson += module6.html_info;
         set_comma = true;
       }
 #endif
@@ -328,8 +279,8 @@ void prozess_sysinfo() {
 #endif
 #endif
 #endif
-  tmpstr += "}";
-  sendWsMessage(tmpstr);
+  myjson += String("}");
+  sendWsMessage(myjson);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -357,92 +308,87 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 }
 
 void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
-  String tmpstr;
+  String myjson;
   bool setComma = false;
-  tmpstr = String("{\"titel1\":\"") + String(HOSTNAME) + String("\"");
-  tmpstr += String(",\"wifi_ssid\":\"") + wifi_ssid + String("\"");
-  tmpstr += String(",\"wifi_pass\":\"") + wifi_pass + String("\"");
+  myjson = String("{\"titel1\":\"") + String(HOSTNAME) + String("\"") +
+           String(",\"wifi_ssid\":\"") + wifi_ssid + String("\"") +
+           String(",\"wifi_pass\":\"") + wifi_pass + String("\"");
 #if defined(HOST_DISCRIPTION)
-  tmpstr += String(",\"titel2\":\"") + String(HOST_DISCRIPTION) + String("\"");
+  myjson += String(",\"titel2\":\"") + String(HOST_DISCRIPTION) + String("\"");
 #endif
 #if defined(MQTT)
-      tmpstr += ",\"set_mqtt_enable\":1";
-      tmpstr += ",\"set_mqtt_active\":";
-      tmpstr += do_mqtt?"1":"0";
-      tmpstr += ",\"set_mqttserver\":\"";
-      tmpstr += mqtt_server;
-      tmpstr += "\",\"set_mqttclient\":\"";
-      tmpstr += mqtt_client;
-      tmpstr += "\",\"set_mqtttopicp2\":\"";
-      tmpstr += mqtt_topicP2;
-      tmpstr += "\"";
+      myjson += String(",\"set_mqtt_enable\":1") +
+                String(",\"set_mqtt_active\":") + String(do_mqtt? "1": "0") +
+                String(",\"set_mqttserver\":\"") + mqtt_server +
+                String("\",\"set_mqttclient\":\"") + mqtt_client +
+                String("\",\"set_mqtttopicp2\":\"") + mqtt_topicP2 + String("\"");
 #else
-  tmpstr += String(",\"set_mqtt_enable\":0");
+  myjson += String(",\"set_mqtt_enable\":0");
 #endif
 // Setzen der Logging Flags 
 #if defined(RF24GW)
-      tmpstr += String(",\"log_rf24\":") + String(do_log_rf24? "1": "0");
+      myjson += String(",\"log_rf24\":") + String(do_log_rf24? "1": "0");
 #endif
 #if defined(MQTT)
-      tmpstr += String(",\"log_mqtt\":") + String(do_log_mqtt? "1": "0");
+      myjson += String(",\"log_mqtt\":") + String(do_log_mqtt? "1": "0");
 #endif
-  tmpstr += String(",\"log_module\":") + String(do_log_module?"1":"0");
-  tmpstr += String(",\"log_system\":") + String(do_log_system?"1":"0");
-  tmpstr += String(",\"log_critical\":") + String(do_log_critical?"1":"0");
-  tmpstr += String(",\"log_web\":") + String(do_log_web?"1":"0");
+  myjson += String(",\"log_module\":") + String(do_log_module?"1":"0") +
+            String(",\"log_system\":") + String(do_log_system?"1":"0") +
+            String(",\"log_critical\":") + String(do_log_critical?"1":"0") +
+            String(",\"log_web\":") + String(do_log_web?"1":"0");
 // RF24 Gateway
 #if defined(RF24GW)
-  tmpstr += String(",\"set_rf24gw_enable\":1");
-  tmpstr += String(",\"set_rf24gw_active\":") + String(do_rf24gw?"1":"0");
-  tmpstr += String(",\"set_RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"");
-  tmpstr += String(",\"set_RF24HUB-Port\":\"") + String(rf24gw_hub_port) + String("\"");
-  tmpstr += String(",\"set_RF24GW-Port\":\"") + String(rf24gw_gw_port) + String("\"");
-  tmpstr += String(",\"set_RF24GW-No\":\"") + String(rf24gw_gw_no) + String("\"");
+  myjson += String(",\"set_rf24gw_enable\":1") +
+            String(",\"set_rf24gw_active\":") + String(do_rf24gw?"1":"0") +
+            String(",\"set_RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"") +
+            String(",\"set_RF24HUB-Port\":\"") + String(rf24gw_hub_port) + String("\"") +
+            String(",\"set_RF24GW-Port\":\"") + String(rf24gw_gw_port) + String("\"") +
+            String(",\"set_RF24GW-No\":\"") + String(rf24gw_gw_no) + String("\"");
 #else      
-  tmpstr += String(",\"set_rf24gw_enable\":0");
+  myjson += String(",\"set_rf24gw_enable\":0");
 #endif
-  tmpstr += String("}");
-  sendWsMessage(tmpstr);
-  tmpstr = "{";
+  myjson += String("}");
+  sendWsMessage(myjson);
+  myjson = String("{");
 #ifdef MODULE1
   module1.html_init();
   if ( module1.html_json_filled) {
-    tmpstr += module1.html_json;
+    myjson += module1.html_json;
     setComma = true;
   }
 #ifdef MODULE2
   module2.html_init();
   if ( module2.html_json_filled) {
-    if (setComma) tmpstr += String(",");
-    tmpstr += module2.html_json;
+    if (setComma) myjson += String(",");
+    myjson += module2.html_json;
     setComma = true;
   }
 #ifdef MODULE3
   module3.html_init();
   if ( module3.html_json_filled) {
-    if (setComma) tmpstr += String(",");
-    tmpstr += module3.html_json;
+    if (setComma) myjson += String(",");
+    myjson += module3.html_json;
     setComma = true;
   }
 #ifdef MODULE4
   module4.html_init();
   if ( module4.html_json_filled) {
-    if (setComma) tmpstr += String(",");
-    tmpstr += module4.html_json;
+    if (setComma) myjson += String(",");
+    myjson += module4.html_json;
     setComma = true;
   }
 #ifdef MODULE5
   module5.html_init();
   if ( module5.html_json_filled) {
-    if (setComma) tmpstr += String(",");
-    tmpstr += module5.html_json;
+    if (setComma) myjson += String(",");
+    myjson += module5.html_json;
     setComma = true;
   }
 #ifdef MODULE6
   module6.html_init();
   if ( module6.html_json_filled) {
-    if (setComma) tmpstr += String(",");
-    tmpstr += module6.html_json;
+    if (setComma) myjson += String(",");
+    myjson += module6.html_json;
     setComma = true;
   }
 #endif  //module6
@@ -451,8 +397,8 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
 #endif  //Module3
 #endif  //Module2
 #endif  //module1
-  tmpstr += String("}");
-  sendWsMessage(tmpstr);
+  myjson += String("}");
+  sendWsMessage(myjson);
 }
 
 void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,

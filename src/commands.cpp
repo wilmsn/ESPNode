@@ -2,10 +2,9 @@
 #include "commands.h"
 
 void show_settings() {
-  String tmpstr;
-  tmpstr = String("{\"stat_1\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"");
-  tmpstr += ",\"stat_2\":\"ENDE\"}";
-  sendWsMessage(tmpstr,LOG_SYSTEM);
+  String myjson = String("{\"stat_1\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"") +
+                 String(",\"stat_2\":\"ENDE\"}");
+  sendWsMessage(myjson);
 }
 
 void json_stat_header(String& mystr) {
@@ -23,12 +22,11 @@ void console_help() {
   json_stat_header(stat_str);
   stat_str += String("\"looptimealarm=<Maximalzeit in ms>\"");
   stat_str += String("}");
-  sendWsMessage(stat_str,LOG_SYSTEM);
+  sendWsMessage(stat_str);
 }
 
 // Kommentiert in main.h
 void prozess_cmd(const String cmd, const String value)  {
-  String tmpstr;
   write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
   if ( cmd == "?" || cmd == "help" ) {
@@ -195,9 +193,9 @@ void prozess_cmd(const String cmd, const String value)  {
     preferences.begin("settings",false);
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
-    tmpstr = "{\"clear_stat\":1"; 
-    tmpstr += String(",\"stat\":\"looptimealarm: set to ") + String(loop_time_alarm) + String("\"}");
-    sendWsMessage(tmpstr,LOG_SYSTEM);
+    String myjson = String("{\"clear_stat\":1") + String(",\"stat\":\"looptimealarm: set to ") + 
+                   String(loop_time_alarm) + String("\"}");
+    sendWsMessage(myjson);
     cmd_valid = true;
     cmd_no++;
   }
@@ -328,7 +326,7 @@ void prozess_cmd(const String cmd, const String value)  {
     cmd_no++;
   }
   if ( ! cmd_valid ) {
-    tmpstr  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String(":") + value + String("\"}");
-    sendWsMessage(tmpstr,LOG_SYSTEM);
+    String myjson  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String(":") + value + String("\"}");
+    sendWsMessage(myjson);
   }
 }
