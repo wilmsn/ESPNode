@@ -69,14 +69,7 @@ extern void json_stat_header(String& mystr);
 
 // Modul: webserver
 extern AsyncWebSocket ws;
-extern uint64_t sd_cardsize;
-extern uint64_t sd_usedbytes;
-extern uint8_t sd_cardType;
-extern int rssi;
-extern int rssi_quality;
-extern char *getResetReason(char *tmp);
-extern Uptime uptime;
-extern void getVcc(String& json);
+void setup_webserver();
 
 // Modul: mqtt
 extern PubSubClient mqttClient;
@@ -98,12 +91,10 @@ extern String   rf24gw_hub_server;
 extern uint16_t rf24gw_hub_port;
 extern uint16_t rf24gw_gw_port;
 extern uint16_t rf24gw_gw_no;
-
 void rf24gw_setup();
 void rf24gw_loop();
 
 // Modul: main
-//extern AsyncWebServer httpServer;
 extern bool rebootflag;
 extern String wifi_ssid;
 extern String wifi_pass;
@@ -119,7 +110,15 @@ extern int cmd_no;
 extern Preferences preferences;
 extern unsigned long loop_time_alarm;
 extern tm timeinfo;
-extern String mqtt_topicP2;
+extern void getResetReason(String& tmp);
+extern int rssi;
+extern int rssi_quality;
+extern uint64_t sd_cardsize;
+extern uint64_t sd_usedbytes;
+extern uint8_t sd_cardType;
+extern void getVcc(String& json);
+extern Uptime uptime;
+
 
 #if defined(MODULE1)
 extern MODULE1_DEFINITION

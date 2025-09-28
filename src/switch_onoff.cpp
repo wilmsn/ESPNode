@@ -109,7 +109,6 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
 }
 
 void Switch_OnOff::do_switch(bool new_state) {
-//  String myjson = String("{");
   if ( new_state ) {
     store_diagramm(new_state);
     if ( slider_used ) {
@@ -141,20 +140,20 @@ void Switch_OnOff::do_switch(bool new_state) {
   switch_value = new_state;
   state = String(switch_value?"1":"0");
   
-  html_json = String("{\"") + html_place + String("\":") + String(switch_value?"1":"0");
+  String myjson = String("{\"") + html_place + String("\":") + String(switch_value?"1":"0");
   if (slider_used) {
-    html_json += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
+    myjson += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
   }
   if (timer_min > 0) {
     if ( new_state ) {
-      html_json += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
+      myjson += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
     } else {
-      html_json += String(",\"") + html_place + String("_progress\":\"0\"");
+      myjson += String(",\"") + html_place + String("_progress\":\"0\"");
       timer_min = 0;
     }
   }
-  html_json += String("}");
-  html_update(html_json);
+  myjson += String("}");
+  sendWsMessage(myjson);
   
   mqtt_stat = String("\"") + switch_mqtt_name+String("\":") + String(switch_value? "1":"0");
   if (slider_used) {
@@ -399,10 +398,10 @@ void Switch_OnOff::loop(time_t now) {
         break;
       }
       if (timer_min > 0) {
-        html_json = String("{");
-        diagramm2web(html_json);
-        html_json += String("}");
-        html_update(html_json);
+        String myjson = String("{");
+        diagramm2web(myjson);
+        myjson += String("}");
+        sendWsMessage(myjson);
       }
     }
     old_min = timeinfo.tm_min;

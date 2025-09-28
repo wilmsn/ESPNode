@@ -68,15 +68,6 @@ public:
     bool keyword_match(const String& _keyword);
 
     /**
-     * @brief Sendet ein Zustandsupdate an den Webbrowser.
-     * Sendet alle benötigten Daten um eine Zustandsänderung auf der Webseite für dieses Modul darzustellen. 
-     * Kann von der abgeleiteten Klasse genutzt weden, muss aber nicht. 
-     * Um die Funktion zu nutzen müssen die zu sendenden Daten als Teil-JSON (ohne geschweifte Klammern)
-     * in einer Variablen vom Typ "String" übergeben werden. 
-     */
-    void html_update(String& myjson);
-    
-    /**
      * @brief Initialisierung einer Webseite
      * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
@@ -128,7 +119,7 @@ public:
     String     html_info;
 
     /**
-     * @brief Informationen zum Sensor für die Webseite als json abgespeichert;
+     * @brief Informationen zum Sensor für die Webseite als Teil-Json (ohne geschweifte Klammern) abgespeichert;
      * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
      * ""html_placeX"+":"+"labelX"+"MesswertX"+"EinheitX", ... "
      */

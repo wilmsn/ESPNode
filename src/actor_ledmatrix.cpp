@@ -75,12 +75,12 @@ void Actor_LEDMatrix::html_init() {
   html_json += String(",\"matrix_x\":") + String(matrix.getNumDevicesX() * 8) +
               String(",\"matrix_y\":") + String(matrix.getNumDevicesY() * 8) + 
               String(",\"show_matrix\":1,");
-  html_upd_data(html_json);
+  update4web(html_json);
   html_json_filled = true;
 }
 
-void Actor_LEDMatrix::html_upd_data(String& myjson) {
-  myjson += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
+void Actor_LEDMatrix::update4web(String& myjson) {
+  myjson += String("{\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
             String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
             String("\"") + String(",\"matrix\":\"");
   getMatrixFB(myjson);
@@ -90,9 +90,10 @@ void Actor_LEDMatrix::html_upd_data(String& myjson) {
 void Actor_LEDMatrix::loop(time_t now) {
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
     matrix.display();
-    html_json = "";
-    html_upd_data(html_json);
-    html_update(html_json);
+    String myjson = String("{");
+    update4web(myjson);
+    myjson += String("}");
+    sendWsMessage(myjson);
     graph_change_time = 0;
   }
 }

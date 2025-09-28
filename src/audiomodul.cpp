@@ -283,7 +283,8 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
       // Audiomodul einstellen
       audio.setVolume(audio_vol);
       // Weboberfläche einstellen
-      ws.textAll(String("{\"audio_vol\":") + String(audio_vol) + String("}"));
+      String myjson = String("{\"audio_vol\":") + String(audio_vol) + String("}");
+      sendWsMessage(myjson);
 #ifdef USE_ROTARY
       // Rotarymodul einstellen - nur wenn Änderungen nicht von dort kommen!
       if (! change_from_rotary) {
@@ -324,7 +325,6 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
 #ifdef DISPLAY
       display.radio_station(audio_radio_station[audio_radio_cur_station].name);
 #endif
-      //html_update();
     }
     // Radio: Sender Name speichern ueber Webinterface
     if ( _cmnd == String("audio_radio_save_stn_name") ) {
@@ -972,8 +972,7 @@ void audio_info(const char *info){
   if ( kbs_at >= 0) {
     audio_kbs = String(String(info).substring(kbs_at+8).toInt()/1000) + String(" KBps");
     tmpstr = String("{\"audiomsg4\":\"") + audio_kbs + String("\"}");
-    write2log(LOG_MODULE,1,tmpstr.c_str());
-    ws.textAll(tmpstr.c_str());
+    sendWsMessage(tmpstr);
   }
 #ifdef DISPLAY              
     display.media_bps(audio_kbs);
@@ -984,16 +983,16 @@ void audio_id3data(const char *info){
   String infostr = String(info);
   write2log(LOG_MODULE,2,"ID3 data:", info);
   if (infostr.indexOf("Artist") != -1) {
-    audio_media_artist_name = infostr.substring(infostr.indexOf("Artist: ")+8);
-    ws.textAll(String("{\"audiomsg1\":\"Artist: ") + audio_media_artist_name + String("\"}"));
+    String myjson = String("{\"audiomsg1\":\"Artist: ") + infostr.substring(infostr.indexOf("Artist: ")+8) + String("\"}");
+    sendWsMessage(myjson);
   }
   if (infostr.indexOf("Title") != -1) {
-    audio_media_song_name = infostr.substring(infostr.indexOf("Title: ")+7);
-    ws.textAll(String("{\"audiomsg2\":\"Song: ") + audio_media_song_name + String("\"}"));
+    String myjson = String("{\"audiomsg2\":\"Song: ") + infostr.substring(infostr.indexOf("Title: ")+7) + String("\"}");
+    sendWsMessage(myjson);
   }
   if (infostr.indexOf("Album") != -1) {
-    audio_media_album_name = infostr.substring(infostr.indexOf("Album: ")+7);
-    ws.textAll(String("{\"audiomsg3\":\"Album: ") + audio_media_album_name + String("\"}"));
+    String myjson = String("{\"audiomsg3\":\"Album: ") + infostr.substring(infostr.indexOf("Album: ")+7) + String("\"}");
+    sendWsMessage(myjson);
   }
 #ifdef DISPLAY              
   display.media_artist(audio_media_artist_name);
@@ -1008,28 +1007,24 @@ void audio_showstreamtitle(const char *info){
 #ifdef DISPLAY                   
   display.radio_streamtitle(audio_radio_streamtitle);
 #endif
-  String tmpstr = String("{\"audiomsg2\":\"") + audio_radio_streamtitle + "\"}";
-  write2log(LOG_MODULE,1,tmpstr.c_str());
-  ws.textAll(tmpstr.c_str());
+  String myjson = String("{\"audiomsg2\":\"") + audio_radio_streamtitle + "\"}";
+  sendWsMessage(myjson);
 }
 
 void audio_bitrate(const char *info) {
   String infostr;
   audio_kbs = String(info).toInt()/1000 + String(" KBps");
-  String tmpstr = String("{\"audiomsg4\":\"") + audio_kbs + String("\"}");
-  write2log(LOG_MODULE,1,tmpstr.c_str());
-  ws.textAll(tmpstr.c_str());
+  String myjson = String("{\"audiomsg4\":\"") + audio_kbs + String("\"}");
+  sendWsMessage(myjson);
 #ifdef DISPLAY
   display.radio_bps(audio_kbs.c_str());
 #endif
 }
 
 void audio_showstation(const char *info){
-  String tmpstr;
   audio_radio_stationname = String(info);
-  tmpstr = String("{\"audiomsg1\":\"") + audio_radio_stationname + String("\"}");
-  write2log(LOG_MODULE,1,tmpstr.c_str());
-  ws.textAll(tmpstr.c_str());
+  String myjson = String("{\"audiomsg1\":\"") + audio_radio_stationname + String("\"}");
+  sendWsMessage(myjson);
 }
 
 /*********************************************************************************************************
@@ -1046,19 +1041,19 @@ void AudioModul::audio_radio_off() {
   audio_radio_streamtitle = String("");
   audio_radio_stationname = String("");
   audio_kbs = String("");
-  ws.textAll("{\"audiomsg1\":\"\",\"audiomsg2\":\"\",\"audiomsg3\":\"\",\"audiomsg4\":\"\",\"audio_radio_sw\":0}");
+  String myjson = String("{\"audiomsg1\":\"\",\"audiomsg2\":\"\",\"audiomsg3\":\"\",\"audiomsg4\":\"\",\"audio_radio_sw\":0}");
+  sendWsMessage(myjson);
 }
 
 void AudioModul::audio_radio_on() {
   write2log(LOG_MODULE,1,"Radio on");
   audio_radio_play();
-  String tmpstr = "{";
-  tmpstr += String("\"audiomsg1\":\"") + audio_radio_stationname + String("\",");
-  tmpstr += String("\"audiomsg2\":\"") + audio_radio_streamtitle + String("\",");
-  tmpstr += String("\"audiomsg4\":\"") + audio_kbs + String("\",");
-  tmpstr += String("\"audio_radio_sw\":1");
-  tmpstr += String("}");
-  ws.textAll(tmpstr);
+  String myjson = String("{") +
+                 String("\"audiomsg1\":\"") + audio_radio_stationname + String("\",") +
+                 String("\"audiomsg2\":\"") + audio_radio_streamtitle + String("\",") +
+                 String("\"audiomsg4\":\"") + audio_kbs + String("\",") +
+                 String("\"audio_radio_sw\":1") + String("}");
+  sendWsMessage(myjson);
 }
 
 void AudioModul::audio_radio_play() {
@@ -1073,16 +1068,15 @@ void AudioModul::audio_radio_play() {
 }
 
 void AudioModul::audio_radio_send_stn2web() {
-  String html_json_tmp = String("{");
+  String myjson = String("{");
   for (int i=0; i<MAXSTATIONS; i++) {
-    if ( i > 0 ) html_json_tmp += String(",");
-    html_json_tmp += String("\"audio_radio_add_stn") + String(i) + String("\":\"") +
-                    String(audio_radio_station[i].url) + String(";") +
-                    String(audio_radio_station[i].name) + String("\"");
+    if ( i > 0 ) myjson += String(",");
+    myjson += String("\"audio_radio_add_stn") + String(i) + String("\":\"") +
+             String(audio_radio_station[i].url) + String(";") +
+             String(audio_radio_station[i].name) + String("\"");
   }
-  html_json_tmp += String("}");
-  write2log(LOG_WEB,1,html_json_tmp.c_str());
-  ws.textAll(html_json_tmp);
+  myjson += String("}");
+  sendWsMessage(myjson);
 }
 
 void AudioModul::audio_radio_load_stations() {
@@ -1129,11 +1123,13 @@ void AudioModul::audio_media_on() {
   display.print(audio_media_album_name);
   display.setCursor(30,150);
   display.print(audio_media_song_name);
-  ws.textAll("{\"audio_media_sw\":1}");
+  String myjson = String("{\"audio_media_sw\":1}");
+  sendWsMessage(myjson);
 }
 
 void AudioModul::audio_media_off() {
-  ws.textAll("{\"audiomsg1\":\"\",\"audiomsg2\":\"\",\"audiomsg3\":\"\",\"audiomsg4\":\"\",\"audio_media_sw\":0}");
+  String myjson = String("{\"audiomsg1\":\"\",\"audiomsg2\":\"\",\"audiomsg3\":\"\",\"audiomsg4\":\"\",\"audio_media_sw\":0}");
+  sendWsMessage(myjson);
   audio.stopSong();
   audio_media_album_name = String("");
   audio_media_artist_name = String("");
@@ -1143,7 +1139,7 @@ void AudioModul::audio_media_off() {
 }
 
 void AudioModul::audio_media_get_album_for_web() {
-  String tmpstr = String("{");
+  String myjson = String("{");
   uint16_t dirNo = 0;
   bool setKomma = false;
   File root = SD.open("/");
@@ -1154,14 +1150,13 @@ void AudioModul::audio_media_get_album_for_web() {
   File dir = root.openNextFile();
   while (dir) {
     if (dir.isDirectory()) {
-      if ( setKomma ) tmpstr += String(",");
-      tmpstr += String("\"audio_media_add_album_d") + String(dirNo) + String("f0") + String("\":\"A#")+String(dirNo) + 
-                String("#0#") + String(dir.name()) + String("\"");
-      if (tmpstr.length() > 500) {
-        tmpstr += String("}");
-        ws.textAll(tmpstr);
-        write2log(LOG_MODULE,1,tmpstr.c_str());
-        tmpstr = String("{");
+      if ( setKomma ) myjson += String(",");
+      myjson += String("\"audio_media_add_album_d") + String(dirNo) + String("f0") + String("\":\"A#") + String(dirNo) + 
+               String("#0#") + String(dir.name()) + String("\"");
+      if (myjson.length() > 500) {
+        myjson += String("}");
+        sendWsMessage(myjson);
+        myjson = String("{");
         setKomma = false;
       } else {
         setKomma = true;
@@ -1170,15 +1165,14 @@ void AudioModul::audio_media_get_album_for_web() {
     }
     dir = root.openNextFile();
   }
-  tmpstr += String("}");
-  ws.textAll(tmpstr);
-  write2log(LOG_MODULE,1,tmpstr.c_str());
+  myjson += String("}");
+  sendWsMessage(myjson);
   if ( dir ) dir.close();
   root.close();
 }
 
 void AudioModul::audio_media_get_songs_for_web(uint16_t reqDirNo) {
-  String tmpstr = String("{");
+  String myjson = String("{");
   uint16_t dirNo = 0;
   uint16_t fileNo = 0;
   File root = SD.open("/");
@@ -1193,12 +1187,12 @@ void AudioModul::audio_media_get_songs_for_web(uint16_t reqDirNo) {
         File file = dir.openNextFile();
         while (file) {
           if ( String(file.name()).endsWith(".mp3") ) {
-            if (fileNo > 0) tmpstr += String(",");
+            if (fileNo > 0) myjson += String(",");
             // Datei gefunden, jetzt den Eintrag für die Weboberfläche erstellen
             // Der Eintrag hat das Format: "audio_media_add_album_d0f0":"A#0#0#filename.mp3"
             // Dabei steht A für Album, 0 für die Albumnummer, 0 für die Dateinummer und filename.mp3 für den Dateinamen
-            tmpstr += String("\"audio_media_add_album_d") + String(dirNo) + String("f") + String(fileNo) + String("\":\"T#") + 
-                      String(dirNo) + String("#") + String(fileNo) + String("#") + String(file.name()) + String("\"");
+            myjson += String("\"audio_media_add_album_d") + String(dirNo) + String("f") + String(fileNo) + String("\":\"T#") + 
+                     String(dirNo) + String("#") + String(fileNo) + String("#") + String(file.name()) + String("\"");
             fileNo++;
           }
           file = dir.openNextFile();
@@ -1210,9 +1204,8 @@ void AudioModul::audio_media_get_songs_for_web(uint16_t reqDirNo) {
     dir = root.openNextFile();
   }
   root.close();
-  tmpstr += "}";
-  Serial.printf("audio_media_get_songs_for_web: %s\n", tmpstr.c_str());
-  ws.textAll(tmpstr);
+  myjson += "}";
+  sendWsMessage(myjson);
 }
 
 void AudioModul::audio_media_play(uint16_t _albumNo, uint16_t _songNo) {

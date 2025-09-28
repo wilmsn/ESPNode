@@ -42,10 +42,5 @@ bool Base_Generic::keyword_match(const String& _keyword) {
   return retval;
 }
 
-void Base_Generic::html_update(String& myjson) {
-  write2log(LOG_WEB,2,"[WEB] ",myjson.c_str());
-  ws.textAll(myjson);
-}
-
 void Base_Generic::html_init() {
 }

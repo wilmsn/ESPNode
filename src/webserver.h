@@ -9,6 +9,8 @@ void setup_webserver();
 
 void prozess_sysinfo();
 
+void sendWsMessage(String& myMsg);
+
 void handleWebSocketInit(void *arg, uint8_t *data, size_t len);
 
 /// @brief Der Handler für Websocket Messages

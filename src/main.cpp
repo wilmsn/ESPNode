@@ -1,4 +1,157 @@
-#include "main.h"
+#include "secrets.h"
+#include "common.h"
+
+#ifdef ESP32
+//TODO: Kann der ESP32 seine eigene Betriebsspannung messen?
+#else
+#ifndef ANALOGINPUT
+ADC_MODE(ADC_VCC);
+#endif
+#endif
+
+// Zeitmanagement
+/// @brief Der NTP Server
+const char* ntp_server = NTP_SERVER;
+/// @brief TimeZone Info
+//const char* tz_info = TZ_INFO;
+
+int rssi_quality;
+int rssi;
+
+
+// preferences
+/// @brief  @brief Ein Objekt für die Preferences
+Preferences preferences;
+
+int magicno;
+
+/// @brief Das reboot Flag, ist es auf "true" wird im nächsten Loop Durchgang der Node neu gestartet.
+bool rebootflag = false;
+
+// WiFi
+String wifi_ssid;
+String wifi_pass;
+#ifdef ESP32
+String wifi_ssid1;
+String wifi_pass1;
+String wifi_ssid2;
+String wifi_pass2;
+#endif
+
+bool ap_mode = false;
+
+// Logging
+bool do_log_module;
+bool do_log_system;
+bool do_log_critical;
+bool do_log_web;
+
+/// @brief Ein String zum Einsatz in der Funktion write2log. Darf nicht genutzt werden wenn diese Funktion mit gefülltem String aufgerufen wird!
+String log_str;
+
+/// @brief Ein fixes Array zur Aufnahme des Zeitstempels
+char timeStr[16];
+
+/// @brief Ein fixes Array zur Aufnahme des Log-Kategorie
+char katStr[7];
+
+// Schleifensteuerung
+
+/// @brief Zeitpunkt der letzten Statusdatenerstellung 
+unsigned long mqtt_last_stat = 0;
+/// @brief Zeitpunkt der letzten Telemetriedatenübertragung
+unsigned long mqtt_last_tele = 0;
+/// @brief Startzeitpunkt des Messvorgangs
+//unsigned long measure_starttime = 0;
+/// @brief
+unsigned long loop_starttime = 0;
+/// @brief
+unsigned long wifi_ap_starttime = 0;
+int lastMinute = 0;
+int lastHour = 0;
+int lastDay  = 0;
+unsigned long loop_time_alarm;
+
+/// @brief Ein Array of Char für Messages.
+char mymsg[30];
+
+/// @brief Ein Objekt zur Verwaltung der uptime
+Uptime uptime;
+/// @brief Eine Variable zur Aufnahme der Zeitzoneninfo
+tm timeinfo;
+/// @brief Eine Variable für Zeitinformationen
+time_t now;
+/// @brief Eine Variable zur Aufnahme der Minuten seit Start
+/// Achtung: Ungenauigkeit wird hier tolleriert
+unsigned long minutes = 0; 
+
+#ifdef USE_AUDIO_MEDIA
+#include "FS.h"
+#include "SD.h"
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+// ESP32S3: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
+//#define SD_SCK                        12
+//#define SD_MISO                       13 
+//#define SD_MOSI                       11 
+#ifndef SD_CS
+#define SD_CS                           10
+#endif
+#endif
+#if defined(CONFIG_IDF_TARGET_ESP32)
+// ESP32: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
+//#define SD_SCK                        18
+//#define SD_MISO                       19
+//#define SD_MOSI                       23 
+#ifndef SD_CS
+#define SD_CS                           5
+#endif
+#endif
+uint64_t sd_cardsize;
+uint64_t sd_usedbytes;
+uint8_t sd_cardType;
+#endif
+
+/// @brief Fügt die gemessene Betriebsspannung dem übergebenen String hinzu.
+/// Achtung: ESP32 noch nicht implementiert
+void getVcc(String& json);
+
+/// @brief Schreibt Dateien in die LogKanäle
+/// @param kat Die Logkategorie dieses Eintrags
+/// @param count Anzahl der übergebenen Textblöcke
+/// @param Maximal 10 übergebene Textblöcke 
+void write2log(uint8_t kat, int count, ...);
+
+/// @brief Beziehen der Netzzeit
+/// @param sec Wartezeit für die Syncronisation
+/// @return true = erfolgreich; false = nicht erfolgreich
+bool getNTPtime(long unsigned int sec);
+
+/// @brief Connect or reconnect to WIFI
+void wifi_con(void);
+
+/****************************************************************
+ * Funktionen für den Webserver
+ ***************************************************************/
+
+
+
+
+
+
+/// @brief Logfunktion für RF24 Daten
+/// @param senddir Entweder "N>G" oder "G>N"
+/// @param pl Der Payload
+void writeRf242log(const char* senddir, payload_t pl);
+
+/// @brief Das Setup
+void setup();
+
+/// @brief Die Hauptschleife
+void loop();
+
+/// @brief Ermittlung des Resetgrundes für den ESP32, der ermittelte Grund wird dem übergebenen String angehängt.
+void getResetReason(String& tmp);
+
 
 #ifdef USE_WIFIMULTI
 #ifdef ESP32
@@ -123,7 +276,7 @@ void write2log(uint8_t kat, int count, ...) {
         n++;
       }
       log_str += "\"}";
-      ws.textAll(log_str);
+      sendWsMessage(log_str);
     }
 #if defined(DEBUG_SERIAL)
     Serial.print(timeStr);
@@ -209,8 +362,7 @@ bool do_wifi_con(void) {
 }
 
 #ifdef ESP32
-char *getResetReason(char *tmp)
-{
+void getResetReason(String& tmp) {
 #if defined(DEBUG_SERIAL_WEB)
   Serial.println("Reset Reason roh:");
   Serial.println(rtc_get_reset_reason(0));
@@ -218,58 +370,53 @@ char *getResetReason(char *tmp)
   switch (rtc_get_reset_reason(0))
   {
   case 1:
-    sprintf(tmp, "%s", "POWERON_RESET");
+    tmp +=  String("POWERON_RESET");
     break; //1,  Vbat power on reset
   case 3:
-    sprintf(tmp, "%s", "SW_RESET");
+    tmp += String("SW_RESET");
     break; //3,  Software reset digital core
   case 4:
-    sprintf(tmp, "%s", "OWDT_RESET");
+    tmp += String("OWDT_RESET");
     break; //4,  Legacy watch dog reset digital core
   case 5:
-    sprintf(tmp, "%s", "DEEPSLEEP_RESET");
+    tmp += String("DEEPSLEEP_RESET");
     break; //5,  Deep Sleep reset digital core
   case 6:
-    sprintf(tmp, "%s", "SDIO_RESET");
+    tmp += String("SDIO_RESET");
     break; //6,  Reset by SLC module, reset digital core
   case 7:
-    sprintf(tmp, "%s", "TG0WDT_SYS_RESET");
+    tmp += String("TG0WDT_SYS_RESET");
     break; //7,  Timer Group0 Watch dog reset digital core
   case 8:
-    sprintf(tmp, "%s", "TG1WDT_SYS_RESET");
+    tmp += String("TG1WDT_SYS_RESET");
     break; //8,  Timer Group1 Watch dog reset digital core
   case 9:
-    sprintf(tmp, "%s", "RTCWDT_SYS_RESET");
+    tmp += String("RTCWDT_SYS_RESET");
     break; //9,  RTC Watch dog Reset digital core
   case 10:
-    sprintf(tmp, "%s", "INTRUSION_RESET");
+    tmp += String("INTRUSION_RESET");
     break; //10, Instrusion tested to reset CPU
   case 11:
-    sprintf(tmp, "%s", "TGWDT_CPU_RESET");
+    tmp += String("TGWDT_CPU_RESET");
     break; //11, Time Group reset CPU
   case 12:
-    sprintf(tmp, "%s", "SW_CPU_RESET");
+    tmp += String("SW_CPU_RESET");
     break; //12, Software reset CPU
   case 13:
-    sprintf(tmp, "%s", "RTCWDT_CPU_RESET");
+    tmp += String("RTCWDT_CPU_RESET");
     break; //13, RTC Watch dog Reset CPU
   case 14:
-    sprintf(tmp, "%s", "EXT_CPU_RESET");
+    tmp += String("EXT_CPU_RESET");
     break; //14, for APP CPU, reseted by PRO CPU
   case 15:
-    sprintf(tmp, "%s", "RTCWDT_BROWN_OUT_RESET");
+    tmp += String("RTCWDT_BROWN_OUT_RESET");
     break; //15, Reset when the vdd voltage is not stable
   case 16:
-    sprintf(tmp, "%s", "RTCWDT_RTC_RESET");
+    tmp += String("RTCWDT_RTC_RESET");
     break; //16, RTC Watch dog reset digital core and rtc module
   default:
-    sprintf(tmp, "%s", "NO_MEAN");
+    tmp += String("NO_MEAN");
   }
-#if defined(DEBUG_SERIAL_WEB)
-  Serial.println("Reset Reason:");
-  Serial.println(tmp);
-#endif
-  return tmp;
 }
 #endif
 
@@ -640,16 +787,16 @@ void loop() {
     yield();
     ws.cleanupClients();
     if ((millis() - loop_starttime) > loop_time_alarm) {
-      snprintf(loopmsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
-      write2log(LOG_CRITICAL,1,loopmsg);
+      snprintf(mymsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
+      write2log(LOG_CRITICAL,1,mymsg);
     }
     yield();
 #if defined(RF24GW)
     rf24gw_loop();
     yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
-      snprintf(loopmsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
-      write2log(LOG_CRITICAL,1,loopmsg);
+      snprintf(mymsg,29,"Looptime RF24GW: %d",(int)(millis() - loop_starttime));
+      write2log(LOG_CRITICAL,1,mymsg);
     }
 #endif
 #if defined(MQTT)
@@ -657,8 +804,8 @@ void loop() {
 //    delay(0);
     yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
-      snprintf(loopmsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
-      write2log(LOG_CRITICAL,1,loopmsg);
+      snprintf(mymsg,29,"Looptime MQTT: %d",(int)(millis() - loop_starttime));
+      write2log(LOG_CRITICAL,1,mymsg);
     }
 #endif
 #if defined(MODULE1)
@@ -686,13 +833,13 @@ void loop() {
     yield();
 #endif
     if ((millis() - loop_starttime) > loop_time_alarm) {
-      snprintf(loopmsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
-      write2log(LOG_CRITICAL,1,loopmsg);
+      snprintf(mymsg,29,"Looptime Modules: %d",(int)(millis() - loop_starttime));
+      write2log(LOG_CRITICAL,1,mymsg);
     }
     yield();
     if ((millis() - loop_starttime) > loop_time_alarm) {
-      snprintf(loopmsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
-      write2log(LOG_CRITICAL,1,loopmsg);
+      snprintf(mymsg,29,"Looptime Stat: %d",(int)(millis() - loop_starttime));
+      write2log(LOG_CRITICAL,1,mymsg);
     }
 // Dinge die täglich erledigt werden sollen
     yield();
@@ -726,8 +873,9 @@ void loop() {
       ESP.getHeapStats(&free, &max, &frag);
 #endif
       String tmp_str;
-      tmp_str = "Wifi: " + WiFi.SSID() + "/" + String(WiFi.channel()) +"/" + String(WiFi.RSSI()) + "; Mem: " + String(free) + "(" + String(max) + "/" +
-                String(frag) + ")";
+      tmp_str = String("Wifi: ") + WiFi.SSID() + String("/") + String(WiFi.channel()) + String("/") + 
+                String(WiFi.RSSI()) + String("; Mem: ") + String(free) + String("(") + String(max) + String("/") +
+                String(frag) + String(")");
       write2log(LOG_CRITICAL,1,tmp_str.c_str());
       uptime.update();
       lastHour = timeinfo.tm_hour;
@@ -738,8 +886,8 @@ void loop() {
       lastMinute = timeinfo.tm_min;
     }
     if ((millis() - loop_starttime) > loop_time_alarm) {
-      snprintf(loopmsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));
-      write2log(LOG_CRITICAL,1,loopmsg);
+      snprintf(mymsg,29,"Looptime LoopEnd: %d",(int)(millis() - loop_starttime));
+      write2log(LOG_CRITICAL,1,mymsg);
     }
   }
 }

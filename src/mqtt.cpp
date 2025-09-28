@@ -1,4 +1,5 @@
 #include "common.h"
+//#include "main.h"
 
 /// @brief Ein Objekt für den MQTT Wifi Client
 WiFiClient mqtt_wifi_client;
@@ -217,8 +218,7 @@ void send_mqtt_tele() {
 #endif
       tmpstr += String(",\"ResetReason\":\"");
 #ifdef ESP32
-      char tmp1[20];
-      tmpstr += getResetReason(tmp1);
+      getResetReason(tmpstr);
       tmpstr += String("\"");
 #else
       tmpstr += ESP.getResetReason() + String("\"");

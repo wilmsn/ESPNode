@@ -232,7 +232,7 @@ void AudioDisplay::show_radio_streamtitle() {
   fillRect(25, 130, 240, 60, GC9A01A_BLACK);
   int startAt = 0;
   int splitAt = 0;
-  int lineNo = 0;
+  unsigned int lineNo = 0;
   setTextColor(GC9A01A_GREEN);
   if (cur_streamtitle.length() < 10) {
     setTextSize(3);
@@ -257,7 +257,7 @@ void AudioDisplay::radio_select_station(const char* s0, const char* s1, const ch
   tmpstr = String(s0);
   int startAt = 0;
   int splitAt = 0;
-  int lineNo = 0;
+  unsigned int lineNo = 0;
   setTextColor(GC9A01A_LIGHTGREY);
   while (splitAt < tmpstr.length() && lineNo < 2) {
     splitAt = getPartStringEnd(tmpstr, startAt, 4, 15);
