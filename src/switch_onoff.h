@@ -4,8 +4,6 @@
  ***************************************************************************************/
 #include "base_generic.h"
 
-// Entwicklungsversion start 21.09.25: neu: Timerversion; Diagrammversion
-
 /**
  * @brief Ein abgeleitetes Objekt für einen Ein-Aus Schalter.
  * Der Schalter reagiert nur wenn es in der **set** Funktion mit dem Schlüsselwort aufgerufen 
@@ -294,14 +292,29 @@ private:
      */
     bool diagramm_used = false;
 
+    /**
+     * @brief Der übergebene String wird um JSON Inhalte für das Diagramm erweitert
+     */
     void diagramm2web(String& myjson);
 
+    /**
+     * @brief Speichert den aktuellen Schalterzustand im Diagrammspeicher
+     */
     void store_diagramm(bool invalue);
 
-    uint8_t timer_progress();
+     /**
+     * @brief Gibt die verbleibende Timerlaufzeit (in Prozent) zurück.
+     */
+   uint8_t timer_progress();
 
+    /**
+     * @brief Eine Variable für den Diagrammstore. Muss im Programm mit Speicher hinterlegt werden.
+     */
     void * diagrammstore = NULL;
 
+    /**
+     * @brief Eine Variable zur Erkenung des Minutenwechsels.
+     */
     int old_min = 0;
 
 };

@@ -115,7 +115,7 @@ uint8_t sd_cardType;
 /// Achtung: ESP32 noch nicht implementiert
 void getVcc(String& json);
 
-/// @brief Schreibt Dateien in die LogKanäle
+/// @brief Schreibt Daten in die LogKanäle
 /// @param kat Die Logkategorie dieses Eintrags
 /// @param count Anzahl der übergebenen Textblöcke
 /// @param Maximal 10 übergebene Textblöcke 
@@ -208,9 +208,9 @@ void write2log(uint8_t kat, int count, ...) {
   va_list args;
   int n = 0;
   if (count > 12) count = 12; 
-  char *c[12];
+  char * c[12];
 
-  /* Parameterabfrage initialisieren */
+  // Parameterabfrage initialisieren
   va_start(args, count);
   while (n < count) {
     c[n] = (char *)va_arg(args, char *);
@@ -288,8 +288,8 @@ void write2log(uint8_t kat, int count, ...) {
     }
     Serial.println();
 #endif
-    va_end(args);
   }
+  va_end(args);
 }
 
 // todo Schleifen maximaldauer könnte kritisch sein
@@ -322,7 +322,6 @@ bool do_wifi_con(void) {
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
 #else  
-//  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 #endif  
 #else
@@ -449,11 +448,11 @@ void start_AP() {
  * Setup
  *****************************************************/
 void setup() {
-  // Serial port for debugging purposes
   // Achtung: Wenn die Prefs zu schnell nach Systemstart aufgerufen werden gibt es einen Feler bei den Preferences!
   //          Die Werte werden nicht ausgelesen, das Programm steht!!!!!!!
   // !!!!!!!! Diesen DELAY nicht entfernen !!!!!!!!!
   delay(1000);
+  // Serial port for debugging purposes
 #ifdef DEBUG_SERIAL
   Serial.begin(115200);
   Serial.println("Available Networks: ");
@@ -647,10 +646,12 @@ void setup() {
     return;
   } else {
     write2log(LOG_SYSTEM,1, "++ Begin Startup: LittleFS mounted ++");
+#ifdef USE_BOOTMESSAGE
+    bootMessage(1,"OK",true);
+#endif
   }
 
 #ifdef USE_BOOTMESSAGE
-  bootMessage(1,"OK",true);
   bootMessage(0,"Con WiFi",false);
 #endif
 
@@ -666,9 +667,7 @@ void setup() {
 #ifdef USE_BOOTMESSAGE
     bootMessage(1,WiFi.localIP().toString().c_str(),true);
 #endif
-#if defined(DEBUG_SERIAL)
     write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
-#endif
 #ifdef USE_BOOTMESSAGE
   bootMessage(0,"get Time",false);
 #endif

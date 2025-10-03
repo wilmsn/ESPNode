@@ -57,11 +57,12 @@ public:
      * @param _slider_keyword Ein Keyword für den Schieberegler
      * @param _mqtt_line Der MQTT Bezeichner für Zeilendaten
      * @param _mqtt_graph Der MQTT Bezeichner für Grafikdaten
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
                bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_no, 
                const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword,
-               const char* _mqtt_line, const char* _mqtt_graph);
+               const char* _mqtt_line, const char* _mqtt_graph, bool _show_diagramm);
 
     /**
      * @brief Die "set" Methode des Actors.

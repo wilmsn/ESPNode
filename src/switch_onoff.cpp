@@ -185,42 +185,42 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
     }
 // Fuer 1 Stunde einschalten
     if ( (_val == String("1h")) ) {
-      off_minute = minutes + 60;
+      off_minute = minutes + 60 + SWITCHTIMERADD;
       timer_min = 60;
       do_switch(true);
       retval = true;
     }
 // Fuer 2 Stunden einschalten
     if ( (_val == String("2h")) ) {
-      off_minute = minutes + 120;
+      off_minute = minutes + 120 + SWITCHTIMERADD;
       timer_min = 120;
       do_switch(true);
       retval = true;
     }
 // Fuer 3 Stunden einschalten
     if ( (_val == String("3h")) ) {
-      off_minute = minutes + 180;
+      off_minute = minutes + 180 + SWITCHTIMERADD;
       timer_min = 180;
       do_switch(true);
       retval = true;
     }
 // Fuer 4 Stunden einschalten
     if ( (_val == String("4h")) ) {
-      off_minute = minutes + 240;
+      off_minute = minutes + 240 + SWITCHTIMERADD;
       timer_min = 240;
       do_switch(true);
       retval = true;
     }
 // Fuer 5 Stunden einschalten
     if ( (_val == String("5h")) ) {
-      off_minute = minutes + 300;
+      off_minute = minutes + 300 + SWITCHTIMERADD;
       timer_min = 300;
       do_switch(true);
       retval = true;
     }
 // Fuer 6 Stunden einschalten
     if ( (_val == String("6h")) ) {
-      off_minute = minutes + 360;
+      off_minute = minutes + 360 + SWITCHTIMERADD;
       timer_min = 360;
       do_switch(true);
       retval = true;

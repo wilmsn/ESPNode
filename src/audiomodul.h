@@ -169,7 +169,7 @@ public:
     /// @param label Ein Bezeichner für diesen Schalter
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
-    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword);
+    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword, bool _show_diagramm);
 
     /// @brief Die normale Set Funktion aus dem Grundmodul erweitert um feste Schlüsselwörter 
     /// @brief zur Steuerung dieses Audiomodules..

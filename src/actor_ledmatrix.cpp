@@ -8,10 +8,10 @@ LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_
 void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
                bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_no, 
                const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword,
-               const char* _mqtt_line, const char* _mqtt_graph) {
+               const char* _mqtt_line, const char* _mqtt_graph, bool _show_diagramm) {
   Switch_OnOff::begin(_html_place, _label, _mqtt_name, _keyword, 
                       _start_value, _on_value, _is_state, _slider_val, 15, _slider_no, 
-                      _slider_label, _slider_mqtt_name, _slider_keyword, false);
+                      _slider_label, _slider_mqtt_name, _slider_keyword, _show_diagramm);
   mqtt_line = _mqtt_line;
   mqtt_graph = _mqtt_graph;
   matrix.begin();
@@ -80,7 +80,7 @@ void Actor_LEDMatrix::html_init() {
 }
 
 void Actor_LEDMatrix::update4web(String& myjson) {
-  myjson += String("{\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
+  myjson += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
             String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
             String("\"") + String(",\"matrix\":\"");
   getMatrixFB(myjson);

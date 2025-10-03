@@ -15,14 +15,14 @@
 //#define NODESIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
-#define WITTYNODE
+//#define WITTYNODE
 //#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
-//#define NODE_TEICH
+#define NODE_TEICH
 //#define NODE_FLUR
 //#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
@@ -108,6 +108,14 @@
 ///               Beim Neustart werden wieder die Defaults genutzt.
 /// Jede andere Zahl bewirkt das die Defaults einmalig übernommen werden wenn sich die NUmmer geändert hat.
 #define MAGICNO               0
+#endif
+
+#ifndef SWITCHTIMERADD
+/// SwitchTimerAdd:
+/// Diese Zeit wird auf die normale Timerzeit aufgeschlagen. Dadurch wird erreicht das bei z.B. einer Schaltzeit,
+/// die verlängert werden soll, zwischenzeitig keine Ausschaltung erfolgt weil z.B. der interne Timer ungenau ist.
+/// Default ist 5 Minuten. 
+#define SWITCHTIMERADD       5
 #endif
 
 /// Modules

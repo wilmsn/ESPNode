@@ -35,7 +35,7 @@ RF24 Gateway:
 #define MAGICNO                  344
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity", false);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Flurlicht", "licht", "licht", false, true, true, 0, 150, 255, 1, "Helligkeit", "intensity", "intensity", true);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
@@ -63,10 +63,10 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Der Node auf der Terasse"
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Terasse", "terasse", "terasse", false, false, false, 2, false);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Terasse", "terasse", "terasse", false, false, false, 2, true);
 
 #define MODULE2_DEFINITION       Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "Balkon", "balkon", "balkon", false, false, false, 0, false);
+#define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "Balkon", "balkon", "balkon", false, false, false, 0, true);
 
 #define MODULE3_DEFINITION       Sensor_18B20 module3;
 #define MODULE3_BEGIN_STATEMENT  module3.begin("out1","Temperatur","Temperatur");
@@ -117,7 +117,7 @@ RF24 Gateway:
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph", true);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur");
@@ -155,14 +155,14 @@ RF24 Gateway:
 //#define I2S_LRC                  0
 //#define I2S_DOUT                 0
 
-#define DEBUG_SERIAL_MODULE
-#define DEBUG_SERIAL_WEB
+//#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_WEB
 
 #define HOSTNAME                 "Kuechenradio"
 #define HOST_DISCRIPTION         "Radio in der Kueche"
 
 #define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", true);
 
 #define DO_LOG_WEB               false
 #define DO_LOG_MODULE            false
@@ -181,10 +181,11 @@ RF24 Gateway:
 #define USE_AUDIO_MEDIA
 #define USE_DISPLAY_GC9A01A
 #define USE_ROTARY
+#define USE_BOOTMESSAGE
 
 #define TFT_ROT                  4
 
-#define MAGICNO                  77
+#define MAGICNO                  78
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
@@ -198,7 +199,7 @@ RF24 Gateway:
 
 #include "audiomodul.h"
 #define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", true);
 
 #endif
 //-----------------------------------------------------

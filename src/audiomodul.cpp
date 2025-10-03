@@ -97,9 +97,9 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) 
 /// @brief Instance for audio (I2S and decoder) device
 Audio            audio;
 
-void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword)  {
+void AudioModul::begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword, bool _show_diagramm)  {
 // Startet als Schalter ohne HW-Pin ohne Diagramm => Fall 1  
-  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true, false);
+  Switch_OnOff::begin(html_place, label, mqtt_name, keyword, false, true, true, _show_diagramm);
   uint8_t this_app;
   uint8_t this_lev;
   html_info = "";
