@@ -169,6 +169,7 @@ public:
     /// @param label Ein Bezeichner für diesen Schalter
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
+    /// @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
     void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword, bool _show_diagramm);
 
     /// @brief Die normale Set Funktion aus dem Grundmodul erweitert um feste Schlüsselwörter 

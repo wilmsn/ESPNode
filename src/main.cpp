@@ -49,12 +49,6 @@ bool do_log_web;
 /// @brief Ein String zum Einsatz in der Funktion write2log. Darf nicht genutzt werden wenn diese Funktion mit gefülltem String aufgerufen wird!
 String log_str;
 
-/// @brief Ein fixes Array zur Aufnahme des Zeitstempels
-char timeStr[16];
-
-/// @brief Ein fixes Array zur Aufnahme des Log-Kategorie
-char katStr[7];
-
 // Schleifensteuerung
 
 /// @brief Zeitpunkt der letzten Statusdatenerstellung 
@@ -207,9 +201,9 @@ void getVcc(String& json) {
 void write2log(uint8_t kat, int count, ...) {
   va_list args;
   int n = 0;
+  char timestr[16];
   if (count > 12) count = 12; 
   char * c[12];
-
   // Parameterabfrage initialisieren
   va_start(args, count);
   while (n < count) {
@@ -218,16 +212,7 @@ void write2log(uint8_t kat, int count, ...) {
   }
   // Im AP-Mode wird nichts gelogged !!!
   if ( ! ap_mode ) {
-    snprintf(timeStr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
-    switch(kat) {
-      case LOG_WEB: snprintf(katStr,7,"[ WEB]"); break;
-      case LOG_SYSTEM: snprintf(katStr,7,"[ SYS]"); break;
-      case LOG_MQTT: snprintf(katStr,7,"[MQTT]"); break;
-      case LOG_RF24: snprintf(katStr,7,"[RF24]"); break;
-      case LOG_MODULE: snprintf(katStr,7,"[ MOD]"); break;
-      case LOG_CRITICAL: snprintf(katStr,7,"[CRIT]"); break;
-      default: snprintf(katStr,7,"[----]"); break;
-    }
+    snprintf(timestr, 15, "[%02d:%02d:%02d.%03u]", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned int)millis()%1000);
     if ( do_log_critical && kat == LOG_DAYBREAK ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
@@ -238,7 +223,7 @@ void write2log(uint8_t kat, int count, ...) {
     if ( do_log_critical && (kat == LOG_CRITICAL) ) {
       File f = LittleFS.open( DEBUGFILE, "a" );
       if (f) {
-        f.printf("%s ",timeStr);
+        f.print(timestr);
         n = 0;
         while (n < count) {
           f.print(c[n]);
@@ -258,28 +243,36 @@ void write2log(uint8_t kat, int count, ...) {
 #endif
           (do_log_system   && ( kat == LOG_SYSTEM )) || 
           (do_log_critical && ( kat == LOG_CRITICAL )) ) {
-      log_str = "{\"log\":\"";
-      log_str += timeStr;
-      log_str += katStr;
+      log_str = String("{\"log\":\"");
+      log_str += timestr;
+      switch(kat) {
+        case LOG_WEB:       log_str += String("[ WEB]"); break;
+        case LOG_SYSTEM:    log_str += String("[ SYS]"); break;
+        case LOG_MQTT:      log_str += String("[MQTT]"); break;
+        case LOG_RF24:      log_str += String("[RF24]"); break;
+        case LOG_MODULE:    log_str += String("[ MOD]"); break;
+        case LOG_CRITICAL:  log_str += String("[CRIT]"); break;
+        default:            log_str += String("[----]"); break;
+      }
       n = 0;
       while (n < count) {
-        log_str += " ";
+        log_str += String(" ");
         // Anführungszeichen innerhalb des Log-Strings führen zu Frontendproblemen.
         // Deshalb wird " gegen ' ersetzt!
-        for ( unsigned int i=0; i<strlen(c[n]); i++ ) {
+        for ( unsigned int i=0; i < strlen(c[n]); i++ ) {
           if ( c[n][i] == '"' ) {
-            log_str += "'";  
+            log_str += String("'");
           } else {
-            log_str += c[n][i];
+            log_str += String(c[n][i]);
           }
         }
         n++;
       }
-      log_str += "\"}";
-      sendWsMessage(log_str);
+      log_str += String("\"}");
+      ws.textAll(log_str);
     }
 #if defined(DEBUG_SERIAL)
-    Serial.print(timeStr);
+    Serial.print(timestr);
     n = 0;
     while (n < count) {
       Serial.print(c[n]);
@@ -654,7 +647,6 @@ void setup() {
 #ifdef USE_BOOTMESSAGE
   bootMessage(0,"Con WiFi",false);
 #endif
-
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
 #ifdef USE_BOOTMESSAGE

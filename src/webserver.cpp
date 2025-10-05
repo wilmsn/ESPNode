@@ -14,7 +14,7 @@ void initWebSocket() {
 
 void sendWsMessage(String& myMsg) {
   ws.textAll(myMsg);
-  write2log(LOG_WEB,2,"[WEB]",myMsg.c_str());
+  write2log(LOG_WEB,1,myMsg.c_str());
 }
 
 void prozess_wifishow() {
