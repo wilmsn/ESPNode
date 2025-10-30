@@ -29,6 +29,8 @@ public:
   /// @param _dc der DC Pin
   /// @param _rot Die Rotation
   AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot);
+  /// @brief Initialisiert die Anzeige
+  void begin();
   /// @brief Die Loop Funktion wird regelmäßig aufgerufen
   /// @param now Der Unix Zeitstempel
   void loop(time_t now);
@@ -105,8 +107,6 @@ enum class screenmode_t {
 
 enum screenmode_t cur_screen;
 
-//  void screen(screenmode_t _screen);
-
 
 private:
   void clock_small();
@@ -140,7 +140,7 @@ String cur_song;
 uint8_t cur_vol;
 uint8_t boot_line = 0;
 bool    boot_last_nl = true;
-
+uint8_t rotation = 0;
 };
 
 #endif

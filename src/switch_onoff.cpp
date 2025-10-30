@@ -73,12 +73,12 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
   on_value = _on_value;
   switch_value = _start_value;
   is_state = _is_state;
+  do_switch(switch_value);
   if ( _show_diagramm ) {
     diagramm_used = true;
     diagrammstore = malloc(24);
     memset(diagrammstore,0,24);
   }
-  do_switch(switch_value);
   if (hw_pin1_used && hw_pin2_used ) {
 
     html_info = String("\"tab_head_") + html_place+String("\":\"Switch On Off\"") +
@@ -292,72 +292,42 @@ void Switch_OnOff::html_init() {
   html_json_filled = true;
 }
 
+bool Switch_OnOff::do_dia_store(int min) {
+  switch (min)  {
+    case 0:
+    case 8:
+    case 15:
+    case 23:
+    case 30:
+    case 38:
+    case 45:
+    case 53:
+      return true;
+    break;
+    default:
+      return false;
+  }
+}
+
 void Switch_OnOff::store_diagramm(bool invalue) {
+  bool ovfl1 = false;
+  bool ovfl2 = invalue;
   if (diagramm_used) {
-    uint8_t myhour =  ((uint8_t *)diagrammstore)[timeinfo.tm_hour];
-    if (timeinfo.tm_min >= 0 && timeinfo.tm_min <= 7) {
-      if (invalue) {
-        myhour = myhour | 0b00000001;  
-      } else {
-        myhour = myhour & 0b11111110;
+    if (do_dia_store(timeinfo.tm_min)) {
+      for (int i=0; i<24; i++) {
+        ovfl1 = ((uint8_t *)diagrammstore)[i] & 0b10000000;
+        ((uint8_t *)diagrammstore)[i] = (((uint8_t *)diagrammstore)[i] << 1) | ovfl2;
+        ovfl2 = ovfl1;
       }
+    } else {
+      ((uint8_t *)diagrammstore)[0] |= invalue;
     }
-    if (timeinfo.tm_min >= 8 && timeinfo.tm_min <= 14) {
-      if (invalue) {
-        myhour = myhour | 0b00000010;  
-      } else {
-        myhour = myhour & 0b11111101;
-      }
-    }
-    if (timeinfo.tm_min >= 15 && timeinfo.tm_min <= 22) {
-      if (invalue) {
-        myhour = myhour | 0b00000100;  
-      } else {
-        myhour = myhour & 0b11111011;
-      }
-    }
-    if (timeinfo.tm_min >= 23 && timeinfo.tm_min <= 29) {
-      if (invalue) {
-        myhour = myhour | 0b00001000;  
-      } else {
-        myhour = myhour & 0b11110111;
-      }
-    }
-    if (timeinfo.tm_min >= 30 && timeinfo.tm_min <= 37) {
-      if (invalue) {
-        myhour = myhour | 0b00010000;  
-      } else {
-        myhour = myhour & 0b11101111;
-      }
-    }
-    if (timeinfo.tm_min >= 38 && timeinfo.tm_min <= 44) {
-      if (invalue) {
-        myhour = myhour | 0b00100000;  
-      } else {
-        myhour = myhour & 0b11011111;
-      }
-    }
-    if (timeinfo.tm_min >= 45 && timeinfo.tm_min <= 52) {
-      if (invalue) {
-        myhour = myhour | 0b01000000;  
-      } else {
-        myhour = myhour & 0b10111111;
-      }
-    }
-    if (timeinfo.tm_min >= 53 && timeinfo.tm_min <= 59) {
-      if (invalue) {
-        myhour = myhour | 0b10000000;  
-      } else {
-        myhour = myhour & 0b01111111;
-      }
-    }
-    ((uint8_t *)diagrammstore)[timeinfo.tm_hour] = myhour;
   }
 }
 
 void Switch_OnOff::diagramm2web(String& myjson) {
   if (diagramm_used) {
-    if (myjson.length() > 3) myjson += String(",");
+    if (myjson.length() > 5) myjson += String(",");
     myjson +=  String("\"") + html_place + String("_dia\":\"");
     for(int n=0; n<24; n++) {
       uint8_t myhour =  ((uint8_t *)diagrammstore)[n];
@@ -371,38 +341,29 @@ void Switch_OnOff::diagramm2web(String& myjson) {
       if (myhour & 0b10000000) myjson += String("1"); else myjson += String("0"); 
     }
     myjson += String("\"");
-    if (timer_min > 0) {
-      myjson += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
-    }
   }
 }
 
 void Switch_OnOff::loop(time_t now) {
   if (timeinfo.tm_min != old_min) {
+    String tmpjson = String("{");
     if (off_minute > 0 && off_minute <= minutes && timer_min > 0) {
       do_switch(false);
       off_minute = 0;
       timer_min = 0;
     }
+    if (timer_min > 0) {
+      tmpjson += String("\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
+    }
     if (diagramm_used) {
-      switch (timeinfo.tm_min)  {
-        case 0:
-        case 8:
-        case 15:
-        case 23:
-        case 30:
-        case 38:
-        case 45:
-        case 53:
-          store_diagramm(switch_value);
-        break;
+      if (do_dia_store(timeinfo.tm_min)) {
+        store_diagramm(switch_value);
+        diagramm2web(tmpjson);
       }
-      if (timer_min > 0) {
-        String myjson = String("{");
-        diagramm2web(myjson);
-        myjson += String("}");
-        sendWsMessage(myjson);
-      }
+    }
+    if ((timer_min > 0 || diagramm_used) && tmpjson.length() > 5) {
+        tmpjson += String("}");
+        sendWsMessage(tmpjson);
     }
     old_min = timeinfo.tm_min;
   }

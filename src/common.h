@@ -50,7 +50,7 @@ extern unsigned long minutes;
 
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
-#ifdef DISPLAY
+#ifdef USE_DISPLAY
 /// @brief Zeigt eine Bootmeldung auf dem Display an
 /// @details Diese Funktion wird beim Booten des Gerätes aufgerufen, um eine Nachricht auf
 /// dem Display anzuzeigen. Der Text wird in der angegebenen Farbe dargestellt. Dabei gilt folgende Festlegung:

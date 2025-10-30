@@ -154,12 +154,6 @@ typedef enum {
     LastApp 
 } mymode_t;
 
-
-
-
-
-
-
 /// @brief Das Audiomodul ist eine Ableitung der Klasse "Switch_OnOff" 
 class AudioModul : public Switch_OnOff {
 
@@ -192,7 +186,6 @@ public:
     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
     */
     void html_init();
-
 
 private:
     /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
@@ -327,9 +320,6 @@ private:
 #endif //USE_AUDIO_MEDIA
 
 };
-
-
-
 
 #endif  //_AUDIOMODUL_H_
 #endif  //USE_AUDIOMODUL

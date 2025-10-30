@@ -88,6 +88,7 @@ void Actor_LEDMatrix::update4web(String& myjson) {
 }
 
 void Actor_LEDMatrix::loop(time_t now) {
+  Switch_OnOff::loop(now);
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
     matrix.display();
     String myjson = String("{");

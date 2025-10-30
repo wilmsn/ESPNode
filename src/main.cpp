@@ -482,7 +482,17 @@ void setup() {
     ESP.restart();
   }
 #ifdef DEBUG_SERIAL
-  Serial.print("MagicNo(Prefs) = ");
+#ifdef ESP32
+  Serial.println(String("IdeVer: ") + String(ESP.getSdkVersion()));
+  Serial.println(String("Arduino: ")+ String(ARDUINO));
+  Serial.println(String("ESP-Arduino: ")  + String(ESP_ARDUINO_VERSION_MAJOR)+ String(".")
+              + String(ESP_ARDUINO_VERSION_MINOR) + String(".") 
+              + String(ESP_ARDUINO_VERSION_PATCH));
+  Serial.println(String("ESP: ")  + String(ESP_IDF_VERSION_MAJOR)+ String(".")
+              + String(ESP_IDF_VERSION_MINOR) + String(".") 
+              + String(ESP_IDF_VERSION_PATCH));
+#endif
+   Serial.print("MagicNo(Prefs) = ");
   Serial.println(magicno);
   Serial.print("MagicNo(Prg) = ");
   Serial.println(MAGICNO);

@@ -1,1 +1,1 @@
-#define SWVERSION   "0.999 beta4"
+#define SWVERSION   "1.000"

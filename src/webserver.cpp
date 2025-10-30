@@ -208,19 +208,19 @@ void prozess_sysinfo() {
       myjson += String("\"") +
                 String(",\"MAC\":\"");
       myjson += WiFi.macAddress();
-      myjson += String("\"") +
-                String(",\"IdeVer\":\"") + String(ARDUINO) + String("\"");
+      myjson += String("\"") + String(",\"IdeVer\":\"") + String(ARDUINO) + String("\"");
 #ifdef ESP32
-      myjson += String(",\"CoreVer\":\"unknown\"");
+      myjson += String(",\"CoreVer\":\"Arduino: ")
+              + String(ESP_ARDUINO_VERSION_MAJOR) + String(".") + String(ESP_ARDUINO_VERSION_MINOR) 
+              + String(".") + String(ESP_ARDUINO_VERSION_PATCH) + String("\"");
 #else
       myjson += String(",\"CoreVer\":\"");
       myjson += ESP.getCoreVersion();
       myjson += String("\"");
 #endif
       myjson += String(",\"SdkVer\":\"");
-      myjson += ESP.getSdkVersion();
-      myjson += String("\"") +
-                String(",\"SW\":\"") + String(SWVERSION) + String(" (") + String(__DATE__) + String(")\"}");
+      myjson += String(ESP.getSdkVersion());
+      myjson += String("\",\"SW\":\"") + String(SWVERSION) + String(" (") + String(__DATE__) + String(")\"}");
       sendWsMessage(myjson);
 // Teil 3
       myjson = String("{\"ws_teil2\":2");

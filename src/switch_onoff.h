@@ -275,8 +275,6 @@ public:
      */
     uint8_t    hw_pin2;
 
-
-private:
     /**
      * @brief Bei Schalten über den Timer wird hier die Ausschaltzeit hinterlegt.
      */
@@ -307,8 +305,15 @@ private:
      */
    uint8_t timer_progress();
 
+   bool do_dia_store(int min);
+
     /**
      * @brief Eine Variable für den Diagrammstore. Muss im Programm mit Speicher hinterlegt werden.
+     * Funktionsweise des diagrammstore: Zunächst wird die Variable als Array mit 24 Feldern aufgebaut.
+     * Jedes Feld ist für eine komplette Stunde, die Felder selber sind jedoch variablen Stunden zugewiesen.
+     * diagrammstore[0] => die aktuelle Stunde
+     * ...
+     * diagrammstore[23] => vor 23 Stunden
      */
     void * diagrammstore = NULL;
 
@@ -316,6 +321,18 @@ private:
      * @brief Eine Variable zur Erkenung des Minutenwechsels.
      */
     int old_min = 0;
+
+    /**
+     * @brief Eine Variable zur Erkenung des Stundenwechsels.
+     */
+    int old_hour = 0;
+
+    /**
+     * @brief Eine Variable die den letzten Speicherzeitpunkt (Diagrammdaten) festhält.
+     */
+    int last_store = 0;
+
+private:
 
 };
 

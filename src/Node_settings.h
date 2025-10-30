@@ -139,7 +139,7 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define USE_ROTARY
 #define USE_DISPLAY_GC9A01A
-#define TFT_ROT   3
+#define TFT_ROT                    3
 #define USE_AUDIO_RADIO
 //#define USE_WIFIMULTI
 
@@ -155,6 +155,7 @@ RF24 Gateway:
 //#define I2S_LRC                  0
 //#define I2S_DOUT                 0
 
+#define DEBUG_SERIAL
 //#define DEBUG_SERIAL_MODULE
 //#define DEBUG_SERIAL_WEB
 
@@ -344,13 +345,13 @@ RF24 Gateway:
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, true, WITTY_LED_PIN, true);
 
 #define MODULE2_DEFINITION      Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rot", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot Helligkeit", "rot_sl", "rot_sl", true);
+#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rt", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot Helligkeit", "rot_sl", "rot_sl", true);
 
 #define MODULE3_DEFINITION      Switch_OnOff module3;
-#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gruen", "gruen", "gruen", false, true, false, WITTY_RGB_GN, 100, 100, 2, "Grün Helligkeit", "gruen_sl", "gruen_sl", true);
+#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gn", "gruen", "gruen", false, true, false, WITTY_RGB_GN, 100, 100, 2, "Grün Helligkeit", "gruen_sl", "gruen_sl", true);
 
 #define MODULE4_DEFINITION      Switch_OnOff module4;
-#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB blau", "blau", "blau", false, true, false, WITTY_RGB_BL, 100, 100, 3, "Blau Helligkeit", "blau_sl", "blau_sl", true);
+#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB bl", "blau", "blau", false, true, false, WITTY_RGB_BL, 100, 100, 3, "Blau Helligkeit", "blau_sl", "blau_sl", true);
 
 #define MODULE5_DEFINITION      Sensor_LDR module5;
 #define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR");
@@ -386,7 +387,7 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Ein Audio Testnode"
 
 #define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage");
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", false);
 
 #define DO_LOG_WEB               true
 #define DO_LOG_MODULE            true

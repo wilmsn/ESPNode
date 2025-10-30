@@ -9,7 +9,7 @@
 <!-- script src="jquery.js"></script -->
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "0.999 beta4 (Sep 26 2025)";
+var htmlversion = "1.000 (Oct 25 2025)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -1024,19 +1024,19 @@ function draw_sw_diagramm() {
     ctx.beginPath();
     ctx.font = "10px Arial";
     ctx.strokeStyle = "black";
-    ctx.strokeText("Uhrzeit -->",x_off - 60, c_h - y_off + 15);
+    ctx.strokeText("Zeit -->",x_off - 60, c_h - y_off + 15);
     ctx.moveTo(x_off, 0);
     ctx.lineTo(x_off, c_h - y_off + 5);
-    ctx.strokeText("0",x_off + 2,c_h - y_off + 15);
+    ctx.strokeText("jetzt",x_off + 2,c_h - y_off + 15);
     ctx.moveTo(x_off + 48, 0);
     ctx.lineTo(x_off + 48, c_h - y_off + 5);
-    ctx.strokeText("6",x_off + 48 + 2,c_h - y_off + 15);
+    ctx.strokeText("-6 h",x_off + 48 + 2,c_h - y_off + 15);
     ctx.moveTo(x_off + 96, 0);
     ctx.lineTo(x_off + 96, c_h - y_off + 5);
-    ctx.strokeText("12",x_off + 96 + 2,c_h - y_off + 15);
+    ctx.strokeText("-12 h",x_off + 96 + 2,c_h - y_off + 15);
     ctx.moveTo(x_off + 144, 0);
     ctx.lineTo(x_off + 144, c_h - y_off + 5);
-    ctx.strokeText("18",x_off + 144 + 2,c_h - y_off + 15);
+    ctx.strokeText("-18 h",x_off + 144 + 2,c_h - y_off + 15);
     ctx.moveTo(x_off + 192, 0);
     ctx.lineTo(x_off + 192, c_h - y_off + 5);
     for (let i=1; i < num_graph; i++) {
