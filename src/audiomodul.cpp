@@ -51,7 +51,7 @@ String audio_media_album_name;
 String audio_media_artist_name;
 /// @brief Der Name des aktuellen Files / Name des Liedes
 String audio_media_song_name;
-
+void my_audio_info(Audio::msg_t m);
 #ifdef USE_ROTARY
 
 #include "AiEsp32RotaryExtention.h"
@@ -93,6 +93,9 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) 
 #endif
 */
 #endif // USE_DISPLAY
+
+/// @brief Wird auf "true" gesetzt wenn das Ende einer Musikdatei erreicht ist.
+bool             song_eof = false;
 
 /// @brief Instance for audio (I2S and decoder) device
 Audio            audio;
@@ -152,6 +155,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* mq
                String(",\"tab_line3_rotary\":\"SW-Pin:#GPIO: ") + String(ROT_SW)+ String("\"") +
                String(",\"tab_line4_rotary\":\"Resistor:#") + String(ROTARY_ENCODER_R_PULLDOWN? "pulldown" : "pullup")+ String("\"");
 #endif
+  Audio::audio_info_callback = my_audio_info; // optional
 #ifdef USE_AUDIO_RADIO
 #ifdef USE_DISPLAY
   display.begin();
@@ -424,9 +428,9 @@ void AudioModul::html_init() {
   html_json += String(",\"audio_media_show\":1");
   if (mode == Media) {
     html_json += String(",\"audio_media_sw\":1") +
-                 String(",\"audiomsg1\":Artist: \"") + audio_media_artist_name + String("\"") +
-                 String(",\"audiomsg2\":Song: \"") + audio_media_song_name + String("\"") +
-                 String(",\"audiomsg3\":Album: \"") + audio_media_album_name + String("\"") +
+                 String(",\"audiomsg1\":\"Artist: ") + audio_media_artist_name + String("\"") +
+                 String(",\"audiomsg2\":\"Song: ") + audio_media_song_name + String("\"") +
+                 String(",\"audiomsg3\":\"Album: ") + audio_media_album_name + String("\"") +
                  String(",\"audiomsg4\":\"") + audio_kbs + String("\"");
   } else {
     html_json += String(",\"audio_media_sw\":0");
@@ -474,6 +478,8 @@ void AudioModul::audio_set_mode(mymode_t new_mode) {
 #endif
   if ( new_mode != mode ) {
     mode_changed = true;
+    if (mode == Radio) audio_radio_off();
+    if (mode == Media) audio_media_off();
     if (new_mode == Radio || new_mode == Media || new_mode == Speaker) default_mode = new_mode;
     last_mode = mode;
     mode = new_mode;
@@ -574,34 +580,36 @@ void AudioModul::loop(time_t now) {
 // Das Audio loop wird nur aufgerufen wenn Audio auch aktiv ist
   if (mode != Off) {
     audio.loop();
-    if (!audio.isRunning()) {
-#ifdef USE_AUDIO_RADIO
-      if (mode == Radio) {
-        audio_radio_off();
-        audio_radio_on();
-      }
-#endif
+    vTaskDelay(1);
+
 #ifdef USE_AUDIO_MEDIA
-      if (mode == Media) {
-        if ( song_started > 0) {
-          if (now - song_started > 2) {
-            Serial.println("###> Song finished, next song");
-            audio_media_cur_song++;
-            if (! getSongByNumber(SD, audio_media_cur_album, audio_media_cur_song)) {
-              audio_media_cur_album++;
-              audio_media_cur_song = 0;
-              if (! getSongByNumber(SD, audio_media_cur_album, audio_media_cur_song)) {
-                audio_media_cur_album = 0;
-                audio_media_cur_song = 0;
-              }
-            } 
-            audio_media_play(audio_media_cur_album, audio_media_cur_song);
-          }
-        } else song_started = now;
+    if (mode == Media) {
+      if (song_started) {
+        song_starttime = now;
+        song_started = false;
+      } 
+      if ( song_eof && (now - song_starttime) < 2 ) {
+        song_eof = false;
+        write2log(LOG_MODULE,1,"AudioModul::loop(): Media playing - within first 2s, ignore EOF");
       }
+      if ( song_eof ) {
+        write2log(LOG_MODULE,1,"AudioModul::loop(): Song EOF detected");
+        song_eof = false;
+        audio_media_cur_song++;
+        if (! getSongByNumber(SD, audio_media_cur_album, audio_media_cur_song)) {
+          audio_media_cur_album++;
+          audio_media_cur_song = 0;
+          if (! getSongByNumber(SD, audio_media_cur_album, audio_media_cur_song)) {
+            audio_media_cur_album = 0;
+            audio_media_cur_song = 0;
+          }
+        } 
+        audio_media_play(audio_media_cur_album, audio_media_cur_song);
+      }
+    }
 #endif
-    } // if (!audio.isRunning())
-  }  
+  } 
+    
 #ifdef USE_ROTARY
   rotary.loop(now);
   // Hier wird der Klickstream für die Bedienung mittels Drehregler definiert
@@ -969,69 +977,74 @@ void AudioModul::loop(time_t now) {
 }
 
 /************************************************************************************
-// Die folgenden Funktionen ergänzen die Lib: ESP32-audioI2S
-// Die Funktionsnamen sind dort festgelegt
+// Die folgende Callbackfunktion ergänzen die Lib: ESP32-audioI2S
 ************************************************************************************/
-
-void audio_info(const char *info){
-  String tmpstr;
-  int kbs_at = String(info).indexOf("BitRate");
-  if ( kbs_at >= 0) {
-    audio_kbs = String(String(info).substring(kbs_at+8).toInt()/1000) + String(" KBps");
-    tmpstr = String("{\"audiomsg4\":\"") + audio_kbs + String("\"}");
-    sendWsMessage(tmpstr);
-  }
-#ifdef USE_DISPLAY              
-    display.media_bps(audio_kbs);
-#endif
-}
-
-void audio_id3data(const char *info){
-  String infostr = String(info);
-  write2log(LOG_MODULE,2,"ID3 data:", info);
-  if (infostr.indexOf("Artist") != -1) {
-    String myjson = String("{\"audiomsg1\":\"Artist: ") + infostr.substring(infostr.indexOf("Artist: ")+8) + String("\"}");
-    sendWsMessage(myjson);
-  }
-  if (infostr.indexOf("Title") != -1) {
-    String myjson = String("{\"audiomsg2\":\"Song: ") + infostr.substring(infostr.indexOf("Title: ")+7) + String("\"}");
-    sendWsMessage(myjson);
-  }
-  if (infostr.indexOf("Album") != -1) {
-    String myjson = String("{\"audiomsg3\":\"Album: ") + infostr.substring(infostr.indexOf("Album: ")+7) + String("\"}");
-    sendWsMessage(myjson);
-  }
-#ifdef USE_DISPLAY              
-  display.media_artist(audio_media_artist_name);
-  display.media_song(audio_media_song_name);
-  display.media_album(audio_media_album_name);
-#endif  
-}
-
-void audio_showstreamtitle(const char *info){
-  String infostr = String(info);;
-  audio_radio_streamtitle = infostr;
-#ifdef USE_DISPLAY                   
-  display.radio_streamtitle(audio_radio_streamtitle);
-#endif
-  String myjson = String("{\"audiomsg2\":\"") + audio_radio_streamtitle + "\"}";
-  sendWsMessage(myjson);
-}
-
-void audio_bitrate(const char *info) {
-  String infostr;
-  audio_kbs = String(info).toInt()/1000 + String(" KBps");
-  String myjson = String("{\"audiomsg4\":\"") + audio_kbs + String("\"}");
-  sendWsMessage(myjson);
+void my_audio_info(Audio::msg_t m) {
+  String myjson;
+  switch(m.e){
+//        case Audio::evt_info:           Serial.printf("info: ....... %s\n", m.msg); break;
+    case Audio::evt_eof: 
+      Serial.printf("end of file:  %s\n", m.msg); 
+      song_eof = true;
+    break;
+    case Audio::evt_bitrate:
+      audio_kbs = String(m.msg).toInt()/1000 + String(" KBps");
+      myjson = String("{\"audiomsg4\":\"") + audio_kbs + String("\"}");
+      sendWsMessage(myjson);
 #ifdef USE_DISPLAY
-  display.radio_bps(audio_kbs.c_str());
+      display.radio_bps(audio_kbs.c_str());
 #endif
-}
-
-void audio_showstation(const char *info){
-  audio_radio_stationname = String(info);
-  String myjson = String("{\"audiomsg1\":\"") + audio_radio_stationname + String("\"}");
-  sendWsMessage(myjson);
+    break; // icy-bitrate or bitrate from metadata
+    case Audio::evt_icyurl:
+      write2log(LOG_WEB,2,"icy URL:",m.msg);
+    break;
+    case Audio::evt_id3data: {
+      write2log(LOG_WEB,2,"ID3 data:",m.msg);
+      String infostr = String(m.msg);
+      if (infostr.indexOf("Artist") != -1) {
+        audio_media_artist_name = infostr.substring(infostr.indexOf("Artist: ")+8);
+        String myjson = String("{\"audiomsg1\":\"Artist: ") + audio_media_artist_name + String("\"}");
+        sendWsMessage(myjson);
+        display.media_artist(audio_media_artist_name);
+      }
+      if (infostr.indexOf("Title") != -1) {
+        audio_media_song_name = infostr.substring(infostr.indexOf("Title: ")+7);
+        String myjson = String("{\"audiomsg2\":\"Song: ") + audio_media_song_name + String("\"}");
+        sendWsMessage(myjson);
+        display.media_song(audio_media_song_name);
+      }
+      if (infostr.indexOf("Album") != -1) {
+        audio_media_album_name = infostr.substring(infostr.indexOf("Album: ")+7);
+        String myjson = String("{\"audiomsg3\":\"Album: ") + audio_media_album_name + String("\"}");
+        sendWsMessage(myjson);
+        display.media_album(audio_media_album_name);
+      }
+    }
+    break; // id3-data or metadata
+//        case Audio::evt_lasthost:       Serial.printf("last URL: ... %s\n", m.msg); break;
+    case Audio::evt_name:
+      audio_radio_stationname = String(m.msg);
+      myjson = String("{\"audiomsg1\":\"") + audio_radio_stationname + String("\"}");
+      sendWsMessage(myjson);
+    break; // station name or icy-name
+    case Audio::evt_streamtitle:
+      audio_radio_streamtitle = String(m.msg);
+#ifdef USE_DISPLAY
+      display.radio_streamtitle(audio_radio_streamtitle);
+#endif
+      myjson = String("{\"audiomsg2\":\"") + audio_radio_streamtitle + "\"}";
+      sendWsMessage(myjson);
+    break;
+    case Audio::evt_icylogo:
+      write2log(LOG_WEB,2,"icy logo:",m.msg);
+    break;
+//        case Audio::evt_icydescription: Serial.printf("icy descr: .. %s\n", m.msg); break;
+//        case Audio::evt_image: for(int i = 0; i < m.vec.size(); i += 2){
+//                                        Serial.printf("cover image:  segment %02i, pos %07lu, len %05lu\n", i / 2, m.vec[i], m.vec[i + 1]);} break; // APIC
+//        case Audio::evt_lyrics:         Serial.printf("sync lyrics:  %s\n", m.msg); break;
+//        case Audio::evt_log   :         Serial.printf("audio_logs:   %s\n", m.msg); break;
+//    default:                        Serial.printf("message:..... %s\n", m.msg); break;
+  }
 }
 
 /*********************************************************************************************************
@@ -1122,7 +1135,6 @@ void AudioModul::audio_radio_save_stations() {
 #ifdef USE_AUDIO_MEDIA
 
 void AudioModul::audio_media_on() {
-//  initMedia();
   getSongByNumber(SD, audio_media_cur_album, audio_media_cur_song);
   audio_media_play(audio_media_cur_album,audio_media_cur_song);
 #ifdef USE_DISPLAY
@@ -1144,7 +1156,6 @@ void AudioModul::audio_media_off() {
   audio_media_artist_name = String("");
   audio_media_song_name = String("");
   audio_kbs = String("");
-  song_started = 0;
 }
 
 void AudioModul::audio_media_get_album_for_web() {
@@ -1225,9 +1236,10 @@ void AudioModul::audio_media_play(uint16_t _albumNo, uint16_t _songNo) {
 #ifdef USE_DISPLAY
     display.screen_media();
 #endif
-    audio.connecttoFS(SD,songPath.c_str());
-    audio.setVolume(audio_vol);
-    song_started = 0;
+    if (audio.connecttoFS(SD,songPath.c_str())) {
+      write2log(LOG_MODULE,2,"audio_media_play: Playing ", songPath.c_str());
+      song_started = true;
+    }
   }
 }
 
@@ -1240,7 +1252,9 @@ bool AudioModul::getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo) 
   uint16_t songFileNo = 0;
   File root = fs.open("/");
   if (!root) {
+#ifdef DEBUG_SERIAL
     Serial.println("Failed to open directory");
+#endif
     return false;
   }
   root.rewindDirectory();
@@ -1259,6 +1273,7 @@ bool AudioModul::getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo) 
           if ( tmpstr.endsWith(".mp3") ) {
             if ( songFileNo == songNo ) {
               audio_media_song_name = String(file.name());
+              write2log(LOG_MODULE,4,"Found song:", String(songNo).c_str(), ":",audio_media_song_name.c_str());
               file_found = true;
             }
             songFileNo++;

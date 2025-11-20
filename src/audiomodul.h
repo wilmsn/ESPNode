@@ -249,6 +249,7 @@ private:
 #endif //USE_AUDIO_RADIO
 
 #ifdef USE_AUDIO_MEDIA
+
     /// @brief Das aktuelle Album
     uint16_t audio_media_cur_album = 1;
     /// @brief Das aktuelle Lied
@@ -258,7 +259,8 @@ private:
     /// @brief Das aktuelle Lied
     uint16_t audio_media_sel_song = 0;
 
-    time_t    song_started;
+    time_t    song_starttime;
+    bool      song_started = false;
 
     bool audio_media_changemode = false;
 
@@ -289,7 +291,7 @@ private:
 
     bool audio_media_sd_init_album = false;
 
-    bool getAlbumByNumber(fs::FS &fs, uint16_t albumNo);
+ //   bool getAlbumByNumber(fs::FS &fs, uint16_t albumNo);
     bool getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo);
 
     /**

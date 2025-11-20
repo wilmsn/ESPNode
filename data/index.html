@@ -9,7 +9,7 @@
 <!-- script src="jquery.js"></script -->
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "1.000 (Oct 25 2025)";
+var htmlversion = "1.0.01 (Nov 20 2025)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -601,9 +601,9 @@ function prozessJS( key, val ) {
         });
         } else {
         $("#mp_album"+AlbumData[1]).append("<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play' src='play.png' height='50px' width='50px'>"+
-                                  "<img src='leer.png' height='50px' width='50px'>"+
+                                  "<img src='leer.png' height='50px' width='20px'>"+
                                   "<img id='mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_img' src='mp3file.png' height='50px' width='50px'>"+
-                                  "<div style='width: 150px;float: right;'>"+AlbumData[3]+"</div><br>");
+                                  "<div style='width: 200px;float: right;'>"+AlbumData[3]+"</div><br>");
         $("#mp_d"+AlbumData[1]+"f"+AlbumData[2]+"_play").click(function() {
           //alert("Play_dir:"+AlbumData[1]+" File:"+AlbumData[2]);
           do_cmd("audio_media_play_song",AlbumData[1]+"#"+AlbumData[2]);

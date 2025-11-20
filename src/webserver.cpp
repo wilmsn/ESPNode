@@ -38,7 +38,7 @@ void prozess_wifishow() {
     myjson = String("{\"wifi_network\":\"") + String(numberOfNetworks) + String(" Networks:<br>\"}");
     sendWsMessage(myjson);
     for (int i = 0; i < numberOfNetworks; i++) {
-      myjson = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(", Ch:") + String(WiFi.channel(i)) +
+      myjson = String("{\"wifi_network\":\"") + WiFi.SSID(i) + String(" ") + WiFi.BSSIDstr(i) + String(", Ch:") + String(WiFi.channel(i)) +
                String(" (") + String(WiFi.RSSI(i)) + String(" dBm ");
 #ifdef ESP32
       switch (WiFi.encryptionType(i)) {
@@ -428,7 +428,20 @@ void setup_webserver() {
   initWebSocket();
   write2log(LOG_WEB,1, "initWebsocket ok");
   // This serves all static web content
-  httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setCacheControl("max-age=3600");
+  httpServer.on("/cmd", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // display params
+    size_t count = request->params();
+    for (size_t i = 0; i < count; i++) {
+      const AsyncWebParameter *p = request->getParam(i);
+#ifdef DEBUG_SERIAL_WEB
+      Serial.printf("PARAM[%u]: %s = %s\n", i, p->name().c_str(), p->value().c_str());
+#endif
+      prozess_cmd(p->name(), p->value());
+    }
+    request->send(LittleFS, "/index.html", "text/html");
+  });
+
+    httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setCacheControl("max-age=3600");
   // Start Elegant OTA
   ElegantOTA.begin(&httpServer);
   // Start server

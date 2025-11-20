@@ -309,14 +309,17 @@ void AudioDisplay::media_bps(String& mybps) {
 
 void AudioDisplay::media_album(String& albumName) {
   cur_album = albumName;
+  show_media_album();
 }
 
 void AudioDisplay::media_artist(String& artistName) {
   cur_artist = artistName;
+  show_media_artist();
 }
 
 void AudioDisplay::media_song(String& songName) {
   cur_song = songName;
+  show_media_song();
 }
 
 void AudioDisplay::show_media_album() {

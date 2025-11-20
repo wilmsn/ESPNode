@@ -306,7 +306,7 @@ bool do_wifi_con(void) {
   WiFi.mode(WIFI_AP);
   WiFi.setHostname(HOSTNAME);
   WiFi.mode(WIFI_STA);
-  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
+//  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
 #ifdef USE_WIFIMULTI  
   wifiMulti.addAP(wifi_ssid.c_str(), wifi_pass.c_str());
   wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
@@ -314,8 +314,20 @@ bool do_wifi_con(void) {
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid.c_str(), " with Password ", wifi_pass.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
-#else  
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
+#else
+  int numberOfNetworks = WiFi.scanNetworks();
+  int32_t rssi_max = -999;
+  int bestNetworkIndex = -1;
+  for (int i = 0; i < numberOfNetworks; i++) {
+    if ( WiFi.SSID(i) == wifi_ssid ) {
+      if (WiFi.RSSI(i) > rssi_max) {
+        rssi_max = WiFi.RSSI(i);
+        bestNetworkIndex = i;
+      }
+    }
+  }
+  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str(), bestNetworkIndex >=0 ? WiFi.channel(bestNetworkIndex) : 0,
+             bestNetworkIndex >=0 ? WiFi.BSSID(bestNetworkIndex) : NULL);
 #endif  
 #else
     //    WiFi.persistent(false);

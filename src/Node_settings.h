@@ -182,7 +182,7 @@ RF24 Gateway:
 #define USE_AUDIO_MEDIA
 #define USE_DISPLAY_GC9A01A
 #define USE_ROTARY
-#define USE_BOOTMESSAGE
+//#define USE_BOOTMESSAGE
 
 #define TFT_ROT                  4
 
