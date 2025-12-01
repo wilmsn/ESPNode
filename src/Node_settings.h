@@ -103,6 +103,33 @@ RF24 Gateway:
 
 #endif
 //-----------------------------------------------------
+#if defined(NODE_WOHNZIMMERLICHT)
+#define USE_SWITCH_ONOFF
+#include "switch_onoff.h"
+
+#define MAGICNO                  200
+#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_MQTT
+
+#define HOSTNAME                 "WohnzimmerLicht"
+#define HOST_DISCRIPTION         "Das Licht im Wohnzimmer"
+
+#define MODULE1_DEFINITION       Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Wohnzimmerlicht", "wohnzimmerlicht", "wohnzimmerlicht", false, false, false, 12, true);
+//#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Wohnzimmerlicht", "wohnzimmerlicht", "wohnzimmerlicht", false, false, false, 12, 0, true, true);
+/*    void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin_relais, uint8_t _hw_pin2_taster, 
+               bool _taster_ruhezustand, bool _show_diagramm = false); */
+
+#define MODULE2_DEFINITION       Switch_OnOff module2;
+#define MODULE2_BEGIN_STATEMENT  module2.begin("sw2", "WohnzimmerTest", "wohnzimmertest", "wohnzimmertest", false, false, false, 13, true);
+
+#define MQTT_CLIENT              "wohnzimmerlicht"
+#define MQTT_TOPICP2             "wohnzimmerlicht"
+
+#endif
+//*****************************************************
 #if defined(NODE_WOHNZIMMER)
 
 #define USE_ACTOR_LEDMATRIX
@@ -117,7 +144,7 @@ RF24 Gateway:
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph", true);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph", false);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur");

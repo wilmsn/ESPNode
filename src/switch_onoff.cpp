@@ -10,6 +10,19 @@ Switch_OnOff::Switch_OnOff(){
   hw_pin2_used = false;
 }
 
+void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin_relais, bool _taster_ruhezustand, 
+                         uint8_t _hw_pin2_taster, bool _show_diagramm) {
+  hw_pin2 = _hw_pin2_taster;                    
+  pinMode(hw_pin2, INPUT);
+  hw_pin2_used = false;
+  taster_ruhezustand = _taster_ruhezustand;
+  taster_used = true;
+  // Imitialisierung über  Fall 2
+  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, hw_pin1, _show_diagramm);
+}
+
+
 // Startet als Schalter mit Regler der einen HW-Pin mittels PWM steuert
 // Fall 5
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
@@ -345,6 +358,12 @@ void Switch_OnOff::diagramm2web(String& myjson) {
 }
 
 void Switch_OnOff::loop(time_t now) {
+  if (taster_used) {
+    if ((digitalRead(hw_pin2) != taster_ruhezustand ) && (now - taster_pressed_time > 30)) {
+      do_switch(! switch_value);
+      taster_pressed_time = now;
+    }
+  }
   if (timeinfo.tm_min != old_min) {
     String tmpjson = String("{");
     if (off_minute > 0 && off_minute <= minutes && timer_min > 0) {

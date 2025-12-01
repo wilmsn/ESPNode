@@ -230,10 +230,18 @@ void prozess_sysinfo() {
                 String("\",\"mqtttopicp2\":\"") + mqtt_topicP2 + String("\"");
 #endif
 #if defined(RF24GW)  
-      myjson += String(",\"RF24HUB-Server\":\"") + rf24gw_hub_server +
-                String("\",\"RF24HUB-Port\":") + String(rf24gw_hub_port) +
+      myjson += String(",\"RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"") +
+                String(",\"RF24HUB-Port\":") + String(rf24gw_hub_port) +
                 String(",\"RF24GW-Port\":") + String(rf24gw_gw_port) +
-                String(",\"RF24GW-No\":") + String(rf24gw_gw_no);  
+                String(",\"RF24GW-No\":") + String(rf24gw_gw_no) +
+                String(",\"tab_head_nrf24l01\":\"Modul Nrf24L01\"") +
+                String(",\"tab_line1_nrf24l01\":\"MOSI:#GPIO: ") + String(RF24_RADIO_MOSI_PIN) + String("\"") +
+                String(",\"tab_line2_nrf24l01\":\"MISO:#GPIO: ") + String(RF24_RADIO_MISO_PIN) + String("\"") +
+                String(",\"tab_line3_nrf24l01\":\"SCK:#GPIO: ") + String(RF24_RADIO_SCK_PIN) + String("\"") +
+                String(",\"tab_line4_nrf24l01\":\"CE:#GPIO: ") + String(RF24_RADIO_CE_PIN) + String("\"") +
+                String(",\"tab_line5_nrf24l01\":\"CSN:#GPIO: ") + String(RF24_RADIO_CSN_PIN) + String("\"") +
+                String(",\"tab_line6_nrf24l01\":\"Channel:# ") + String(RF24_CHANNEL) + String("\"") +
+                String(",\"tab_line7_nrf24l01\":\"Speed:# ") + String(RF24_SPEED_STR) + String("\"");
 #endif
       myjson += String("}");
       sendWsMessage(myjson);

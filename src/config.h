@@ -20,6 +20,7 @@
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
+//#define NODE_WOHNZIMMERLICHT
 //#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
@@ -246,6 +247,12 @@
 
 #define DEBUGFILE                    "/debugfile.txt"
 
+#ifdef ESP8266
+// Einstellungen für das RF24 Funkmodul auf dem ESP8266
+// Folgende Pins sind fest vergeben:
+#define RF24_RADIO_MISO_PIN   12
+#define RF24_RADIO_MOSI_PIN   13
+#define RF24_RADIO_SCK_PIN    14
 #ifndef RF24_RADIO_CE_PIN
 ///Anschlusspin für den CE Pin des Funkmodules
 #define RF24_RADIO_CE_PIN              15
@@ -264,7 +271,10 @@
 #ifndef RF24_SPEED
 /// Die Übertragungsgeschwindigkeit
 #define RF24_SPEED                     RF24_250KBPS
+#define RF24_SPEED_STR                 "250KBPS"
 #endif
+
+#endif // ESP82666
 
 #ifndef RF24_HUB2NODE
 /// Der Netzwerkschlüssel Hub zum Node

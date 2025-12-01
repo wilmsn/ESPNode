@@ -123,15 +123,6 @@ bool getNTPtime(long unsigned int sec);
 /// @brief Connect or reconnect to WIFI
 void wifi_con(void);
 
-/****************************************************************
- * Funktionen für den Webserver
- ***************************************************************/
-
-
-
-
-
-
 /// @brief Logfunktion für RF24 Daten
 /// @param senddir Entweder "N>G" oder "G>N"
 /// @param pl Der Payload

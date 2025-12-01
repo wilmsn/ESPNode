@@ -79,6 +79,24 @@ public:
                bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2, bool _show_diagramm = false);
 
     /**
+     * @brief Die Initialisierung des Schalters für zwei HW-Pins
+     * @param _html_place Der Einbauort in der Webseite
+     * @param _label Ein Bezeichner für diesen Schalter
+     * @param _mqtt_name Der Bezeichner in MQTT für diesen Schalter
+     * @param _keyword Das Schlüsselword auf das dieser Schalter reagiert
+     * @param _start_value Die initiale Schaltposition des Schalters
+     * @param _on_value Der Zustand des HW-Pis wenn der Schalter eingeschaltet ist.
+     * @param _is_state True wenn dieser SChalter den Status des Nodes darstellt sonst false. Es kann nur einen Status geben!
+     * @param _hw_pin_relais Der Hardware Pin des Relais
+     * @param _hw_pin2_taster Der Hardware Pin des Tasters
+     * @param _taster_ruhezustand Der Ruhestandard des Tasters (true = HIGH; false = LOW)
+     * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
+     */
+    void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin_relais,  bool _taster_ruhezustand,
+               uint8_t _hw_pin2_taster, bool _show_diagramm = false);
+
+    /**
      * @brief Die Initialisierung des Schalters mit Regler ohne HW-Pin
      * @param _html_place Der Einbauort in der Webseite
      * @param _label Ein Bezeichner für diesen Schalter
@@ -256,24 +274,39 @@ public:
     uint8_t slider_no;
 
     /**
-     * @brief Flag das festlegt ob HW-Pin1 genutzt wird (true = wird genutzt)
+     * @brief Flag das festlegt ob HW-Pin1 für das Relais genutzt wird (true = wird genutzt)
      */
     bool       hw_pin1_used = false;
 
     /**
-     * @brief Flag das festlegt ob HW-Pin2 genutzt wird (true = wird genutzt)
+     * @brief Flag das festlegt ob HW-Pin2 für das Relais genutzt wird (true = wird genutzt)
      */
     bool       hw_pin2_used = false;
 
     /**
-     * @brief Optional: Der Hardwarepin1 für diesen Sensor.
+     * @brief Optional: Der Hardwarepin1 für diesen Sensor (Relais oder Taster).
      */
     uint8_t    hw_pin1;
 
     /**
-     * @brief Optional: Der Hardwarepin2 für diesen Sensor.
+     * @brief Optional: Der Hardwarepin2 für diesen Sensor (Relais oder Taster).
      */
     uint8_t    hw_pin2;
+
+    /**
+     * @brief Optional: Ruhestandard des Tasters. (true = HIGH; false = LOW)
+     */
+    uint8_t    taster_ruhezustand;
+
+    /**
+     * @brief Optional: Ein Flag ob ein Taster genutzt wird (true = wird genutzt)
+     */
+    bool       taster_used = false;
+
+    /**
+     * @brief Wenn der Taster gedrück wird, wird hier die Zeit festgehalten wann der Taster gedrückt wurde.
+     */
+    time_t     taster_pressed_time = 0;
 
     /**
      * @brief Bei Schalten über den Timer wird hier die Ausschaltzeit hinterlegt.

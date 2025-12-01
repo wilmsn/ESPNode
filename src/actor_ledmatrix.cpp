@@ -34,12 +34,14 @@ void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const c
     matrix.off();
   }
 
-  html_info += String("\"tab_head_ldr\":\"Matrixdislay\"") +
+  html_info += String("\"tab_head_matrix\":\"Matrixdislay\"") +
                String(",\"tab_line1_matrix\":\"CLK:#GPIO: ") + String(LEDMATRIX_CLK) + String("\"")+
                String(",\"tab_line2_matrix\":\"DIN:#GPIO: ") + String(LEDMATRIX_DIN) + String("\"")+
                String(",\"tab_line3_matrix\":\"CS: #GPIO: ") + String(LEDMATRIX_CS) + String("\"")+
                String(",\"tab_line4_matrix\":\"X Devices:# ") + String(LEDMATRIX_DEVICES_X) + String("\"")+
                String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
+  html_has_info = true;
+  
   mqtt_info += String("\"Display-HW\":\"MAX7219 / MAX7221\"");
   mqtt_has_info = true; 
 
