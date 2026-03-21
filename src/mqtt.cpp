@@ -21,16 +21,16 @@ time_t last_mqtt_stat = 0;
 bool do_mqtt;
 String mqtt_server;
 String mqtt_client;
-String mqtt_topicP2;
+String mqtt_topic_part2;
 bool do_log_mqtt;
 
 
-const char* mk_topic(const char* part1, const char* part3) {
-  mqtt_topic = part1;
+const char* mk_topic(const char* mqtt_topic_part1, const char* mqtt_topic_part3) {
+  mqtt_topic = mqtt_topic_part1;
   mqtt_topic += "/";
-  mqtt_topic += mqtt_topicP2;
+  mqtt_topic += mqtt_topic_part2;
   mqtt_topic += "/";
-  mqtt_topic += part3;
+  mqtt_topic += mqtt_topic_part3;
   return mqtt_topic.c_str();
 }
 
@@ -95,43 +95,43 @@ void send_mqtt_stat() {
   String tmpstr = String("{");
   bool set_komma = false;
 #ifdef MODULE1
-  if (module1.mqtt_has_stat) {
-    tmpstr += module1.mqtt_stat;
+  if (module1.mqtt_stat_set) {
+    module1.mqtt_stat(tmpstr);
     module1.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE2
-  if (module2.mqtt_has_stat) {
+  if (module2.mqtt_stat_set) {
     if(set_komma) tmpstr += String(",");
-    tmpstr += module2.mqtt_stat;
+    module2.mqtt_stat(tmpstr);
     module2.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE3
-  if (module3.mqtt_has_stat) {
+  if (module3.mqtt_stat_set) {
     if(set_komma) tmpstr += String(",");
-    tmpstr += module3.mqtt_stat;
+    module3.mqtt_stat(tmpstr);
     module3.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE4
-  if (module4.mqtt_has_stat) {
+  if (module4.mqtt_stat_set) {
     if(set_komma) tmpstr += String(",");
-    tmpstr += module4.mqtt_stat;
+    module4.mqtt_stat(tmpstr);
     module4.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE5
-  if (module5.mqtt_has_stat) {
+  if (module5.mqtt_stat_set) {
     if(set_komma) tmpstr += String(",");
-    tmpstr += module5.mqtt_stat;
+    module5.mqtt_stat(tmpstr);
     module5.mqtt_stat_changed = false;
     set_komma = true;
   }
 #ifdef MODULE6
-  if (module6.mqtt_has_stat) {
+  if (module6.mqtt_stat_set) {
     if(set_komma) tmpstr += String(",");
-    tmpstr += module6.mqtt_stat;
+    module6.mqtt_stat(tmpstr);
     module6.mqtt_stat_changed = false;
     set_komma = true;
   }
@@ -203,10 +203,6 @@ void send_mqtt_tele() {
       tmpstr += String(",\"FlashFreq\":\"")+String((int)(ESP.getFlashChipSpeed() / 1000000))+String(" Mhz\"");
       tmpstr += String(",\"Sketchsize\":\"")+String(ESP.getSketchSize() / 1024.0)+String(" kB\"");
       tmpstr += String(",\"Freespace\":\"")+String((float)ESP.getFreeSketchSpace() / 1024.0)+String(" kB\"");
-#ifdef USE_AUDIO_MEDIA
-      tmpstr += String(",\"SDCard_size\":\"")+String(sd_cardsize/1024/1024)+String("\"");
-      tmpstr += String(",\"SDCard_used\":\"")+String(sd_usedbytes/1024/1024)+String("\"");
-#endif //USE_AUDIO MEDIA / SD-Card
       tmpstr += String(",\"Vcc\":\""); getVcc(tmpstr); tmpstr += String("\"");
       tmpstr += String(",\"Heap_free\":\"")+String((float)free / 1024.0)+String(" kB\"");
       tmpstr += String(",\"Heap_max\":\"")+String((float)max / 1024.0)+String(" kB\"");
@@ -255,38 +251,38 @@ void send_mqtt_tele() {
 
       tmpstr = String("{");
 #ifdef MODULE1
-      if (module1.mqtt_has_info) {
-        tmpstr += module1.mqtt_info;
+      if (module1.mqtt_info_set) {
+        module1.mqtt_info(tmpstr);
         set_komma = true;
       }
 #ifdef MODULE2  
-      if (module2.mqtt_has_info) {
+      if (module2.mqtt_info_set) {
         if(set_komma) tmpstr += String(",");
-        tmpstr += module2.mqtt_info;
+        module2.mqtt_info(tmpstr);
         set_komma = true;
       }
 #ifdef MODULE3
-      if (module3.mqtt_has_info) {
+      if (module3.mqtt_info_set) {
         if(set_komma) tmpstr += String(",");
-        tmpstr += module3.mqtt_info;
+        module3.mqtt_info(tmpstr);
         set_komma = true;
       }
 #ifdef MODULE4
-      if (module4.mqtt_has_info) {
+      if (module4.mqtt_info_set) {
         if(set_komma) tmpstr += String(",");
-        tmpstr += module4.mqtt_info;
+        module4.mqtt_info(tmpstr);
         set_komma = true;
       }
 #ifdef MODULE5
-      if (module5.mqtt_has_info) {
+      if (module5.mqtt_info_set) {
         if(set_komma) tmpstr += String(",");
-        tmpstr += module5.mqtt_info;
+        module5.mqtt_info(tmpstr);
         set_komma = true;
       }
 #ifdef MODULE6
-      if (module6.mqtt_has_info) {
+      if (module6.mqtt_info_set) {
         if(set_komma) tmpstr += String(",");
-        tmpstr += module6.mqtt_info;
+        module6.mqtt_info(tmpstr);
         set_komma = true;
       }
 #endif  //Module6
@@ -310,22 +306,22 @@ void send_mqtt_tele() {
 void callback_mqtt(char* topic, byte* payload, unsigned int length) {
   char delimiter[] = "/";
   char *ptr;
-  char part1[TOPIC_PART1_SIZE];
-  char part2[TOPIC_PART2_SIZE];
-  char part3[TOPIC_PART3_SIZE];
+  char mqtt_in_topic_part1[MQTT_TOPIC_PART1_SIZE];
+  char mqtt_in_topic_part2[MQTT_TOPIC_PART2_SIZE];
+  char mqtt_in_topic_part3[MQTT_TOPIC_PART3_SIZE];
   char* cmd = (char*)malloc(length + 2);
   if (do_mqtt) {
     snprintf(cmd, length + 1, "%s", (char*)payload);
     write2log(LOG_MQTT,2, topic, cmd);
     ptr = strtok(topic, delimiter);
-    if (ptr != NULL) snprintf(part1, TOPIC_PART1_SIZE, "%s", ptr);
+    if (ptr != NULL) snprintf(mqtt_in_topic_part1, MQTT_TOPIC_PART1_SIZE, "%s", ptr);
     ptr = strtok(NULL, delimiter);
-    if (ptr != NULL) snprintf(part2, TOPIC_PART2_SIZE, "%s", ptr);
+    if (ptr != NULL) snprintf(mqtt_in_topic_part2, MQTT_TOPIC_PART2_SIZE, "%s", ptr);
     ptr = strtok(NULL, delimiter);
-    if (ptr != NULL) snprintf(part3, TOPIC_PART3_SIZE, "%s", ptr);
-    if ( strncmp(part1, MQTT_COMMAND, sizeof MQTT_COMMAND) == 0 ) {
-      if ( strncmp(part2, mqtt_topicP2.c_str(), sizeof mqtt_topicP2.c_str()) == 0 ) {
-        prozess_cmd(part3, cmd);
+    if (ptr != NULL) snprintf(mqtt_in_topic_part3, MQTT_TOPIC_PART3_SIZE, "%s", ptr);
+    if ( strncmp(mqtt_in_topic_part1, MQTT_COMMAND, sizeof MQTT_COMMAND) == 0 ) {
+      if ( strncmp(mqtt_in_topic_part2, mqtt_topic_part2.c_str(), sizeof mqtt_topic_part2.c_str()) == 0 ) {
+        prozess_cmd(mqtt_in_topic_part3, cmd);
       }
     }
     // Free the memory
@@ -360,9 +356,11 @@ void mqtt_loop(time_t now) {
         last_mqtt_tele = now;
       }
 #ifdef MODULE1
-      if (module1.mqtt_has_stat && module1.mqtt_stat_changed) {
+      if (module1.mqtt_stat_set && module1.mqtt_stat_changed) {
         module1.mqtt_stat_changed = false;
-        String tmpstr = String("{") + module1.mqtt_stat + String("}");
+        String tmpstr = String("{");
+        module1.mqtt_stat(tmpstr);
+        tmpstr += String("}");
         mqttClient.publish(mk_topic(MQTT_STATUS,"stat"), tmpstr.c_str());
         if (do_log_mqtt) {
           write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
@@ -373,9 +371,11 @@ void mqtt_loop(time_t now) {
         }
       }
 #ifdef MODULE2
-      if (module2.mqtt_has_stat && module2.mqtt_stat_changed) {
+      if (module2.mqtt_stat_set && module2.mqtt_stat_changed) {
         module2.mqtt_stat_changed = false;
-        String tmpstr = String("{") + module2.mqtt_stat + String("}");
+        String tmpstr = String("{");
+        module2.mqtt_stat(tmpstr);
+        tmpstr += String("}");
         mqttClient.publish(mk_topic(MQTT_STATUS,"stat"), tmpstr.c_str());
         if (do_log_mqtt) {
           write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
@@ -386,9 +386,11 @@ void mqtt_loop(time_t now) {
         }
       }
 #ifdef MODULE3
-        if (module3.mqtt_has_stat && module3.mqtt_stat_changed) {
+        if (module3.mqtt_stat_set && module3.mqtt_stat_changed) {
           module3.mqtt_stat_changed = false;
-          String tmpstr = String("{") + module3.mqtt_stat + String("}");
+          String tmpstr = String("{");
+          module3.mqtt_stat(tmpstr);
+          tmpstr +=  String("}");
           mqttClient.publish(mk_topic(MQTT_STATUS,"stat"), tmpstr.c_str());
           if (do_log_mqtt) {
             write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
@@ -399,9 +401,11 @@ void mqtt_loop(time_t now) {
           }
         }
 #ifdef MODULE4
-        if (module4.mqtt_has_stat && module4.mqtt_stat_changed) {
+        if (module4.mqtt_stat_set && module4.mqtt_stat_changed) {
           module4.mqtt_stat_changed = false;
-          String tmpstr = String("{") + module4.mqtt_stat + String("}");
+          String tmpstr = String("{");
+          module4.mqtt_stat(tmpstr);
+          tmpstr += String("}");
           mqttClient.publish(mk_topic(MQTT_STATUS,"stat"), tmpstr.c_str());
           if (do_log_mqtt) {
             write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
@@ -412,9 +416,11 @@ void mqtt_loop(time_t now) {
           }
         }
 #ifdef MODULE5
-        if (module5.mqtt_has_stat && module5.mqtt_stat_changed) {
+        if (module5.mqtt_stat_set && module5.mqtt_stat_changed) {
           module5.mqtt_stat_changed = false;
-          String tmpstr = String("{") + module5.mqtt_stat + String("}");
+          String tmpstr = String("{");
+          module5.mqtt_stat(tmpstr);
+          tmpstr += String("}");
           mqttClient.publish(mk_topic(MQTT_STATUS,"stat"), tmpstr.c_str());
           if (do_log_mqtt) {
             write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());
@@ -425,9 +431,11 @@ void mqtt_loop(time_t now) {
           }
         }
 #ifdef MODULE6
-        if (module6.mqtt_has_stat && module6.mqtt_stat_changed) {
+        if (module6.mqtt_stat_set && module6.mqtt_stat_changed) {
           module6.mqtt_stat_changed = false;
-          String tmpstr = String("{") + module6.mqtt_stat + String("}");
+          String tmpstr = String("{");
+          module6.mqtt_stat(tmpstr);
+          tmpstr += String("}");
           mqttClient.publish(mk_topic(MQTT_STATUS,"stat"), tmpstr.c_str());
           if (do_log_mqtt) {
             write2log(LOG_MQTT,2, mqtt_topic.c_str(), tmpstr.c_str());

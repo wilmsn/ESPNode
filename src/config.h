@@ -12,10 +12,11 @@
 //#warning ESP_IDF_VERSION_MAJOR
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
-//#define NODESIMPLE
+//#define NODEMINIMAL         // Test eines Updatenodes
+//#define NODESIMPLE 
 //#define NODE18B20
 //#define NODEBOSCH
-//#define WITTYNODE
+#define WITTYNODE
 //#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
@@ -26,7 +27,7 @@
 //#define NODE_TEICH
 //#define NODE_FLUR
 //#define NODE_KUECHENRADIO
-#define NODE_WOHNZIMMERRADIO
+//#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
 // Die folgende Einstellungen müssen an die aktuelle Umgebung angepasst werden.
@@ -209,13 +210,13 @@
 
 ///@brief Settings for mqtt topic
 ///Der Part1 des MQTT Topics nimmt nur einen der 3 vordefinierten Werte auf. Deshalb sind hier 5 Zeichen hinreichend.
-#define TOPIC_PART1_SIZE             5
+#define MQTT_TOPIC_PART1_SIZE             5
 #define MQTT_STATUS                  "stat"
 #define MQTT_TELEMETRIE              "tele"
 #define MQTT_COMMAND                 "cmnd"
 
-#define TOPIC_PART2_SIZE             30
-#define TOPIC_PART3_SIZE             10
+#define MQTT_TOPIC_PART2_SIZE             50
+#define MQTT_TOPIC_PART3_SIZE             10
 //Settings for QoS
 #define MQTT_QOS                     0
 #define MQTT_WILLRETAIN              true

@@ -118,7 +118,7 @@ void prozess_wifiscan() {
 
 void prozess_sysinfo() {
   String myjson;
-  bool set_comma = false;
+  bool setComma = false;
 // Daten für Sysinfo
 // Teil 1
       uint32_t free;
@@ -247,39 +247,54 @@ void prozess_sysinfo() {
       sendWsMessage(myjson);
       myjson = String("{");
 #ifdef MODULE1
-      if (module1.html_has_info) {
-        myjson += module1.html_info;
-        set_comma = true;
+      if (module1.html_info_set) {
+        module1.html_info(myjson);
+        setComma = true;
       }
 #ifdef MODULE2
-      if (module2.html_has_info) {
-        if (set_comma) myjson += String(",");
-        myjson += module2.html_info;
-        set_comma = true;
+      if (module2.html_info_set) {
+        if (setComma) {
+          myjson += String(",");
+          setComma = false;
+        }
+        module2.html_info(myjson);
+        setComma = true;
       }
 #ifdef MODULE3
-      if (module3.html_has_info) {
-        if (set_comma) myjson += String(",");
-        myjson += module3.html_info;
-        set_comma = true;
+      if (module3.html_info_set) {
+        if (setComma) {
+          myjson += String(",");
+          setComma = false;
+        }
+        module3.html_info(myjson);
+        setComma = true;
       }
 #ifdef MODULE4
-      if (module4.html_has_info) {
-        if (set_comma) myjson += String(",");
-        myjson += module4.html_info;
-        set_comma = true;
+      if (module4.html_info_set) {
+        if (setComma) {
+          myjson += String(",");
+          setComma = false;
+        }
+        module4.html_info(myjson);
+        setComma = true;
       }
 #ifdef MODULE5
-      if (module5.html_has_info) {
-        if (set_comma) myjson += String(",");
-        myjson += module5.html_info;
-        set_comma = true;
+      if (module5.html_info_set) {
+        if (setComma) {
+          myjson += String(",");
+          setComma = false;
+        }
+        module5.html_info(myjson);
+        setComma = true;
       }
 #ifdef MODULE6
-      if (module6.html_has_info) {
-        if (set_comma) myjson += String(",");
-        myjson += module6.html_info;
-        set_comma = true;
+      if (module6.html_info_set) {
+        if (setComma) {
+          myjson += String(",");
+          setComma = false;
+        }
+        module6.html_info(myjson);
+        setComma = true;
       }
 #endif
 #endif
@@ -359,44 +374,53 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
   sendWsMessage(myjson);
   myjson = String("{");
 #ifdef MODULE1
-  module1.html_init();
-  if ( module1.html_json_filled) {
-    myjson += module1.html_json;
+  if ( module1.html_init_set) {
+    module1.html_init(myjson);
     setComma = true;
   }
 #ifdef MODULE2
-  module2.html_init();
-  if ( module2.html_json_filled) {
-    if (setComma) myjson += String(",");
-    myjson += module2.html_json;
+  if ( setComma) {
+    myjson += String(",");
+    setComma = false;
+  }
+  if ( module2.html_init_set) {
+    module2.html_init(myjson) ;
     setComma = true;
   }
 #ifdef MODULE3
-  module3.html_init();
-  if ( module3.html_json_filled) {
-    if (setComma) myjson += String(",");
-    myjson += module3.html_json;
+  if ( setComma) {
+    myjson += String(",");
+    setComma = false;
+  }
+  if ( module3.html_init_set) {
+    module3.html_init(myjson);
     setComma = true;
   }
 #ifdef MODULE4
-  module4.html_init();
-  if ( module4.html_json_filled) {
-    if (setComma) myjson += String(",");
-    myjson += module4.html_json;
+  if ( setComma) {
+    myjson += String(",");
+    setComma = false;
+  }
+  if ( module4.html_init_set) {
+    module4.html_init(myjson);
     setComma = true;
   }
 #ifdef MODULE5
-  module5.html_init();
-  if ( module5.html_json_filled) {
-    if (setComma) myjson += String(",");
-    myjson += module5.html_json;
+  if ( setComma) {
+    myjson += String(",");
+    setComma = false;
+  }
+  if ( module5.html_init_set) {
+    module5.html_init(myjson);
     setComma = true;
   }
 #ifdef MODULE6
-  module6.html_init();
-  if ( module6.html_json_filled) {
-    if (setComma) myjson += String(",");
-    myjson += module6.html_json;
+  if ( setComma) {
+    myjson += String(",");
+    setComma = false;
+  }
+  if ( module6.html_init_set) {
+    module6.html_init(myjson);
     setComma = true;
   }
 #endif  //module6
@@ -433,6 +457,7 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 }
 
 void setup_webserver() {
+  bool result = false;
   initWebSocket();
   write2log(LOG_WEB,1, "initWebsocket ok");
   // This serves all static web content
@@ -446,7 +471,11 @@ void setup_webserver() {
 #endif
       prozess_cmd(p->name(), p->value());
     }
-    request->send(LittleFS, "/index.html", "text/html");
+    if ( ! cmd_result) {
+      request->send(LittleFS, "/error_cmd.html", "text/html");
+    } else {
+      request->send(LittleFS, "/ok.html", "text/html");
+    }
   });
 
     httpServer.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setCacheControl("max-age=3600");
@@ -455,3 +484,90 @@ void setup_webserver() {
   // Start server
   httpServer.begin();
 }
+
+void webserver_loop(time_t now) {
+#ifdef MODULE1
+  if ( module1.html_update_set 
+#ifdef MODULE2
+       || module2.html_update_set
+#ifdef MODULE3
+       || module3.html_update_set
+#ifdef MODULE4
+       || module4.html_update_set
+#ifdef MODULE5
+       || module5.html_update_set
+#ifdef MODULE6
+       || module6.html_update_set
+#endif  //Module6
+#endif  //Module5
+#endif  //Module4
+#endif  //Module3
+#endif  //Module2
+       ) {
+    String myjson = String("{");
+    bool setComma = false;
+    if ( module1.html_update_set) {
+      module1.html_update(myjson);
+      module1.html_update_set = false;
+      setComma = true;
+    }
+#ifdef MODULE2
+    if ( module2.html_update_set) {
+      if ( setComma) {
+        myjson += String(",");
+        setComma = false;
+      }
+      module2.html_update(myjson);
+      module2.html_update_set = false;
+      setComma = true;
+    }
+#ifdef MODULE3
+    if ( module3.html_update_set) {
+      if ( setComma) {
+        myjson += String(",");
+        setComma = false;
+      }
+      module3.html_update(myjson);
+      module3.html_update_set = false;
+      setComma = true;
+    }
+#ifdef MODULE4
+    if ( module4.html_update_set) {
+      if ( setComma) {
+        myjson += String(",");
+        setComma = false;
+      }
+      module4.html_update(myjson);
+      module4.html_update_set = false;
+      setComma = true;
+    }
+#ifdef MODULE5
+    if ( module5.html_update_set) {
+      if ( setComma) {
+        myjson += String(",");
+        setComma = false;
+      }
+      module5.html_update(myjson);
+      module5.html_update_set = false;
+      setComma = true;
+    }
+#ifdef MODULE6
+    if ( module6.html_update_set) {
+      if ( setComma) {
+        myjson += String(",");
+        setComma = false;
+      }
+      module6.html_update(myjson);
+      module6.html_update_set = false;
+      setComma = true;
+  }
+#endif  //module6
+#endif  //Module5
+#endif  //Module4
+#endif  //Module3
+#endif  //Module2
+    myjson += String("}");
+    sendWsMessage(myjson);
+  }
+#endif  //module1
+} 

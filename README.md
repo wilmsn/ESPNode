@@ -1,6 +1,6 @@
 # ESPNode
 ## Brief Description
-ESPNode is a firmware for ESP8266 and ESP32. This firmware is not generic, it has to be configured and compiled for each individual node.
+ESPNode is a firmware for ESP8266 and ESP32. This firmware is not generic, it has to be configured and compiled for each individual node. If you are looking for a precompiled ready to use Firmware try TASMOTA or similar.
 
 ### Features:
 
@@ -59,7 +59,9 @@ Zeitabhängige Aktionen:
 * Statusdaten und Messwerte senden (var: STATINTERVAL) 
 
 ## Module
-Module beschreiben bzw erzeugen eigene Objekte. Die Definition erfolgt in der Datei **"Node_settings.h"**. Die Aktivierung der Konfiguration für einen Node erfolgt in der Datei **"config.h"**
+Module beschreiben bzw erzeugen eigene Objekte. Die Definition erfolgt in der Datei **"Node_settings.h"**. Die Aktivierung der Konfiguration für einen Node erfolgt in der Datei **"config.h"**. Wird die Konfiguration in einer dieser Dateien geändert muss die Firmware neu kompiliert werden.
+
+Details zu den Modulen in der [Modulbeschreibung](module.md)
 
 Für die nachfolgenden Beispiele reichen die mitgelieferten Klassenbibliotheken.
 
@@ -264,95 +266,12 @@ Debuggingausgaben zum System auf der seriellen Schnittstelle
 
 	#define DEBUG_SERIAL_SYSTEM
 
-###Erstellung eines neuen Modules / einer neuen Klasse###
-
-Für jedes neue Modul werden jeweils eine Headerdatei und eine CPP-Datei angelegt. Innerhalb dieser Dateien wird eine Klasse beschrieben die in den ESPNode eingebaut wird. Diese Klasse kann natürlich Objekte nutzen die wiederum auf anderen Klassen basieren. Es ist darauf zu achten das sich in der Headerdatei nur Deklarationen befnden. Definitionen und Initialisierungen kommen in die CPP Datei.
-
-Die Modulklasse wird direkt oder indirekt von der Klasse "Base_Generic" abgeleitet. Beispiel:
-
-	class Sensor_18B20 : public Base_Generic {
-	
-	public:
-	
-	private:
- 	
-	};
-
-Das hat den Vorteil das alle benötigten Funktionen bereits vorhanden sind und dadurch sichergestellt wird das der Compiler fehlerfrei läuft. Einige der in der Klasse "Base_Generic" definierten Funktionen sind jedoch leer und müssen in der abgeleiteten Funktion mit sinnvollem Inhalt gefüllt werden.
-
-**Wichtiger Hinweis**
-
-Nicht benötigte Module ( wichtig bei Hardwarebezug z.B addressiete Pins ) müssen entweder
-
-a) durch eine passende Precompilerdirektive deaktiviert werden (Beispiel Modul "actor_ledmatrix"):
-
-Datei "actor_ledmatrix.h":
-
-	#ifdef USE_ACTOR_LEDMATRIX
-	
-	... Programmext ...
-	
-	#endif
-	
-Datei "actor_ledmatrix.cpp":
-
-	#include "config.h"
-    #ifdef USE_ACTOR_LEDMATRIX
-	
-	... Programmext ...
-	
-	#endif
-	
-Diese Direktive wird dann in der Datei "Node_settings.h" aktiviert:
-
-oder
-
-b) entfernt werden => sehr unpraktisch!!
-
-**Problem:** Besitzt ein Modul einen Hardwarebezug stören sich die Programme gegenseitig auch wenn sie nicht aktiv sind. (Beispiel: 2 Module greifen mit unterschiedlichen Methoden auf GPIO 4 zu, jedoch ist für einen Node jeweils nur ein Modul mit einer Methode aktiviert) 
-
-**Lösung:** Umgesetzt ist die Methode a)
-
-Die benötigte Direktive steht jeweils in der ersten Zeile der Moduldateien *.h bzw. in der zweite Zeile von *.cpp
-
-###Aufgaben
-Jedes Modul ist für die Bereitstellung seiner Daten egal ob Aktualisierung der Webseite oder Versand mittels MQTT selbst verantwortlich.
-
-####Web
-Hier sind drei Szenarien zu unterscheiden: Die Kommunikation mit der Webseite erfolgt mittels JSON Statements. Ein JSON Statenment besteht immer aus einem Wertepaar: "Schlüssel":"Wert". Mehrere Statements werden durch Komma getrennt.
-
-**1) Öffnen einer Webseite**
-Wird eine Webseite geöffnet und das Modul darüber (mittels html_init()) informiert, dann werden in der Variablen "html_json" alle benötigten JSON Statements gespeichert.
-
-**2) Update einer Webseite**
-Bei jeder Änderung, die auf der Webseite dargestellt wird, wird durch das Modul eigenständig eine JSON Nachricht mit den neuen Daten an die Webseite geschickt.
-
-**3) Systeminfo Daten**
-Hardwaredaten zu diesem Modul können auf der Seite "Systeminfo" angezeigt werden. Dazu sind folgende Maßnahmen erforderliich:
-
-Über den Schalter "html_has_info" wird dem Hauptprogramm mitgeteilt das diese Daten vorhanden sind.
-
-In der Variablen "html_info" werden diese Daten als JSON bereitgestellt.
-
-Beispiel: Es soll ein Sensor mit seinem HW-GPIO angezeigt werden:
-
-Zunächst wird eine neue Abschnittsüberschrift erzeugt. Der Schlüssel dafür lautet `tab_head_<myname>` Wichtig Da jeder Schlüssel im JSON eindeutig sein muss ist bei `<myname>èine eindeutige Bezeichnung zu wählen. Der Wert ist die angezeigte Abschnittsüberschrift. Danach folgen max 5 Zeilen in folgender Syntax:
-
-Schlüssel: tab_lineX_id (mit X =1 ..5) 
-
-Wert: `<Zellelinks>#<Zelle rachts>`
-
-Beispiel:
- 
-	  "tab_head_ldr":"Sensor","tab_line1_ldr":"LDR:#GPIO: A0"
-	
-
 ####MQTT
 Mittels MQTT werden folgende Arten von Daten bereitgestellt.
 
 **1) Telemetriedaten**
 
-sind von ihrer Natur her statisch und verändern sich nicht während der Laufzeit. Die können z.B. Anschlüsse von Serńsoren oder Schaltern sein. Die Daten werden inḿ JSON Format in die Variable "mqtt_info" geschrieben. Um dem Hauptprogramm zu signalisieren das es diese Daten gibt ist der Schalter "mqtt_has_info" au true zu setzen.
+sind von ihrer Natur her eher statisch und verändern sich nicht oder nur langsam während der Laufzeit. Die können z.B. Anschlüsse von Sensoren oder Schaltern sein. Die Daten werden in JSON Format in die Variable "mqtt_info" geschrieben. Um dem Hauptprogramm zu signalisieren das es diese Daten gibt ist der Schalter "mqtt_has_info" au true zu setzen.
 
 **2) Zustandsdaten**
 
@@ -362,27 +281,5 @@ Normale Messwerte werden als JSON in die Variable "mqtt_stat" geschrieben. Durch
 
 Wird ein Wert als Nodestatus definiert ist folgendes zu beachten: Der Wert wird in die Variable "state" eingetragen. Zusätzlich muss "is_state" auf true gesetzt sein. Achtung: Ein Node kann nur einen State haben!
 
-###Funktionen und Variablen
-Hier werden nur Funktionen und Variablen beschrieben die zwingend erforderlich sind. Diese Funktionen sind alle in der Klasse "Base_Generic" definiert, es handelt ich jedoch teilweise nur um Funktionen ohne Inhalt.
-
-####Funktion "begin()"####
-Hier wird das Objekt initialisiert dabei ist naturgemäß die Anzahl der Parameter variabel. Jedliche grundlegende Konfiguration muss hier erfolgen. Im weiteren Programm gibt es dazu keine Möglichkeit mehr.
-Der Einbau in den ESPNode mittels Precompilerdirektive wurde bereits behandelt.
-
-####Funktion set( _cmnd, _val)####
-Hier werden alle Anweisungen für dieses Modul umgesetzt. Diese Funktion muss bei Bedarf im abgeleiteten Modul gefüllt werden.
-Innerhalb des Hauptprogrammes werden alle Befehle (Format "comand"="value") durch jede set funktion der eingebauten Module geschleust. Die Module prüfen innerhalb der **"set"** Funktion ob das "comand" für sie ein keyword ist und sie handeln müssen. Die benötigte Funktion für diese Prüfung ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. Alle nötigen Handlungen für einen "Keyword Match" sind hier zu hinterlegen.
-
-####Funktion "html_init()"####
-Stellt alle Konfigurationsdaten (als JSON Teilstring) bereit, die für dieses Modul beim Aufruf der Webseite benötigt werden. Die Daten werden in die Variable "html_json" geschrieben. Um dem Hauptprogramm mitzuteilen das Daten zur Verfügung stehen wird der Schalter "html_json_filled" auf "true" gesetzt.
-
-####Funktion loop(time_t now)####
-In dieser Funktion steht dem Modul Rechenzeit zur Verfügung. Hier werden alle Aktionen durchgeführt die nicht durch ein "comand" veranlasst worden sind z.B. regelmäßige Messungen mit Sensoren.
-ZU beachten ist folgendes: Rechenzeit ist ein knappes Gut. Es findet seitens des Hauptprogrammes keine Kontrolle/Zeitbegrenzung statt. Die Loop Funktionen aller Module wird nah dem "Round Robin" Prinzip angesteuert. Verwendung von "delay()" ist unbedingt zu vermeiden. Um eine Wartefunktion zu realisieren gbt es den übergebenen Zeitstempel.
- 
- 
-(Modul Switch On Off)[./modul_switch_onoff.md]
- 
-(technische Doku)[./technischedoku.md]
  
  

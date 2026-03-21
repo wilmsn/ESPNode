@@ -79,32 +79,6 @@ time_t now;
 /// Achtung: Ungenauigkeit wird hier tolleriert
 unsigned long minutes = 0; 
 
-#ifdef USE_AUDIO_MEDIA
-#include "FS.h"
-#include "SD.h"
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-// ESP32S3: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
-//#define SD_SCK                        12
-//#define SD_MISO                       13 
-//#define SD_MOSI                       11 
-#ifndef SD_CS
-#define SD_CS                           10
-#endif
-#endif
-#if defined(CONFIG_IDF_TARGET_ESP32)
-// ESP32: SD Card mit HW-SPI (ok bei 3V3 Adaptern)
-//#define SD_SCK                        18
-//#define SD_MISO                       19
-//#define SD_MOSI                       23 
-#ifndef SD_CS
-#define SD_CS                           5
-#endif
-#endif
-uint64_t sd_cardsize;
-uint64_t sd_usedbytes;
-uint8_t sd_cardType;
-#endif
-
 /// @brief Fügt die gemessene Betriebsspannung dem übergebenen String hinzu.
 /// Achtung: ESP32 noch nicht implementiert
 void getVcc(String& json);
@@ -137,6 +111,7 @@ void loop();
 /// @brief Ermittlung des Resetgrundes für den ESP32, der ermittelte Grund wird dem übergebenen String angehängt.
 void getResetReason(String& tmp);
 
+bool cmd_result;
 
 #ifdef USE_WIFIMULTI
 #ifdef ESP32
@@ -298,14 +273,20 @@ bool do_wifi_con(void) {
   WiFi.setHostname(HOSTNAME);
   WiFi.mode(WIFI_STA);
 //  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
-#ifdef USE_WIFIMULTI  
+#ifdef USE_WIFIMULTI
+#ifdef WIFI_SSID
   wifiMulti.addAP(wifi_ssid.c_str(), wifi_pass.c_str());
-  wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
-  wifiMulti.addAP(wifi_ssid2.c_str(), wifi_pass2.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid.c_str(), " with Password ", wifi_pass.c_str());
+#endif
+#ifdef WIFI_SSID1
+  wifiMulti.addAP(wifi_ssid1.c_str(), wifi_pass1.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid1.c_str(), " with Password ", wifi_pass1.c_str());
+#endif
+#ifdef WIFI_SSID2
+  wifiMulti.addAP(wifi_ssid2.c_str(), wifi_pass2.c_str());
   write2log(LOG_SYSTEM, 4, "WIFI try to connect to ", wifi_ssid2.c_str(), " with Password ", wifi_pass2.c_str());
-#else
+#endif
+#else  // USE_WIFIMULTI
   int numberOfNetworks = WiFi.scanNetworks();
   int32_t rssi_max = -999;
   int bestNetworkIndex = -1;
@@ -320,11 +301,11 @@ bool do_wifi_con(void) {
   WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str(), bestNetworkIndex >=0 ? WiFi.channel(bestNetworkIndex) : 0,
              bestNetworkIndex >=0 ? WiFi.BSSID(bestNetworkIndex) : NULL);
 #endif  
-#else
+#else // if ESP32
     //    WiFi.persistent(false);
   WiFi.hostname(HOSTNAME);
   WiFi.begin(wifi_ssid, wifi_pass);
-#endif
+#endif  
 
   // ... Give ESP 10 seconds to connect to station.
   unsigned int i = 0;
@@ -790,6 +771,7 @@ void loop() {
     localtime_r(&now, &timeinfo); // update the structure tm with the current time
     yield();
     ws.cleanupClients();
+    webserver_loop(now);
     if ((millis() - loop_starttime) > loop_time_alarm) {
       snprintf(mymsg,29,"Looptime WiFi: %d",(int)(millis() - loop_starttime));
       write2log(LOG_CRITICAL,1,mymsg);

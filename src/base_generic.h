@@ -73,9 +73,62 @@ public:
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
      * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
      */
-    void html_init();
- 
-    //----------------Variablen---------------   
+    void html_init(String& _html_init);
+
+    /**
+     * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Daten für die HTML Initialisierung
+     * bereitstellt.
+     */
+    bool html_init_set = false;
+
+    /**
+     * @brief Update der Webseite
+     * Wenn sich der Inhalt der Webseite ändert, werden hier die geänderten Daten in Form eines Teil-JSON bereitgestellt.
+     * Durch das zugrunde liegende Event wird die Variable html_update_set auf true gesetzt, damit das Hauptprogramm 
+     * weiß, dass es neue Daten gibt. Das Hauptprogramm sendet diese Daten dann als Websocket an den Browser.
+     */
+    void html_update(String& _html_update);
+
+    /**
+     * @brief Die Variable wird auf true gesetzt wenn ein inhalticher Update vorliegt.
+     * bereitstellt.
+     */
+    bool html_update_set = false;
+
+    /**
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_info(String& _html_init);
+
+    /**
+     * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Daten für die Seite "Systeminfo" 
+     * bereitstellt.
+     */
+    bool html_info_set = false;
+    
+    /**
+     * @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
+     */
+    void mqtt_info(String& _mqtt_info);
+
+    // MQTT Support
+
+    /**
+     * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
+     */
+    bool       mqtt_info_set = false;
+
+    /**
+     * @brief Der MQTT Status
+     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
+     * "mqtt_nameX"+":"+"MesswertX",...
+     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+     */
+    void mqtt_stat(String& _mqtt_stat);
+    
  
     /**
      * @brief Das gespeicherte Schlüsselword für diesen Sensor/Actor.
@@ -106,43 +159,20 @@ public:
     // HTML Support
 
     /**
-     * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Daten für die Seite "Systeminfo" bereitstellt.
-     */
-    bool       html_has_info = false;
-    
-    /**
      * @brief Systeminformationen zum Sensor für die Webseite als json abgespeichert.
      * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Systeminfowert:
      * ""html_placeX"+":"+"labelX"+"MesswertX"+"EinheitX", ... "
      * Hier muss immer ein komplettes, gültiges Teil-JSON stehen!
      */
-    String     html_info;
+//    String     html_info;
 
     /**
      * @brief Informationen zum Sensor für die Webseite als Teil-Json (ohne geschweifte Klammern) abgespeichert;
      * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
      * ""html_placeX"+":"+"labelX"+"MesswertX"+"EinheitX", ... "
      */
-    String     html_json;
+//    String     html_json;
     
-    /**
-     * @brief Schalter: Wird wahr wenn html_json gefüllt ist. 
-     * Die Rücksetzung des Schalters erfolgt durch das Hauptprogramm.
-     */
-    bool       html_json_filled = false;
-
-    // MQTT Support
-
-    /**
-     * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
-     */
-    bool       mqtt_has_info = false;
-
-    /**
-     * @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
-     */
-    String     mqtt_info;
-
     /**
      * @brief Schalter ob "obj_mqtt_state" verändert worden ist und neu (=true) übertragen werden soll.
      * Rücksetzung erfolgt im Hauptprogramm.
@@ -152,15 +182,7 @@ public:
     /**
      * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Statusdaten bereitstellt.
      */
-    bool       mqtt_has_stat = false;
-
-    /**
-     * @brief Der MQTT Status
-     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
-     * "mqtt_nameX"+":"+"MesswertX",...
-     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
-     */
-    String     mqtt_stat;
+    bool       mqtt_stat_set = false;
 
     /**
      * @brief Die Bezeichnung für den ersten Wert

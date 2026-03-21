@@ -6,24 +6,32 @@
 
 void Sensor_LDR::begin(const char* _html_place, const char* _label) {
   Base_Generic::begin(_html_place, _label);
-  html_info = String("\"tab_head_ldr\":\"Sensor\",\"tab_line1_ldr\":\"LDR:#GPIO: A0\"");
-  html_has_info = true;
-  mqtt_has_stat = true;
+  html_init_set = true;
+  mqtt_stat_set = true;
 }
 
 void Sensor_LDR::loop(time_t now) {
   if ((now - measure_starttime) > REFRESHTIME) {
     measure_starttime = now;
     value = analogRead(A0);
-    mqtt_stat = String("\"LDR\":") + String(value);
-    String myjson = String("{\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"}");
-    sendWsMessage(myjson);
+    html_update_set = true;
   }
 }
 
-void Sensor_LDR::html_init() {
-  html_json = String("\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"");
-  html_json_filled = true;
+void Sensor_LDR::html_init(String& _html_init) {
+  _html_init += String("\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"");
+}
+
+void Sensor_LDR::html_update(String& _html_update) {
+  _html_update += String("\"") + html_place + String("\":\"") + label + String(": ") + String(value) + String("\"");
+}
+
+void Sensor_LDR::html_info(String& _html_info) {
+  _html_info += String("\"tab_head_ldr\":\"Sensor\",\"tab_line1_ldr\":\"LDR:#GPIO: A0\"");
+}
+
+void Sensor_LDR::mqtt_stat(String& _mqtt_stat) {
+  _mqtt_stat += String("\"LDR\":") + String(value);
 }
 
 #endif

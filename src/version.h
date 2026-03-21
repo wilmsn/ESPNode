@@ -1,1 +1,1 @@
-#define SWVERSION   "1.0.02"
+#define SWVERSION   "1.1.00"

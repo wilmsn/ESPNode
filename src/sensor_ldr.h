@@ -31,13 +31,36 @@ public:
      */
     void loop(time_t now);
 
+     /**
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_init(String& _html_init);
+
     /**
      * @brief Initialisierung einer Webseite
      * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
      * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
      */
-    void html_init();
+    void html_info(String& _html_info);
+
+    /**
+     * @brief Update einer Webseite
+     * Wenn sich der Inhalt einer Webseite ändert wird hier der geänderte Inhalt bereitgestellt.
+     */
+    void html_update(String& _html_update);
+
+    /**
+     * @brief Der MQTT Status
+     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
+     * "mqtt_nameX"+":"+"MesswertX",...
+     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+     */
+    void mqtt_stat(String& _mqtt_stat);
+
 
 private:
 

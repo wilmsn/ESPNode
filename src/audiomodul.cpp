@@ -54,6 +54,10 @@ String audio_media_song_name;
 void my_audio_info(Audio::msg_t m);
 #ifdef USE_ROTARY
 
+uint64_t sd_cardsize;
+uint64_t sd_usedbytes;
+uint8_t sd_cardType;
+
 #include "AiEsp32RotaryExtention.h"
 
 AiEsp32RotaryExtention  rotary = AiEsp32RotaryExtention(ROT_S1, ROT_S2, ROT_SW, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS, ROTARY_ENCODER_R_PULLDOWN);

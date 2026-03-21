@@ -19,7 +19,7 @@ bool cmd_valid = false;
 /// @brief Der Kommandoprozessor
 /// @param cmd Das Kommando
 /// @param value Der Wert des Kommandos
-void prozess_cmd(const String cmd, const String value);
+bool prozess_cmd(const String cmd, const String value);
 
 /// @brief Überträgt ein JSON mit den Settings an die Wboberfläche.
 void show_settings();

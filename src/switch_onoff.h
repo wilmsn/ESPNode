@@ -169,7 +169,29 @@ public:
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
      * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
      */
-    void html_init();
+     void html_init(String& _html_init);
+
+    /**
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_info(String& _html_init);
+
+    /**
+     * @brief Update einer Webseite
+     * Wenn sich der Inhalt einer Webseite ändert wird hier der geänderte Inhalt bereitgestellt.
+     */
+    void html_update(String& _html_update);
+
+    /**
+     * @brief Der MQTT Status
+     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
+     * "mqtt_nameX"+":"+"MesswertX",...
+     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+     */
+    void mqtt_stat(String& _mqtt_stat);
 
     /**
      * @brief Gibt die aktuellen Einstellungen des Sliders zurück 
@@ -366,7 +388,20 @@ public:
     int last_store = 0;
 
 private:
+    /**
+     * @brief Die Initialisierungsdaten für die Webseite werden hier gespeichert.
+     */
+    String html_init_str;
 
+    /**
+     * @brief Ein String um einen Teil JSON mit mqtt_info aufzubauen.
+     */
+    String mqtt_info_str;
+
+    /**
+     * @brief Ein String um einen Teil JSON mit mqtt_stat aufzubauen.
+     */
+    String mqtt_stat_str;
 };
 
 #endif

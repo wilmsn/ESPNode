@@ -8,6 +8,8 @@ Switch_OnOff::Switch_OnOff(){
   hw_pin2 = 0;
   hw_pin1_used = false;
   hw_pin2_used = false;
+  html_init_set = true;
+  html_info_set = true;
 }
 
 void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
@@ -82,7 +84,7 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
                          bool _start_value, bool _on_value, bool _is_state, bool _show_diagramm) {
   Base_Generic::begin(_html_place, _label, _mqtt_name, _keyword);
   switch_mqtt_name = _mqtt_name;
-  mqtt_has_stat = true;
+  mqtt_stat_set = true;
   on_value = _on_value;
   switch_value = _start_value;
   is_state = _is_state;
@@ -94,28 +96,16 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
   }
   if (hw_pin1_used && hw_pin2_used ) {
 
-    html_info = String("\"tab_head_") + html_place+String("\":\"Switch On Off\"") +
-                String(",\"tab_line1_") + html_place+String("\":\"") + label + String(":#GPIO:") + String(hw_pin1);
-    if (slider_used) { html_info += String(" (PWM)\""); } else { html_info += String("\""); }
-    html_info = String(",\"tab_line2_") + html_place+String("\":\"") + label + String(":#GPIO:") + String(hw_pin2);
-    if (slider_used) { html_info += String(" (PWM)\""); } else { html_info += String("\""); }
-    html_has_info = true;
-
-    mqtt_info = String("\"GPIO_") + mqtt_name + String("\":\"") + String(hw_pin1) + String("; ") + String(hw_pin2);
-    if (slider_used) { mqtt_info += String(" (PWM)\""); } else { mqtt_info += String("\""); }
-    mqtt_has_info = true;
+    mqtt_info_str = String("\"GPIO_") + mqtt_name + String("\":\"") + String(hw_pin1) + String("; ") + String(hw_pin2);
+    if (slider_used) { mqtt_info_str += String(" (PWM)\""); } else { mqtt_info_str += String("\""); }
+    mqtt_info_set = true;
 
   } else {
     if (hw_pin1_used ) {
 
-      html_info = String("\"tab_head_") + html_place + String("\":\"Switch On Off\"") +
-                  String(",\"tab_line1_") + html_place + String("\":\"") + label + String(":#GPIO:") + String(hw_pin1);
-      if (slider_used) { html_info += String(" (PWM)\""); } else { html_info += String("\""); }
-      html_has_info = true;
-
-      mqtt_info = String("\"GPIO_") + mqtt_name + String("\":\"") + String(hw_pin1);
-      if (slider_used) { mqtt_info += String(" (PWM)\""); } else { mqtt_info += String("\""); }
-      mqtt_has_info = true;
+      mqtt_info_str = String("\"GPIO_") + mqtt_name + String("\":\"") + String(hw_pin1);
+      if (slider_used) { mqtt_info_str += String(" (PWM)\""); } else { mqtt_info_str += String("\""); }
+      mqtt_info_set = true;
 
     }
   }
@@ -152,25 +142,11 @@ void Switch_OnOff::do_switch(bool new_state) {
   }
   switch_value = new_state;
   state = String(switch_value?"1":"0");
-  
-  String myjson = String("{\"") + html_place + String("\":") + String(switch_value?"1":"0");
+  html_update_set = true;
+
+  mqtt_stat_str = String("\"") + switch_mqtt_name+String("\":") + String(switch_value? "1":"0");
   if (slider_used) {
-    myjson += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
-  }
-  if (timer_min > 0) {
-    if ( new_state ) {
-      myjson += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
-    } else {
-      myjson += String(",\"") + html_place + String("_progress\":\"0\"");
-      timer_min = 0;
-    }
-  }
-  myjson += String("}");
-  sendWsMessage(myjson);
-  
-  mqtt_stat = String("\"") + switch_mqtt_name+String("\":") + String(switch_value? "1":"0");
-  if (slider_used) {
-    mqtt_stat += String(",\"") + slider_mqtt_name + String("\":") + String(slider_value);
+    mqtt_stat_str += String(",\"") + slider_mqtt_name + String("\":") + String(slider_value);
   }
   mqtt_stat_changed = true;
 }
@@ -250,7 +226,7 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
       json_stat_header(stat_str);
       stat_str += String("\"Schalten:\"");
       json_stat_header(stat_str);
-      stat_str += String("\"<") + html_place + String("|") + keyword + String(">:<1|ein|0|aus|2|umschalten|<1..6>h>\"");
+      stat_str += String("\"<") + keyword + String(">:<1|ein|0|aus|2|umschalten|<1..6>h>\"");
       if (slider_used) {
         json_stat_header(stat_str);
         stat_str += String("\"Dimmen:\"");
@@ -263,8 +239,34 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
   return retval;
 }
 
-uint8_t Switch_OnOff::get_slider_val() {
-  return slider_value;
+void Switch_OnOff::html_info(String& _html_info) {
+  if (hw_pin1_used && hw_pin2_used ) {
+    _html_info += String("\"tab_head_") + html_place + String("\":\"Switch On Off\"") +
+                  String(",\"tab_line1_") + html_place + String() + String("\":\"") + 
+                  label + String(" (") + keyword + String("):#GPIO:") + String(hw_pin1);
+    if (slider_used) { 
+      _html_info += String(" (PWM)\""); 
+    } else { 
+      _html_info += String("\""); 
+    }
+    _html_info += String(",\"tab_line2_") + html_place + String("\":\"") + label + String(":#GPIO:") + String(hw_pin2);
+    if (slider_used) { 
+      _html_info += String(" (PWM)\""); 
+    } else {
+      _html_info += String("\""); 
+    }
+  } else {
+    if (hw_pin1_used ) {
+      _html_info += String("\"tab_head_") + html_place + String("\":\"Switch On Off\"") +
+                    String(",\"tab_line1_") + html_place + String("\":\"") + 
+                    label + String(" (") + keyword + String("):#GPIO:") + String(hw_pin1);
+      if (slider_used) { 
+        _html_info += String(" (PWM)\""); 
+      } else { 
+        _html_info += String("\""); 
+      }
+    }
+  }
 }
 
 bool Switch_OnOff::get_switch_val() {
@@ -288,21 +290,38 @@ void Switch_OnOff::set_slider_max_value(uint8_t _val) {
   slider_max_value = _val;
 }
 
-void Switch_OnOff::html_init() {
-  html_json = String("\"") + html_place + String("_label\":\"") + label + String("\"") +
-              String(",\"") + html_place + String("_format\":\"x\"");
+void Switch_OnOff::html_init(String& _html_init) {
+  _html_init += String("\"") + html_place + String("_label\":\"") + label + String("\"") +
+                String(",\"") + html_place + String("_format\":\"x\"");
   if (slider_used) {
-    html_json += String(",\"slider") + String(slider_no) + String("\":1") +
-                 String(",\"slider") + String(slider_no) + String("label\":\"") + slider_label + String("\"") +
-                 String(",\"slider") + String(slider_no) + String("name\":\"") + slider_keyword + String("\"") +
-                 String(",\"slider") + String(slider_no) + String("max\":\"") + String(slider_max_value) + String("\"");
+    _html_init += String(",\"slider") + String(slider_no) + String("\":1") +
+                  String(",\"slider") + String(slider_no) + String("label\":\"") + slider_label + String("\"") +
+                  String(",\"slider") + String(slider_no) + String("name\":\"") + slider_keyword + String("\"") +
+                  String(",\"slider") + String(slider_no) + String("max\":\"") + String(slider_max_value) + String("\"");
   }
-  html_json += String(",\"") + html_place + String("\":") + String(switch_value?"1":"0");
+  _html_init += String(",");
+  html_update(_html_init);
+  diagramm2web(_html_init );
+}
+
+void Switch_OnOff::html_update(String& _html_update) {
+  _html_update += String("\"") + html_place + String("\":") + String(switch_value?"1":"0");
   if (slider_used) {
-    html_json += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
+    _html_update += String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + String("\"");
   }
-  diagramm2web(html_json);
-  html_json_filled = true;
+  if (timer_min > 0) {
+    if ( switch_value ) {
+      _html_update += String(",\"") + html_place + String("_progress\":\"") + String(timer_progress()) + String("\"");
+      _html_update += String(",\"") + html_place + String("_timer\":\"") + String(timer_min/60) + String("\"");
+    } else {
+      _html_update += String(",\"") + html_place + String("_progress\":\"0\"");
+      timer_min = 0;
+    }
+  }
+}
+
+void Switch_OnOff::mqtt_stat(String& _mqtt_stat) {
+  _mqtt_stat += String("\"") + mqtt_name + String("\":") + String(switch_value?"1":"0");
 }
 
 bool Switch_OnOff::do_dia_store(int min) {

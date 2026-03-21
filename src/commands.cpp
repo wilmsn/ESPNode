@@ -26,7 +26,7 @@ void console_help() {
 }
 
 // Kommentiert in main.h
-void prozess_cmd(const String cmd, const String value)  {
+bool prozess_cmd(const String cmd, const String value)  {
   write2log(LOG_SYSTEM,4,"prozess_cmd Cmd:",cmd.c_str(),"Val:",value.c_str());
   cmd_valid = false;
   if ( cmd == "?" || cmd == "help" ) {
@@ -328,5 +328,10 @@ void prozess_cmd(const String cmd, const String value)  {
   if ( ! cmd_valid ) {
     String myjson  = String("{\"stat\":\"Ungültiges Kommando:") + cmd + String(":") + value + String("\"}");
     sendWsMessage(myjson);
+    cmd_result = false;
+    return false;
+  } else {
+    cmd_result = true;
+    return true;
   }
 }

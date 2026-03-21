@@ -203,6 +203,8 @@ RF24 Gateway:
 //-------------------------------------------------------
 #if defined(NODE_WOHNZIMMERRADIO)
 
+// Nur lauffähig auf ESP32 !!!
+#ifdef ESP32
 //#define USE_WIFIMULTI
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
@@ -210,6 +212,7 @@ RF24 Gateway:
 #define USE_DISPLAY_GC9A01A
 #define USE_ROTARY
 //#define USE_BOOTMESSAGE
+#define USE_AUDIO_RADIO
 
 #define TFT_ROT                  4
 
@@ -229,11 +232,25 @@ RF24 Gateway:
 #define MODULE1_DEFINITION       AudioModul module1;
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", true);
 
+#else
+#error "Audio läuft nur auf dem ESP32 / ESP32-S3"
+#endif
 #endif
 //-----------------------------------------------------
 
 //*****************************************************
 //    Testnodes
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++
+//    NODESIMPLE
+//    Ein Node ohne externe Elemente.
+//    Lauffähig auf ESP8266 oder ESP32,ESP32S3,...    
+//-----------------------------------------------------
+#ifdef NODEMINIMAL
+#define HOSTNAME               "nodeminimal"
+#define HOST_DISCRIPTION       "Ein minimaler Node als Zwischenschritt zum Update auf 1M ESP8266"
+#define MAGICNO                 0
+#define MINIMALNODE             true
+#endif
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++
 //    NODESIMPLE
 //    Ein Node ohne externe Elemente.
@@ -369,7 +386,7 @@ RF24 Gateway:
 #define DO_LOG_SYSTEM            true
 
 #define MODULE1_DEFINITION      Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, true, WITTY_LED_PIN, true);
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "LED int.", "int_led", "int_led", false, false, true, WITTY_LED_PIN, true);
 
 #define MODULE2_DEFINITION      Switch_OnOff module2;
 #define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rt", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot Helligkeit", "rot_sl", "rot_sl", true);
@@ -393,18 +410,18 @@ RF24 Gateway:
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
 //#define USE_FTP
-//#define USE_WIFIMULTI
+#define USE_WIFIMULTI
 #define USE_ROTARY
 //#define ROTARY_ENCODER_VCC_PIN     -1
 //#define ROTARY_ENCODER_STEPS       4
 //#define ROTARY_ENCODER_R_PULLDOWN  false
 #define TFT_ROT                 0
 //#define ROT_SW                  33
-#define ROT_S1                  35
-#define ROT_S2                  34
+//#define ROT_S1                  35
+//#define ROT_S2                  34
 
 #include "audiomodul.h"
-#define MAGICNO                 66
+#define MAGICNO                 0
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
@@ -421,7 +438,7 @@ RF24 Gateway:
 #define DO_LOG_SYSTEM            true
 
 #else
-#warning "Audio läuft nur auf dem ESP32"
+#warning "Audio läuft nur auf dem ESP32-S3"
 #endif
 #endif
 

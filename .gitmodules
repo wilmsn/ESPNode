@@ -22,9 +22,6 @@
 [submodule "lib/OneWire"]
 	path = lib/OneWire
 	url = https://github.com/wilmsn/OneWire.git
-[submodule "lib/ESPAsyncTCP"]
-	path = lib/ESPAsyncTCP
-	url = https://github.com/wilmsn/ESPAsyncTCP.git
 [submodule "lib/PubSubClient"]
 	path = lib/PubSubClient
 	url = https://github.com/wilmsn/pubsubclient.git
@@ -61,3 +58,6 @@
 	url = https://github.com/wilmsn/Adafruit-ST7735-Library.git
 [submodule "ESP32-audioI2S"]
 	url = https://github.com/schreibfaul1/ESP32-audioI2S
+[submodule "lib/SdFat"]
+	path = lib/SdFat
+	url = git@github.com:greiman/SdFat.git

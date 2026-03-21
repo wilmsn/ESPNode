@@ -15,37 +15,9 @@ Auf der Weboberfläche sind 4 Ausgabezeilen vorgesehen. Diese Felder haben den N
 
 Daneben können auf der Webseite noch weitere Objekte angelegt werden, diese werden hier jedoch nicht beschrieben.
 
-**Nutzungsszenarien**
-
-**Web**
-
 Alle Datenübertragungen wurden als Websockets realisiert.
 
-In der HTML Oberfläche gibt es folgende Nutzungsszenarien:
-
-- Aufbau der Webseite durch Aufruf der URL bzw. Reresh der Seite:
-
-Diese Funktion wird durch das Hauptprogramm umgesetzt, das Modul unterstützt durch die Funktion "html_init()". Diese Funktion wird durch das Hauptprogramm aufgerufen wenn eine HTML-Seite geöffnet oder neu geladen wurde. Innerhalb der Funktion wird vom Modul eine Websocket Nachricht an die Webseite geschickt.
-
-- Änderung von Inhalten der Webseite
-
-Hier ist das Modul eigenverantwortlich für seine Inhalte. Nach jeder Veränderung, die eine Änderung auf der Webseite veranlasst, wird aus den Modul heraus eine Websocketnachricht gesendet.
-
-**MQTT:**
-
-Für die Datenübertragung über MQTT sind 2 Nachrichten vorgesehen.
-
-* Sammelnachricht im JSON Format
-
-In dieser Nachricht werden alle zu übermittelnden Werte als JSON übermittelt. In jedem Modul wird ein Teil-JSON angelegt.
-
-* Statusnachricht
-
-Zusätzlich kann ein Wert bestimmt werden, der den Status des Objektes (z.B. in FHEM) anzeigt. Es gibt nur einen Status für den kompletten Node!
-
-Zusätzlich gibt es Zulieferungen zur Systeminfo des Nodes.
-
-##Anforderungen an die Software
+##Aufgaben und Schnittstellen der Module
 Grundsätzlich ist das Modul dafür verantwortlich:
 
 - Alle Inhalte selbst zu verwalten
@@ -56,42 +28,41 @@ Grundsätzlich ist das Modul dafür verantwortlich:
 
 - Webinhalte selbst zu verwalten
 
-##Schnittstellen zum Hauptprogramm
-Die nachfolgenden Schnittstellen werden durch das Hauptprogramm aufgerufen und müssen vorhanden sein. Wenn ein Modul auf "Base_Generic" als Vaterobjekt aufbaut ist das gewährleistet.
+Zum Hauptprogramm gibt es definierte Schnittstellen. Da jedes Modul von der Klasse "Base_Generic" abgeleitet werden sollte, sind diese Schnittstellen schon als leere Hüllen implementiert und müssen in der abgeleiteten Klasse mit Inhalt gefüllt werden.
+###Initialisierung des Modules
+Es gibt nur eine Schnittstelle in der alle spezifischen Einstellungen für dieses Modul geschehen müssen: Die Funktion begin(). Diese Funktion hat je Modul einen individuellen Satz von Parametern. 
+###Regelmäßige Aufgaben des Modules
+**Allgemein**
 
-###Funktion "begin()"
-Hier wird das Objekt initialisiert dabei ist naturgemäß die Anzahl der Parameter variabel. Jedliche grundlegende Konfiguration muss hier erfolgen. Im weiteren Programm gibt es dazu keine Möglichkeit mehr.
-Der Einbau in den ESPNode mittels Precompilerdirektive siehe:
+Benötigt ein Modul Rechenzeit, dann kann diese nur in der Funktion "loop(time_t now)" realisiert werden. Da diese Funktion den aktuellen Zeitstempel übergeben bekommt sind auch zeitlich gesteuerte oder periodische Aktionen realisierbar. 
 
-**Einbindung eines Modules**
+**Umsetzung**
 
-###Funktion loop(time_t now)
-Wärend des Laufs wird die loop Funktion regelmäßig aufgerufen. Alle loop Funktionen aller Module und die im Hauptprogramm aufgerufenen periodischen Funktionen werden nach dem "round Robin" Prinzip nacheinander aufgerufen. Erst wenn eine loop Funktion beendet ist folgt die nächtse. Es gibt keine zeitliche Begrenzung, dies liegt in der Verantwortung des Moduls! Durch Übergabe des Zeitstempels sind Zeitmessungen (z.B. für Wartezeit) möglich.
+Während des Laufs wird die loop Funktion regelmäßig aufgerufen. Alle loop Funktionen aller Module und die im Hauptprogramm aufgerufenen periodischen Funktionen werden nach dem "round Robin" Prinzip nacheinander aufgerufen. Erst wenn eine loop Funktion beendet ist folgt die nächste. Es gibt keine zeitliche Begrenzung, dies liegt in der Verantwortung des Moduls! Durch Übergabe des Zeitstempels sind Zeitmessungen (z.B. für Wartezeit) möglich.
+###Ausgabe mittels Webseite
+Die komplette Webseite ist vordefiniert und wird beim Öffnen der Webseite eines Nodes geladen. Alle inhaltlichen Elemente sind beim Start ausgeblendet und müssen bei Nutzung durch das Modul eingeblendet und mit Inhalt befüllt werden. Dies geschieht mittels JSON Statement das per Websocket transportiert wird.
+####Initialisierung der Webseite
+**Allgemein**
 
-###Funktion set( keyword, value)
-Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion aller eingebauten Module geschleust. Jedes Module prüft eigenverantwortlich ob das Item für dieses Modul ein Keyword ist und das Modul handeln muss. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. 
-
-**Rückgabewert:**
-
-"false" wenn das "item" nicht in diesem Modul ausgewertet wird, sonst "true"
-
-###Funktion html_init()
-Diese Funktion wird vom Hauptrogramm aus aufgerufen wenn ein neuer Webclient sich verbindet. In diesem Fall muss der Client mit aktuellen Daten (mittels Websocket) versorgt werden.
-
-**Aufgabe**
-
-Liefert eine Websocketmessage mit allen benötigten Daten zur Initialisierung und dem aktuellen Werten der Webseite (für dieses Modul).Das versenden der Websocketmessage erfolgt eigenständig durch das Modul. Die Methode zum Versenden "ws.textAll()" ist in allen Modulen verfügbar.
+Wird die Webseite eines Nodes geöffnet muss der Inhalt der Webseite komplett neu aufgebaut werden. Dazu muss jedes Modul seine Initialisierungsdaten liefern, die vom Hauptprogramm über die Funktion "html_init()" abgefragt werden wenn die Variable "html_init_set" auf true gesetzt ist. Das geschieht jedes mal wenn ein neuer Webclient sich verbindet. In diesem Fall muss der Client mit aktuellen Daten (mittels Websocket) versorgt werden.
 
 **Umsetzung**
 
 Es kann je Modul entschieden werden ob es sinnvoller ist die Websocketnachricht jeweils neu aufzubauen oder sie in Form eines Strings abzulegen. 
 
-**Rückgabewert:**
+####Update der Webseite
+**Allgemein**
 
-Keine.
+Ein Update einzelner Elemente der Webseite wird durch das Modul veranlasst. Wird z.B ein Schalter betätigt oder ein neuer Meßwert eingelesen dann schickt das Modul eigenständig die Daten an die Weboberfläche.
 
-###Zulieferung zu den Systeminfos
-Es besteht dieMöglichkeit im HTML Client die Systeminfo Seite mit Infos z.B. zur verwendeten Hardware, genutzter Ports, etc zu befüllen. Dazu muss die Variable "html_info" gefüllt werden. Zusätlich muss die Variable "html_has_info" a "true" gesetzt werden.
+**Umsetzung**
+
+Das Modul setzt die Variable "html_update_set" auf "true". Danach wird vom Hauptprogramm die Funktion "html_update(String& _html_update)" abgefragt. Innerhlab der aufgerufenen Funktion wird der String "_html_update" um einen Teil-JSON erweitert. Die Rücksetzung von "html_update_set" auf "false" erfolgt durch das Hauptprogramm.
+
+####Zulieferung zu den Systeminfos
+**Allgemein**
+
+Es besteht die Möglichkeit im HTML Client die Systeminfo Seite mit Infos z.B. zur verwendeten Hardware, genutzter Ports, etc zu befüllen. Dazu muss die Funktion "html_info()" gefüllt werden. Zusätlich muss die Variable "html_info_set" auf "true" gesetzt werden.
 
 **Umsetzung**
 
@@ -101,201 +72,101 @@ Danach folgt für jede Zeile ein item "tab_lineX_xyz" (Dabei ist "X" durch die Z
 
 Beispiel:
 
-	html_info =  String("\"tab_head_18b20\":\"Sensor\"")+
-	html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
-	html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")
-  	
-###mqtt_json
-Diese Funktion liefert einen Teil-JSON zurück der vom Hauptprogramm zu einer MQTT-Nachricht zusammengebaut wird:
-**stat/TOPIC2/data JSON-Statement**
-
-###mqtt_has_state()
-Ein Schalter der "WAHR" ist wenn das Modul den Statuswert beinhaltet.
-Der Satus ist in **obj_mqtt_has_state** gespeichert. Defaultwert wurde in "Base_Generic" auf "false" gesetzt.
-
-###mqtt_state()
-Gibt den Status für MQTT als String zurück. Der Wert wird aus **obj_mqtt_state** genommen. 
-
-##interne Funktionen
-
-###keyword_match()
-
-
-
-##Interne Variablen
-
-
-##Einbindung eines Modules
-Module beschreiben bzw erzeugen eigene Objekte. Sie werden von der Klasse "Base_Generic" abgeletet, dort sind alle grundlegenden Funktionen bereits vorhanden, viele jedoch als Leerfunktionen. Diese müssen in der abgeleiteten Klasse mit Inhalt gefüllt werden.
-
-Über die Datei "node_settings.h" werden die Module ins Hauptprogramm eingebunden.
-
-Beispiel:
-
-	#ifdef ESP8266SIMPLE
-	#define USE_SWITCH_ONOFF
-	#include "switch_onoff.h"
-	#define HOSTNAME              "nodesimple"
-	#define HOST_DISCRIPTION       "Ein ESP8266 Node ohne externe Elemente"
-	#define DEBUG_SERIAL_HTML
-	#define DEBUG_SERIAL_SENSOR
-	#define DEBUG_SERIAL_MQTT
-	#define MODULE1_DEFINITION      Switch_OnOff module1;
-	#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, 2);
-	#endif
-
-In der Datei "config.h" wird dann genau ein zu erzeugender Node aktiviert
-
-Auszug:
-
-	// Hier wird der zu erzeugende Node aktiviert
-	// Achtung: Es darf nur ein Node ausgewählt werden!
-	//#define NODE_AUDIO
-	#define ESP8266SIMPLE
-	//#define ESP32SIMPLE
-
-## Ausdrücke(Precompilermakros) für "node_settings.h"
-1) Vergabe eines Nodenamens (als logischer Einschalter für diesen Node) imBeispiel oben: "ESP8266SIMPLE"
-
-2) Setzen von Hostname und Beschreibung
-
-	#define HOSTNAME                  "nodesimple"
-	#define HOST_DISCRIPTION      "Ein ESP8266 Node ohne externe 
-
-3) Einbindung des/der Module
-
-	#include "switch_onoff.h"
-	#define MODULE1_DEFINITION                 Switch_OnOff module1;
-	#define MODULE1_BEGIN_STATEMENT     module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, 2);
- 
-Zeile 1: Einbindung der Headerdatei des Modules
-
-Zeile 2: Erzeugung einer Instanz. 
-
-Wichtig: Es wird der Klassenname aus der Headerdatei genommen. Die Instanz muss zwingend mit module1 bis modue6 benannt werden. Die Nummern müssen aufsteigend und lückenlos verwendet werden.
-
-Zeile 3: Das Begin Statement passend zur Deinition des Modules
-
-4) Setzen der Magic Number
-
-	#define MAGICNO                  0
-
-Die Magic Number legt fest wie mit Änderungen in den Preferences beim Neustart umgegangen wird:
-
-Magic Number = 0: Änderungen werden beim Neustart verworfen
-
-Magic Number > 0: Änderungen werden beim Neustart bebehalten.
-
-<b style="color:red">Wichtiger Hinweis</b>Auch bei einem Programmupate bleiben die Preferences erhalten wenn sich dies Nummer nicht ändert!
-
-5) Debuggingeinstellungen (optional)
-
-5.1) Serielles Debugging
-
-	#define DEBUG_SERIAL_HTML
-	
-Gibt auf der Seriellen Schnittstelle Debuginfos zu HTML Inhalten aus
-
-	#define DEBUG_SERIAL_MODULE
-	
-Reserviert für Debugausgaben innerhalb der Module
-
-	#define DEBUG_SERIAL_MQTT
-
-Gibt auf der Seriellen Schnittstelle Debuginfos zu MQTT Inhalten aus
-
-	#define DEBUG_SERIAL_WEB
-
-Gibt auf der Seriellen Schnittstelle Debuginfos zu Web Inhalten aus
-
-5.2) Voreinstellungen für das eingebaute Logging
-
-	#define DO_LOG_CRITICAL          true
-	
-Schaltet das Logging für kritische Ereignisse ein
-
-	#define DO_LOG_SYSTEM              true
-	
-Schaltet das Systemlogging ein
-
-	#define DO_LOG_RF24              true
-	
-Schaltet das RF24 Logging ein
-
-	#define DO_LOG_MQTT              true
-
-Schaltet das MQTT Logging ein
-
-	#define DO_LOG_WEB              true
-
-Schaltet das WEB Logging ein
-
-	#define DO_LOG_MODULE              true
-
-Schaltet das MODULE Logging ein
-
-6) MQTT Einstellungen (optional)
-
-	#define MQTT_CLIENT              "wohnzimmernode"
-	#define MQTT_TOPICP2             "wohnzimmernode"
-
-Sind diese beiden Zeilen gesetzt wird MQTT eingeschaltet.
-
-Der Name des Mqtt-Clients muss innerhalb der Mqtt Umgebung eindeutig sein.
-
-Das Topics 1 ist in Der Datei "config.h" definiert.
-Topic 3 ist der MQTT-Name eines Objektes innerhalb des Nodes.
-
-7) RF24 Einstellungen (optional)
-
-	#define RF24GW_HUB_SERVER        "rpi1.fritz.box"
-	#define RF24GW_NO                        102
-
-Sind diese beiden Zeilen gesetzt wird Der RF24 Gateway eingeschaltet.
-
-## Ableitung eines Modules von der Urklasse
-Alle Module werden von der Urklasse "Base_Generic" abgeleitet. Diese Vorgehensweise sorgt dafür das in dem abgeleiteten Modul bereits alle Methoden vorhanden sind. Die Methoden müssen jetzt nur noch mit den entsprechenden Inhalten gefüllt werden.
-
-<b style="color:red">Wichtiger Hinweis</b>
-Nicht benötigte Module ( wichtig bei Hardwarebezug z.B addressiete Pins ) müssen entweder
-
-a) durch eine passende Precompilerdirektive deaktiviert werden (Beispiel Modul "actor_ledmatrix"):
-
-b) entfernt werden => sehr unpraktisch!!
-
-Umgesetzt wurde Option a)
-
-Jedes Modul bekommt eine Precompilerdirektive als Schlüsselwort zum Einschalten des Moduls (im Beispiel "USE_MYMODUL").
-
-Datei: mymodul.h
-
-	#ifdef USE_MYMODUL
-	#include "base_generic.h"
-
-	class MyModul : public Base_Generic {
-	public:
-	private:
+	void MyModule::begin() {
+	...
+	  html_info_set = true;
+	...
 	}
+	
+	void MyModule::html_info(String& _html_info) {
+	  _html_info +=  String("\"tab_head_18b20\":\"Sensor\"")+
+	  _html_info += String(",\"tab_line1_18b20\":\"HW 18B20:#GPIO: ")+String(PIN_18B20)+String("\"")+
+	  _html_info += String(",\"tab_line2_18b20\":\"Resolution:# ")+String(RESOLUTION)+String("\"")
+	}
+	
+####Zulieferung zum eingebauten Hilfesystem
+**Allgemein**
 
-Datei mymodul.cpp
+Das eingebaute Hilfesystem kann auf der Webseite des Nodes im Reiter Konsole gestartet werden. Dazu wird in der Befehlszeile "?" oder "help" eingegeben.
+Jedes Modul kann optional einen Hilfetext anbieten.
 
-	#include "config.h"
-	#ifdef USE_MYMODUL
+**Umsetzung**
+
+Die Implementierung erfolgt über die "set()" Funktion. Hier wird auf das Kommando "?" und "help" reagiert.
+
+	if ( _cmnd == String("?") || _cmnd == String("help")) {
+
+Für jede Ausgabezeile muß zunächst die Funktion
+
+	json_stat_header(stat_str);
+
+aufgerufen werden. Danach folgt der auszugebende Text.
+Zum Abschluß <b style="color:red">MUSS</b> hier der Rückgabewert auf "false" gesetzt werden.
+
+	      retval = false;
+	    }
+
+Das komplette Beispiel aus der Klasse "Switch_OnOff":
+
+	    if ( _cmnd == String("?") || _cmnd == String("help")) {
+	      json_stat_header(stat_str);
+	      stat_str += String("\"Schalten:\"");
+	      json_stat_header(stat_str);
+	      stat_str += String("\"<") + keyword + String(">:<1|ein|0|aus|2|umschalten|<1..6>h>\"");
+	      if (slider_used) {
+	        json_stat_header(stat_str);
+	        stat_str += String("\"Dimmen:\"");
+	        json_stat_header(stat_str);
+	        stat_str += String("\"") + slider_keyword + String(":<0 ... 100>\"");
+	      }
+	      retval = false;
+	    }
+
+###Ausgabe mittels MQTT
+Für die Datenübertragung über MQTT sind 2 Nachrichtentypen vorgesehen.
+
+* Sammelnachricht im JSON Format
+
+In dieser Nachricht werden alle zu übermittelnden Werte als JSON übermittelt. In jedem Modul wird ein Teil-JSON angelegt.
+
+* Statusnachricht
+
+Zusätzlich kann ein Wert bestimmt werden, der den Status des Objektes (z.B. in FHEM) anzeigt. Es gibt nur einen Status für den kompletten Node!
+###MQTT
+MQTT ist implementiert, muß aber auf Nodeebene eingeschaltet werden.
+Die verwendeten Topics sind an TASMOTA und FHEM angelehnt. Die Struktur sieht dabei wie folgt aus:
+
+	tele/my/individual/topic/thisnode
+
+In der Software sind diese als 
+####MQTT Telemetriedaten
+**Allgemein**
+
+todo
+####MQTT Statusdaten
+todo
+###Eingehende Kommandos
+**Allgemein**
+
+Kommandos können über unterschiedliche Kanäle (MQTT, Web, Websocket,...) eingehen, werden jedoch immer gleich behandelt. Jedes Modul besitzt einen Kommandointerpreter in Form der Funktion "set()". Hier wird durch das Modul entschieden ob ein Kommando für dieses Modul relevant ist und welche Maßnahmen dann ausgeführt werden.
+
+**Umsetzung**
+
+Diese Funktion ist die Schnittstelle in das Modul hinein. Innerhalb des Hauptprogrammes werden alle Befehle (Format Item=value) durch jede set funktion aller eingebauten Module geschleust. Jedes Modul prüft eigenverantwortlich ob das Item für dieses Modul ein Keyword ist und ob das Modul handeln muss. Die benötigte Funktion für diese Prüfing ist im generischen Basisobjekt als Funktion **keyword_match** hinterlegt. Die Funktion:
+
+	bool set(const String& _cmnd, const String& _val);
+
+wird vom Hauptprogramm nacheinander in allen Modulen mit dem gesendeten Kommando ("_cmnd") und dem dazugehörigen Wert ("_val") aufgerufen. Das Modul prüft ob das Kommando durch dieses Modul verarbeitet wird. Falls eine Verarbeitung erfolgt gibt die Funktion "set" den Wert "true" zurück, andernfalls wird "false" zurückgegeben.
+ 
+
+**Rückgabewert:**
+
+"false" wenn das "item" nicht in diesem Modul ausgewertet wird, sonst "true"
+
+####Kommandos per Webseite
+todo
+####Kommandos per MQTT
+todo
 
 
-
-
-
-
-
-
-
-###Variablen und deren Inhalte###
-
-In die Variable **obj_sensorinfo** wird ein Teil-JSON mit allenunter Sysinfo anzuzeigenden Sensorinfos angelegt.
-
-Syntax: **"sensorinfo1 : Sensordetails linke Spalte # Sensordetails rechte Spalte"**
-
-In der Webseite ist Platz für **"sensorinfo1"** bis **"sensorinfo5"** vorgesehen
-
-
+##Programmierhinweise

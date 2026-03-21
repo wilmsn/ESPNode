@@ -70,12 +70,13 @@ extern void json_stat_header(String& mystr);
 // Modul: webserver
 extern AsyncWebSocket ws;
 void setup_webserver();
+void webserver_loop(time_t now);
 
 // Modul: mqtt
 extern PubSubClient mqttClient;
 extern String mqtt_server;
 extern String mqtt_client;
-extern String mqtt_topicP2;
+extern String mqtt_topic_part2;
 extern String mqtt_topic;
 extern bool do_mqtt;
 extern bool do_log_mqtt;
@@ -113,9 +114,6 @@ extern tm timeinfo;
 extern void getResetReason(String& tmp);
 extern int rssi;
 extern int rssi_quality;
-extern uint64_t sd_cardsize;
-extern uint64_t sd_usedbytes;
-extern uint8_t sd_cardType;
 extern void getVcc(String& json);
 extern Uptime uptime;
 
@@ -147,9 +145,12 @@ extern MODULE6_DEFINITION
 /// @brief Der Komandoprozessor. Hier werden alle Befehle in der Form "Kommando = Wert" abgearbeitet
 /// @param cmd Das Komando, der bezeichner des Komandos
 /// @param value Der Wert für dieses Kommando
-void prozess_cmd(const String cmd, const String value);
+/// @return true wenn das Kommando gültig war, false wenn es ungültig war
+bool prozess_cmd(const String cmd, const String value);
 
-const char* mk_topic(const char* part1, const char* part3);
+extern bool cmd_result;
+
+const char* mk_topic(const char* mqtt_topic_part1, const char* mqtt_topic_part3);
 
 
 #endif
