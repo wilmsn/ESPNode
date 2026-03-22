@@ -21,28 +21,10 @@ public:
      * @brief Legt die Startkonfiguration des Sensors fest.
      * Die übergebenen Variabelen werden in die entsprechenden Objektvariabelen gespeichert.
      * @param _html_place wird in html_place gespeichert.
-     * @param _label wird in label gespeichert
-     */
-    void begin(const char* _html_place, const char* _label);
-    
-    /**
-     * @brief Legt die Startkonfiguration des Sensors fest.
-     * Die übergebenen Variabelen werden in die entsprechenden Objektvariabelen gespeichert.
-     * @param _html_place wird in html_place gespeichert.
-     * @param _label wird in label gespeichert
-     * @param _mqtt_name wird in mqtt_name gespeichert
-     */
-    void begin(const char* _html_place, const char* _label, const char* _mqtt_name);
-
-    /**
-     * @brief Legt die Startkonfiguration des Sensors fest.
-     * Die übergebenen Variabelen werden in die entsprechenden Objektvariabelen gespeichert.
-     * @param _html_place wird in html_place gespeichert.
-     * @param _label wird in label gespeichert
-     * @param _mqtt_name wird in mqtt_name gespeichert
+     * @param _html_label wird in label gespeichert
      * @param _keyword wird in keyword gespeichert
      */
-    void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword);
+    void begin(const char* _html_place, const char* _html_label, const char* _keyword);
 
     /**
      * @brief Eine Funktion die im Hauptprogramm im loop regelmäßig aufgerufen wird.
@@ -62,10 +44,23 @@ public:
 
     /**
      * @brief Prüft ob das übergebene keyword dem hinterlegten keyword entspricht
-     * @param _keyword Das zu prüfende keyword
+     * @param _cmnd Das zu prüfende Kommando wird gegen das keyword geprüft
      * @return true bei Übereinstimmung sonst false
      */
-    bool keyword_match(const String& _keyword);
+    bool keyword_match(const String& _cmnd);
+
+    /**
+     * @brief Das gespeicherte Schlüsselword für diesen Sensor/Actor.
+     */
+    String  keyword;
+
+    /**
+     * @brief Ein Schalter der angibt ob der Nodestatus aus diesem Modul genommen wird.
+     * Macht nur Sinn bei einem Schalter und muss dann in der abgeleiteten Klasse auf true gesetzt werden.
+     */
+    bool is_state = false;
+    
+    // HTML Support
 
     /**
      * @brief Initialisierung einer Webseite
@@ -82,7 +77,7 @@ public:
     bool html_init_set = false;
 
     /**
-     * @brief Update der Webseite
+     * @brief Updatedaten für die Webseite
      * Wenn sich der Inhalt der Webseite ändert, werden hier die geänderten Daten in Form eines Teil-JSON bereitgestellt.
      * Durch das zugrunde liegende Event wird die Variable html_update_set auf true gesetzt, damit das Hauptprogramm 
      * weiß, dass es neue Daten gibt. Das Hauptprogramm sendet diese Daten dann als Websocket an den Browser.
@@ -90,8 +85,9 @@ public:
     void html_update(String& _html_update);
 
     /**
-     * @brief Die Variable wird auf true gesetzt wenn ein inhalticher Update vorliegt.
-     * bereitstellt.
+     * @brief HTML Update steht bereit.
+     * Die Variable wird auf true gesetzt wenn ein inhalticher Update vorliegt.
+     * Die Rücksetzung erfolgt im Hauptprogramm, nachdem die Daten übertragen wurden.
      */
     bool html_update_set = false;
 
@@ -110,6 +106,23 @@ public:
     bool html_info_set = false;
     
     /**
+     * @brief Der Einbauort für diesen Sensor/Actor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
+     */
+    String  html_place;
+    
+    /**
+     * @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt.
+     */
+    String  html_label;
+
+    /**
+     * @brief Der aktuelle State des Nodes wird hier abgelegt (nur wenn dieses Modul den State setzt)
+     */
+    String state;
+
+    // MQTT Support
+
+    /**
      * @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
      */
     void mqtt_info(String& _mqtt_info);
@@ -119,7 +132,7 @@ public:
     /**
      * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
      */
-    bool       mqtt_info_set = false;
+    bool mqtt_info_set = false;
 
     /**
      * @brief Der MQTT Status
@@ -128,66 +141,17 @@ public:
      * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
      */
     void mqtt_stat(String& _mqtt_stat);
-    
- 
-    /**
-     * @brief Das gespeicherte Schlüsselword für diesen Sensor/Actor.
-     */
-    String     keyword;
-    
-    /**
-     * @brief Der Einbauort für diesen Sensor/Actor, dient auch als Schlüsselwort wenn die Änderung durch die Webseite verursacht wird.
-     */
-    String     html_place;
-    
-    /**
-     * @brief Eine Beschriftung für die Webseite. Wird sie gesetzt, wird sie auch als Schlüsselwort genutzt.
-     */
-    String     label;
-
-    /**
-     * @brief Ein Schalter der angibt ob der Nodestatus aus diesem Modul genommen wird.
-     * Macht nur Sinn bei einem Schalter und muss dann in der abgeleiteten Klasse auf true gesetzt werden.
-     */
-    bool       is_state = false;
-
-    /**
-     * @brief Der aktuelle State des Nodes wird hier abgelegt (nur wenn dieses Modul den State setzt)
-     */
-    String     state;
-
-    // HTML Support
-
-    /**
-     * @brief Systeminformationen zum Sensor für die Webseite als json abgespeichert.
-     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Systeminfowert:
-     * ""html_placeX"+":"+"labelX"+"MesswertX"+"EinheitX", ... "
-     * Hier muss immer ein komplettes, gültiges Teil-JSON stehen!
-     */
-//    String     html_info;
-
-    /**
-     * @brief Informationen zum Sensor für die Webseite als Teil-Json (ohne geschweifte Klammern) abgespeichert;
-     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
-     * ""html_placeX"+":"+"labelX"+"MesswertX"+"EinheitX", ... "
-     */
-//    String     html_json;
-    
+        
     /**
      * @brief Schalter ob "obj_mqtt_state" verändert worden ist und neu (=true) übertragen werden soll.
      * Rücksetzung erfolgt im Hauptprogramm.
      */
-    bool       mqtt_stat_changed = false;
+    bool mqtt_stat_changed = false;
 
     /**
      * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Statusdaten bereitstellt.
      */
-    bool       mqtt_stat_set = false;
-
-    /**
-     * @brief Die Bezeichnung für den ersten Wert
-     */
-    String     mqtt_name;
+    bool mqtt_stat_set = false;
 
 };
 

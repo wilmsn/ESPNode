@@ -97,10 +97,10 @@ bool prozess_cmd(const String cmd, const String value)  {
   }
   if ( cmd == "mqtttopicp2" ) {
     cmd_valid = true;
-    if ( mqtt_topicP2 != value ) {
-      mqtt_topicP2 = value;
+    if ( mqtt_topic_part2 != value ) {
+      mqtt_topic_part2 = value;
       preferences.begin("settings",false);
-      preferences.putString("mqtt_topicP2", mqtt_topicP2);
+      preferences.putString("mqtt_topic_part2", mqtt_topic_part2);
       preferences.end();
       cmd_no++;
     }

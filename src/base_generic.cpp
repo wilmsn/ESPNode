@@ -6,25 +6,10 @@ Base_Generic::Base_Generic(){
   html_info_set = false;
 }
 
-void Base_Generic::begin(const char* _html_place, const char* _label) {
-  keyword = _label;
-  html_place = _html_place;
-  label = _label;
-  mqtt_name = _label;
-}
-
-void Base_Generic::begin(const char* _html_place, const char* _label, const char* _mqtt_name) {
-  keyword = _label;
-  html_place = _html_place;
-  label = _label;
-  mqtt_name = _mqtt_name;
-}
-
-void Base_Generic::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword) {
+void Base_Generic::begin(const char* _html_place, const char* _html_label, const char* _keyword) {
   keyword = _keyword;
   html_place = _html_place;
-  label = _label;
-  mqtt_name = _mqtt_name;
+  html_label = _html_label;
 }
 
 void Base_Generic::loop(time_t now) {
@@ -36,7 +21,7 @@ bool Base_Generic::set(const String& _cmnd, const String& _val) {
 
 bool Base_Generic::keyword_match(const String& _keyword) {
   bool retval = false;
-  if ( _keyword == keyword || _keyword == html_place || _keyword == mqtt_name  || _keyword == label ) {
+  if ( _keyword == keyword || _keyword == html_place ) {
     retval = true;
   }
   return retval;
@@ -53,3 +38,7 @@ void Base_Generic::html_info(String& _html_info) {
 
 void Base_Generic::mqtt_stat(String& _mqtt_stat) {
 }
+
+void Base_Generic::mqtt_info(String& _mqtt_info){
+}
+

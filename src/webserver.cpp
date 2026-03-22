@@ -227,7 +227,7 @@ void prozess_sysinfo() {
 #if defined(MQTT)  
       myjson += String(",\"mqttserver\":\"") + mqtt_server +
                 String("\",\"mqttclient\":\"") + mqtt_client +
-                String("\",\"mqtttopicp2\":\"") + mqtt_topicP2 + String("\"");
+                String("\",\"mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"");
 #endif
 #if defined(RF24GW)  
       myjson += String(",\"RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"") +
@@ -344,7 +344,7 @@ void handleWebSocketInit(void *arg, uint8_t *data, size_t len) {
                 String(",\"set_mqtt_active\":") + String(do_mqtt? "1": "0") +
                 String(",\"set_mqttserver\":\"") + mqtt_server +
                 String("\",\"set_mqttclient\":\"") + mqtt_client +
-                String("\",\"set_mqtttopicp2\":\"") + mqtt_topicP2 + String("\"");
+                String("\",\"set_mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"");
 #else
   myjson += String(",\"set_mqtt_enable\":0");
 #endif
@@ -457,7 +457,6 @@ void ws_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
 }
 
 void setup_webserver() {
-  bool result = false;
   initWebSocket();
   write2log(LOG_WEB,1, "initWebsocket ok");
   // This serves all static web content

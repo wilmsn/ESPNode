@@ -386,19 +386,19 @@ RF24 Gateway:
 #define DO_LOG_SYSTEM            true
 
 #define MODULE1_DEFINITION      Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "LED int.", "int_led", "int_led", false, false, true, WITTY_LED_PIN, true);
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "LED int.", "int_led", false, false, true, WITTY_LED_PIN, true);
 
 #define MODULE2_DEFINITION      Switch_OnOff module2;
-#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rt", "rot", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot Helligkeit", "rot_sl", "rot_sl", true);
+#define MODULE2_BEGIN_STATEMENT module2.begin("sw2", "RGB rt", "rot", false, true, false, WITTY_RGB_RT, 100, 100, 1, "Rot Helligkeit", "rot_sl", true);
 
 #define MODULE3_DEFINITION      Switch_OnOff module3;
-#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gn", "gruen", "gruen", false, true, false, WITTY_RGB_GN, 100, 100, 2, "Grün Helligkeit", "gruen_sl", "gruen_sl", true);
+#define MODULE3_BEGIN_STATEMENT module3.begin("sw3", "RGB gn", "gruen", false, true, false, WITTY_RGB_GN, 100, 100, 2, "Grün Helligkeit", "gruen_sl", true);
 
 #define MODULE4_DEFINITION      Switch_OnOff module4;
-#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB bl", "blau", "blau", false, true, false, WITTY_RGB_BL, 100, 100, 3, "Blau Helligkeit", "blau_sl", "blau_sl", true);
+#define MODULE4_BEGIN_STATEMENT module4.begin("sw4", "RGB bl", "blau", false, true, false, WITTY_RGB_BL, 100, 100, 3, "Blau Helligkeit", "blau_sl", true);
 
 #define MODULE5_DEFINITION      Sensor_LDR module5;
-#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR");
+#define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", "ldr");
 
 #endif
 //-----------------------------------------------------

@@ -15,8 +15,8 @@
 //#define NODEMINIMAL         // Test eines Updatenodes
 //#define NODESIMPLE 
 //#define NODE18B20
-//#define NODEBOSCH
-#define WITTYNODE
+#define NODEBOSCH
+//#define WITTYNODE
 //#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 

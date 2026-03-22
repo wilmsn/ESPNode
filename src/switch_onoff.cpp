@@ -12,7 +12,7 @@ Switch_OnOff::Switch_OnOff(){
   html_info_set = true;
 }
 
-void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+void Switch_OnOff::begin(const char* _html_place, const char* _html_label,  const char* _keyword,
                          bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin_relais, bool _taster_ruhezustand, 
                          uint8_t _hw_pin2_taster, bool _show_diagramm) {
   hw_pin2 = _hw_pin2_taster;                    
@@ -21,69 +21,67 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
   taster_ruhezustand = _taster_ruhezustand;
   taster_used = true;
   // Imitialisierung über  Fall 2
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, hw_pin1, _show_diagramm);
+  begin(_html_place, _html_label, _keyword, _start_value, _on_value, _is_state, hw_pin1, _show_diagramm);
 }
 
 
 // Startet als Schalter mit Regler der einen HW-Pin mittels PWM steuert
 // Fall 5
-void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
+void Switch_OnOff::begin(const char* _html_place, const char* _html_label, const char* _keyword,
                          bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _slider_val, 
-                         uint8_t _slider_max_val, uint8_t _slider_no, const char* _slider_label, 
-                         const char* _slider_mqtt_name, const char* _slider_keyword, bool _show_diagramm) {
+                         uint8_t _slider_max_val, uint8_t _slider_no, const char* _slider_html_label, 
+                         const char* _slider_keyword, bool _show_diagramm) {
   hw_pin1 = _hw_pin1;                    
   pinMode(hw_pin1, OUTPUT);
   hw_pin1_used =true;
   // Imitialisierung über  Fall 4
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _slider_val, _slider_max_val, _slider_no,
-        _slider_label, _slider_mqtt_name, _slider_keyword, _show_diagramm);
+  begin(_html_place, _html_label, _keyword, _start_value, _on_value, _is_state, _slider_val, _slider_max_val, _slider_no,
+        _slider_html_label, _slider_keyword, _show_diagramm);
 }
 
 // Startet als Schalter mit Regler ohne HW Bezug
 // Fall 4
-void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
-                         bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
-                         const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword, bool _show_diagramm) {
+void Switch_OnOff::begin(const char* _html_place, const char* _html_label, const char* _keyword, bool _start_value, 
+                         bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
+                         const char* _slider_html_label, const char* _slider_keyword, bool _show_diagramm) {
   slider_used = true;
   slider_value = _slider_val;
   slider_no = _slider_no;
   slider_max_value = _slider_max_val;
-  slider_label = _slider_label;
-  slider_mqtt_name = _slider_mqtt_name;
+  slider_html_label = _slider_html_label;
   slider_keyword = _slider_keyword;
   // Initialisierung über Fall 1
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _show_diagramm);
+  begin(_html_place, _html_label, _keyword, _start_value, _on_value, _is_state, _show_diagramm);
 }
 
 // Startet als Schalter der zwei HW-Pins steuert
 // Fall 3
-void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
+void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _keyword,
                          bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2,
                          bool _show_diagramm) {
   hw_pin2 = _hw_pin2;
   hw_pin2_used = true;
   pinMode(hw_pin2, OUTPUT);
   // Initialisierung über Fall 2
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _hw_pin1, _show_diagramm);
+  begin(_html_place, _label, _keyword, _start_value, _on_value, _is_state, _hw_pin1, _show_diagramm);
 }
 
 // Startet als Schalter der einen HW-Pin steuert
 // Fall 2
-void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name,  const char* _keyword,
-                         bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, bool _show_diagramm) {
+void Switch_OnOff::begin(const char* _html_place, const char* _html_label, const char* _keyword,
+                        bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, bool _show_diagramm) {
   hw_pin1 = _hw_pin1;
   pinMode(hw_pin1, OUTPUT);
   hw_pin1_used = true;
   // Initialisierung über Fall 1
-  begin(_html_place, _label, _mqtt_name, _keyword, _start_value, _on_value, _is_state, _show_diagramm);
+  begin(_html_place, _html_label, _keyword, _start_value, _on_value, _is_state, _show_diagramm);
 }
 
 // Startet als Schalter ohne HW-Pin
 // Fall 1
-void Switch_OnOff::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+void Switch_OnOff::begin(const char* _html_place, const char* _html_label, const char* _keyword,
                          bool _start_value, bool _on_value, bool _is_state, bool _show_diagramm) {
-  Base_Generic::begin(_html_place, _label, _mqtt_name, _keyword);
-  switch_mqtt_name = _mqtt_name;
+  Base_Generic::begin(_html_place, _html_label, _keyword);
   mqtt_stat_set = true;
   on_value = _on_value;
   switch_value = _start_value;
@@ -94,20 +92,8 @@ void Switch_OnOff::begin(const char* _html_place, const char* _label, const char
     diagrammstore = malloc(24);
     memset(diagrammstore,0,24);
   }
-  if (hw_pin1_used && hw_pin2_used ) {
-
-    mqtt_info_str = String("\"GPIO_") + mqtt_name + String("\":\"") + String(hw_pin1) + String("; ") + String(hw_pin2);
-    if (slider_used) { mqtt_info_str += String(" (PWM)\""); } else { mqtt_info_str += String("\""); }
+  if (hw_pin1_used ) {
     mqtt_info_set = true;
-
-  } else {
-    if (hw_pin1_used ) {
-
-      mqtt_info_str = String("\"GPIO_") + mqtt_name + String("\":\"") + String(hw_pin1);
-      if (slider_used) { mqtt_info_str += String(" (PWM)\""); } else { mqtt_info_str += String("\""); }
-      mqtt_info_set = true;
-
-    }
   }
 }
 
@@ -144,16 +130,16 @@ void Switch_OnOff::do_switch(bool new_state) {
   state = String(switch_value?"1":"0");
   html_update_set = true;
 
-  mqtt_stat_str = String("\"") + switch_mqtt_name+String("\":") + String(switch_value? "1":"0");
+  mqtt_stat_str = String("\"") + keyword + String("\":") + String(switch_value? "1":"0");
   if (slider_used) {
-    mqtt_stat_str += String(",\"") + slider_mqtt_name + String("\":") + String(slider_value);
+    mqtt_stat_str += String(",\"") + slider_keyword + String("\":") + String(slider_value);
   }
   mqtt_stat_changed = true;
 }
 
 bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
   bool retval = false;
-  if ( keyword_match(_cmnd) || _cmnd == mqtt_name ) {
+  if ( keyword_match(_cmnd) ) {
 // Ausschalten
     if ( (_val == "0") || (_val == String("aus")) || (_val == String("Aus")) || (_val == String("off")) | (_val == String("Off")) ) {
       do_switch(false);
@@ -216,7 +202,7 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
     }
   } else {
     if (slider_used) {
-      if ( (_cmnd == switch_mqtt_name) || (_cmnd == slider_keyword) ) {
+      if ( (_cmnd == slider_keyword) ) {
         slider_value = _val.toInt();
         do_switch(switch_value); 
         retval = true;
@@ -243,13 +229,13 @@ void Switch_OnOff::html_info(String& _html_info) {
   if (hw_pin1_used && hw_pin2_used ) {
     _html_info += String("\"tab_head_") + html_place + String("\":\"Switch On Off\"") +
                   String(",\"tab_line1_") + html_place + String() + String("\":\"") + 
-                  label + String(" (") + keyword + String("):#GPIO:") + String(hw_pin1);
+                  html_label + String(" (") + keyword + String("):#GPIO:") + String(hw_pin1);
     if (slider_used) { 
       _html_info += String(" (PWM)\""); 
     } else { 
       _html_info += String("\""); 
     }
-    _html_info += String(",\"tab_line2_") + html_place + String("\":\"") + label + String(":#GPIO:") + String(hw_pin2);
+    _html_info += String(",\"tab_line2_") + html_place + String("\":\"") + html_label + String(":#GPIO:") + String(hw_pin2);
     if (slider_used) { 
       _html_info += String(" (PWM)\""); 
     } else {
@@ -259,7 +245,7 @@ void Switch_OnOff::html_info(String& _html_info) {
     if (hw_pin1_used ) {
       _html_info += String("\"tab_head_") + html_place + String("\":\"Switch On Off\"") +
                     String(",\"tab_line1_") + html_place + String("\":\"") + 
-                    label + String(" (") + keyword + String("):#GPIO:") + String(hw_pin1);
+                    html_label + String(" (") + keyword + String("):#GPIO:") + String(hw_pin1);
       if (slider_used) { 
         _html_info += String(" (PWM)\""); 
       } else { 
@@ -277,8 +263,8 @@ void Switch_OnOff::set_switch(uint8_t val) {
   set(keyword, String(val));
 }
 
-void Switch_OnOff::set_slider_label(const char* _label) {
-  slider_label = _label;
+void Switch_OnOff::set_slider_label(const char* _html_label) {
+  slider_html_label = _html_label;
 }
 
 void Switch_OnOff::set_slider(uint8_t _val) {
@@ -291,11 +277,11 @@ void Switch_OnOff::set_slider_max_value(uint8_t _val) {
 }
 
 void Switch_OnOff::html_init(String& _html_init) {
-  _html_init += String("\"") + html_place + String("_label\":\"") + label + String("\"") +
+  _html_init += String("\"") + html_place + String("_label\":\"") + html_label + String("\"") +
                 String(",\"") + html_place + String("_format\":\"x\"");
   if (slider_used) {
     _html_init += String(",\"slider") + String(slider_no) + String("\":1") +
-                  String(",\"slider") + String(slider_no) + String("label\":\"") + slider_label + String("\"") +
+                  String(",\"slider") + String(slider_no) + String("label\":\"") + slider_html_label + String("\"") +
                   String(",\"slider") + String(slider_no) + String("name\":\"") + slider_keyword + String("\"") +
                   String(",\"slider") + String(slider_no) + String("max\":\"") + String(slider_max_value) + String("\"");
   }
@@ -321,7 +307,25 @@ void Switch_OnOff::html_update(String& _html_update) {
 }
 
 void Switch_OnOff::mqtt_stat(String& _mqtt_stat) {
-  _mqtt_stat += String("\"") + mqtt_name + String("\":") + String(switch_value?"1":"0");
+  _mqtt_stat += String("\"") + keyword + String("\":") + String(switch_value?"1":"0");
+}
+
+void Switch_OnOff::mqtt_info(String& _mqtt_info) {
+  if (hw_pin1_used && hw_pin2_used ) {
+
+    _mqtt_info = String("\"GPIO_") + keyword + String("\":\"") + String(hw_pin1) + String("; ") + String(hw_pin2);
+    if (slider_used) { _mqtt_info += String(" (PWM)\""); } else { _mqtt_info += String("\""); }
+    mqtt_info_set = true;
+
+  } else {
+    if (hw_pin1_used ) {
+
+      _mqtt_info = String("\"GPIO_") + keyword + String("\":\"") + String(hw_pin1);
+      if (slider_used) { _mqtt_info += String(" (PWM)\""); } else { _mqtt_info += String("\""); }
+      mqtt_info_set = true;
+
+    }
+  }
 }
 
 bool Switch_OnOff::do_dia_store(int min) {

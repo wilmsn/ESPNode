@@ -16,30 +16,30 @@ public:
     /**
      * @brief Initialisierung für 2 Messwerte (Temperatur und Luftdruck = BMP180/280)
      * @param _html_place Einbauort in der HTML Seite für Messwert1
-     * @param _label Bezeichner in der HTML Seite für Messwert1 
-     * @param _mqtt_name Bezeichner für Messwert1 in der MQTT Übertragung
+     * @param _html_label Bezeichner in der HTML Seite für Messwert1 
+     * @param _keyword Keyword für Messwert1 in der MQTT Übertragung
      * @param _html_place2 Einbauort in der HTML Seite für Messwert2
-     * @param _label2 Bezeichner in der HTML Seite für Messwert2
-     * @param _mqtt_name2 Bezeichner für Messwert2 in der MQTT Übertragung
+     * @param _html_label2 Bezeichner in der HTML Seite für Messwert2
+     * @param _keyword2 Keyword für Messwert2 in der MQTT Übertragung
      */
-    void begin(const char* _html_place, const char* _label, const char* _mqtt_name,
-               const char* _html_place2, const char* _label2, const char* _mqtt_name2);
+    void begin(const char* _html_place, const char* _html_label, const char* _keyword1,
+               const char* _html_place2, const char* _html_label2, const char* _keyword2);
 
     /**
      * @brief Initialisierung für 3 Messwerte (inkl. Luftfeuchte = BME280)
      * @param _html_place Einbauort in der HTML Seite für Messwert1
-     * @param _label Bezeichner in der HTML Seite für Messwert1 
-     * @param _mqtt_name Bezeichner für Messwert1 in der MQTT Übertragung
+     * @param _html_label Bezeichner in der HTML Seite für Messwert1 
+     * @param _keyword Keyword für Messwert1 in der MQTT Übertragung
      * @param _html_place2 Einbauort in der HTML Seite für Messwert2
-     * @param _label2 Bezeichner in der HTML Seite für Messwert2
-     * @param _mqtt_name2 Bezeichner für Messwert2 in der MQTT Übertragung
+     * @param _html_label2 Bezeichner in der HTML Seite für Messwert2
+     * @param _keyword2 Keyword für Messwert2 in der MQTT Übertragung
      * @param _html_place3 Einbauort in der HTML Seite für Messwert3
-     * @param _label3 Bezeichner in der HTML Seite für Messwert3
-     * @param _mqtt_name3 Bezeichner für Messwert3 in der MQTT Übertragung
+     * @param _html_label3 Bezeichner in der HTML Seite für Messwert3
+     * @param _keyword3 Keyword für Messwert3 in der MQTT Übertragung
      */
-    void begin(const char* _html_place, const char* _label, const char* _mqtt_name,
-               const char* _html_place2, const char* _label2, const char* _mqtt_name2,
-               const char* _html_place3, const char* _label3, const char* _mqtt_name3);
+    void begin(const char* _html_place, const char* _html_label, const char* _keyword,
+               const char* _html_place2, const char* _html_label2, const char* _keyword2,
+               const char* _html_place3, const char* _html_label3, const char* _keyword3);
 
     /**
      * @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
@@ -53,8 +53,37 @@ public:
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
      * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
      */
-    void html_init();
+    void html_init(String& _html_init);
 
+    /**
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_info(String& _html_init);
+
+    /**
+     * @brief Updatedaten für die Webseite
+     * Wenn sich der Inhalt der Webseite ändert, werden hier die geänderten Daten in Form eines Teil-JSON bereitgestellt.
+     * Durch das zugrunde liegende Event wird die Variable html_update_set auf true gesetzt, damit das Hauptprogramm 
+     * weiß, dass es neue Daten gibt. Das Hauptprogramm sendet diese Daten dann als Websocket an den Browser.
+     */
+    void html_update(String& _html_update);
+
+    /**
+     * @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
+     */
+    void mqtt_info(String& _mqtt_info);
+
+    /**
+     * @brief Der MQTT Status
+     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
+     * "mqtt_nameX"+":"+"MesswertX",...
+     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+     */
+    void mqtt_stat(String& _mqtt_stat);
+     
 private:
 
     /**
@@ -64,14 +93,9 @@ private:
     void start_measure(time_t now);
 
     /**
-     * @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert1
-     */
-    String     mqtt_name1;
-
-    /**
      * @brief Eine Beschriftung des zweiten Meßwertes für die Webseite.
      */
-    String     label2;
+    String     html_label2;
 
     /**
      * @brief Der Einbauort des zweiten Meßwertes für diesen Sensor.
@@ -81,12 +105,12 @@ private:
     /**
      * @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert2
      */
-    String     mqtt_name2;
+    String     keyword2;
  
     /**
      * @brief Eine Beschriftung des dritten Meßwertes für die Webseite.
      */
-    String     label3;
+    String     html_label3;
 
     /**
      * @brief Der Einbauort des dritten Meßwertes für diesen Sensor.
@@ -96,7 +120,7 @@ private:
     /**
      * @brief Der Bezeichner innerhalb des JSON für die MQTT Übertragung für Messwert3
      */
-    String     mqtt_name3;
+    String     keyword3;
 
     /**
      * @brief Ein Schalter ob die Messung gestartet wurde

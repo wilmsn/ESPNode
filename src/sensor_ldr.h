@@ -22,8 +22,9 @@ public:
      * @brief Die normale Initialisierung aus Sensor_Generic erweitert um eine Messung des LDR damit dieser sofort nach dem Start verfügbar ist.
      * @param _html_place Der Einbauort des Messwertes 
      * @param _label Der Bezeichner des Messwertes
+     * @param _keyword Das Schlüsselwort auf das dieser Sensor reagiert
      */
-    void begin(const char* _html_place, const char* _label);
+    void begin(const char* _html_place, const char* _html_label, const char* _keyword);
 
     /**
      * @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen

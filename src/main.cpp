@@ -524,12 +524,12 @@ void setup() {
     do_mqtt      = MQTT;
     mqtt_server  = MQTT_SERVER;
     mqtt_client  = MQTT_CLIENT;
-    mqtt_topicP2 = MQTT_TOPICP2;
+    mqtt_topic_part2 = MQTT_TOPICP2;
     do_log_mqtt  = DO_LOG_MQTT;
     preferences.putBool("do_mqtt", do_mqtt);
     preferences.putString("mqtt_server", mqtt_server);
     preferences.putString("mqtt_client", mqtt_client);
-    preferences.putString("mqtt_topicP2", mqtt_topicP2);
+    preferences.putString("mqtt_topic_part2", mqtt_topic_part2);
     preferences.putBool("do_log_mqtt", do_log_mqtt);
 #endif
 #if defined(RF24GW)
@@ -576,7 +576,7 @@ void setup() {
     do_mqtt           = preferences.getBool("do_mqtt");
     mqtt_server       = preferences.getString("mqtt_server");
     mqtt_client       = preferences.getString("mqtt_client");
-    mqtt_topicP2      = preferences.getString("mqtt_topicP2");
+    mqtt_topic_part2      = preferences.getString("mqtt_topic_part2");
     do_log_mqtt       = preferences.getBool("do_log_mqtt");
 #endif
 #if defined(RF24GW)

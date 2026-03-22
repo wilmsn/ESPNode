@@ -183,7 +183,7 @@ void send_mqtt_tele() {
 #if defined(MQTT)  
       tmpstr += String(",\"mqttserver\":\"") + mqtt_server + String("\"");
       tmpstr += String(",\"mqttclient\":\"") + mqtt_client + String("\"");
-      tmpstr += String(",\"mqtttopicp2\":\"") + mqtt_topicP2 + String("\"");
+      tmpstr += String(",\"mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"");
 #endif
 #if defined(RF24GW)  
       tmpstr += String(",\"RF24HUB-Server\":\"") + String(RF24GW_HUB_SERVER) + String("\""); 
