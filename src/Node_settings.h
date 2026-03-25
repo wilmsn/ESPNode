@@ -144,7 +144,7 @@ RF24 Gateway:
 #define DO_LOG_CRITICAL          true
 
 #define MODULE1_DEFINITION       Actor_LEDMatrix module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "intensity", "mx_line", "mx_graph", false);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anzeige", "display", true, true, true, 3, 1, "Helligkeit", "intensity", "mx_line", "mx_graph", false);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1", "Temperatur", "Temperatur");
@@ -265,15 +265,18 @@ RF24 Gateway:
 #define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
-#ifndef LED_BUILTIN
-#define LED_BUILTIN   2
-#endif
 #define MODULE1_DEFINITION      Switch_OnOff module1;
-#ifdef ESP32
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, true, false, LED_BUILTIN, false);
+#ifdef CONFIG_IDF_TARGET_ESP32
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, true, false, LED_BUILTIN, false);
 #else
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", "int_led", false, false, false, LED_BUILTIN, false);
-#endif
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#undef LED_BUILTIN
+#define LED_BUILTIN   97
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, false, false, LED_BUILTIN, false);
+#else   
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, false, false, LED_BUILTIN, false);
+#endif //CONFIG_IDF_TARGET_ESP32S3
+#endif //CONFIG_IDF_TARGET_ESP32
 #define DO_LOG_SYSTEM           true
 #define MAGICNO                 0
 
@@ -283,9 +286,9 @@ RF24 Gateway:
 // Hier ein Node mit Temperatursensor 18B20.
 // Der Temperatursensor MUSS an GPIO 4 angeschlossen sein oder die Datei "sensor_18B20.cpp" muss abgeändert werden!
 #ifdef NODE18B20
-#define USE_SWITCH_ONOFF
+//#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
-#define USE_SENSOR_18B20
+//#define USE_SENSOR_18B20
 #include "sensor_18B20.h"
 
 #define DEBUG_SERIAL_WEB
@@ -300,7 +303,7 @@ RF24 Gateway:
 #define MQTT_TOPICP2             "node18b20"
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", "led", false, false, false, 2, false);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", false, false, false, 2, false);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
 #define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
@@ -400,6 +403,33 @@ RF24 Gateway:
 #define MODULE5_DEFINITION      Sensor_LDR module5;
 #define MODULE5_BEGIN_STATEMENT module5.begin("out1", "LDR", "ldr");
 
+#endif
+//-----------------------------------------------------
+//****************************************************
+// Hier ein Node mit ESP32 S3 DevKitC 1 ohne externe Bauteile.
+// Der ESP32S3 hat eine interne LED (GPIO 49), und eine RGB LED auf Basis des WS2812/Neopixel (GPIO 48).
+// Jede LED kann ein- oder ausgeschaltet werden. Die maximale Helligkeit der RGB Leds wird mittels
+// Schieberegler eingestellt.
+#if defined(ESP32S3_NODE)
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#define USE_SWITCH_ONOFF
+#include "switch_onoff.h"
+#define USE_ACTOR_NEOPIXEL
+#include "actor_neopixel.h"
+
+#define HOSTNAME               "esp32s3node"
+#define HOST_DISCRIPTION       "Ein Node auf Basis ESP32S3 ohne externe Elemente"
+//#define DEBUG_SERIAL_WEB
+//#define DEBUG_SERIAL_MODULE
+//#define DEBUG_SERIAL_MQTT
+#define DEBUG_SERIAL
+#define MODULE1_DEFINITION      Actor_NeoPixel module1;
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "Neopixel", "rgb", 48, 1);
+
+#define DO_LOG_SYSTEM           true
+#define MAGICNO                 0
+
+#endif //CONFIG_IDF_TARGET_ESP32S3
 #endif
 //-----------------------------------------------------
 #if defined(NODE_AUDIO)

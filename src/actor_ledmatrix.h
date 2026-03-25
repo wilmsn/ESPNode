@@ -1,6 +1,5 @@
 #ifndef _ACTOR_LEDMATRIX_H_
 #define _ACTOR_LEDMATRIX_H_
-#define USE_SWITCH_ONOFF
 #include "switch_onoff.h"
 #include "LED_Matrix.h"
 
@@ -59,9 +58,9 @@ public:
      * @param _mqtt_graph Der MQTT Bezeichner für Grafikdaten
      * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
-    void begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+    void begin(const char* _html_place, const char* _label, const char* _keyword,
                bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_no, 
-               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword,
+               const char* _slider_label, const char* _slider_keyword,
                const char* _mqtt_line, const char* _mqtt_graph, bool _show_diagramm);
 
     /**
@@ -85,7 +84,36 @@ public:
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
      * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
      */
-    void html_init();
+    void html_init(String& _html_init);
+
+    /**
+     * @brief Updatedaten für die Webseite
+     * Wenn sich der Inhalt der Webseite ändert, werden hier die geänderten Daten in Form eines Teil-JSON bereitgestellt.
+     * Durch das zugrunde liegende Event wird die Variable html_update_set auf true gesetzt, damit das Hauptprogramm 
+     * weiß, dass es neue Daten gibt. Das Hauptprogramm sendet diese Daten dann als Websocket an den Browser.
+     */
+    void html_update(String& _html_update);
+
+    /**
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_info(String& _html_init);
+
+    /**
+     * @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
+     */
+    void mqtt_info(String& _mqtt_info);
+
+    /**
+     * @brief Der MQTT Status
+     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
+     * "mqtt_nameX"+":"+"MesswertX",...
+     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+     */
+    void mqtt_stat(String& _mqtt_stat);
 
     /**
      * @brief Die loop Funktion wird gegelmäßig vom Hauptprogramm aufgerufen
@@ -97,7 +125,7 @@ private:
     /**
      * @brief Sammelt alle nötigen Daten für ein Webupdate als Teil-Json, schickt sie abernicht ab..
      */    
-    void update4web(String& myjson);
+//    void update4web(String& myjson);
 
     /**
      * @brief Gibt eine Zeile im Display aus
@@ -141,6 +169,9 @@ private:
      * wird diese erst 2 Sekunden nach dem ersten Update refreshed.
      */
     time_t graph_change_time;
+
+
+    LED_Matrix* matrix;
 };
 
 #endif

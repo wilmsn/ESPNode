@@ -58,7 +58,8 @@ public:
      * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _html_label, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin, bool _show_diagramm = false);
+               bool _start_value, bool _on_value, bool _is_state, 
+               uint8_t _hw_pin, bool _show_diagramm = false);
 
     /**
      * @brief Die Initialisierung des Schalters für zwei HW-Pins
@@ -73,7 +74,8 @@ public:
      * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _html_label, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin1, uint8_t _hw_pin2, bool _show_diagramm = false);
+               bool _start_value, bool _on_value, bool _is_state, 
+               uint8_t _hw_pin1, uint8_t _hw_pin2, bool _show_diagramm = false);
 
     /**
      * @brief Die Initialisierung des Schalters für zwei HW-Pins
@@ -89,7 +91,8 @@ public:
      * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _html_label, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin_relais,  bool _taster_ruhezustand,
+               bool _start_value, bool _on_value, bool _is_state,
+               uint8_t _hw_pin_relais,  bool _taster_ruhezustand,
                uint8_t _hw_pin2_taster, bool _show_diagramm = false);
 
     /**
@@ -107,8 +110,9 @@ public:
      * @param _slider_keyword Das Schlüsselword auf das dieser Schalter reagiert
      * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
-    void begin(const char* _html_place, const char* _html_label, const char* _keyword, bool _start_value, 
-               bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
+    void begin(const char* _html_place, const char* _html_label, const char* _keyword,
+               bool _start_value, bool _on_value, bool _is_state, 
+               uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
                const char* _slider_html_label, const char* _slider_keyword, bool _show_diagramm);
 
     /**
@@ -128,7 +132,8 @@ public:
      * @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
      */
     void begin(const char* _html_place, const char* _html_label, const char* _keyword,
-               bool _start_value, bool _on_value, bool _is_state, uint8_t _hw_pin, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
+               bool _start_value, bool _on_value, bool _is_state, 
+               uint8_t _hw_pin, uint8_t _slider_val, uint8_t _slider_max_val, uint8_t _slider_no,
                const char* _slider_label, const char* _slider_keyword, bool _show_diagramm = false);
 
     /**
@@ -209,24 +214,6 @@ public:
     void set_switch(uint8_t _val);
 
     /**
-     * @brief Sets the slider
-     * @param val The value to set (0...255)
-     */
-    void set_slider(uint8_t _val);
-
-    /**
-     * @brief Sets the slider
-     * @param val The value to set (0...255)
-     */
-    void set_slider_label(const char* _label);
-
-    /**
-     * @brief Sets the sliders max value
-     * @param val The value to set (0...255)
-     */
-    void set_slider_max_value(uint8_t _val);
-
-    /**
      * @brief Schaltet den Schalter auf einen neuen Zustand.
      * @param _new_state Der neue Zustand des Schalters ("true" = Ein, "false" = Aus).
      */
@@ -241,6 +228,18 @@ public:
      * @brief Der aktuelle Zustand des Schalters
      */
     bool switch_value;
+
+    /**
+     * @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
+     */
+    uint8_t slider_no;
+
+    /**
+     * @brief Nimmt den aktuellen Wert des Sliders auf
+     */
+    uint8_t slider_value;
+
+private:
 
     /**
      * @brief Der hardwareseitige Einschaltwert des Schalters.
@@ -268,19 +267,9 @@ public:
     String slider_html_label;
 
     /**
-     * @brief Nimmt den aktuellen Wert des Sliders auf
-     */
-    uint8_t slider_value;
-
-    /**
      * @brief Nimmt den maximalen Wert des Sliders auf
      */
     uint8_t slider_max_value;
-
-    /**
-     * @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)
-     */
-    uint8_t slider_no;
 
     /**
      * @brief Flag das festlegt ob HW-Pin1 für das Relais genutzt wird (true = wird genutzt)
@@ -374,7 +363,6 @@ public:
      */
     int last_store = 0;
 
-private:
     /**
      * @brief Die Initialisierungsdaten für die Webseite werden hier gespeichert.
      */

@@ -1,5 +1,16 @@
+#include <Arduino.h>
 #include "common.h"
-#include "commands.h"
+
+
+/// @brief Ein String zur Aufnahme von Statusmeldungen für die Webconsole
+String stat_str;
+
+/// @brief Eine laufende Nummer für die JSON Schlüssel
+unsigned int stat_no;
+
+/// @brief Ein Schalter der auf "true" gesetzt wird falls ein "set" Befehl abgearbeitet wurde.
+extern bool cmd_valid;
+bool cmd_valid = false;
 
 void show_settings() {
   String myjson = String("{\"stat_1\":\"looptimealarm: ") + String(loop_time_alarm) + String(" ms\"") +

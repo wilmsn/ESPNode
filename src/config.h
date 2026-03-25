@@ -15,14 +15,15 @@
 //#define NODEMINIMAL         // Test eines Updatenodes
 //#define NODESIMPLE 
 //#define NODE18B20
-#define NODEBOSCH
+//#define NODEBOSCH
 //#define WITTYNODE
+//#define ESP32S3_NODE
 //#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMERLICHT
-//#define NODE_WOHNZIMMER
+#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
@@ -63,39 +64,40 @@
  * Die globale Wiederholdauer für Messungen in Sekunden 
  */
 #define REFRESHTIME          300
-#endif
+#endif //REFRESHTIME
 
 #ifndef MEASUREDELAY
 /**
  * Die globale Wartezeit nach dem Start einer Messung in Sekunden 
  */
 #define MEASUREDELAY         10
-#endif
+#endif //MEASUREDELAY
 
 #ifndef RESOLUTION_18B20
 /**
  * Globale Festlegung der Messauflösung für den 18B20 Sensor
  */
 #define RESOLUTION_18B20     12
-#endif
+#endif //RESOLUTION_18B20
 
 #ifndef ONEWIREBUS
 /**
  * Settings for one wire bus
  */
 #define ONEWIREBUS           4
-#endif
+#endif //ONEWIREBUS
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
 #ifndef ESP32
 #define ESP32
 #endif
-#endif
+#endif //CONFIG_IDF_TARGET_ESP32S3
+
 #ifdef CONFIG_IDF_TARGET_ESP32
 #ifndef ESP32
 #define ESP32
 #endif
-#endif
+#endif //CONFIG_IDF_TARGET_ESP32
 
 #include "Node_settings.h"
 
@@ -110,7 +112,7 @@
 ///               Beim Neustart werden wieder die Defaults genutzt.
 /// Jede andere Zahl bewirkt das die Defaults einmalig übernommen werden wenn sich die NUmmer geändert hat.
 #define MAGICNO               0
-#endif
+#endif // MAGICNO
 
 #ifndef SWITCHTIMERADD
 /// SwitchTimerAdd:
@@ -118,70 +120,96 @@
 /// die verlängert werden soll, zwischenzeitig keine Ausschaltung erfolgt weil z.B. der interne Timer ungenau ist.
 /// Default ist 5 Minuten. 
 #define SWITCHTIMERADD       5
-#endif
+#endif // SWITCHTIMERADD
 
 /// Modules
 #ifdef MODULE1_DEFINITION
 #define MODULE1
-#endif
+#endif // MODULE1_DEFINITION
+
 #ifdef MODULE2_DEFINITION
 #define MODULE2
-#endif
+#endif // MODULE2_DEFINITION
+
 #ifdef MODULE3_DEFINITION
 #define MODULE3
-#endif
+#endif // MODULE3_DEFINITION
+
 #ifdef MODULE4_DEFINITION
 #define MODULE4
-#endif
+#endif // MODULE4_DEFINITION
+
 #ifdef MODULE5_DEFINITION
 #define MODULE5
-#endif
+#endif // MODULE5_DEFINITION
+
 #ifdef MODULE6_DEFINITION
 #define MODULE6
-#endif
+#endif // MODULE6_DEFINITION
 
 /// Abhängigkeiten für das Debugging
 /// Debug Settings
 #ifdef DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL
-#endif
+#endif //DEBUG_SERIAL_MODULE
+
 #ifdef DEBUG_SERIAL_RF24
 #define DEBUG_SERIAL
-#endif
+#endif //DEBUG_SERIAL_RF24
+
 #ifdef DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL
-#endif
+#endif //DEBUG_SERIAL_WEB
+
 #ifdef DEBUG_SERIAL_MQTT
 #define DEBUG_SERIAL
-#endif
+#endif //DEBUG_SERIAL_MQTT
+
 #ifdef DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL
-#endif
+#endif //DEBUG_SERIAL_MODULE
 
 /// Festlegung des MQTT Defaultservers
 #ifndef MQTT_SERVER
 #define MQTT_SERVER                    DEFAULT_MQTT_SERVER
-#endif
+#endif //MQTT_SERVER
+
 #ifdef MQTT_CLIENT
 #define MQTT                          true
 #ifndef MQTT_TOPICP2
 #define MQTT_TOPICP2                  MQTT_CLIENT
 #endif
-#endif
+#endif //MQTT_CLIENT
 
 /// Festlegung der RF24 Defaulteinstellungen
+#ifdef RF24GW_NO
+
+#define RF24GW                         true
+
 #ifndef RF24GW_HUB_SERVER
 #define RF24GW_HUB_SERVER              DEFAULT_RF24GW_HUB_SERVER
-#endif
+#endif // RF24GW_HUB_SERVER
+
 #ifndef RF24GW_HUB_UDP_PORTNO
 #define RF24GW_HUB_UDP_PORTNO          DEFAULT_RF24GW_HUB_UDP_PORTNO
-#endif
+#endif // RF24GW_HUB_UDP_PORTNO
+
 #ifndef RF24GW_GW_UDP_PORTNO
 #define RF24GW_GW_UDP_PORTNO           DEFAULT_RF24GW_GW_UDP_PORTNO
+#endif // RF24GW_GW_UDP_PORTNO
+
+#ifndef RF24_CHANNEL
+///Der verwendete RF24 Funkkanal
+#define RF24_CHANNEL                   92
+#endif // RF24_CHANNEL
+
+#ifndef RF24_SPEED
+/// Die Übertragungsgeschwindigkeit
+#define RF24_SPEED                     RF24_250KBPS
+#define RF24_SPEED_STR                 "250KBPS"
 #endif
-#ifdef RF24GW_NO
-#define RF24GW                         true
-#endif
+
+#endif // RF24GW_NO
 
 //Set a default hostname
 #ifndef HOSTNAME
@@ -191,22 +219,27 @@
 //Settings for Logging
 #ifndef DO_LOG_WEB
 #define DO_LOG_WEB                      false
-#endif
+#endif //DO_LOG_WEB
+
 #ifndef DO_LOG_MODULE
 #define DO_LOG_MODULE                   false
-#endif
+#endif //DO_LOG_MODULE
+
 #ifndef DO_LOG_SYSTEM
 #define DO_LOG_SYSTEM                   false
-#endif
+#endif //DO_LOG_SYSTEM
+
 #ifndef DO_LOG_MQTT
 #define DO_LOG_MQTT                     false
-#endif
+#endif //DO_LOG_MQTT
+
 #ifndef DO_LOG_RF24
 #define DO_LOG_RF24                     false
-#endif
+#endif //DO_LOG_RF24
+
 #ifndef DO_LOG_CRITICAL
 #define DO_LOG_CRITICAL                 false
-#endif
+#endif //DO_LOG_CRITICAL
 
 ///@brief Settings for mqtt topic
 ///Der Part1 des MQTT Topics nimmt nur einen der 3 vordefinierten Werte auf. Deshalb sind hier 5 Zeichen hinreichend.
@@ -226,20 +259,20 @@
 /// In diesem Zeitinterval werden auch die Schalterzustände übertragen.
 #ifndef STATINTERVAL
 #define STATINTERVAL                 300
-#endif
+#endif //STATINTERVAL
 
 /// Measuredelay:
 /// Definiert den Abstand zwischen dem Start der Messung und dem gesicherten Vorliegen der Ergebnisse in Sekunden.
 #ifndef MEASUREDELAY
 #define MEASUREDELAY                 10
-#endif
+#endif //MEASUREDELAY
 
 /// Telemetrieinterval:
 /// Definiert den Abstand (in Sekunden) zwischen 2 Telemetrieübertragungen.
 /// Hierzu gehören: Serverdaten, Netzwerkdaten, ...
 #ifndef TELEINTERVAL
 #define TELEINTERVAL                 1200
-#endif
+#endif //TELEINTERVAL
 
 /// Loop Time Alarm
 /// Definiert das Zeitintervall (in Millisekunden) für einen Loop Durchgang das nicht überschritten werden sollte.
@@ -257,46 +290,71 @@
 #ifndef RF24_RADIO_CE_PIN
 ///Anschlusspin für den CE Pin des Funkmodules
 #define RF24_RADIO_CE_PIN              15
-#endif
+#endif // RF24_RADIO_CE_PIN
 
 #ifndef RF24_RADIO_CSN_PIN
 ///Anschlusspin für den CSN Pin des Funkmodules
 #define RF24_RADIO_CSN_PIN             16
-#endif
-
-#ifndef RF24_CHANNEL
-///Der verwendete RF24 Funkkanal
-#define RF24_CHANNEL                   92
-#endif
-
-#ifndef RF24_SPEED
-/// Die Übertragungsgeschwindigkeit
-#define RF24_SPEED                     RF24_250KBPS
-#define RF24_SPEED_STR                 "250KBPS"
-#endif
+#endif // RF24_RADIO_CSN_PIN
 
 #endif // ESP82666
+
+#ifdef CONFIG_IDF_TARGET_ESP32
+#warning "ESP32 Node - Achtung: Die Pinbelegung für die RF24 Hardware muss geändert werden !!!!!"
+// Einstellungen für das RF24 Funkmodul auf dem ESP32
+// Folgende Pins sind fest vergeben:
+#define RF24_RADIO_MISO_PIN   19
+#define RF24_RADIO_MOSI_PIN   20
+#define RF24_RADIO_SCK_PIN    21
+#ifndef RF24_RADIO_CSN_PIN
+///Anschlusspin für den CSN Pin des Funkmodules
+#define RF24_RADIO_CSN_PIN    0
+#endif
+#ifndef RF24_RADIO_CE_PIN
+///Anschlusspin für den CE Pin des Funkmodules
+#define RF24_RADIO_CE_PIN     0
+#endif
+
+#endif // CONFIG_IDF_TARGET_ESP32
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+
+#warning "ESP32S3 Node - Achtung: Die Pinbelegung für die RF24 Hardware muss geändert werden !!!!!"
+// Einstellungen für das RF24 Funkmodul auf dem ESP32S3
+// Folgende Pins sind fest vergeben:
+#define RF24_RADIO_MISO_PIN   19
+#define RF24_RADIO_MOSI_PIN   20
+#define RF24_RADIO_SCK_PIN    21
+#ifndef RF24_RADIO_CSN_PIN
+///Anschlusspin für den CSN Pin des Funkmodules
+#define RF24_RADIO_CSN_PIN    0
+#endif
+#ifndef RF24_RADIO_CE_PIN
+///Anschlusspin für den CE Pin des Funkmodules
+#define RF24_RADIO_CE_PIN     0 
+#endif
+
+#endif // CONFIG_IDF_TARGET_ESP32S3
 
 #ifndef RF24_HUB2NODE
 /// Der Netzwerkschlüssel Hub zum Node
 #define RF24_HUB2NODE       { 0xf0, 0xcc, 0xfc, 0xcc, 0xcc}
-#endif
+#endif // RF24_HUB2NODE
 
 #ifndef RF24_NODE2HUB
 /// Der Netzwerkschlüssel Node zum Hub
 #define RF24_NODE2HUB       { 0x33, 0xcc, 0xfc, 0xcc, 0xcc}
-#endif
+#endif // RF24_NODE2HUB
 
 #ifndef NODE_DATTYPE
 /// Der Datentyp für die Node_ID. Ist aktuell auf 1...255 festgelegt. Werden mehr Nodes benötigt, kann der Datentyp hier zentral umgestellt werden.
 #define NODE_DATTYPE        uint8_t
-#endif
+#endif //NODE_DATTYPE
 
 #ifndef ONR_DATTYPE
 /// Der Datentyp für die Ordernummer. Auch hier eine zentrale Festlegung des Datentyps, der ggf. die Umstellung vereinfacht.
 #define ONR_DATTYPE         uint8_t
-#endif
-
+#endif //ONR_DATTYPE
 
 /**
  * @brief Die Datenstruktur des payloads in dem RF24 Netzwerk. Sie wird nur benötigt wenn der RF24Gateway genutzt
@@ -399,30 +457,37 @@ typedef struct {
 #ifndef LOG_RF24
 /// 
 #define  LOG_RF24      0
-#endif
+#endif //LOG_RF24
+
 #ifndef LOG_SYSTEM
 #define  LOG_SYSTEM    1
-#endif
+#endif //LOG_SYSTEM
+
 #ifndef LOG_MQTT
 #define  LOG_MQTT      2
-#endif
+#endif //LOG_MQTT
+
 #ifndef LOG_MODULE
 #define  LOG_MODULE    3
-#endif
+#endif //LOG_MODULE
+
 #ifndef LOG_WEB
 #define  LOG_WEB       4
-#endif
+#endif //LOG_WEB
+
 #ifndef LOG_CRITICAL
 #define  LOG_CRITICAL  5
-#endif
+#endif //LOG_CRITICAL
+
 #ifndef LOG_DAYBREAK
 #define  LOG_DAYBREAK  6
-#endif
+#endif //LOG_DAYBREAK
 
 #ifdef USE_DISPLAY_GC9A01A
 #ifndef USE_DISPLAY
 #define USE_DISPLAY "GC9A01A"
-#endif
-#endif
+#endif //USE_DISPLAY
 
-#endif
+#endif //USE_DISPLAY_GC9A01A
+
+#endif // _CONFIG_H_

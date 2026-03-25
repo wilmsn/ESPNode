@@ -1,29 +1,26 @@
-#include "config.h"
-#ifdef USE_SENSOR_LDR
 #include "sensor_ldr.h"
-#include "config.h"
 #include "common.h"
 
 void Sensor_LDR::begin(const char* _html_place, const char* _html_label, const char* _keyword) {
   Base_Generic::begin(_html_place, _html_label, _keyword);
-  html_init_set = true;
-  mqtt_stat_set = true;
+  this->html_init_set = true;
+  this->mqtt_stat_set = true;
 }
 
 void Sensor_LDR::loop(time_t now) {
-  if ((now - measure_starttime) > REFRESHTIME) {
-    measure_starttime = now;
-    value = analogRead(A0);
-    html_update_set = true;
+  if ((now - this->measure_starttime) > REFRESHTIME) {
+    this->measure_starttime = now;
+    this->value = analogRead(A0);
+    this->html_update_set = true;
   }
 }
 
 void Sensor_LDR::html_init(String& _html_init) {
-  _html_init += String("\"") + html_place + String("\":\"") + html_label + String(": ") + String(value) + String("\"");
+  _html_init += String("\"") + this->html_place + String("\":\"") + this->html_label + String(": ") + String(this->value) + String("\"");
 }
 
 void Sensor_LDR::html_update(String& _html_update) {
-  _html_update += String("\"") + html_place + String("\":\"") + html_label + String(": ") + String(value) + String("\"");
+  _html_update += String("\"") + this->html_place + String("\":\"") + this->html_label + String(": ") + String(this->value) + String("\"");
 }
 
 void Sensor_LDR::html_info(String& _html_info) {
@@ -31,7 +28,5 @@ void Sensor_LDR::html_info(String& _html_info) {
 }
 
 void Sensor_LDR::mqtt_stat(String& _mqtt_stat) {
-  _mqtt_stat += String("\"LDR\":") + String(value);
+  _mqtt_stat += String("\"LDR\":") + String(this->value);
 }
-
-#endif

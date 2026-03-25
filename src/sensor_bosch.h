@@ -2,6 +2,7 @@
 #define _SENSOR_BOSCH_H_
 
 #include "base_generic.h"
+#include "BMX_sensor.h"
 
 /**
  * @brief Ein abgeleitetes Objekt für einen Bosch Sensor.
@@ -85,6 +86,11 @@ public:
     void mqtt_stat(String& _mqtt_stat);
      
 private:
+
+    /**
+     * @brief Ein Zeiger auf das BMX_SENSOR Objekt. Dieses Objekt stellt die HW-Schnittstelle zum Sensor dar.
+     */
+    BMX_SENSOR* bmx_sensor;
 
     /**
      * @brief Startet den Bosch Sensor im single Measure Mode. 

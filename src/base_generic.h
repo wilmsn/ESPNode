@@ -1,6 +1,7 @@
 #ifndef _BASE_GENERIC_H_
 #define _BASE_GENERIC_H_
 #include <Arduino.h>
+
 /**
  * @brief Ein generisches Objekt für einen Sensor/Actor.
  * Achtung: Nicht zum Einbau bestimmt, sondern nur als Vererbungsobjekt.
@@ -97,7 +98,7 @@ public:
      * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
      * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
      */
-    void html_info(String& _html_init);
+    void html_info(String& _html_info);
 
     /**
      * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Daten für die Seite "Systeminfo" 
@@ -152,6 +153,8 @@ public:
      * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Statusdaten bereitstellt.
      */
     bool mqtt_stat_set = false;
+
+    void append_comma(String& _string);
 
 };
 

@@ -27,17 +27,34 @@
 #include <rom/rtc.h>
 #include <WiFiMulti.h>
 typedef unsigned char uint8_t;
-#endif
+#endif //ESP32
 
 #ifdef ESP8266
 #include <Preferences8266.h>
 #include <ESP8266WiFi.h>
 #include "ESPAsyncTCP.h"
-#endif
-
-
+#endif //ESP8266
 
 // externe Referenzen
+/// @brief Erweitert den übergebenen String um den nächsten "stat_XX" Schlüssel
+/// @param mystr Der übergebene String zur Aufnahme der Inhalte
+void json_stat_header(String& mystr);
+
+/// @brief Der Kommandoprozessor
+/// @param cmd Das Kommando
+/// @param value Der Wert des Kommandos
+bool prozess_cmd(const String cmd, const String value);
+
+/// @brief Überträgt ein JSON mit den Settings an die Weboberfläche.
+void show_settings();
+
+extern String stat_str;
+
+/// @brief Eine laufende Nummer für die JSON Schlüssel
+extern unsigned int stat_no;
+
+/// @brief Ein Schalter der auf "true" gesetzt wird falls ein "set" Befehl abgearbeitet wurde.
+extern bool cmd_valid;
 
 // Alle Module
 extern void write2log(uint8_t kat, int count, ...);
@@ -50,7 +67,6 @@ extern unsigned long minutes;
 
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
-#ifdef USE_DISPLAY
 /// @brief Zeigt eine Bootmeldung auf dem Display an
 /// @details Diese Funktion wird beim Booten des Gerätes aufgerufen, um eine Nachricht auf
 /// dem Display anzuzeigen. Der Text wird in der angegebenen Farbe dargestellt. Dabei gilt folgende Festlegung:
@@ -60,7 +76,6 @@ extern void sendWsMessage(String& _myMsg, uint8_t kat);
 /// @note Diese Funktion ist für die Anzeige auf dem Display zuständig und wird in der Regel
 ///       beim Start des Geräts aufgerufen, um den Benutzer über den Bootvorgang zu informieren.
 extern void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline = true);
-#endif
 
 // Modul: commands
 extern String stat_str;
@@ -106,7 +121,7 @@ extern String wifi_pass1;
 extern String wifi_ssid2;
 extern String wifi_pass2;
 #endif
-#endif
+#endif //USE_WIFIMULTI
 extern int cmd_no;
 extern Preferences preferences;
 extern unsigned long loop_time_alarm;
@@ -153,4 +168,4 @@ extern bool cmd_result;
 const char* mk_topic(const char* mqtt_topic_part1, const char* mqtt_topic_part3);
 
 
-#endif
+#endif // _COMMON_H_

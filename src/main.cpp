@@ -339,12 +339,7 @@ bool do_wifi_con(void) {
 
 #ifdef ESP32
 void getResetReason(String& tmp) {
-#if defined(DEBUG_SERIAL_WEB)
-  Serial.println("Reset Reason roh:");
-  Serial.println(rtc_get_reset_reason(0));
-#endif
-  switch (rtc_get_reset_reason(0))
-  {
+  switch (rtc_get_reset_reason(0)) {
   case 1:
     tmp +=  String("POWERON_RESET");
     break; //1,  Vbat power on reset
@@ -441,7 +436,7 @@ void setup() {
     Serial.printf("%d: %s, Ch:%d (%ddBm) %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
 #endif
   }
-#endif
+#endif // DEBUG_SERIAL
 
 #ifdef USE_BOOTMESSAGE
   bootMessage(0,"Prefs",false);
@@ -476,7 +471,7 @@ void setup() {
               + String(ESP_IDF_VERSION_MINOR) + String(".") 
               + String(ESP_IDF_VERSION_PATCH));
 #endif
-   Serial.print("MagicNo(Prefs) = ");
+  Serial.print("MagicNo(Prefs) = ");
   Serial.println(magicno);
   Serial.print("MagicNo(Prg) = ");
   Serial.println(MAGICNO);
@@ -484,7 +479,7 @@ void setup() {
   Serial.print("MQTT_SERVER = ");
   Serial.println(MQTT_SERVER);
 #endif
-#endif
+#endif // DEBUG_SERIAL
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
 #ifdef USE_BOOTMESSAGE
@@ -619,7 +614,7 @@ void setup() {
   Serial.println(do_log_system?"ja":"nein");
   Serial.print("Critical: ");
   Serial.println(do_log_critical?"ja":"nein");
-#endif
+#endif // DEBUG_SERIAL
 #ifdef USE_BOOTMESSAGE
   bootMessage(0,"mount FS",false);
 #endif

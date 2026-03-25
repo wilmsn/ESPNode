@@ -74,6 +74,10 @@ public:
     void html_info(String& _html_init);
 
 private:
+
+    OneWire* oneWire;
+    DallasTemperature* sensor;
+
     /**
      * @brief Startet den Bosch Sensor im single Measure Mode. 
      * Nach der Erzeugung der Messwerte wird der Schalter "measure_started" gesetzt.

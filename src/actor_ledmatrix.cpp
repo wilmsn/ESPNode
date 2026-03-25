@@ -1,49 +1,39 @@
 #include "config.h"
-#ifdef USE_ACTOR_LEDMATRIX
 #include "common.h"
 #include "actor_ledmatrix.h"
 
-LED_Matrix matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
-
-void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const char* _mqtt_name, const char* _keyword,
+void Actor_LEDMatrix::begin(const char* _html_place, const char* _label, const char* _keyword,
                bool _start_value, bool _on_value, bool _is_state, uint8_t _slider_val, uint8_t _slider_no, 
-               const char* _slider_label, const char* _slider_mqtt_name, const char* _slider_keyword,
+               const char* _slider_label, const char* _slider_keyword,
                const char* _mqtt_line, const char* _mqtt_graph, bool _show_diagramm) {
-  Switch_OnOff::begin(_html_place, _label, _mqtt_name, _keyword, 
+  Switch_OnOff::begin(_html_place, _label, _keyword, 
                       _start_value, _on_value, _is_state, _slider_val, 15, _slider_no, 
-                      _slider_label, _slider_mqtt_name, _slider_keyword, _show_diagramm);
+                      _slider_label, _slider_keyword, _show_diagramm);
   mqtt_line = _mqtt_line;
   mqtt_graph = _mqtt_graph;
-  matrix.begin();
+  matrix = new LED_Matrix(LEDMATRIX_DIN, LEDMATRIX_CLK, LEDMATRIX_CS, LEDMATRIX_DEVICES_X, LEDMATRIX_DEVICES_Y);
+  matrix->begin();
   for (unsigned int address=0; address < LEDMATRIX_DEVICES_X * LEDMATRIX_DEVICES_Y ; address++) {
-    matrix.displayTest(address, true);
+    matrix->displayTest(address, true);
     delay(200);
-    matrix.displayTest(address, false);
+    matrix->displayTest(address, false);
   }
-  matrix.setIntensity(_slider_val);
-  matrix.clear();
-  matrix.setCursor(8,8);
-  matrix.print("init");
-  matrix.display();
+  matrix->setIntensity(_slider_val);
+  matrix->clear();
+  matrix->setCursor(8,8);
+  matrix->print("init");
+  matrix->display();
   delay(1000);
-  matrix.clear();
-  matrix.display();
+  matrix->clear();
+  matrix->display();
   if (get_switch_val()) {
-    matrix.on();
+    matrix->on();
   } else {
-    matrix.off();
+    matrix->off();
   }
-
-  html_info += String("\"tab_head_matrix\":\"Matrixdislay\"") +
-               String(",\"tab_line1_matrix\":\"CLK:#GPIO: ") + String(LEDMATRIX_CLK) + String("\"")+
-               String(",\"tab_line2_matrix\":\"DIN:#GPIO: ") + String(LEDMATRIX_DIN) + String("\"")+
-               String(",\"tab_line3_matrix\":\"CS: #GPIO: ") + String(LEDMATRIX_CS) + String("\"")+
-               String(",\"tab_line4_matrix\":\"X Devices:# ") + String(LEDMATRIX_DEVICES_X) + String("\"")+
-               String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
-  html_has_info = true;
-  
-  mqtt_info += String("\"Display-HW\":\"MAX7219 / MAX7221\"");
-  mqtt_has_info = true; 
+  html_init_set = true;
+  html_info_set = true;
+  mqtt_info_set = true; 
 
 }
 
@@ -51,11 +41,11 @@ bool Actor_LEDMatrix::set(const String& _cmnd, const String& _val) {
   bool retval = false;
   if (Switch_OnOff::set(_cmnd, _val)) {
     if (get_switch_val()) {
-        matrix.on();
+        matrix->on();
     } else {
-        matrix.off();
+        matrix->off();
     }
-    matrix.setIntensity(get_slider_val());
+    matrix->setIntensity(get_slider_val());
     retval = true;
   } else {
     if ( _cmnd == mqtt_line ) {
@@ -72,15 +62,40 @@ bool Actor_LEDMatrix::set(const String& _cmnd, const String& _val) {
   return retval;
 }
 
-void Actor_LEDMatrix::html_init() {
-  Switch_OnOff::html_init();
-  html_json += String(",\"matrix_x\":") + String(matrix.getNumDevicesX() * 8) +
-              String(",\"matrix_y\":") + String(matrix.getNumDevicesY() * 8) + 
-              String(",\"show_matrix\":1,");
-  update4web(html_json);
-  html_json_filled = true;
+void Actor_LEDMatrix::html_info(String& _html_info) {
+  _html_info += String("\"tab_head_matrix\":\"Matrixdislay\"") +
+                String(",\"tab_line1_matrix\":\"CLK:#GPIO: ") + String(LEDMATRIX_CLK) + String("\"")+
+                String(",\"tab_line2_matrix\":\"DIN:#GPIO: ") + String(LEDMATRIX_DIN) + String("\"")+
+                String(",\"tab_line3_matrix\":\"CS: #GPIO: ") + String(LEDMATRIX_CS) + String("\"")+
+                String(",\"tab_line4_matrix\":\"X Devices:# ") + String(LEDMATRIX_DEVICES_X) + String("\"")+
+                String(",\"tab_line5_matrix\":\"Y Devices:# ") + String(LEDMATRIX_DEVICES_Y) + String("\"");
 }
 
+void Actor_LEDMatrix::html_init(String& _html_init) {
+  Switch_OnOff::html_init(_html_init);
+  _html_init += String(",\"matrix_x\":") + String(matrix->getNumDevicesX() * 8) +
+                String(",\"matrix_y\":") + String(matrix->getNumDevicesY() * 8) + 
+                String(",\"show_matrix\":1,");
+  html_update(_html_init);
+}
+
+void Actor_LEDMatrix::html_update(String& _html_update) {
+  _html_update += String("\"") + this->html_place + String("\":") + String(switch_value?"1":"0") + 
+                  String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
+                  String("\"") + String(",\"matrix\":\"");
+  getMatrixFB(_html_update);
+  _html_update += String("\"");
+}
+
+void Actor_LEDMatrix::mqtt_info(String& _mqtt_info) {
+  _mqtt_info += String("\"Display-HW\":\"MAX7219 / MAX7221\"");
+}
+
+void Actor_LEDMatrix::mqtt_stat(String& _mqtt_stat) {
+  _mqtt_stat += String("\"") + keyword + String("\":") + String(switch_value?"1":"0");
+}
+
+/*
 void Actor_LEDMatrix::update4web(String& myjson) {
   myjson += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
             String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
@@ -88,13 +103,13 @@ void Actor_LEDMatrix::update4web(String& myjson) {
   getMatrixFB(myjson);
   myjson += String("\"");
 }
-
+*/
 void Actor_LEDMatrix::loop(time_t now) {
   Switch_OnOff::loop(now);
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {
-    matrix.display();
+    matrix->display();
     String myjson = String("{");
-    update4web(myjson);
+    html_update(myjson);
     myjson += String("}");
     sendWsMessage(myjson);
     graph_change_time = 0;
@@ -132,10 +147,10 @@ void Actor_LEDMatrix::print_line(const char* rohtext ) {
     case 0:      // just wipe
     default:
       {
-        matrix.clear(0,(line-1)*8,31,line*8-1);            
+        matrix->clear(0,(line-1)*8,31,line*8-1);            
       }
   }
-  matrix.setFont(font);
+  matrix->setFont(font);
   switch (line) {
     case 2:
       cursor_y = 8;
@@ -148,14 +163,14 @@ void Actor_LEDMatrix::print_line(const char* rohtext ) {
   }
   cursor_x = offset;
   if (textallign == 'L') {
-    matrix.setCursor(cursor_x, cursor_y);
+    matrix->setCursor(cursor_x, cursor_y);
   }
   if (textallign == 'R') {
-    cursor_x = matrix.getNumDevicesX()*8 - matrix.getSize(linetext) - offset;
-    matrix.setCursor(cursor_x,cursor_y);
+    cursor_x = matrix->getNumDevicesX()*8 - matrix->getSize(linetext) - offset;
+    matrix->setCursor(cursor_x,cursor_y);
   }
-  matrix.print(linetext); 
-//  matrix.display();
+  matrix->print(linetext); 
+//  matrix->display();
 }
 
 void Actor_LEDMatrix::print_graph(const char* rohtext ) {
@@ -163,19 +178,17 @@ void Actor_LEDMatrix::print_graph(const char* rohtext ) {
   for (unsigned int pos = 0; pos + 5 <= length; pos += 5) {
     unsigned int cur_x = (rohtext[pos] - '0') * 10 + (rohtext[pos + 1] - '0');
     unsigned int cur_y = (rohtext[pos + 2] - '0') * 10 + (rohtext[pos + 3] - '0');
-    matrix.setPixel(cur_x, cur_y, rohtext[pos + 4] - '0');
+    matrix->setPixel(cur_x, cur_y, rohtext[pos + 4] - '0');
   }
-//  matrix.display();
+//  matrix->display();
 }
 
 void Actor_LEDMatrix::getMatrixFB(String& fb_cont) {
-  unsigned int dotx = matrix.getNumDevicesX() * 8;
-  unsigned int doty = matrix.getNumDevicesY() * 8;  
+  unsigned int dotx = matrix->getNumDevicesX() * 8;
+  unsigned int doty = matrix->getNumDevicesY() * 8;  
   for (unsigned int y=0; y<doty; y++) {
     for (unsigned int x=0; x<dotx; x++) {
-      fb_cont += matrix.getPixel(x,y)? "1" : "0";
+      fb_cont += matrix->getPixel(x,y)? "1" : "0";
     }
   }
 }
-
-#endif
