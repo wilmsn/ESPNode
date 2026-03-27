@@ -95,15 +95,6 @@ void Actor_LEDMatrix::mqtt_stat(String& _mqtt_stat) {
   _mqtt_stat += String("\"") + keyword + String("\":") + String(switch_value?"1":"0");
 }
 
-/*
-void Actor_LEDMatrix::update4web(String& myjson) {
-  myjson += String("\"") + html_place + String("\":") + String(switch_value?"1":"0") + 
-            String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
-            String("\"") + String(",\"matrix\":\"");
-  getMatrixFB(myjson);
-  myjson += String("\"");
-}
-*/
 void Actor_LEDMatrix::loop(time_t now) {
   Switch_OnOff::loop(now);
   if ( graph_change_time > 0 && now - graph_change_time > 2 ) {

@@ -128,8 +128,6 @@ public:
      */
     void mqtt_info(String& _mqtt_info);
 
-    // MQTT Support
-
     /**
      * @brief In der abgeleiteten Klasse wird hier auf "true" gesetzt wenn dieses Modul Telemetriedaten bereitstellt.
      */

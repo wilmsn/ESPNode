@@ -461,8 +461,9 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Ein Audio Testnode"
 
 #define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", false);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", false);
 
+#define AUDIOMODUL               module1
 #define DO_LOG_WEB               true
 #define DO_LOG_MODULE            true
 #define DO_LOG_SYSTEM            true

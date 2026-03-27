@@ -1,11 +1,16 @@
-#ifdef USE_AUDIOMODUL
-
 #ifndef _AUDIOMODUL_H_
 #define _AUDIOMODUL_H_
 
-#define USE_SWITCH_ONOFF
+#include "config.h"
 #include "switch_onoff.h"
-#include "SD.h"
+//#include "SD.h"
+#include "Audio.h"
+#ifdef USE_DISPLAY_GC9A01A
+#include "audiodisplay_GC9A01A.h"
+#endif
+#ifdef USE_ROTARY
+#include "AiEsp32RotaryExtention.h"
+#endif
 
 // Settings for Webradio-Stations definitions
 #define MAXSTATIONS               10
@@ -154,6 +159,8 @@ typedef enum {
     LastApp 
 } mymode_t;
 
+void my_audio_info(Audio::msg_t m);
+
 /// @brief Das Audiomodul ist eine Ableitung der Klasse "Switch_OnOff" 
 class AudioModul : public Switch_OnOff {
 
@@ -164,7 +171,7 @@ public:
     /// @param mqtt_name Der Bezeichner in MQTT für diesen Schalter
     /// @param keyword Das Schlüsselword auf das dieser Schalter reagiert
     /// @param _show_diagramm True wenn ein 24 Stunden Zeitdiagramm über den Zustand des Schalters angezeigt werden soll, sonst false.
-    void begin(const char* html_place, const char* label, const char* mqtt_name, const char* keyword, bool _show_diagramm);
+    void begin(const char* html_place, const char* label, const char* keyword, bool _show_diagramm);
 
     /// @brief Die normale Set Funktion aus dem Grundmodul erweitert um feste Schlüsselwörter 
     /// @brief zur Steuerung dieses Audiomodules..
@@ -179,13 +186,57 @@ public:
     void loop(time_t now);
     
     /**
-    * @brief Initialisierung bzw. Neuladen einer Webseite
-    * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft bzw. die Reload-Taste gedrückt wird,
-    * wird diese Funtion durch das Hauptprogramm aufgerufen. 
-    * Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
-    * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
-    */
-    void html_init();
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_info(String& _html_info);
+
+    /**
+     * @brief Initialisierung einer Webseite
+     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+     */
+    void html_init(String& _html_init);
+
+    /**
+     * @brief Updatedaten für die Webseite
+     * Wenn sich der Inhalt der Webseite ändert, werden hier die geänderten Daten in Form eines Teil-JSON bereitgestellt.
+     * Durch das zugrunde liegende Event wird die Variable html_update_set auf true gesetzt, damit das Hauptprogramm 
+     * weiß, dass es neue Daten gibt. Das Hauptprogramm sendet diese Daten dann als Websocket an den Browser.
+     */
+    void html_update(String& _html_update);
+
+    /**
+     * @brief Sollte es in diesem Modul telemetrieähnliche Daten geben, werden diese hier als Teil-JSON eingetragen
+     */
+    void mqtt_info(String& _mqtt_info);
+
+    /**
+     * @brief Der MQTT Status
+     * Dieser String muss durch das abgeleitete Objekt gefüllt werden. Dabei gilt für jeden Messwert:
+     * "mqtt_nameX"+":"+"MesswertX",...
+     * Hier steht immer ein abgeschlossenes Teil-JSON ohne Klammern.
+     */
+    void mqtt_stat(String& _mqtt_stat);
+
+    /// @brief Der Name des aktuellen Streams / Sender
+    String audio_radio_stationname;
+    /// @brief Der Streamtitle des aktuellen Streams / Sender
+    String audio_radio_streamtitle;
+   /// @brief Die aktuelle BPS Rate 
+    String audio_kbs;
+
+    bool song_eof = false;
+
+#ifdef USE_DISPLAY_GC9A01A
+    AudioDisplay*  display;
+#endif
+#ifdef USE_ROTARY
+    AiEsp32RotaryExtention*  rotary;
+#endif
 
 private:
     /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
@@ -200,21 +251,25 @@ private:
     bool mode_changed = false;
     /// @brief Die aktuelle Lautstärke
     uint16_t   audio_vol;
-#ifdef USE_ROTARY
-    uint16_t rot_last_val;
-#endif
 /*    
     uint16_t   audio_bas;
     uint16_t   audio_tre;
 */
-//    void html_update();
     void audio_set_mode(mymode_t new_mode);
     void audio_off();
     String print_mode(mode_t mymode);
     void start_timeout();
     bool timeout_set;
     time_t timeout_start;
-  
+ 
+    Audio*            audio;
+
+#ifdef USE_ROTARY
+    uint8_t this_app;
+    uint8_t this_lev;
+    uint16_t rot_last_val;
+//    AiEsp32RotaryExtention*  rotary;
+#endif
 
 #ifdef USE_AUDIO_RADIO
 
@@ -245,11 +300,16 @@ private:
     /// @brief Der aktuell ausgewählte Sender, entspricht der Indexnummer im Array.
     uint8_t   audio_radio_cur_station;
 
-
 #endif //USE_AUDIO_RADIO
 
 #ifdef USE_AUDIO_MEDIA
 
+    /// @brief Der Name des aktuellen Ordners / Name des Albums
+    String audio_media_album_name;
+    /// @brief Der Name des aktuellen Künstlers / Gruppe
+    String audio_media_artist_name;
+    /// @brief Der Name des aktuellen Files / Name des Liedes
+    String audio_media_song_name;
     /// @brief Das aktuelle Album
     uint16_t audio_media_cur_album = 1;
     /// @brief Das aktuelle Lied
@@ -324,4 +384,3 @@ private:
 };
 
 #endif  //_AUDIOMODUL_H_
-#endif  //USE_AUDIOMODUL

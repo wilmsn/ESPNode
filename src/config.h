@@ -18,12 +18,12 @@
 //#define NODEBOSCH
 //#define WITTYNODE
 //#define ESP32S3_NODE
-//#define NODE_AUDIO
+#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
 //#define NODE_WOHNZIMMERLICHT
-#define NODE_WOHNZIMMER
+//#define NODE_WOHNZIMMER
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
