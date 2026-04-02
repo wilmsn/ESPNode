@@ -12,6 +12,15 @@
 #include "AiEsp32RotaryExtention.h"
 #endif
 
+#define MODE_OFF            0
+#define MODE_RADIO          1
+#define MODE_MEDIA          2
+#define MODE_SPEAKER        3
+#define MODE_SETTINGS       4
+#define MODE_MUSIC_UPDATE   5
+#define MODE_RADIO_SEL      6
+
+
 // Settings for Webradio-Stations definitions
 #define MAXSTATIONS               10
 #define STATION_NAME_LENGTH       30
@@ -148,17 +157,6 @@ typedef struct {
     char    url[STATION_URL_LENGTH];
 } station_t;
 
-/// @brief Ein ENUM für die verschiedenen Modi
-typedef enum { 
-    Off = 0, 
-    Radio, 
-    Media, 
-    Speaker, 
-    Settings, 
-    MusicUpdate, 
-    LastApp 
-} mymode_t;
-
 void my_audio_info(Audio::msg_t m);
 
 /// @brief Das Audiomodul ist eine Ableitung der Klasse "Switch_OnOff" 
@@ -223,13 +221,18 @@ public:
     void mqtt_stat(String& _mqtt_stat);
 
     /// @brief Der Name des aktuellen Streams / Sender
-    String audio_radio_stationname;
+    String radio_stationname;
     /// @brief Der Streamtitle des aktuellen Streams / Sender
-    String audio_radio_streamtitle;
+    String radio_streamtitle;
    /// @brief Die aktuelle BPS Rate 
-    String audio_kbs;
+    String bps;
 
     bool song_eof = false;
+
+    bool update_set = false;
+    bool display_update_set = false;
+    bool display_update_vol = false;
+    bool display_update_now = false;
 
 #ifdef USE_DISPLAY_GC9A01A
     AudioDisplay*  display;
@@ -238,26 +241,32 @@ public:
     AiEsp32RotaryExtention*  rotary;
 #endif
 
+    /// @brief Der Name des aktuellen Künstlers / Gruppe
+    String media_artist_name;
+    /// @brief Der Name des aktuellen Files / Name des Liedes
+    String media_song_name;
+    /// @brief Der Name des aktuellen Ordners / Name des Albums
+    String media_album_name;
+    /// @brief Der aktuelle Modus des Audiomoduls, z.B. MODE_RADIO, ....
+    uint8_t mode;
+    /// @brief Die aktuelle Lautstärke
+    uint8_t vol;
+
 private:
-    /// @brief Die Variable "mode" ist zu jeder Zeit mit dem gerade aktiven "mode" gefüllt
-    mymode_t   mode;
-    /// @brief Der letzte verwendete "mode"
-    mymode_t   last_mode = Radio;
-    /// @brief Der letzte verwendete "mode" aus (Radio, Media und Speaker) wird hier gespeichert und nach dem Einschalten aktiviert.
-    mymode_t   default_mode;
+
+    uint8_t last_mode;
+    uint8_t default_mode;
 
     bool change_from_rotary;
 
     bool mode_changed = false;
-    /// @brief Die aktuelle Lautstärke
-    uint16_t   audio_vol;
 /*    
-    uint16_t   audio_bas;
-    uint16_t   audio_tre;
+    uint16_t   bas;
+    uint16_t   tre;
 */
-    void audio_set_mode(mymode_t new_mode);
-    void audio_off();
-    String print_mode(mode_t mymode);
+    void set_mode(uint8_t new_mode);
+    void off();
+    void on();
     void start_timeout();
     bool timeout_set;
     time_t timeout_start;
@@ -275,81 +284,72 @@ private:
 
 // private Funktionen für das Radio
 
-    /// @brief Schaltet das Radio an.
-    void audio_radio_on();
+    /// @brief Schaltet das Radio an und spielt den aktuellen Sender.
+    void radio_on();
 
     /// @brief Schaltet das Radio aus.
-    void audio_radio_off();
-
-    /// @brief Spielt den aktuellen Sender.
-    void audio_radio_play();
+    void radio_off();
 
     /// @brief Sendet die Senderliste an die Weboberfläche.
-    void audio_radio_send_stn2web();
+    void radio_send_stn2web();
 
     /// @brief Lädt die Textdatei data/sender.txt in das Array audio_radio_station[]
-    void audio_radio_load_stations();
+    void radio_load_stations();
 
-    void audio_radio_save_stations();
+    void radio_save_stations();
 
 // private Variablen für das Radio
 
     /// @brief Ein Array mit den Sendern
-    station_t audio_radio_station[MAXSTATIONS];
+    station_t radio_station[MAXSTATIONS];
 
     /// @brief Der aktuell ausgewählte Sender, entspricht der Indexnummer im Array.
-    uint8_t   audio_radio_cur_station;
+    uint8_t   radio_cur_station;
 
 #endif //USE_AUDIO_RADIO
 
 #ifdef USE_AUDIO_MEDIA
 
-    /// @brief Der Name des aktuellen Ordners / Name des Albums
-    String audio_media_album_name;
-    /// @brief Der Name des aktuellen Künstlers / Gruppe
-    String audio_media_artist_name;
-    /// @brief Der Name des aktuellen Files / Name des Liedes
-    String audio_media_song_name;
     /// @brief Das aktuelle Album
-    uint16_t audio_media_cur_album = 1;
+    uint16_t media_cur_album = 1;
     /// @brief Das aktuelle Lied
-    uint16_t audio_media_cur_song = 0;
+    uint16_t media_cur_song = 0;
     /// @brief Das aktuelle Album
-    uint16_t audio_media_sel_album = 0;
+    uint16_t media_sel_album = 0;
     /// @brief Das aktuelle Lied
-    uint16_t audio_media_sel_song = 0;
+    uint16_t media_sel_song = 0;
 
     time_t    song_starttime;
     bool      song_started = false;
 
-    bool audio_media_changemode = false;
+    bool media_changemode = false;
 
-    void audio_media_get_album_for_web();
+    void media_get_album_for_web();
 
-    void audio_media_get_songs_for_web(uint16_t reqDirNo);
+    void media_get_songs_for_web(uint16_t reqDirNo);
     /// @brief Schaltet den Mediaplayer an.
-    void audio_media_on();
+    void media_on();
     /// @brief Schaltet den Mediaplayer aus.
-    void audio_media_off();
+    void media_off();
     
-    void audio_media_play(uint16_t _albumNo, uint16_t _songNo);
+    void media_play(uint16_t _albumNo, uint16_t _songNo);
 
     /**
      * Wird auf "true" gesetz wenn ein "Media update" durchgeführt werden soll.
      */
-    bool audio_media_do_update = false;
+    bool media_do_update = false;
 
     /**
      * @brief: Hier wird je Album(Ordner) die Datei songs.txt mit den Albumtiteln gefüllt.
      */
 
-    bool audio_media_sd_init_songs = false;
+    bool media_sd_init_songs = false;
 
     /**
      * @brief Hier wird für alle Alben die Datei album.txt mit den Verzeichnisnamen gefüllt.
      */
 
-    bool audio_media_sd_init_album = false;
+    bool media_sd_init_album = false;
 
  //   bool getAlbumByNumber(fs::FS &fs, uint16_t albumNo);
     bool getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo);
@@ -357,14 +357,14 @@ private:
     /**
      * Wird auf "true" gesetz wenn ein "Media update" durchgeführt werden soll.
      */
-    bool audio_media_update_running = false;
-    char* audio_media_update_lowstr;
-    char* audio_media_update_highstr;
-    bool audio_media_update_found = false;
-    bool audio_media_update_outfile = false;
-    File sd_root;
-    File sd_dir;
-    File sd_out;
+    bool  media_update_running = false;
+    char* media_update_lowstr;
+    char* media_update_highstr;
+    bool  media_update_found = false;
+    bool  media_update_outfile = false;
+    File  sd_root;
+    File  sd_dir;
+    File  sd_out;
 
     /**
      * @brief Die zentrale Sortierfunktion.
@@ -373,7 +373,7 @@ private:
      * @param s2 Der zu testende String
      * @return "true" wenn s2 zwischen s0 und s1 liegt, sonst "false"
      */
-    bool audio_media_sort(const char* s0, const char* s1, const char* s2);
+    bool media_sort(const char* s0, const char* s1, const char* s2);
 
 
     void initMedia();

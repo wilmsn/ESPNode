@@ -300,6 +300,7 @@
 #endif // ESP82666
 
 #ifdef CONFIG_IDF_TARGET_ESP32
+#ifdef RF24GW
 #warning "ESP32 Node - Achtung: Die Pinbelegung für die RF24 Hardware muss geändert werden !!!!!"
 // Einstellungen für das RF24 Funkmodul auf dem ESP32
 // Folgende Pins sind fest vergeben:
@@ -314,11 +315,11 @@
 ///Anschlusspin für den CE Pin des Funkmodules
 #define RF24_RADIO_CE_PIN     0
 #endif
-
+#endif // RF24GW
 #endif // CONFIG_IDF_TARGET_ESP32
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-
+#ifdef RF24GW
 #warning "ESP32S3 Node - Achtung: Die Pinbelegung für die RF24 Hardware muss geändert werden !!!!!"
 // Einstellungen für das RF24 Funkmodul auf dem ESP32S3
 // Folgende Pins sind fest vergeben:
@@ -333,7 +334,7 @@
 ///Anschlusspin für den CE Pin des Funkmodules
 #define RF24_RADIO_CE_PIN     0 
 #endif
-
+#endif // RF24GW
 #endif // CONFIG_IDF_TARGET_ESP32S3
 
 #ifndef RF24_HUB2NODE

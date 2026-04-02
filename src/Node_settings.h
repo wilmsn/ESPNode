@@ -435,13 +435,13 @@ RF24 Gateway:
 #if defined(NODE_AUDIO)
 
 #ifdef ESP32
-#define USE_AUDIOMODUL
+//#define USE_AUDIOMODUL
 #define USE_DISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
-#define USE_AUDIO_MEDIA
+//#define USE_AUDIO_MEDIA
 //#define USE_FTP
-#define USE_WIFIMULTI
-#define USE_ROTARY
+//#define USE_WIFIMULTI
+//#define USE_ROTARY
 //#define ROTARY_ENCODER_VCC_PIN     -1
 //#define ROTARY_ENCODER_STEPS       4
 //#define ROTARY_ENCODER_R_PULLDOWN  false
@@ -463,7 +463,7 @@ RF24 Gateway:
 #define MODULE1_DEFINITION       AudioModul module1;
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", false);
 
-#define AUDIOMODUL               module1
+//#define AUDIOMODUL               module1
 #define DO_LOG_WEB               true
 #define DO_LOG_MODULE            true
 #define DO_LOG_SYSTEM            true

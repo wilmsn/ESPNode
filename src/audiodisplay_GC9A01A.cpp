@@ -1,10 +1,10 @@
 #include "config.h"
 #ifdef USE_DISPLAY_GC9A01A
 #include "audiodisplay_GC9A01A.h"
+#include "audiomodul.h"
 #include "common.h"
 
-#define FONT2_MIN_CHAR     7
-#define FONT2_MAX_CHAR    17
+extern AudioModul* audiomodul_ptr;
 
 AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot ) :
               Adafruit_GC9A01A(_cs, _dc, _rst) {
@@ -14,7 +14,6 @@ AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot ) :
 void AudioDisplay::begin() {
   Adafruit_GC9A01A::begin();
   setRotation(rotation);
-  cur_screen = AudioDisplay::screenmode_t::Screen_Off;
   fillScreen(GC9A01A_BLACK);
   setTextColor(GC9A01A_WHITE);
   setTextSize(3);
@@ -23,29 +22,142 @@ void AudioDisplay::begin() {
   fillRect(30,50,180,140,GC9A01A_DARKGREY);
   setCursor(35,60);
   setTextSize(1);
-  html_info = String(",\"tab_head_display\":\"Display: GC9A01A\"") +
-              String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
-              String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
-              String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
-              String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"");
+}
+
+void AudioDisplay::html_info(String& _html_info) {
+  _html_info = String("\"tab_head_display\":\"Display: GC9A01A\"") +
+               String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
+               String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
+               String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
+               String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"");
+}
+
+void AudioDisplay::update_display() {
+  audiomodul_ptr->display_update_set = false;
+  switch (audiomodul_ptr->mode) {
+    case MODE_OFF: {
+      clear();
+      clock_big();
+    }
+    break;
+    case MODE_RADIO: {
+      uint8_t num_lines = 0;
+      clear();
+      clock_small();
+      show_vol(audiomodul_ptr->vol);
+      // set ip address
+      setTextColor(GC9A01A_WHITE);  
+      setTextSize(IP_FONTSIZE);
+      setCursor(IP_POS_X,IP_POS_Y);
+      print(WiFi.localIP().toString());
+      // end set ip address
+      // set bps
+      setTextColor(GC9A01A_RED);  
+      setTextSize(1);
+      setCursor(75, 205);
+      println(audiomodul_ptr->bps);
+      // end set bps
+      // set station
+      num_lines = split4display(audiomodul_ptr->radio_stationname);
+      setTextColor(GC9A01A_ORANGE);
+      if (num_lines == 1) {
+        setTextSize(3);
+        setCursor(25, 75);
+        print(displaystr[0]);
+      } else {
+        setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 2) {
+          if (thisline <= 1) setCursor(25, 75 + (thisline * 20));
+          print(displaystr[thisline]);
+          thisline++;
+        }
+      }
+      // end set station
+      // set streamtitle
+      num_lines = split4display(audiomodul_ptr->radio_streamtitle);
+      setTextColor(GC9A01A_GREEN);
+      if (num_lines == 1) {
+        setTextSize(3);
+        setCursor(25, 130);
+        print(displaystr[0]);
+      } else {
+        setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 3) {
+          setCursor(25, 130 + (thisline * 20));
+          print(displaystr[thisline]);
+          thisline++;
+        }
+      }
+      // end set streamtitle
+    }
+    break;
+    case MODE_RADIO_SEL:
+      clear();
+      break;
+    default:
+      clear();
+      break;
+  }
 }
 
 void AudioDisplay::loop(time_t now) {
-  if (timeinfo.tm_min != last_min) {
+  localtime_r(&now, &timeinfo);
+  if (audiomodul_ptr->display_update_vol) {
+    wipe_vol();
+    show_vol(audiomodul_ptr->vol);
+    audiomodul_ptr->display_update_vol = false;
+  }
+  if (audiomodul_ptr->display_update_now) {
+    update_display();
+    audiomodul_ptr->display_update_now = false;
+  }
+  if (audiomodul_ptr->display_update_set &&
+     (timeinfo.tm_sec == 10 || 
+      timeinfo.tm_sec == 20 ||
+      timeinfo.tm_sec == 30 ||
+      timeinfo.tm_sec == 40 ||
+      timeinfo.tm_sec == 50)) {
+    update_display();
+  }
+  if (timeinfo.tm_min != last_min ) {
     last_min = timeinfo.tm_min;
-    switch(cur_screen) {
-      case AudioDisplay::screenmode_t::Screen_Off:
-        clear();
-        clock_big();
-      break;
-      case AudioDisplay::screenmode_t::Screen_Radio:
-        clock_small();
-      break;
-      default:
-      // nothing to do
-      break;
+    update_display();
+  }
+}
+
+uint8_t AudioDisplay::split4display(String& in_str) {
+  uint8_t startAt = 0;
+  uint8_t splitAt = 0;
+  uint8_t lineNo = 0;
+  uint8_t strLen = in_str.length();
+  uint8_t retval;
+  Serial.println(String("split4display: #") + String(in_str) + String("# ") + String(strLen));
+  displaystr[0] = "";
+  displaystr[1] = "";
+  displaystr[2] = "";
+  if (strLen < FONT1_MAX_CHAR) {
+    displaystr[0] = in_str;
+    retval = 1;
+  } else {
+    while (splitAt < strLen && lineNo < 3) {
+      splitAt = getPartStringEnd(in_str, startAt, FONT2_MIN_CHAR, FONT2_MAX_CHAR);
+      displaystr[lineNo] = in_str.substring(startAt,splitAt);
+      startAt = splitAt + 1;
+      if (lineNo < 2) {
+        retval = 2;
+      } else{
+        retval = lineNo+1;
+      } 
+      lineNo++;
     }
   }
+  Serial.println(displaystr[0]);
+  Serial.println(displaystr[1]);
+  Serial.println(displaystr[2]);
+  Serial.println(String("split4display: retval ") + String(retval));
+  return retval;
 }
 
 // - txtcolor: 0 = weiss, 1 = grün, 2 = rot
@@ -79,26 +191,23 @@ void AudioDisplay::bootMessage(uint8_t txtcolor, const char* msg, bool newline) 
 void AudioDisplay::clear() {
   fillScreen(GC9A01A_BLACK);
 }
-
-void AudioDisplay::vol(uint8_t _vol) {
-  cur_vol= _vol;
-  if (_vol > 90) cur_vol=90;
-  show_vol();
+  
+void AudioDisplay::wipe_vol() {
+  fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
 }
 
-void AudioDisplay::show_vol() {
-  if (cur_screen == AudioDisplay::screenmode_t::Screen_Radio || cur_screen == AudioDisplay::screenmode_t::Screen_Media) {
-    fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
-    fillArc(119,119,-90,cur_vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
-  }
+void AudioDisplay::show_vol(uint8_t cur_vol) {
+  fillArc(119,119,-90,cur_vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
 }
 
+/*
 void AudioDisplay::screen_off() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Off;
   clear();
   clock_big();
 }
-
+*/
+/*
 void AudioDisplay::screen_radio() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Radio;
   clear();
@@ -109,22 +218,26 @@ void AudioDisplay::screen_radio() {
   show_radio_streamtitle();
   show_vol();
 }
-
+*/
+/*
 void AudioDisplay::screen_radio_select() {
   cur_screen = AudioDisplay::screenmode_t::Screen_RadioSel;
   clear();
 }
-
+*/
+/*
 void AudioDisplay::screen_settings() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Settings;
   clear();
 }
-
+*/
+/*
 void AudioDisplay::screen_media_update() {
   cur_screen = AudioDisplay::screenmode_t::Screen_MediaUpdate;
   clear();
 }
-
+*/
+/*
 void AudioDisplay::screen_media() {
   cur_screen = AudioDisplay::screenmode_t::Screen_Media;
   clear();
@@ -135,6 +248,7 @@ void AudioDisplay::screen_media() {
   show_vol();
   ip();
 }
+*/
 
 void AudioDisplay::clock_big() {
   clear();
@@ -159,34 +273,31 @@ void AudioDisplay::clock_print() {
   printf("%d",timeinfo.tm_min);
 }
 
-void AudioDisplay::ip() {
-  setTextColor(GC9A01A_WHITE);  
-  setTextSize(IP_FONTSIZE);
-  setCursor(IP_POS_X,IP_POS_Y);
-  print(WiFi.localIP().toString());
-}
-
+/*
 void AudioDisplay::radio_bps(const char* mybps) {
   cur_bps = String(mybps);
   show_radio_bps();
 }
-
+*/
+/*
 void AudioDisplay::show_radio_bps() {
   setTextColor(GC9A01A_RED);  
   setTextSize(1);
   setCursor(75, 205);
   println(cur_bps);
 }
-
+*/
 /// @brief Zeigt den Sender auf dem Display an
 /// Benutzter Displaybereich 25,65 bis 215,130
 /// Mögliche Ausgabe: 2 Zeilen in Schriftgröße 2 a 10 Zeichen
 /// @param mystation Der Sendername als Array of Char
+/*
 void AudioDisplay::radio_station(const char* mystation) {
   cur_station = String(mystation);
   show_radio_station();
 }
-
+*/
+/*
 void AudioDisplay::show_radio_station() {
   fillRect(25, 65, 190, 55, GC9A01A_BLACK);
   int startAt = 0;
@@ -209,12 +320,14 @@ void AudioDisplay::show_radio_station() {
     }
   }
 }
-
+*/
+/*
 void AudioDisplay::radio_streamtitle(String& myplayinfo) {
   cur_streamtitle = replaceNonAscii(myplayinfo);
   if ( cur_screen == AudioDisplay::screenmode_t::Screen_Radio ) show_radio_streamtitle();
 }
-
+*/
+/*
 void AudioDisplay::show_radio_streamtitle() {
   fillRect(25, 130, 240, 60, GC9A01A_BLACK);
   int startAt = 0;
@@ -236,7 +349,8 @@ void AudioDisplay::show_radio_streamtitle() {
     }
   }
 }
-
+*/
+/*
 void AudioDisplay::radio_select_station(const char* s0, const char* s1, const char* s2) {
   clear();
   String tmpstr;
@@ -281,7 +395,8 @@ void AudioDisplay::radio_select_station(const char* s0, const char* s1, const ch
 //  if (strlen(s1) > 0) show_text_s2(s1,10,110,GC9A01A_ORANGE);
 //  if (strlen(s2) > 0) show_text_s2(s2,40,170,GC9A01A_LIGHTGREY);
 }
-
+*/
+/*
 void AudioDisplay::media_select_album(String& album, const uint16_t * pic) {
   clear();
   drawRGBBitmap(80,20,pic,70,70);
@@ -290,7 +405,8 @@ void AudioDisplay::media_select_album(String& album, const uint16_t * pic) {
   setCursor(10, 110);
   println(album);
 }
-
+*/
+/*
 void AudioDisplay::media_select_song(String& album, String& song, const uint16_t * pic) {
   clear();
   drawRGBBitmap(80,20,pic,70,70);
@@ -302,26 +418,31 @@ void AudioDisplay::media_select_song(String& album, String& song, const uint16_t
   setCursor(40, 170);
   println(song);
 }
-
+*/
+/*
 void AudioDisplay::media_bps(String& mybps) {
   cur_bps = mybps;
 } 
-
+*/
+/*
 void AudioDisplay::media_album(String& albumName) {
   cur_album = albumName;
   show_media_album();
 }
-
+*/
+/*
 void AudioDisplay::media_artist(String& artistName) {
   cur_artist = artistName;
   show_media_artist();
 }
-
+*/
+/*
 void AudioDisplay::media_song(String& songName) {
   cur_song = songName;
   show_media_song();
 }
-
+*/
+/*
 void AudioDisplay::show_media_album() {
   int startAt = 0;
   int strLen = cur_album.length();
@@ -343,7 +464,8 @@ void AudioDisplay::show_media_album() {
     }
   }
 }
-
+*/
+/*
 void AudioDisplay::show_media_artist() {
   int startAt = 0;
   int strLen = cur_artist.length();
@@ -365,7 +487,8 @@ void AudioDisplay::show_media_artist() {
     }
   }
 }
-
+*/
+/*
 void AudioDisplay::show_media_song() {
   int startAt = 0;
   int splitAt = 0;
@@ -386,14 +509,15 @@ void AudioDisplay::show_media_song() {
     }
   }
 }
-
+*/
+/*
 void AudioDisplay::show_media_bps() {
   setTextColor(GC9A01A_RED);  
   setTextSize(1);
   setCursor(75, 205);
   println(cur_bps);
 }
-
+*/
 
 void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour) {
 
