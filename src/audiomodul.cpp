@@ -20,6 +20,8 @@
 #define KLICK_TIMEOUT               20
 #endif
 
+AudioModul* audiomodul_ptr = NULL;
+
 #ifdef USE_FTP
 #include <FtpServer.h>
 FtpServer        ftp;
@@ -46,18 +48,11 @@ uint8_t sd_cardType;
 
 //AiEsp32RotaryExtention  rotary = AiEsp32RotaryExtention(ROT_S1, ROT_S2, ROT_SW, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS, ROTARY_ENCODER_R_PULLDOWN);
 
-void IRAM_ATTR intrSRV() {
-    audiomodul_ptr->rotary->readEncoder_ISR();
-}
-#endif
-
 #ifdef USE_DISPLAY
 //#define JPG_SCALE              4
 //#define BMPSIZE                32000      //40*40*2
 #define BMPSIZE                  12800      //80*80*2
 uint16_t* bmpBuffer;
-
-AudioModul* audiomodul_ptr = NULL;
 
 void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline) {
   audiomodul_ptr->display->bootMessage(txtcolor, myMsg, newline);
@@ -118,6 +113,11 @@ void my_audio_info(Audio::msg_t m) {
   }
 }
 
+void IRAM_ATTR intrSRV() {
+    audiomodul_ptr->rotary->readEncoder_ISR();
+}
+#endif
+
 
 /*
 #ifdef USE_AUDIO_MEDIA
@@ -149,6 +149,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 //  uint8_t this_app;
 //  uint8_t this_lev;
   this->html_init_set = true;
+  this->html_info_set = true;
   audio = new Audio();
   audiomodul_ptr = this;
 #ifdef USE_DISPLAY_GC9A01A
@@ -190,7 +191,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
   this->this_lev = rotary->lev_add(this->this_app,0,1,0);
 // 4) Settings
   // Ebene 0 App auswählen
-  this->this_app = rotary->app_add(0,LastApp-1,0);
+  this->this_app = rotary->app_add(0,last_app-1,0);
   // Ebene 1 App starten
   this->this_lev = rotary->lev_add(this->this_app,0,1,0);
 // 5) Update Music Library
@@ -288,7 +289,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 #endif
   write2log(LOG_MODULE,1,"End audiomodul.begin()");
 #ifdef DEBUG_SERIAL
-//  Serial.println(html_info);
   Serial.println("Auiomodul begin ende");
 #endif
 }
@@ -299,12 +299,12 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
   if ( Switch_OnOff::set(_cmnd, _val) ) {
     // Ein- und Ausschalten erfolgt im Elternobjekt
     // Schalter ist aus und mode ist nicht Off
-    if ((! switch_value) && (mode != MODE_OFF)) { 
+    if ((! this->switch_is_on) && (this->mode != MODE_OFF)) { 
       this->mode = MODE_OFF;
       this->display_update_now = true;
       this->off();
     // Schalter ist ein und mode ist Off
-    } else if (( switch_value) && (mode == MODE_OFF)) { 
+    } else if (( this->switch_is_on) && (this->mode == MODE_OFF)) { 
       this->vol = 3; 
       this->mode = default_mode;
       this->display_update_now = true;
@@ -336,8 +336,7 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
       // Display aktualisieren
       this->display_update_vol = true;
       // Weboberfläche einstellen
-      String myjson = String("{\"audio_vol\":") + String(this->vol) + String("}");
-      sendWsMessage(myjson);
+      sendWsMessage(String("{\"audio_vol\":") + String(this->vol) + String("}"));
 #ifdef USE_ROTARY
       // Rotarymodul einstellen - nur wenn Änderungen nicht von dort kommen!
       if (! change_from_rotary) {
@@ -511,7 +510,7 @@ void AudioModul::html_info(String& _html_info) {
 #endif
 #ifdef USE_AUDIO_MEDIA
   this->append_comma(_html_info);
-  _html_info += String(",\"tab_head_sdcard\":\"SD Card\"") +
+  _html_info += String("\"tab_head_sdcard\":\"SD Card\"") +
                 String(",\"tab_line1_sdcard\":\"MOSI:#GPIO: ") + String(SD_MOSI)+ String("\"") +
                 String(",\"tab_line2_sdcard\":\"MISO:#GPIO: ") + String(SD_MISO)+ String("\"") +
                 String(",\"tab_line3_sdcard\":\"SCK:#GPIO: ") + String(SD_SCK)+ String("\"") +
@@ -524,19 +523,33 @@ void AudioModul::html_update(String& _html_update) {
   Switch_OnOff::html_update(_html_update);
   this->append_comma(_html_update);
   _html_update += String("\"audio_vol\":") + String(this->vol);
+  switch(this->mode) {
 #ifdef USE_AUDIO_RADIO
-  if (this->mode == MODE_RADIO) {
-    _html_update += String(",\"audio_radio_sw\":1") +
-                    String(",\"audiomsg1\":\"") + this->radio_stationname + String("\"") +
-                    String(",\"audiomsg2\":\"") + this->radio_streamtitle + String("\"") +
-                    String(",\"audiomsg4\":\"") + this->bps + String("\"");
-  } else {
-    _html_update += String(",\"audio_radio_sw\":0") +
-                    String(",\"audiomsg1\":\"\"") +
-                    String(",\"audiomsg2\":\"\"") +
-                    String(",\"audiomsg4\":\"\"");
+    case MODE_RADIO:
+      _html_update += String(",\"audio_radio_sw\":1") +
+                      String(",\"audiomsg1\":\"") + this->radio_stationname + String("\"") +
+                      String(",\"audiomsg2\":\"") + this->radio_streamtitle + String("\"") +
+                      String(",\"audiomsg4\":\"") + this->bps + String("\"");
+    break;
+#endif //USE_AUDIO_RADIO
+#ifdef USE_AUDIO_MEDIA
+    case MODE_MEDIA:
+      _html_update += String(",\"audio_media_sw\":1") +
+                   String(",\"audiomsg1\":\"Artist: ") + this->media_artist_name + String("\"") +
+                   String(",\"audiomsg2\":\"Song: ") + this->media_song_name + String("\"") +
+                   String(",\"audiomsg3\":\"Album: ") + this->media_album_name + String("\"") +
+                   String(",\"audiomsg4\":\"") + this->kbs + String("\"");
+    break;
+#endif //USE_AUDIO_MEDIA
+    default:
+      _html_update += String(",\"audio_radio_sw\":0") +
+                      String(",\"audio_media_sw\":0") +
+                      String(",\"audiomsg1\":\"\"") +
+                      String(",\"audiomsg2\":\"\"") +
+                      String(",\"audiomsg3\":\"\"") +
+                      String(",\"audiomsg4\":\"\"");
+    break;
   }
-#endif
 }
 
 void AudioModul::set_mode(uint8_t new_mode) {
@@ -563,7 +576,7 @@ void AudioModul::set_mode(uint8_t new_mode) {
       Serial.printf("audio_set_app: case Radio => Rotary app: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), this->rot_last_val);
 #endif
 #endif
-        if (! switch_value ) do_switch(true);
+        if (! switch_is_on ) do_switch(true);
         this->radio_on();
       // Radio: Wiedergabe im Display
         this->update_set = true;
@@ -571,7 +584,7 @@ void AudioModul::set_mode(uint8_t new_mode) {
 #endif  //USE_AUDIO_RADIO
 #ifdef USE_AUDIO_MEDIA
     case Media:
-      if (! switch_value ) do_switch(true);
+      if (! switch_is_on ) do_switch(true);
       this->media_on();
 #ifdef USE_DISPLAY
       display->screen_media();
@@ -621,6 +634,8 @@ void AudioModul::off() {
     break;
 #endif //USE_AUDIO_MEDIA
   }
+  html_update_set = true;
+  display_update_now = true;
 }
 
 void AudioModul:: on() {
@@ -703,18 +718,6 @@ void AudioModul::loop(time_t now) {
         //TODO: Anzeige zurücksetzen
         rotary->app_set(rotary->app(),0);
         this->timeout_set = false;
-        switch (rotary->app()) {
-#ifdef USE_DISPLAY
-          case Radio:
-            display->screen_radio();
-          break;
-          case Media:
-            display->screen_media();
-          break;
-#endif
-          default:
-          break;
-        }
     }
   }
   // Der Drehregler wurde gedreht.
@@ -724,24 +727,24 @@ void AudioModul::loop(time_t now) {
     Serial.printf("Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
     switch(rotary->app()) {
-      case Off: {
+      case MODE_OFF: {
           if (this->rotary->lev() == 0) {
             if (this->rotary->val() > 1) {
               // Die letzte App wird aufgerufen
-              if (this->last_mode == Radio || this->last_mode == Off) this->set(String("audio_radio"),String("1"));
-              if (this->last_mode == Media) this->set(String("audio_media"),String("1"));
+              if (this->last_mode == MODE_RADIO || this->last_mode == MODE_OFF) this->set(String("audio_radio"),String("1"));
+              if (this->last_mode == MODE_MEDIA) this->set(String("audio_media"),String("1"));
             }              
           }
         } 
       break;
 #ifdef USE_AUDIO_RADIO
-      case Radio: {
+      case MODE_RADIO: {
           switch(rotary->lev()) {
             case 0:
           // Lautstärke einstellen
               change_from_rotary = true;
               this->set("audio_vol",String(this->rotary->val()));
-              change_from_rotary = false;
+              this->change_from_rotary = false;
 #ifdef DEBUG_SERIAL
               Serial.println(this->rotary->val());
 #endif
@@ -750,10 +753,10 @@ void AudioModul::loop(time_t now) {
           // Sender Auswahl
               start_timeout();
 #ifdef USE_DISPLAY
-              display->radio_select_station(
-                          this->rotary->val() > 0 ? this->radio_station[this->rotary->val()-1].name : "",
-                          this->radio_station[this->rotary->val()].name,
-                          this->rotary->val() < MAXSTATIONS ? this->radio_station[this->rotary->val()+1].name : "" );
+//              display->radio_select_station(
+//                  this->rotary->val() > 0 ? this->radio_station[this->rotary->val()-1].name : "",
+//                  this->radio_station[this->rotary->val()].name,
+//                  this->rotary->val() < MAXSTATIONS ? this->radio_station[this->rotary->val()+1].name : "" );
 #endif
               rot_last_val = rotary->val();
             break;
@@ -762,13 +765,13 @@ void AudioModul::loop(time_t now) {
       break;  // case Radio
 #endif // USE_AUDIO_RADIO
 #ifdef USE_AUDIO_MEDIA
-      case Media: {
+      case MODE_MEDIA: {
         switch(rotary->lev()) {
           case 0:
         // Lautstärke einstellen
             change_from_rotary = true;
             set("audio_vol",String(rotary->val()));
-            change_from_rotary = false;
+            this->change_from_rotary = false;
           break;
           case 1: {
         // Album auswählen
@@ -799,7 +802,7 @@ void AudioModul::loop(time_t now) {
       }
       break;  // case Media
 #endif // USE_AUDIO_MEDIA
-      case Settings: {
+      case MODE_SETTINGS: {
 #ifdef DEBUG_SERIAL
         Serial.printf("---Rotary changed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
@@ -809,27 +812,27 @@ void AudioModul::loop(time_t now) {
             // App oder Eigenschaft auswählen
  #ifdef USE_DISPLAY
               switch(rotary->val()) {
-                case Off:
+                case MODE_OFF:
  //                 display.show_set_icon("Off");
                   display->drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
                 break;
-                case Radio:
+                case MODE_RADIO:
                   display->drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
                 break;
-                case Media:
+                case MODE_MEDIA:
                   display->drawRGBBitmap(80,80,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
 #ifdef DEBUG_SERIAL
                   Serial.println("Media select");
                   Serial.printf("-1a-Rotary changed App: %u Lev: %u   Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
                   break;
-                case Speaker:
+                case MODE_SPEAKER:
                   display->drawRGBBitmap(80,80,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
                 break;
-                case Settings:
+                case MODE_SETTINGS:
                   display->drawRGBBitmap(80,80,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
                 break;
-                case MusicUpdate:
+                case MODE_MUSIC_UPDATE:
                   display->drawRGBBitmap(80,80,music_update_bmp,MUSIC_UPDATE_BMP_HEIGHT,MUSIC_UPDATE_BMP_WIDTH);
                 break;
               }
@@ -887,40 +890,36 @@ void AudioModul::loop(time_t now) {
     switch(rotary->app()) {
 // Aktionen nach kurzen   Druck beim Radio
 #ifdef USE_AUDIO_RADIO
-      case Radio: {
+      case MODE_RADIO: {
         new_lev = rotary->lev_up();
 #ifdef DEBUG_SERIAL
         Serial.printf("Rotary nev Lev %u\n", new_lev);
 #endif
         switch(new_lev) {
           // Radio Ebene 1: Neuen Sender auswählen
-          case 1:
-            rotary->val_set(audio_radio_cur_station);
+          case MODE_RADIO:
+            rotary->val_set(radio_cur_station);
 #ifdef USE_DISPLAY
-            display->screen_radio_select();
-            display->radio_select_station(
-                          audio_radio_cur_station > 0 ? audio_radio_station[audio_radio_cur_station-1].name : "",
-                            audio_radio_station[audio_radio_cur_station].name,
-                          audio_radio_cur_station < MAXSTATIONS ? audio_radio_station[audio_radio_cur_station+1].name : "" );
+//            display->screen_radio_select();
+//            display->radio_select_station(
+//                          audio_radio_cur_station > 0 ? audio_radio_station[audio_radio_cur_station-1].name : "",
+//                            audio_radio_station[audio_radio_cur_station].name,
+//                          audio_radio_cur_station < MAXSTATIONS ? audio_radio_station[audio_radio_cur_station+1].name : "" );
 #endif
           break;
           // Radio Ebene 2: Neuen Sender übernehmen und Level zurück auf 0 => Play
-          case 2:
+          case MODE_RADIO_SELECT:
 #ifdef DEBUG_SERIAL
             Serial.print("Radio neuer Sender: ");
             Serial.println(rot_last_val);
             Serial.print("Radio alter Sender: ");
-            Serial.println(audio_radio_cur_station);
+            Serial.println(radio_cur_station);
 #endif
-            if (audio_radio_cur_station != rot_last_val) {
+            if (radio_cur_station != rot_last_val) {
               set(String("audio_radio_set_stn"),String(rot_last_val));
               radio_cur_station = rot_last_val;
               radio_on();
-#ifdef USE_DISPLAY
-//             audio_radio_stationname = String("");
-              display->radio_streamtitle(audio_radio_stationname);
-              display->screen_radio();
-#endif
+              this->update_set = true;
               rotary->app_set(rotary->app(),0);
             }
             break;
@@ -929,20 +928,20 @@ void AudioModul::loop(time_t now) {
       break; //case Radio
 #endif //USE_AUDIO_RADIO
 #ifdef USE_AUDIO_MEDIA
-      case Media: {
+      case MODE_MEDIA: {
         switch(rotary->lev_up()) {
           // Media Ebene 1: Album auswählen
           case 1: {
             media_changemode = true;
-            media_sel_album = audio_media_cur_album;
-            media_sel_song = audio_media_cur_song;
-            rotary->val_set(audio_media_sel_album);
+            media_sel_album = media_cur_album;
+            media_sel_song = media_cur_song;
+            rotary->val_set(media_sel_album);
 #ifdef DEBUG_SERIAL
             Serial.printf("Media change Album Lev 1: App: %u Lev: %u (Max: %u) Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->get_max_lev(rotary->app()), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
 #ifdef USE_DISPLAY
             getSongByNumber(SD, media_sel_album, 0);
-            display->media_select_album(audio_media_album_name, cd_bmp);
+            display->media_select_album(media_album_name, cd_bmp);
 #endif
           }
           break;
@@ -955,7 +954,7 @@ void AudioModul::loop(time_t now) {
             Serial.printf("Media change Song App: %u Lev: %u (Max: %u) Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->get_max_lev(rotary->app()), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
 #ifdef USE_DISPLAY
-            display->media_select_song(media_album_name, media_song_name, cd_bmp);
+//            display->media_select_song(media_album_name, media_song_name, cd_bmp);
 #endif
           }
           break;
@@ -982,23 +981,23 @@ void AudioModul::loop(time_t now) {
           // Off: Ausschalten
           case 1: {
             switch(rot_last_val) {
-              case Off:
+              case MODE_OFF:
                 set(keyword, "0");
               break;
 #ifdef USE_AUDIO_RADIO
-              case Radio:
+              case MODE_RADIO:
                 set(String("audio_radio"),String("1"));
               break;
 #endif
 #ifdef USE_AUDIO_MEDIA
-              case Media:
+              case MODE_MEDIA:
                 set(String("audio_media"),String("1"));
               break;
-              case MusicUpdate:
+              case MODE_MUSIC_UPDATE:
                 set(String("audio_media_update"),String("1"));
               break;
 #endif
-              case Settings:
+              case MODE_SETTINGS:
 
               break;
               default:
@@ -1024,38 +1023,38 @@ void AudioModul::loop(time_t now) {
       Serial.printf("Rotary Long Pressed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
       start_timeout();
-      if ( ! rotary->app_set((uint8_t)Settings,0,0,(uint16_t)LastApp-1,(uint16_t)mode) ) 
-             Serial.printf("Error: app_set(%u,0,0,%u,%u);",(uint8_t)Settings, (uint16_t)LastApp-1, (uint16_t)mode);
+      if ( ! rotary->app_set((uint8_t)MODE_SETTINGS,0,0,(uint16_t)last_app-1,(uint16_t)mode) ) 
+             Serial.printf("Error: app_set(%u,0,0,%u,%u);",(uint8_t)MODE_SETTINGS, (uint16_t)last_app-1, mode);
       Serial.printf("##Rotary Long Pressed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
-//      rotary->app_set(Settings,0);
-#ifdef USE_DISPLAY
-      display->screen_settings();
-      switch (mode) {
-        case Off:
-          display->drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
-        break;
-        case Radio:
-          display->drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
-        break;
-        case Media:
-          display->drawRGBBitmap(80,80,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
-        break;
-        case Speaker:
-          display->drawRGBBitmap(80,80,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
-        break;
-        case Settings:
-          display->drawRGBBitmap(80,80,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
-        break;
-        case MusicUpdate:
-          display->drawRGBBitmap(80,80,music_update_bmp,MUSIC_UPDATE_BMP_HEIGHT,MUSIC_UPDATE_BMP_WIDTH);
-        break;
-      }
-#endif
+      rotary->app_set(MODE_SETTINGS,0);
+//#ifdef USE_DISPLAY
+//      display->screen_settings();
+//      switch (mode) {
+//        case Off:
+//          display->drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
+//        break;
+//        case Radio:
+//          display->drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+//        break;
+//        case Media:
+//          display->drawRGBBitmap(80,80,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
+//        break;
+//        case Speaker:
+//          display->drawRGBBitmap(80,80,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
+//        break;
+//        case Settings:
+//          display->drawRGBBitmap(80,80,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
+//        break;
+//        case MusicUpdate:
+//          display->drawRGBBitmap(80,80,music_update_bmp,MUSIC_UPDATE_BMP_HEIGHT,MUSIC_UPDATE_BMP_WIDTH);
+//        break;
+//      }
+//#endif
       rot_last_val = mode;
   }
 #endif //USE_ROTARY
 // Ende Klickstream Definition
-}
+} // loop
 
 
 /*********************************************************************************************************
@@ -1146,9 +1145,7 @@ void AudioModul::audio_media_on() {
   sendWsMessage(myjson);
 }
 
-void AudioModul::audio_media_off() {
-  String myjson = String("{\"audiomsg1\":\"\",\"audiomsg2\":\"\",\"audiomsg3\":\"\",\"audiomsg4\":\"\",\"audio_media_sw\":0}");
-  sendWsMessage(myjson);
+void AudioModul::media_off() {
   audio->stopSong();
   audio_media_album_name = String("");
   audio_media_artist_name = String("");

@@ -1,6 +1,7 @@
 #include "config.h"
 #ifdef USE_DISPLAY_GC9A01A
 #include "audiodisplay_GC9A01A.h"
+#include "audiodisplay_bmps.h"
 #include "audiomodul.h"
 #include "common.h"
 
@@ -25,11 +26,11 @@ void AudioDisplay::begin() {
 }
 
 void AudioDisplay::html_info(String& _html_info) {
-  _html_info = String("\"tab_head_display\":\"Display: GC9A01A\"") +
-               String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
-               String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
-               String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
-               String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"");
+  _html_info += String("\"tab_head_display\":\"Display: GC9A01A\"") +
+                String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
+                String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
+                String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
+                String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"");
 }
 
 void AudioDisplay::update_display() {
@@ -93,8 +94,32 @@ void AudioDisplay::update_display() {
       // end set streamtitle
     }
     break;
-    case MODE_RADIO_SEL:
+    case MODE_RADIO_SELECT:
       clear();
+      break;
+    case MODE_SETTINGS:
+      clear();
+      switch (audiomodul_ptr->new_mode) {
+        case MODE_OFF:
+          drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
+        break;
+        case MODE_RADIO:
+          drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+        break;
+        case MODE_MEDIA:
+          drawRGBBitmap(80,80,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
+        break;
+        case MODE_SPEAKER:
+          drawRGBBitmap(80,80,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
+        break;
+//        case MODE_SETTINGS:
+//          drawRGBBitmap(80,80,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
+//        break;
+        case MODE_MUSIC_UPDATE:
+          drawRGBBitmap(80,80,music_update_bmp,MUSIC_UPDATE_BMP_HEIGHT,MUSIC_UPDATE_BMP_WIDTH);
+        break;
+      }
+
       break;
     default:
       clear();

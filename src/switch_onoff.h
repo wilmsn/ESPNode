@@ -225,9 +225,9 @@ public:
     void loop(time_t now);
 
     /**
-     * @brief Der aktuelle Zustand des Schalters
+     * @brief Der aktuelle Zustand des Schalters: "true" = Ein, "false" = Aus
      */
-    bool switch_value;
+    bool switch_is_on;
 
     /**
      * @brief Nummer des Slieders (für den Einbau in die HTML Oberfläche)

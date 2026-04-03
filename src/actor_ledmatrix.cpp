@@ -80,7 +80,7 @@ void Actor_LEDMatrix::html_init(String& _html_init) {
 }
 
 void Actor_LEDMatrix::html_update(String& _html_update) {
-  _html_update += String("\"") + this->html_place + String("\":") + String(switch_value?"1":"0") + 
+  _html_update += String("\"") + this->html_place + String("\":") + String(switch_is_on?"1":"0") + 
                   String(",\"slider") + String(slider_no) + String("val\":\"") + String(slider_value) + 
                   String("\"") + String(",\"matrix\":\"");
   getMatrixFB(_html_update);
@@ -92,7 +92,7 @@ void Actor_LEDMatrix::mqtt_info(String& _mqtt_info) {
 }
 
 void Actor_LEDMatrix::mqtt_stat(String& _mqtt_stat) {
-  _mqtt_stat += String("\"") + keyword + String("\":") + String(switch_value?"1":"0");
+  _mqtt_stat += String("\"") + keyword + String("\":") + String(switch_is_on?"1":"0");
 }
 
 void Actor_LEDMatrix::loop(time_t now) {

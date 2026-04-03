@@ -18,7 +18,7 @@
 #define MODE_SPEAKER        3
 #define MODE_SETTINGS       4
 #define MODE_MUSIC_UPDATE   5
-#define MODE_RADIO_SEL      6
+#define MODE_RADIO_SELECT   6
 
 
 // Settings for Webradio-Stations definitions
@@ -249,6 +249,8 @@ public:
     String media_album_name;
     /// @brief Der aktuelle Modus des Audiomoduls, z.B. MODE_RADIO, ....
     uint8_t mode;
+    /// @brief Der neue Modus des Audiomoduls zur Wahl, z.B. MODE_RADIO, ....
+    uint8_t new_mode;
     /// @brief Die aktuelle Lautstärke
     uint8_t vol;
 
@@ -276,6 +278,7 @@ private:
 #ifdef USE_ROTARY
     uint8_t this_app;
     uint8_t this_lev;
+    uint8_t last_app;
     uint16_t rot_last_val;
 //    AiEsp32RotaryExtention*  rotary;
 #endif

@@ -1,6 +1,6 @@
 // To onvert use: https://notisrac.github.io/FileToCArray/
 
-#include "common.h"
+//#include "common.h"
 
 #define RADIO_BMP_HEIGHT 70
 #define RADIO_BMP_WIDTH 70

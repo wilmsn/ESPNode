@@ -441,7 +441,7 @@ RF24 Gateway:
 //#define USE_AUDIO_MEDIA
 //#define USE_FTP
 //#define USE_WIFIMULTI
-//#define USE_ROTARY
+#define USE_ROTARY
 //#define ROTARY_ENCODER_VCC_PIN     -1
 //#define ROTARY_ENCODER_STEPS       4
 //#define ROTARY_ENCODER_R_PULLDOWN  false

@@ -88,9 +88,9 @@ void Switch_OnOff::begin(const char* _html_place, const char* _html_label, const
   Base_Generic::begin(_html_place, _html_label, _keyword);
   this->mqtt_stat_set = true;
   this->on_value = _on_value;
-  this->switch_value = _start_value;
+  this->switch_is_on = _start_value;
   this->is_state = _is_state;
-  do_switch(switch_value);
+  do_switch(switch_is_on);
   if ( _show_diagramm ) {
     this->diagramm_used = true;
     this->diagrammstore = malloc(24);
@@ -102,7 +102,7 @@ void Switch_OnOff::begin(const char* _html_place, const char* _html_label, const
 }
 
 void Switch_OnOff::do_switch(bool new_state) {
-  if ( this->switch_value != new_state ) {
+  if ( this->switch_is_on != new_state ) {
     store_diagramm(new_state);
     if ( this->slider_used ) {
       if ( this->hw_pin1_used ) {
@@ -130,11 +130,11 @@ void Switch_OnOff::do_switch(bool new_state) {
       }
     }
   }
-  this->switch_value = new_state;
-  this->state = String(this->switch_value?"1":"0");
+  this->switch_is_on = new_state;
+  this->state = String(this->switch_is_on?"1":"0");
   this->html_update_set = true;
 
-  this->mqtt_stat_str = String("\"") + this->keyword + String("\":") + String(this->switch_value? "1":"0");
+  this->mqtt_stat_str = String("\"") + this->keyword + String("\":") + String(this->switch_is_on?"1":"0");
   if (this->slider_used) {
     this->mqtt_stat_str += String(",\"") + this->slider_keyword + String("\":") + String(this->slider_value);
   }
@@ -158,7 +158,7 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
     }
 // Umschalten
     if ( (_val == String("2")) || (_val == String("umschalten")) || (_val == String("Umschalten")) || (_val == String("toggle")) | (_val == String("Toggle")) ) {
-      do_switch(! this->switch_value);
+      do_switch(! this->switch_is_on);
       this->off_minute = 0;
       retval = true;
     }
@@ -208,7 +208,7 @@ bool Switch_OnOff::set(const String& _cmnd, const String& _val) {
     if (slider_used) {
       if ( (_cmnd == slider_keyword) ) {
         slider_value = _val.toInt();
-        do_switch(switch_value); 
+        do_switch(switch_is_on); 
         retval = true;
       }
     }
@@ -260,7 +260,7 @@ void Switch_OnOff::html_info(String& _html_info) {
 }
 
 bool Switch_OnOff::get_switch_val() {
-  return switch_value;
+  return switch_is_on;
 }
 
 uint8_t Switch_OnOff::get_slider_val() {
@@ -286,12 +286,12 @@ void Switch_OnOff::html_init(String& _html_init) {
 }
 
 void Switch_OnOff::html_update(String& _html_update) {
-  _html_update += String("\"") + this->html_place + String("\":") + String(this->switch_value?"1":"0");
+  _html_update += String("\"") + this->html_place + String("\":") + String(this->switch_is_on?"1":"0");
   if (slider_used) {
     _html_update += String(",\"slider") + String(this->slider_no) + String("val\":\"") + String(this->slider_value) + String("\"");
   }
   if (timer_min > 0) {
-    if ( this->switch_value ) {
+    if ( this->switch_is_on ) {
       _html_update += String(",\"") + this->html_place + String("_progress\":\"") + String(this->timer_progress()) + String("\"");
       _html_update += String(",\"") + this->html_place + String("_timer\":\"") + String(this->timer_min/60) + String("\"");
     } else {
@@ -302,7 +302,7 @@ void Switch_OnOff::html_update(String& _html_update) {
 }
 
 void Switch_OnOff::mqtt_stat(String& _mqtt_stat) {
-  _mqtt_stat += String("\"") + this->keyword + String("\":") + String(this->switch_value?"1":"0");
+  _mqtt_stat += String("\"") + this->keyword + String("\":") + String(this->switch_is_on?"1":"0");
 }
 
 void Switch_OnOff::mqtt_info(String& _mqtt_info) {
@@ -378,7 +378,7 @@ void Switch_OnOff::diagramm2web(String& myjson) {
 void Switch_OnOff::loop(time_t now) {
   if (taster_used) {
     if ((digitalRead(hw_pin2) != taster_ruhezustand ) && (now - taster_pressed_time > 30)) {
-      do_switch(! switch_value);
+      do_switch(! switch_is_on);
       taster_pressed_time = now;
     }
   }
@@ -394,7 +394,7 @@ void Switch_OnOff::loop(time_t now) {
     }
     if (diagramm_used) {
       if (do_dia_store(timeinfo.tm_min)) {
-        store_diagramm(switch_value);
+        store_diagramm(switch_is_on);
         diagramm2web(tmpjson);
       }
     }
