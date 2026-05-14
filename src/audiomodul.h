@@ -12,14 +12,17 @@
 #include "AiEsp32RotaryExtention.h"
 #endif
 
-#define MODE_OFF            0
-#define MODE_RADIO          1
-#define MODE_MEDIA          2
-#define MODE_SPEAKER        3
-#define MODE_SETTINGS       4
-#define MODE_MUSIC_UPDATE   5
-#define MODE_RADIO_SELECT   6
+//#define MODE_OFF            0
+//#define MODE_RADIO          1
+#define MODE_RADIO_SELECT   11
+//#define MODE_MEDIA          2
+//#define MODE_MEDIA_ALBUM    21
+//#define MODE_MEDIA_SONG     22
+//#define MODE_SPEAKER        3
+//#define MODE_SETTINGS       4
+//#define MODE_MUSIC_UPDATE   5
 
+#define AUDIO_ON_MIN_VOL    1
 
 // Settings for Webradio-Stations definitions
 #define MAXSTATIONS               10
@@ -229,9 +232,23 @@ public:
 
     bool song_eof = false;
 
-    bool update_set = false;
+    /// @brief Trigger für die Aktualisierung der Anzeige in den nächsten 10 Sekunden.
+    /// Im Gegensatz zu "display_update_now" wird diese Variable auf "true" gesetzt, 
+    /// wenn die Anzeige in den nächsten 10 Sekunden aktualisiert werden soll. 
+    /// Dadurch wird eine wiederholte Aktualisierung der Anzeige in kurzen Abständen vermieden,
+    /// wenn sich mehrere Daten ändern. Das Displayprogramm prüft diese Variable regelmäßig und führt die 
+    /// Aktualisierung durch, wenn sie auf "true" gesetzt ist. Nach der Aktualisierung wird die Variable 
+    /// wieder auf "false" zurückgesetzt.
     bool display_update_set = false;
+    /// @brief Trigger für die Aktualisierung der Lautstärkeanzeige auf dem Display.
+    /// Diese Variable wird auf "true" gesetzt, wenn die Lautstärkeanzeige aktualisiert werden soll.
+    /// Das Displayprogramm prüft diese Variable regelmäßig und führt die Aktualisierung durch,
+    /// wenn sie auf "true" gesetzt ist. Nach der Aktualisierung wird die Variable wieder auf "false" zurückgesetzt.
     bool display_update_vol = false;
+    /// @brief Trigger für die sofortige Aktualisierung der Anzeige.
+    /// Diese Variable wird auf "true" gesetzt, wenn die Anzeige aktualisiert werden soll.
+    /// Das Displayprogramm prüft diese Variable regelmäßig und führt die Aktualisierung durch,
+    /// wenn sie auf "true" gesetzt ist. Nach der Aktualisierung wird die Variable wieder auf "false" zurückgesetzt.
     bool display_update_now = false;
 
 #ifdef USE_DISPLAY_GC9A01A
@@ -239,7 +256,18 @@ public:
 #endif
 #ifdef USE_ROTARY
     AiEsp32RotaryExtention*  rotary;
+    uint16_t rot_last_val;
+    uint8_t  last_app;
 #endif
+
+    uint8_t  app_no_off   = 0;
+    uint8_t  app_no_radio = 0;
+    uint8_t  app_no_radio_select = 11;
+    uint8_t  app_no_media = 0;
+    uint8_t  app_no_media_update = 0;
+    uint8_t  app_no_max = 0;
+    bool     has_app_radio = false;
+    bool     has_app_media = false;
 
     /// @brief Der Name des aktuellen Künstlers / Gruppe
     String media_artist_name;
@@ -247,29 +275,31 @@ public:
     String media_song_name;
     /// @brief Der Name des aktuellen Ordners / Name des Albums
     String media_album_name;
-    /// @brief Der aktuelle Modus des Audiomoduls, z.B. MODE_RADIO, ....
-    uint8_t mode;
-    /// @brief Der neue Modus des Audiomoduls zur Wahl, z.B. MODE_RADIO, ....
-    uint8_t new_mode;
+    /// @brief Die Nummer der aktuelle App/Modus des Audiomoduls
+    uint8_t app_no;
+    /// @brief Die neue Nummer der neu einzustellenden App/Modus des Audiomoduls.
+    uint8_t app_no_new;
     /// @brief Die aktuelle Lautstärke
     uint8_t vol;
 
+#ifdef USE_AUDIO_RADIO
+    /// @brief Ein Array mit den Sendern
+    station_t radio_station[MAXSTATIONS];
+#endif //USE_AUDIO_RADIO
+
 private:
 
-    uint8_t last_mode;
-    uint8_t default_mode;
+    uint8_t app_no_last = 0;
+    uint8_t app_no_default;
 
     bool change_from_rotary;
 
-    bool mode_changed = false;
+    bool app_changed = false;
 /*    
     uint16_t   bas;
     uint16_t   tre;
 */
-    void set_mode(uint8_t new_mode);
-    void off();
-    void on();
-    void start_timeout();
+    void start_timeout(time_t now);
     bool timeout_set;
     time_t timeout_start;
  
@@ -278,9 +308,6 @@ private:
 #ifdef USE_ROTARY
     uint8_t this_app;
     uint8_t this_lev;
-    uint8_t last_app;
-    uint16_t rot_last_val;
-//    AiEsp32RotaryExtention*  rotary;
 #endif
 
 #ifdef USE_AUDIO_RADIO
@@ -302,9 +329,6 @@ private:
     void radio_save_stations();
 
 // private Variablen für das Radio
-
-    /// @brief Ein Array mit den Sendern
-    station_t radio_station[MAXSTATIONS];
 
     /// @brief Der aktuell ausgewählte Sender, entspricht der Indexnummer im Array.
     uint8_t   radio_cur_station;

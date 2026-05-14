@@ -17,6 +17,12 @@ AiEsp32RotaryExtention::AiEsp32RotaryExtention(uint8_t encoderAPin, uint8_t enco
   p_app_current = p_app_initial;
 }
 
+void AiEsp32RotaryExtention::begin() {
+  AiEsp32RotaryEncoder::begin();
+  millis_Button_pressed = millis();
+  wasButtonDown = false;
+}
+
 void AiEsp32RotaryExtention::loop(time_t now) {
   // 0. Check reset of level
 /*  if (cur_level != 0) {
@@ -162,6 +168,7 @@ void AiEsp32RotaryExtention::min_set(uint16_t _min) {
 void AiEsp32RotaryExtention::val_set(uint16_t _val) {
   p_app_current->val = _val;
   setEncoderValue(p_app_current->val);
+  this->valChanged();
 }
 
 uint8_t AiEsp32RotaryExtention::lev_up() {

@@ -206,6 +206,7 @@ $(document).ready(function(){
     $("#audio_radio_stn_name").val($('#audio_radio_sel option:selected').text());
     $("#audio_radio_stn_url").val($('#audio_radio_sel option:selected').val());
     do_cmd("audio_radio_set_stn",$('#audio_radio_sel option:selected').val());
+    $("#audio_menu").removeClass("change");
   });
 
   $('#audio_media_but').click(function () {

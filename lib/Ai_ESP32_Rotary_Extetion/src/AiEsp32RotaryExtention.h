@@ -98,11 +98,13 @@ public:
 
     bool valChanged();
 
+    void begin();
+
     void loop(time_t now);
 
-    bool buttonShortPressed;
+    bool buttonShortPressed = false;
 
-    bool buttonLongPressed;
+    bool buttonLongPressed = false;
 
 private:
     void set_val_changed();

@@ -35,95 +35,103 @@ void AudioDisplay::html_info(String& _html_info) {
 
 void AudioDisplay::update_display() {
   audiomodul_ptr->display_update_set = false;
-  switch (audiomodul_ptr->mode) {
-    case MODE_OFF: {
-      clear();
-      clock_big();
+  Serial.print("Update Display: App_NO:");
+  Serial.println(audiomodul_ptr->app_no);
+  if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_off) {
+    clear();
+    clock_big();
+  }
+  else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio) {
+    clear();
+    clock_small();
+    show_vol(audiomodul_ptr->vol);
+    // set ip address
+    setTextColor(IP_COLOR);  
+    setTextSize(IP_FONTSIZE);
+    setCursor(IP_POS_X,IP_POS_Y);
+    print(WiFi.localIP().toString());
+    // end set ip address
+    // set bps
+    setTextColor(BPS_COLOR);  
+    setTextSize(BPS_FONTSIZE);
+    setCursor(BPS_POS_X, BPS_POS_Y);
+    println(audiomodul_ptr->bps);
+    // end set bps
+    // set station
+    num_lines = split4display(audiomodul_ptr->radio_stationname);
+    setTextColor(GC9A01A_ORANGE);
+    if (num_lines == 1) {
+      setTextSize(3);
+      setCursor(25, 75);
+      print(displaystr[0]);
+    } else {
+      setTextSize(2);
+      uint8_t thisline = 0;
+      while (thisline < num_lines && thisline < 2) {
+        if (thisline <= 1) setCursor(25, 75 + (thisline * 20));
+        print(displaystr[thisline]);
+        thisline++;
+      }
     }
-    break;
-    case MODE_RADIO: {
-      uint8_t num_lines = 0;
-      clear();
-      clock_small();
-      show_vol(audiomodul_ptr->vol);
-      // set ip address
-      setTextColor(GC9A01A_WHITE);  
-      setTextSize(IP_FONTSIZE);
-      setCursor(IP_POS_X,IP_POS_Y);
-      print(WiFi.localIP().toString());
-      // end set ip address
-      // set bps
-      setTextColor(GC9A01A_RED);  
+    // end set station
+    // set streamtitle
+    num_lines = split4display(audiomodul_ptr->radio_streamtitle);
+    setTextColor(GC9A01A_GREEN);
+    if (num_lines == 1) {
+      setTextSize(3);
+      setCursor(25, 130);
+      print(displaystr[0]);
+    } else {
+      setTextSize(2);
+      uint8_t thisline = 0;
+      while (thisline < num_lines && thisline < 3) {
+        setCursor(25, 130 + (thisline * 20));
+        print(displaystr[thisline]);
+        thisline++;
+      }
+    }
+  } //audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio
+  else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio_select) {
+    clear();
+    setTextSize(2);
+    setTextColor(GC9A01A_WHITE);
+    setCursor(60,20);
+    print("Senderwahl");
+    setTextColor(GC9A01A_ORANGE);
+/*      setCursor(40,70);
       setTextSize(1);
-      setCursor(75, 205);
-      println(audiomodul_ptr->bps);
-      // end set bps
-      // set station
-      num_lines = split4display(audiomodul_ptr->radio_stationname);
-      setTextColor(GC9A01A_ORANGE);
-      if (num_lines == 1) {
-        setTextSize(3);
-        setCursor(25, 75);
-        print(displaystr[0]);
-      } else {
-        setTextSize(2);
-        uint8_t thisline = 0;
-        while (thisline < num_lines && thisline < 2) {
-          if (thisline <= 1) setCursor(25, 75 + (thisline * 20));
-          print(displaystr[thisline]);
-          thisline++;
-        }
+      if (audiomodul_ptr->rot_last_val > 0) {
+        print(audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val-1].name);
+      }*/
+    setCursor(25,120);
+    String stationname = audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val].name;
+    num_lines = split4display(stationname);
+    if (num_lines == 1) {
+      setTextSize(3);
+      print(displaystr[0]);
+    } else {
+      setTextSize(2);
+      uint8_t thisline = 0;
+      while (thisline < num_lines && thisline < 2) {
+        if (thisline <= 1) setCursor(25, 120 + (thisline * 20));
+        print(displaystr[thisline]);
+        thisline++;
       }
-      // end set station
-      // set streamtitle
-      num_lines = split4display(audiomodul_ptr->radio_streamtitle);
-      setTextColor(GC9A01A_GREEN);
-      if (num_lines == 1) {
-        setTextSize(3);
-        setCursor(25, 130);
-        print(displaystr[0]);
-      } else {
-        setTextSize(2);
-        uint8_t thisline = 0;
-        while (thisline < num_lines && thisline < 3) {
-          setCursor(25, 130 + (thisline * 20));
-          print(displaystr[thisline]);
-          thisline++;
-        }
-      }
-      // end set streamtitle
     }
-    break;
-    case MODE_RADIO_SELECT:
-      clear();
-      break;
-    case MODE_SETTINGS:
-      clear();
-      switch (audiomodul_ptr->new_mode) {
-        case MODE_OFF:
-          drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
-        break;
-        case MODE_RADIO:
-          drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
-        break;
-        case MODE_MEDIA:
-          drawRGBBitmap(80,80,media_bmp,MEDIA_BMP_HEIGHT,MEDIA_BMP_WIDTH);
-        break;
-        case MODE_SPEAKER:
-          drawRGBBitmap(80,80,speaker_bmp,SPEAKER_BMP_HEIGHT,SPEAKER_BMP_WIDTH);
-        break;
-//        case MODE_SETTINGS:
-//          drawRGBBitmap(80,80,settings_bmp,SETTINGS_BMP_HEIGHT,SETTINGS_BMP_WIDTH);
-//        break;
-        case MODE_MUSIC_UPDATE:
-          drawRGBBitmap(80,80,music_update_bmp,MUSIC_UPDATE_BMP_HEIGHT,MUSIC_UPDATE_BMP_WIDTH);
-        break;
-      }
-
-      break;
-    default:
-      clear();
-      break;
+/*      setCursor(40,180);
+      setTextSize(1);
+      if (audiomodul_ptr->rot_last_val < MAXSTATIONS-1) {
+        print(audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val+1].name);
+      }*/
+  } //audiomodul_ptr->app_no == audiomodul_ptr->app_no_media
+  else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_max+1) {
+    clear();
+    if (audiomodul_ptr->app_no_new == audiomodul_ptr->app_no_off) {
+      drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
+    }
+    if (audiomodul_ptr->app_no_new == audiomodul_ptr->app_no_radio) {
+      drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+    }
   }
 }
 
@@ -158,7 +166,7 @@ uint8_t AudioDisplay::split4display(String& in_str) {
   uint8_t lineNo = 0;
   uint8_t strLen = in_str.length();
   uint8_t retval;
-  Serial.println(String("split4display: #") + String(in_str) + String("# ") + String(strLen));
+//  Serial.println(String("split4display: #") + String(in_str) + String("# ") + String(strLen));
   displaystr[0] = "";
   displaystr[1] = "";
   displaystr[2] = "";
@@ -178,10 +186,6 @@ uint8_t AudioDisplay::split4display(String& in_str) {
       lineNo++;
     }
   }
-  Serial.println(displaystr[0]);
-  Serial.println(displaystr[1]);
-  Serial.println(displaystr[2]);
-  Serial.println(String("split4display: retval ") + String(retval));
   return retval;
 }
 

@@ -14,8 +14,13 @@
 #define BMP_LEFT          70
 #define BMP_DOWN          50
 #define IP_POS_X          75
-#define IP_POS_Y          225
+#define IP_POS_Y          215
 #define IP_FONTSIZE       1
+#define IP_COLOR          GC9A01A_WHITE
+#define BPS_POS_X         90
+#define BPS_POS_Y         230
+#define BPS_FONTSIZE      1
+#define BPS_COLOR         GC9A01A_RED
 #define FONT1_MAX_CHAR    10
 #define FONT2_MIN_CHAR     7
 #define FONT2_MAX_CHAR    17
@@ -86,6 +91,8 @@ private:
 uint8_t boot_line = 0;
 bool    boot_last_nl = true;
 uint8_t rotation = 0;
+      uint8_t num_lines = 0;
+
 };
 
 #endif // _AUDIODISPLAY_GC9A01A_H_

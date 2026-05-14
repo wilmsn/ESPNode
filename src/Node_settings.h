@@ -90,10 +90,10 @@ RF24 Gateway:
 #define MAGICNO                  416
 
 #define MODULE1_DEFINITION       Switch_OnOff module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", "relais", false, false, true, 0, 2, true);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Teichpumpe", "pumpe", false, false, true, 0, 2, true);
 
 #define MODULE2_DEFINITION       Sensor_18B20 module2;
-#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","Temperatur");
+#define MODULE2_BEGIN_STATEMENT  module2.begin("out1","Temperatur","temperatur");
 
 #define MQTT_CLIENT              "teichnode"
 #define MQTT_TOPICP2             "teichnode"
@@ -257,26 +257,27 @@ RF24 Gateway:
 //    Lauffähig auf ESP8266 oder ESP32,ESP32S3,...    
 //-----------------------------------------------------
 #ifdef NODESIMPLE
-#define USE_SWITCH_ONOFF
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#include "actor_neopixel.h"
+#else
 #include "switch_onoff.h"
-
+#endif
 #define HOSTNAME               "nodesimple"
 #define HOST_DISCRIPTION       "Ein Node ohne externe Elemente"
 #define DEBUG_SERIAL_WEB
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_MQTT
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#define MODULE1_DEFINITION      Actor_NeoPixel module1;
+#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "Neopixel", "rgb", 48, 1);
+#else
 #define MODULE1_DEFINITION      Switch_OnOff module1;
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, true, false, LED_BUILTIN, false);
 #else
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#undef LED_BUILTIN
-#define LED_BUILTIN   97
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, false, false, LED_BUILTIN, false);
-#else   
-#define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, false, false, LED_BUILTIN, false);
-#endif //CONFIG_IDF_TARGET_ESP32S3
 #endif //CONFIG_IDF_TARGET_ESP32
+#endif //CONFIG_IDF_TARGET_ESP32S3
 #define DO_LOG_SYSTEM           true
 #define MAGICNO                 0
 
@@ -442,9 +443,9 @@ RF24 Gateway:
 //#define USE_FTP
 //#define USE_WIFIMULTI
 #define USE_ROTARY
-//#define ROTARY_ENCODER_VCC_PIN     -1
-//#define ROTARY_ENCODER_STEPS       4
-//#define ROTARY_ENCODER_R_PULLDOWN  false
+#define ROTARY_ENCODER_VCC_PIN     -1
+#define ROTARY_ENCODER_STEPS       4
+#define ROTARY_ENCODER_R_PULLDOWN  false
 #define TFT_ROT                 0
 //#define ROT_SW                  33
 //#define ROT_S1                  35
@@ -455,7 +456,7 @@ RF24 Gateway:
 
 #define DEBUG_SERIAL_MODULE
 #define DEBUG_SERIAL_WEB
-//#define DEBUG_SERIAL
+#define DEBUG_SERIAL
 
 #define HOSTNAME                 "Audiotestnode"
 #define HOST_DISCRIPTION         "Ein Audio Testnode"
@@ -463,7 +464,6 @@ RF24 Gateway:
 #define MODULE1_DEFINITION       AudioModul module1;
 #define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", false);
 
-//#define AUDIOMODUL               module1
 #define DO_LOG_WEB               true
 #define DO_LOG_MODULE            true
 #define DO_LOG_SYSTEM            true

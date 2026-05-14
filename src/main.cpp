@@ -422,8 +422,26 @@ void start_AP() {
 void setup() {
   // Achtung: Wenn die Prefs zu schnell nach Systemstart aufgerufen werden gibt es einen Feler bei den Preferences!
   //          Die Werte werden nicht ausgelesen, das Programm steht!!!!!!!
+#if defined(MODULE1)
+  MODULE1_BEGIN_STATEMENT
+#endif
+#if defined(MODULE2)
+  MODULE2_BEGIN_STATEMENT
+#endif
+#if defined(MODULE3)
+  MODULE3_BEGIN_STATEMENT
+#endif
+#if defined(MODULE4)
+  MODULE4_BEGIN_STATEMENT
+#endif
+#if defined(MODULE5)
+  MODULE5_BEGIN_STATEMENT
+#endif
+#if defined(MODULE6)
+  MODULE6_BEGIN_STATEMENT
+#endif
   // !!!!!!!! Diesen DELAY nicht entfernen !!!!!!!!!
-  delay(1000);
+//  delay(1000);
   // Serial port for debugging purposes
 #ifdef DEBUG_SERIAL
   Serial.begin(115200);
@@ -695,24 +713,6 @@ void setup() {
   Serial.print("Cycle Count: ");
   Serial.println(ESP.getCycleCount());
 #endif
-#endif
-#if defined(MODULE1)
-  MODULE1_BEGIN_STATEMENT
-#endif
-#if defined(MODULE2)
-  MODULE2_BEGIN_STATEMENT
-#endif
-#if defined(MODULE3)
-  MODULE3_BEGIN_STATEMENT
-#endif
-#if defined(MODULE4)
-  MODULE4_BEGIN_STATEMENT
-#endif
-#if defined(MODULE5)
-  MODULE5_BEGIN_STATEMENT
-#endif
-#if defined(MODULE6)
-  MODULE6_BEGIN_STATEMENT
 #endif
 #ifdef USE_BOOTMESSAGE
   bootMessage(0,"Ende Setup",false);
