@@ -149,6 +149,8 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
   Serial.println("Auiomodul begin");
 #endif
 #ifdef USE_ROTARY
+  uint8_t this_app;
+  uint8_t this_lev;
   rotary->areEncoderPinsPulldownforEsp32=false;
   rotary->begin();
   rotary->setup(intrSRV);
@@ -157,34 +159,34 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 // Applications einrichten
 // 1) Radio
   //  Ebene 0 Lautstärke einstellen
-  this->this_app = rotary->app_add(0,100,0);
+  this_app = rotary->app_add(0,100,0);
   // Ebene 1 Sender auswählen
-  this->this_lev = rotary->lev_add(this->this_app,0,MAXSTATIONS-1,0);
+  this_lev = rotary->lev_add(this_app,0,MAXSTATIONS-1,0);
   // Ebene 2 Sender abspielen
-  this->this_lev = rotary->lev_add(this->this_app,0,1,0);
+  this_lev = rotary->lev_add(this_app,0,1,0);
 // 2) Mediaplayer
   // Ebene 0 Lautstärke einstellen
-  this->this_app = rotary->app_add(0,100,0);
+  this_app = rotary->app_add(0,100,0);
   // Ebene 1 Album auswählen
-  this->this_lev = rotary->lev_add(this->this_app,0,100,0);
+  this_lev = rotary->lev_add(this_app,0,100,0);
   // Ebene 2 Musikstück auswählen
-  this->this_lev = rotary->lev_add(this->this_app,0,100,0);
+  this_lev = rotary->lev_add(this_app,0,100,0);
   // Ebene 3 Musikstück abspielen 
-  this->this_lev = rotary->lev_add(this->this_app,0,1,0);
+  this_lev = rotary->lev_add(this_app,0,1,0);
 // 3) Speaker
   // Ebene 0 Lautstärke einstellen
-  this->this_app = rotary->app_add(0,100,0);
+  this_app = rotary->app_add(0,100,0);
   // Ebene 1 Keine Aktion - nur Dummy
-  this->this_lev = rotary->lev_add(this->this_app,0,1,0);
+  this_lev = rotary->lev_add(this_app,0,1,0);
 // 4) Settings
   // Ebene 0 App auswählen
-  this->this_app = rotary->app_add(0,last_app-1,0);
+  this_app = rotary->app_add(0,app_no_max,0);
   // Ebene 1 App starten
-  this->this_lev = rotary->lev_add(this->this_app,0,1,0);
+  this_lev = rotary->lev_add(this_app,0,1,0);
 // 5) Update Music Library
 // TODO: Prüfen ob wirklich benötigt
-  this->this_app = rotary->app_add(0,1,0);
-  this->this_lev = rotary->lev_add(this->this_app,0,1,0);
+  this_app = rotary->app_add(0,1,0);
+  this_lev = rotary->lev_add(this_app,0,1,0);
 // Ende Rotary Initialisierung
   rotary->app_set(0,0); // Application 0, Level 0 aktivieren 
 #endif
@@ -192,7 +194,6 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 #ifdef USE_AUDIO_RADIO
   app_no_max++;
   app_no_radio = app_no_max;
-  if (this->app_no_last == 0) this->app_no_last = app_no_radio;
   radio_load_stations();
   write2log(LOG_MODULE,1,"Radio Stations loaded");
 #ifdef USE_DISPLAY
@@ -202,7 +203,7 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 #ifdef USE_AUDIO_MEDIA
   app_no_max++;
   app_no_media = app_no_max;
-  if (this->last_mode == 0) this->last_mode = app_no_media;
+  if (this->app_no_last == 0) this->app_no_last = app_no_media;
 #ifdef USE_DISPLAY
   display->bootMessage(0, "SD Card", false);
 #endif
@@ -258,13 +259,13 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 #endif
 //  audio_set_mode(Off);  
 #ifdef USE_AUDIO_SPEAKER
-  default_mode = Speaker;
+  app_no_last = app_no_speaker;
 #endif
 #ifdef USE_AUDIO_MEDIA
-  default_mode = Media;
+  app_no_last = app_no_media;
 #endif
 #ifdef USE_AUDIO_RADIO
-  app_no_default = app_no_radio;
+  app_no_last = app_no_radio;
 #endif
 
 #ifdef USE_AUDIO_MEDIA
@@ -312,7 +313,7 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
     }
     if (( this->switch_is_on) && (this->app_no == app_no_off)) { 
       this->vol = AUDIO_ON_MIN_VOL; 
-      this->app_no = app_no_default;
+      this->app_no = this->app_no_last;
       this->display_update_now = true;
       this->html_update_set = true;
 #ifdef USE_AUDIO_RADIO
@@ -486,7 +487,6 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
     }
 #endif
   }
-  this->app_changed = false;
   return retval;
 }
 
@@ -650,16 +650,9 @@ void AudioModul::loop(time_t now) {
   // zuletzt aktiven Stand zurückgesetzt.
   if ( this->timeout_set ) {
     if ((now - this->timeout_start) > KLICK_TIMEOUT) {
-      rotary->app_set(this->last_app,0);
+      rotary->app_set(this->app_no_last,0);
+      this->app_no = this->app_no_last;
       this->timeout_set = false;
-      switch(rotary->app()) {
-        case 1:
-          this->app_no = app_no_radio;
-          break;
-        case 2:
-          this->app_no = app_no_media;
-          break;
-      }
       this->display_update_now = true;
       Serial.println("Timeout expired, reset rotary to app: " + String(rotary->app()) + " lev: 0");
     }
@@ -697,9 +690,7 @@ void AudioModul::loop(time_t now) {
         switch(rotary->lev()) {
           case 0:
         // Lautstärke einstellen
-            this->change_from_rotary = true;
             this->set("audio_vol",String(this->rotary->val()));
-            this->change_from_rotary = false;
           break;
           case 1: {
         // Album auswählen
@@ -875,13 +866,14 @@ void AudioModul::loop(time_t now) {
 // Button wurde lang gedrückt
 // Einleitung zum Wechsel der App
 // Hier wird nur das Symbol der aktuellen App angezeigt und der Rotary auf Settings gesetzt.
-// Die App wird erst gewechselt, wenn der Button nach Auswahl (Drehen) erneut gedrückt wird.
+// Die App wird erst gewechselt, wenn der Button nach Auswahl (Drehen) erneut kurz gedrückt wird.
   if (rotary->buttonLongPressed) {
     rotary->buttonLongPressed = false;
 #ifdef DEBUG_SERIAL
     Serial.printf("Rotary Long Pressed App: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
     start_timeout(now);
+    this->app_no_last = this->app_no;
     this->app_no = app_no_max+1;
     rotary->app_set(app_no_max+1,0,0,app_no_max,0);
     this->display_update_now = true;
