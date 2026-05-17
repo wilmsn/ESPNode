@@ -9,7 +9,7 @@
 <!-- script src="jquery.js"></script -->
 <script type="text/javascript">
 var title="Hauptmenü";
-var htmlversion = "1.1.00 (Mar 20 2026)";
+var htmlversion = "1.1.00 (May 17 2026)";
 var ledmatrix_active = 0;
 var mqtt_active = 0;
 var rf24gw_active = 0;
@@ -896,141 +896,13 @@ case "wifi_ssid":
     break;
 
 // Ab hier für Sysinfo
-    case "wifi_network":
-      $("#wifinw2").append(" "+val+"<br>");
-    break;
-    case "Platform":
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Host:</td></tr>"+
-                       "<tr><td class='tab_left'> Platform: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Cores":
-      $("#Tab").append("<tr><td class='tab_left'> Cores: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Hostname":
-      $("#Tab").append("<tr><td class='tab_left'> Hostname: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "CpuFreq":
-      $("#Tab").append("<tr><td class='tab_left'> CPU Speed: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "FlashSize":
-      $("#Tab").append("<tr><td class='tab_left'> Flash Size: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "FlashFreq":
-      $("#Tab").append("<tr><td class='tab_left'> Flash Speed: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Sketchsize":
-      $("#Tab").append("<tr><td class='tab_left'> Sketch Size: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Freespace":
-      $("#Tab").append("<tr><td class='tab_left'> Free Space: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Heap_free":
-      $("#Tab").append("<tr><td class='tab_left'> Heap Free: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Heap_max":
-      $("#Tab").append("<tr><td class='tab_left'> Heap Max: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Heap_frag":
-      $("#Tab").append("<tr><td class='tab_left'> Heap Fragmentation: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "PSRamSize":
-      $("#Tab").append("<tr><td class='tab_left'> PSRAM Size: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "PsRamFree":
-      $("#Tab").append("<tr><td class='tab_left'> PSRAM Free: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "ResetReason":
-      $("#Tab").append("<tr><td class='tab_left'> Reset Reason: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Vcc":
-      $("#Tab").append("<tr><td class='tab_left'> Vcc: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "MBTemp":
-      $("#Tab").append("<tr><td class='tab_left'> Board Temp: </td><td class='tab_right'>"+val+"&deg;C</td></tr>");
-    break;
-    case "UpTime":
-      $("#Tab").append("<tr><td class='tab_left'> Uptime: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "IP":
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Network:</td></tr>"+
-                       "<tr><td class='tab_left'> IP Address: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "SubNetMask":
-      $("#Tab").append("<tr><td class='tab_left'> Sub Net Mask: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "GW-IP":
-      $("#Tab").append("<tr><td class='tab_left'> Gateway IP: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "DnsIP":
-      $("#Tab").append("<tr><td class='tab_left'> DNS Server IP: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "SSID":
-      $("#Tab").append("<tr><td class='tab_left'> SSID: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "Channel":
-      $("#Tab").append("<tr><td class='tab_left'> Channel: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "BSSID":
-      $("#Tab").append("<tr><td class='tab_left'> BSSID: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "MAC":
-      $("#Tab").append("<tr><td class='tab_left'> MAC Address: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "IdeVer":
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Build System:</td></tr>"+
-                       "<tr><td class='tab_left'> IDE Version: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "CoreVer":
-      $("#Tab").append("<tr><td class='tab_left'> Core Version: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "SdkVer":
-      $("#Tab").append("<tr><td class='tab_left'> SDK Version: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "SW":
-      $("#Tab").append("<tr><td class='tab_left'> Software Version: </td><td class='tab_right'>"+val+"</td></tr>");
-      $("#Tab").append("<tr><td class='tab_left'> HTML Version: </td><td class='tab_right'>"+htmlversion+"</td></tr>");
-    break;
-    case "mqttserver":
-      if (mqtt_active == 1)
-        $("#Tab").append("<tr><td colspan=2 class='tab_head'>MQTT:</td></tr>"
-			  +"<tr><td class='tab_left'> MQTT Server: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "mqttclient":
-      if (mqtt_active == 1)
-        $("#Tab").append("<tr><td class='tab_left'> MQTT Client: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "mqtttopicp2":
-      if (mqtt_active == 1)
-        $("#Tab").append("<tr><td class='tab_left'> MQTT Topic Part2: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "RF24HUB-Server":
-      if ( rf24gw_active == 1 ) 
-        $("#Tab").append("<tr><td colspan=2 class='tab_head'>RF24 Gateway:</td></tr>"
-            +"<tr><td class='tab_left'> RF24 Hub Server: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "RF24HUB-Port":
-      if ( rf24gw_active == 1 ) 
-        $("#Tab").append("<tr><td class='tab_left'> RF24 Hub UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "RF24GW-Port":
-      if ( rf24gw_active == 1 ) 
-        $("#Tab").append("<tr><td class='tab_left'> RF24 GW UDP Port: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "RF24GW-No":
-      if ( rf24gw_active == 1 ) 
-        $("#Tab").append("<tr><td class='tab_left'> RF24 GW Nummer: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
-    case "sens-hw":
-      $("#Tab").append("<tr><td colspan=2 class='tab_head'>Sensor:</td></tr>");
-      $("#Tab").append("<tr><td class='tab_left'> Hardware: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;  
-    case "sens-res":
-      $("#Tab").append("<tr><td class='tab_left'> Resolution: </td><td class='tab_right'>"+val+"</td></tr>");
-    break;
     case "tab_head":
       $("#Tab tr:last").after("<tr><td colspan=2 class='tab_head'>"+val+"</td></tr>");
     break;
     case "tab_line":
+      if ( val == "HTML") {
+        val = "HTML Version:#"+htmlversion;
+      } 
       tabline = val.split("#");
       $("#Tab tr:last").after("<tr><td class='tab_left'>"+tabline[0]+"</td><td class='tab_right'>"+tabline[1]+"</td></tr>");
     break;

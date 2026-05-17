@@ -124,116 +124,91 @@ void prozess_sysinfo() {
       uint32_t free;
       uint32_t max;
       uint8_t frag;
-#ifdef ESP32
+      FSInfo fs_info;
+      LittleFS.info(fs_info);
+      uint32_t file_system_size = fs_info.totalBytes;
+ #ifdef ESP32
       free = ESP.getFreeHeap();
       max = ESP.getMaxAllocHeap();
 #else
       ESP.getHeapStats(&free, &max, &frag);
 #endif
-      myjson = String("{");
+      myjson = String("{") +
+               String("\"tab_head_host\":\"Host\"") + 
 #ifdef ESP32
-      myjson += String("\"Platform\":\"") + String(ESP.getChipModel()) + String("\"");
+               String(",\"tab_line1_host\":\"Hostname:#") + String(HOSTNAME) + String("\"") +
+               String(",\"tab_line2_host\":\"Platform:#") + String(ESP.getChipModel()) + String("\"") +
+               String(",\"tab_line3_host\":\"Cores:#") + String(ESP.getChipCores()) + String("\"") +
+               String(",\"tab_line4_host\":\"PSRamSize:#") + String((float)ESP.getPsramSize()/1024.0) + String(" KB\"") +
+               String(",\"tab_line5_host\":\"PsRamFree:#") + String((float)ESP.getFreePsram()/1024.0) + String(" KB\"") +
 #else
-      myjson += String("\"Platform\":\"ESP8266\"");
+               String(",\"tab_line1_host\":\"Hostname:#") + WiFi.hostname() + String("\"") +
+               String(",\"tab_line2_host\":\"Platform:#ESP8266\"") +
+               String(",\"tab_line3_host\":\"Cores:#1\"") +
 #endif
+               String(",\"tab_line6_host\":\"CpuFreq:#") + String((int)(F_CPU / 1000000)) + String(" Mhz\"") +
+               String(",\"tab_line7_host\":\"FlashSize:#") + String((int)(ESP.getFlashChipSize()/1024/1024)) + String(" MB \"") +
+               String(",\"tab_line8_host\":\"FlashFreq:#") + String((int)(ESP.getFlashChipSpeed() / 1000000)) + String(" Mhz\"") +
+               String(",\"tab_line9_host\":\"Sketchsize:#") + String(ESP.getSketchSize() / 1024.0) + String(" kB\"") +
+               String(",\"tab_line10_host\":\"Heap_free:#") + String((float)free / 1024.0) + String(" kB\"") +
+               String(",\"tab_line11_host\":\"Heap_max:#") + String((float)max / 1024.0) + String(" kB\"") +
+#ifdef ESP8266
+               String(",\"tab_line12_host\":\"Heap_frag:#") + String((float)frag / 1024.0) + String("%\"") +
+#endif
+               String(",\"tab_line13_host\":\"LittleFS size:#") + String(file_system_size/1024) + String(" kB\"") + 
+               String(",\"tab_line14_host\":\"ResetReason:#") +
 #ifdef ESP32
-      myjson += String(",\"Cores\":") + String(ESP.getChipCores()) +
-                String(",\"PSRamSize\":\"") + String((float)ESP.getPsramSize()/1024.0) + String(" KB\"") +
-                String(",\"PsRamFree\":\"") + String((float)ESP.getFreePsram()/1024.0) + String(" KB\"");
+               getResetReason(myjson);
 #else
-      myjson += String(",\"Cores\":\"1\"");
+               ESP.getResetReason() + 
 #endif
-      myjson += String(",\"Hostname\":\"");
+               String("\"") + 
+               String(",\"tab_line15_host\":\"BootMode:#") + String(ESP.getBootMode()) + String("\"") +
+               String(",\"tab_line16_host\":\"Vcc:#") + String(ESP.getVcc() / 1000.0) + String(" V\"") +
+               String(",\"tab_line17_host\":\"Uptime:#") + String(uptime.uptimestr()) + String("\"") +
 #ifdef ESP32
-      myjson += HOSTNAME;
-#else
-      myjson += WiFi.hostname();
+               String(",\"tab_line20_host\":\"MBTemp:#") + String(temperatureRead()) + String(" °C\"") +
 #endif
-      myjson += String("\"") + String(",\"CpuFreq\":\"") + String((int)(F_CPU / 1000000)) + String(" Mhz\"") +
-                String(",\"FlashSize\":\"") + String((int)(ESP.getFlashChipSize() / 1024 / 1024)) + String(" MB \"") +
-                String(",\"FlashFreq\":\"") + String((int)(ESP.getFlashChipSpeed() / 1000000)) + String(" Mhz\"") +
-                String(",\"Sketchsize\":\"") + String(ESP.getSketchSize() / 1024.0) + String(" kB\"") +
-                String(",\"Freespace\":\"") + String(ESP.getFreeSketchSpace() / 1024.0) + String(" kB\"") +
-                String(",\"Heap_free\":\"") + String((float)free / 1024.0) + String(" kB\"") +
-                String(",\"Heap_max\":\"") + String((float)max / 1024.0) + String(" kB\"");
-#ifdef ESP32
-//      myjson += "";
-#else
-      myjson += String(",\"Heap_frag\":\"") + String((float)frag / 1024.0) + String("%\"");
-#endif
-      myjson += String(",\"ResetReason\":\"");
-#ifdef ESP32
-      getResetReason(myjson);
-#else
-      myjson += ESP.getResetReason();
-#endif
-      myjson += String("\"") + String(",\"Vcc\":\"");
-      getVcc(myjson);
-      myjson += String("\"");     
-#ifdef ESP32
-      myjson += String(",\"MBTemp\":\"");
-      myjson += temperatureRead();
-      myjson += String("\"");
-#endif
-      myjson += String(",\"UpTime\":\"");
-      myjson += uptime.uptimestr();
-      myjson += String("\"}");
+               String("}");
       sendWsMessage(myjson);
 
 // Teil 2
-      myjson = String("{\"IP\":\"");
-      myjson += WiFi.localIP().toString();
-      myjson += String("\"") +
-                String(",\"SubNetMask\":\"");
-      myjson += WiFi.subnetMask().toString();
-      myjson += String("\"") +
-                String(",\"GW-IP\":\"");
-      myjson += WiFi.gatewayIP().toString();
-      myjson += String("\"") +
-                String(",\"DnsIP\":\"");
-      myjson += WiFi.dnsIP().toString();
-      myjson += String("\"") +
-                String(",\"SSID\":\"");
-      myjson += WiFi.SSID();
-      myjson += String(" (");
-      myjson += String(rssi);
-      myjson += String("dBm / ");
-      myjson += String(rssi_quality);
-      myjson += String("%)\"") +
-                String(",\"Channel\":\"");
-      myjson += String(WiFi.channel());
-      myjson += String("\"") +
-                String(",\"BSSID\":\"");
-      myjson += WiFi.BSSIDstr();
-      myjson += String("\"") +
-                String(",\"MAC\":\"");
-      myjson += WiFi.macAddress();
-      myjson += String("\"") + String(",\"IdeVer\":\"") + String(ARDUINO) + String("\"");
+      myjson = String("{") +
+               String("\"tab_head_network\":\"Network\"") + 
+               String(",\"tab_line1_network\":\"IP:#") + WiFi.localIP().toString() + String("\"") +
+               String(",\"tab_line2_network\":\"Mask:#") + WiFi.subnetMask().toString() + String("\"") +
+               String(",\"tab_line5_network\":\"MAC:#") + WiFi.macAddress() + String("\"") +
+               String(",\"tab_line1_network\":\"GW-IP:#") + WiFi.gatewayIP().toString() + String("\"") +
+               String(",\"tab_line2_network\":\"DNS-IP:#") + WiFi.dnsIP().toString() + String("\"") +
+               String(",\"tab_line3_network\":\"SSID:#") + WiFi.SSID() + String("<br>(") + String(rssi) + String(" dBm / ") + String(rssi_quality) + String(" %)\"") +
+               String(",\"tab_line4_network\":\"Channel:#") + String(WiFi.channel()) + String("\"") +
+               String(",\"tab_line5_network\":\"BSSID:#") + WiFi.BSSIDstr() + String("\"") +
+
+               String(",\"tab_head_buildsys\":\"Build System\"") + 
 #ifdef ESP32
-      myjson += String(",\"CoreVer\":\"Arduino: ")
-              + String(ESP_ARDUINO_VERSION_MAJOR) + String(".") + String(ESP_ARDUINO_VERSION_MINOR) 
-              + String(".") + String(ESP_ARDUINO_VERSION_PATCH) + String("\"");
+               String(",\"tab_line1_buildsys\":\"CoreVer:#") + String(ESP_ARDUINO_VERSION_MAJOR) + String(".") + String(ESP_ARDUINO_VERSION_MINOR) + String(".") + String(ESP_ARDUINO_VERSION_PATCH) + String("\"");
 #else
-      myjson += String(",\"CoreVer\":\"");
-      myjson += ESP.getCoreVersion();
-      myjson += String("\"");
+               String(",\"tab_line1_buildsys\":\"CoreVer:#") + String(ESP.getCoreVersion()) + String("\"") +
 #endif
-      myjson += String(",\"SdkVer\":\"");
-      myjson += String(ESP.getSdkVersion());
-      myjson += String("\",\"SW\":\"") + String(SWVERSION) + String(" (") + String(__DATE__) + String(")\"}");
+               String(",\"tab_line2_buildsys\":\"SdkVer:#") + String(ESP.getSdkVersion()) + String("\"") +
+               String(",\"tab_line3_buildsys\":\"IdeVer:#") + String(ARDUINO) + String("\"") +
+               String(",\"tab_line4_buildsys\":\"SW:#") + String(SWVERSION) + String(" (") + String(__DATE__) + String(")\"") +
+               String(",\"tab_line5_buildsys\":\"HTML\"") +
+               String("}");
       sendWsMessage(myjson);
 // Teil 3
-      myjson = String("{\"ws_teil2\":2");
+      myjson = String("{") +
 #if defined(MQTT)  
-      myjson += String(",\"mqttserver\":\"") + mqtt_server +
+                String(",\"mqttserver\":\"") + mqtt_server +
                 String("\",\"mqttclient\":\"") + mqtt_client +
-                String("\",\"mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"");
+                String("\",\"mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"") +
 #endif
 #if defined(RF24GW)  
-      myjson += String(",\"RF24HUB-Server\":\"") + rf24gw_hub_server + String("\"") +
-                String(",\"RF24HUB-Port\":") + String(rf24gw_hub_port) +
-                String(",\"RF24GW-Port\":") + String(rf24gw_gw_port) +
-                String(",\"RF24GW-No\":") + String(rf24gw_gw_no) +
+                String(",\"tab_head_rf24gw\":\"RF24 Gateway\"") +
+                String(",\"tab_line1_rf24gw\":\"RF24HUB-Server:#") + rf24gw_hub_server + String("\"") +
+                String(",\"tab_line2_rf24gw\":\"RF24HUB-Port:#") + String(rf24gw_hub_port) + String("\"") +
+                String(",\"tab_line3_rf24gw\":\"RF24GW-Port:#") + String(rf24gw_gw_port) + String("\"") +
+                String(",\"tab_line4_rf24gw\":\"RF24GW-No:#") + String(rf24gw_gw_no) + String("\"") +
                 String(",\"tab_head_nrf24l01\":\"Modul Nrf24L01\"") +
                 String(",\"tab_line1_nrf24l01\":\"MOSI:#GPIO: ") + String(RF24_RADIO_MOSI_PIN) + String("\"") +
                 String(",\"tab_line2_nrf24l01\":\"MISO:#GPIO: ") + String(RF24_RADIO_MISO_PIN) + String("\"") +
@@ -241,9 +216,9 @@ void prozess_sysinfo() {
                 String(",\"tab_line4_nrf24l01\":\"CE:#GPIO: ") + String(RF24_RADIO_CE_PIN) + String("\"") +
                 String(",\"tab_line5_nrf24l01\":\"CSN:#GPIO: ") + String(RF24_RADIO_CSN_PIN) + String("\"") +
                 String(",\"tab_line6_nrf24l01\":\"Channel:# ") + String(RF24_CHANNEL) + String("\"") +
-                String(",\"tab_line7_nrf24l01\":\"Speed:# ") + String(RF24_SPEED_STR) + String("\"");
+                String(",\"tab_line7_nrf24l01\":\"Speed:# ") + String(RF24_SPEED_STR) + String("\"") +
 #endif
-      myjson += String("}");
+                String("}");
       sendWsMessage(myjson);
       myjson = String("{");
 #ifdef MODULE1
