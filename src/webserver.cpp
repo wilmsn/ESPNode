@@ -124,9 +124,11 @@ void prozess_sysinfo() {
       uint32_t free;
       uint32_t max;
       uint8_t frag;
+#ifdef ESP8266      
       FSInfo fs_info;
       LittleFS.info(fs_info);
       uint32_t file_system_size = fs_info.totalBytes;
+#endif
  #ifdef ESP32
       free = ESP.getFreeHeap();
       max = ESP.getMaxAllocHeap();
@@ -154,17 +156,21 @@ void prozess_sysinfo() {
                String(",\"tab_line11_host\":\"Heap_max:#") + String((float)max / 1024.0) + String(" kB\"") +
 #ifdef ESP8266
                String(",\"tab_line12_host\":\"Heap_frag:#") + String((float)frag / 1024.0) + String("%\"") +
-#endif
                String(",\"tab_line13_host\":\"LittleFS size:#") + String(file_system_size/1024) + String(" kB\"") + 
-               String(",\"tab_line14_host\":\"ResetReason:#") +
+#endif
+               String(",\"tab_line14_host\":\"ResetReason:#");
 #ifdef ESP32
-               getResetReason(myjson);
+               String resetreason;
+               getResetReason(resetreason);
+               myjson += resetreason +
 #else
-               ESP.getResetReason() + 
+               myjson += ESP.getResetReason() + 
 #endif
                String("\"") + 
+#ifdef ESP8266
                String(",\"tab_line15_host\":\"BootMode:#") + String(ESP.getBootMode()) + String("\"") +
                String(",\"tab_line16_host\":\"Vcc:#") + String(ESP.getVcc() / 1000.0) + String(" V\"") +
+#endif
                String(",\"tab_line17_host\":\"Uptime:#") + String(uptime.uptimestr()) + String("\"") +
 #ifdef ESP32
                String(",\"tab_line20_host\":\"MBTemp:#") + String(temperatureRead()) + String(" °C\"") +
@@ -186,7 +192,7 @@ void prozess_sysinfo() {
 
                String(",\"tab_head_buildsys\":\"Build System\"") + 
 #ifdef ESP32
-               String(",\"tab_line1_buildsys\":\"CoreVer:#") + String(ESP_ARDUINO_VERSION_MAJOR) + String(".") + String(ESP_ARDUINO_VERSION_MINOR) + String(".") + String(ESP_ARDUINO_VERSION_PATCH) + String("\"");
+               String(",\"tab_line1_buildsys\":\"CoreVer:#") + String(ESP_ARDUINO_VERSION_MAJOR) + String(".") + String(ESP_ARDUINO_VERSION_MINOR) + String(".") + String(ESP_ARDUINO_VERSION_PATCH) + String("\"") +
 #else
                String(",\"tab_line1_buildsys\":\"CoreVer:#") + String(ESP.getCoreVersion()) + String("\"") +
 #endif
