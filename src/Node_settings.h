@@ -165,7 +165,7 @@ RF24 Gateway:
 #ifdef ESP32
 #define USE_AUDIOMODUL
 #define USE_ROTARY
-#define USE_DISPLAY_GC9A01A
+#define USE_AUDIODISPLAY_GC9A01A
 #define TFT_ROT                    3
 #define USE_AUDIO_RADIO
 //#define USE_WIFIMULTI
@@ -190,7 +190,7 @@ RF24 Gateway:
 #define HOST_DISCRIPTION         "Radio in der Kueche"
 
 #define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", true);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", false);
 
 #define DO_LOG_WEB               false
 #define DO_LOG_MODULE            false
@@ -209,9 +209,8 @@ RF24 Gateway:
 #define USE_AUDIOMODUL
 #define USE_AUDIO_RADIO
 #define USE_AUDIO_MEDIA
-#define USE_DISPLAY_GC9A01A
+#define USE_AUDIODISPLAY_GC9A01A
 #define USE_ROTARY
-//#define USE_BOOTMESSAGE
 #define USE_AUDIO_RADIO
 
 #define TFT_ROT                  4
@@ -230,7 +229,7 @@ RF24 Gateway:
 
 #include "audiomodul.h"
 #define MODULE1_DEFINITION       AudioModul module1;
-#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", "anlage", true);
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "Anlage", "anlage", false);
 
 #else
 #error "Audio läuft nur auf dem ESP32 / ESP32-S3"
@@ -437,16 +436,16 @@ RF24 Gateway:
 
 #ifdef ESP32
 //#define USE_AUDIOMODUL
-#define USE_DISPLAY_GC9A01A
+//#define USE_AUDIODISPLAY_ST7796
+#define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
 //#define USE_AUDIO_MEDIA
 //#define USE_FTP
 //#define USE_WIFIMULTI
-#define USE_ROTARY
-#define ROTARY_ENCODER_VCC_PIN     -1
-#define ROTARY_ENCODER_STEPS       4
-#define ROTARY_ENCODER_R_PULLDOWN  false
-#define TFT_ROT                 0
+//#define USE_ROTARY
+//#define ROTARY_ENCODER_VCC_PIN     -1
+//#define ROTARY_ENCODER_STEPS       4
+//#define ROTARY_ENCODER_R_PULLDOWN  false
 //#define ROT_SW                  33
 //#define ROT_S1                  35
 //#define ROT_S2                  34
@@ -530,6 +529,7 @@ void RotaryTest::begin(const char* html_place, const char* label, const char* mq
 #define MAGICNO                 0
 
 #endif
+
 
 #endif
 //_NODE_SETTINGS_H_

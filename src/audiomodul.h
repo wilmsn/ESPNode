@@ -14,8 +14,11 @@
 #include "switch_onoff.h"
 //#include "SD.h"
 #include "Audio.h"
-#ifdef USE_DISPLAY_GC9A01A
+#ifdef USE_AUDIODISPLAY_GC9A01A
 #include "audiodisplay_GC9A01A.h"
+#endif
+#ifdef USE_AUDIODISPLAY_ST7796
+#include "audiodisplay_ST7796.h"
 #endif
 #ifdef USE_ROTARY
 #include "AiEsp32RotaryExtention.h"
@@ -244,6 +247,7 @@ public:
     /// @brief Ein Flag, das anzeigt, ob ein Song zu Ende ist. 
     bool song_eof = false;
 
+
     /// @brief Trigger für die Aktualisierung der Anzeige in den nächsten 10 Sekunden.
     /// Im Gegensatz zu "display_update_now" wird diese Variable auf "true" gesetzt, 
     /// wenn die Anzeige in den nächsten 10 Sekunden aktualisiert werden soll. 
@@ -265,7 +269,11 @@ public:
     /// wenn sie auf "true" gesetzt ist. Nach der Aktualisierung wird die Variable wieder auf "false" zurückgesetzt.
     bool display_update_now = false;
 
-#ifdef USE_DISPLAY_GC9A01A
+#ifdef USE_AUDIODISPLAY_GC9A01A
+    /// @brief Ein Zeiger auf das Displayobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
+    AudioDisplay*  display;
+#endif
+#ifdef USE_AUDIODISPLAY_ST7796
     /// @brief Ein Zeiger auf das Displayobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
     AudioDisplay*  display;
 #endif
@@ -308,6 +316,8 @@ public:
     /// @brief Die aktuelle Lautstärke
     uint8_t vol;
 
+    /// @brief Index der aktuell ausgewählten Station, entspricht der Position im Array audio_radio_station[]
+    uint8_t radio_station_selected; 
 #ifdef USE_AUDIO_RADIO
     /// @brief Ein Array mit den Sendern
     station_t radio_station[MAXSTATIONS];

@@ -456,8 +456,8 @@ void setup() {
   }
 #endif // DEBUG_SERIAL
 
-#ifdef USE_BOOTMESSAGE
-  bootMessage(0,"Prefs",false);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+  bootMessage(0,"Prefs",true,false);
 #endif
 
   // Zunächst werden die Preferences im Schreibmodus geöffnet.
@@ -465,16 +465,16 @@ void setup() {
   // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
   if (preferences.begin("settings",true)) {
     magicno = preferences.getUShort("magicno", 0);
-#ifdef USE_BOOTMESSAGE
-    bootMessage(1,"MagicNo:",false);
-    bootMessage(1,String(magicno).c_str(),false);
-    bootMessage(1,"OK",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(1,"OK",false,true);
+    bootMessage(1,"MagicNo:",true,false);
+    bootMessage(1,String(magicno).c_str(),false,true);
 #endif
     preferences.end();
   } else {
-#ifdef USE_BOOTMESSAGE
-    bootMessage(2,"Error",true);
-    bootMessage(2,"Reboot !!!",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(2,"Error",false, true);
+    bootMessage(2,"Reboot !!!",true, true);
 #endif
     ESP.restart();
   }
@@ -500,8 +500,8 @@ void setup() {
 #endif // DEBUG_SERIAL
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
-#ifdef USE_BOOTMESSAGE
-    bootMessage(1,"Using default Environment",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(1,"Using default Environment",true, true);
 #endif
     wifi_ssid = WIFI_SSID;
     wifi_pass = WIFI_PASS;
@@ -569,8 +569,8 @@ void setup() {
     preferences.putBool("do_log_critical", do_log_critical);
     preferences.end();
   } else {
-#ifdef USE_BOOTMESSAGE
-    bootMessage(1,"Using Env. from Prefs",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(1,"Using Env. from Prefs",true, true);
 #endif
     preferences.begin("settings",true);
 // Wenn sich die MagicNo nicht geändert hat werden die gespeicherten Werte genommen
@@ -633,54 +633,54 @@ void setup() {
   Serial.print("Critical: ");
   Serial.println(do_log_critical?"ja":"nein");
 #endif // DEBUG_SERIAL
-#ifdef USE_BOOTMESSAGE
-  bootMessage(0,"mount FS",false);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+  bootMessage(0,"mount FS",true, false);
 #endif
 
   if (!LittleFS.begin()) {
-#ifdef USE_BOOTMESSAGE
-    bootMessage(2,"Error",true);
-    bootMessage(2,"REBOOT",false);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(2,"Error",false, true);
+    bootMessage(2,"REBOOT",true, true);
 #endif
     ESP.restart();
     return;
   } else {
     write2log(LOG_SYSTEM,1, "++ Begin Startup: LittleFS mounted ++");
-#ifdef USE_BOOTMESSAGE
-    bootMessage(1,"OK",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(1,"OK",false, true);
 #endif
   }
 
-#ifdef USE_BOOTMESSAGE
-  bootMessage(0,"Con WiFi",false);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+  bootMessage(0,"Con WiFi",true, false);
 #endif
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
-#ifdef USE_BOOTMESSAGE
-    bootMessage(2,"Error",true);
-    bootMessage(2,"Start AP",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(2,"Error",false, true);
+    bootMessage(2,"Start AP",true, true);
 #endif
     start_AP();
   } else {
     
-#ifdef USE_BOOTMESSAGE
-    bootMessage(1,WiFi.localIP().toString().c_str(),true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+    bootMessage(1,WiFi.localIP().toString().c_str(),false, true);
 #endif
     write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
-#ifdef USE_BOOTMESSAGE
-  bootMessage(0,"get Time",false);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+  bootMessage(0,"get Time",true, false);
 #endif
     setupTime();
     if ( ! getNTPtime(30) ) {
       write2log(LOG_SYSTEM,1, "Error getting NTP Time");
-#ifdef USE_BOOTMESSAGE
-      bootMessage(2,"Error",true);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+      bootMessage(2,"Error",false, true);
 #endif
     } else {
-#ifdef USE_BOOTMESSAGE
+#ifdef USE_DISPLAY_BOOTMESSAGE
       char timestr[20];
       sprintf(timestr,"%d.%d.%d %02d:%02d",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year,  timeinfo.tm_hour, timeinfo.tm_min);
-      bootMessage(1,timestr,true);
+      bootMessage(1,timestr,false, true);
 #endif
     }
     lastDay = timeinfo.tm_mday;
@@ -714,8 +714,8 @@ void setup() {
   Serial.println(ESP.getCycleCount());
 #endif
 #endif
-#ifdef USE_BOOTMESSAGE
-  bootMessage(0,"Ende Setup",false);
+#ifdef USE_DISPLAY_BOOTMESSAGE
+  bootMessage(0,"Ende Setup",true, false);
   delay(3000);
 #endif
   write2log(LOG_SYSTEM,1, "Setup Ende");

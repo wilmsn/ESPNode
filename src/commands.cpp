@@ -205,7 +205,7 @@ bool prozess_cmd(const String cmd, const String value)  {
     preferences.putUInt("loop_time_alarm", loop_time_alarm);
     preferences.end();
     String myjson = String("{\"clear_stat\":1") + String(",\"stat\":\"looptimealarm: set to ") + 
-                   String(loop_time_alarm) + String("\"}");
+                    String(loop_time_alarm) + String("\"}");
     sendWsMessage(myjson);
     cmd_valid = true;
     cmd_no++;

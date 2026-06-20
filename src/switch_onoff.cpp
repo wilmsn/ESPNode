@@ -233,13 +233,13 @@ void Switch_OnOff::html_info(String& _html_info) {
   if (hw_pin1_used && hw_pin2_used ) {
     _html_info += String("\"tab_head_") + this->html_place + String("\":\"Switch On Off\"") +
                   String(",\"tab_line1_") + this->html_place + String() + String("\":\"") + 
-                  this->html_label + String(" (") + this->keyword + String("):#GPIO:") + String(this->hw_pin1);
+                  this->html_label + String(" (") + this->keyword + String("):#GPIO ") + String(this->hw_pin1);
     if (slider_used) { 
       _html_info += String(" (PWM)\""); 
     } else { 
       _html_info += String("\""); 
     }
-    _html_info += String(",\"tab_line2_") + this->html_place + String("\":\"") + this->html_label + String(":#GPIO:") + String(this->hw_pin2);
+    _html_info += String(",\"tab_line2_") + this->html_place + String("\":\"") + this->html_label + String(":#GPIO ") + String(this->hw_pin2);
     if (slider_used) { 
       _html_info += String(" (PWM)\""); 
     } else {
@@ -249,7 +249,7 @@ void Switch_OnOff::html_info(String& _html_info) {
     if (hw_pin1_used ) {
       _html_info += String("\"tab_head_") + this->html_place + String("\":\"Switch On Off\"") +
                     String(",\"tab_line1_") + this->html_place + String("\":\"") + 
-                    this->html_label + String(" (") + this->keyword + String("):#GPIO:") + String(this->hw_pin1);
+                    this->html_label + String(" (") + this->keyword + String("):#GPIO ") + String(this->hw_pin1);
       if (slider_used) { 
         _html_info += String(" (PWM)\""); 
       } else { 

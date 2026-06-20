@@ -27,34 +27,17 @@
 #include <rom/rtc.h>
 #include <WiFiMulti.h>
 typedef unsigned char uint8_t;
-#endif //ESP32
+#endif
 
 #ifdef ESP8266
 #include <Preferences8266.h>
 #include <ESP8266WiFi.h>
 #include "ESPAsyncTCP.h"
-#endif //ESP8266
+#endif
+
+
 
 // externe Referenzen
-/// @brief Erweitert den übergebenen String um den nächsten "stat_XX" Schlüssel
-/// @param mystr Der übergebene String zur Aufnahme der Inhalte
-void json_stat_header(String& mystr);
-
-/// @brief Der Kommandoprozessor
-/// @param cmd Das Kommando
-/// @param value Der Wert des Kommandos
-bool prozess_cmd(const String cmd, const String value);
-
-/// @brief Überträgt ein JSON mit den Settings an die Weboberfläche.
-void show_settings();
-
-extern String stat_str;
-
-/// @brief Eine laufende Nummer für die JSON Schlüssel
-extern unsigned int stat_no;
-
-/// @brief Ein Schalter der auf "true" gesetzt wird falls ein "set" Befehl abgearbeitet wurde.
-extern bool cmd_valid;
 
 // Alle Module
 extern void write2log(uint8_t kat, int count, ...);
@@ -64,18 +47,21 @@ extern bool do_log_critical;
 extern bool do_log_web;
 extern time_t now;
 extern unsigned long minutes;
-
+extern bool cmd_result;
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
+#ifdef USE_DISPLAY
 /// @brief Zeigt eine Bootmeldung auf dem Display an
 /// @details Diese Funktion wird beim Booten des Gerätes aufgerufen, um eine Nachricht auf
-/// dem Display anzuzeigen. Der Text wird in der angegebenen Farbe dargestellt. Dabei gilt folgende Festlegung:
-/// - txtcolor: 0 = grau, 1 = grün, 2 = rot
-/// @param txtcolor Die Textfarbe für die Bootmeldung
+/// dem Display anzuzeigen. Der Text wird in der angegebenen Farbe dargestellt.
+/// @param txtcolor Die Textfarbe für die Bootmeldung: 0 = grau, 1 = grün, 2 = rot
 /// @param myMsg Die anzuzeigende Nachricht
+/// @param newline Ein Flag, das angibt, ob die Nachricht in einer neuen Zeile angezeigt werden soll (true) oder in der aktuellen Zeile fortgesetzt werden soll (false).
+/// @param align_right Ein Flag, das angibt, ob die Nachricht rechtsbündig (true) oder linksbündig (false) ausgerichtet werden soll.
 /// @note Diese Funktion ist für die Anzeige auf dem Display zuständig und wird in der Regel
 ///       beim Start des Geräts aufgerufen, um den Benutzer über den Bootvorgang zu informieren.
-extern void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline = true);
+extern void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline, bool align_right);
+#endif
 
 // Modul: commands
 extern String stat_str;
@@ -91,7 +77,7 @@ void webserver_loop(time_t now);
 extern PubSubClient mqttClient;
 extern String mqtt_server;
 extern String mqtt_client;
-extern String mqtt_topic_part2;
+extern String mqtt_topicP2;
 extern String mqtt_topic;
 extern bool do_mqtt;
 extern bool do_log_mqtt;
@@ -121,7 +107,7 @@ extern String wifi_pass1;
 extern String wifi_ssid2;
 extern String wifi_pass2;
 #endif
-#endif //USE_WIFIMULTI
+#endif
 extern int cmd_no;
 extern Preferences preferences;
 extern unsigned long loop_time_alarm;
@@ -129,6 +115,9 @@ extern tm timeinfo;
 extern void getResetReason(String& tmp);
 extern int rssi;
 extern int rssi_quality;
+extern uint64_t sd_cardsize;
+extern uint64_t sd_usedbytes;
+extern uint8_t sd_cardType;
 extern void getVcc(String& json);
 extern Uptime uptime;
 
@@ -160,12 +149,9 @@ extern MODULE6_DEFINITION
 /// @brief Der Komandoprozessor. Hier werden alle Befehle in der Form "Kommando = Wert" abgearbeitet
 /// @param cmd Das Komando, der bezeichner des Komandos
 /// @param value Der Wert für dieses Kommando
-/// @return true wenn das Kommando gültig war, false wenn es ungültig war
 bool prozess_cmd(const String cmd, const String value);
 
-extern bool cmd_result;
-
-const char* mk_topic(const char* mqtt_topic_part1, const char* mqtt_topic_part3);
+const char* mk_topic(const char* part1, const char* part3);
 
 
-#endif // _COMMON_H_
+#endif

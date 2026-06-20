@@ -1,10 +1,35 @@
-#ifdef USE_DISPLAY_GC9A01A
+#ifdef USE_AUDIODISPLAY_GC9A01A
 
 #ifndef _AUDIODISPLAY_GC9A01A_H_
 #define _AUDIODISPLAY_GC9A01A_H_
 
 #include "Adafruit_GFX.h"
 #include "Adafruit_GC9A01A.h"
+
+#ifndef TFT_CS
+#define TFT_CS               8
+#endif
+#ifndef TFT_RST
+#define TFT_RST              10 //17
+#endif
+#ifndef TFT_DC
+#define TFT_DC               9
+#endif
+#ifndef TFT_BL
+#define TFT_BL               14
+#endif
+#ifndef TFT_SCK
+#define TFT_SCK              12
+#endif
+#ifndef TFT_MOSI
+#define TFT_MOSI             11
+#endif
+#ifndef TFT_MISO
+#define TFT_MISO             13
+#endif
+#ifndef TFT_ROT
+#define TFT_ROT              1
+#endif
 
 #define ARC_SIGMENT_DEGREES 3
 #define ARC_WIDTH 5
@@ -21,9 +46,16 @@
 #define BPS_POS_Y         230
 #define BPS_FONTSIZE      1
 #define BPS_COLOR         GC9A01A_RED
+#define CLOCK_BIG_FONTSIZE 4
+#define CLOCK_BIG_CURSOR_X 20
+#define CLOCK_BIG_CURSOR_Y 100
+#define CLOCK_SMALL_FONTSIZE 2
+#define CLOCK_SMALL_CURSOR_X 80
+#define CLOCK_SMALL_CURSOR_Y 30
 #define FONT1_MAX_CHAR    10
 #define FONT2_MIN_CHAR     7
 #define FONT2_MAX_CHAR    17
+
 
 extern uint16_t* bmpBuffer;
 
@@ -68,7 +100,7 @@ public:
 /// @param myMsg Die anzuzeigende Nachricht
 /// @note Diese Funktion ist für die Anzeige auf dem Display zuständig und wird in der Regel
 ///       beim Start des Geräts aufgerufen, um den Benutzer über den Bootvorgang zu informieren.
-  void bootMessage(uint8_t txtcolor, const char* msg, bool newline = true);
+  void bootMessage(uint8_t txtcolor, const char* msg, bool newline, bool align_right);
 
 private:
   void update_display();
@@ -89,11 +121,10 @@ private:
   String replaceNonAscii(String inputString);
 
 uint8_t boot_line = 0;
-bool    boot_last_nl = true;
 uint8_t rotation = 0;
-      uint8_t num_lines = 0;
+uint8_t num_lines = 0;
 
 };
 
 #endif // _AUDIODISPLAY_GC9A01A_H_
-#endif // USE_DISPLAY_GC9A01A
+#endif // USE_AUDIODISPLAY_GC9A01A

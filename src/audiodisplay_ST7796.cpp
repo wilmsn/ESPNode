@@ -1,49 +1,63 @@
 #include "config.h"
-#ifdef USE_AUDIODISPLAY_GC9A01A
-#include "audiodisplay_GC9A01A.h"
-#include "audiodisplay_bmps.h"
+#ifdef USE_DISPLAY_ST7796
+#include "audiodisplay_ST7796.h"
+//#include "audiodisplay_bmps.h"
 #include "audiomodul.h"
 #include "common.h"
+#include "audiodisplay_bmps.h"
+#include <Fonts/FreeSans12pt7b.h> // A custom font
+#include <Fonts/FreeSansBold24pt7b.h> // A custom font
 
 extern AudioModul* audiomodul_ptr;
 
 
 AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot ) :
-              Adafruit_GC9A01A(_cs, _dc, _rst) {
+              Adafruit_ST7796S(_cs, _dc, _rst) {
   rotation = _rot;
 }
 
 void AudioDisplay::begin() {
-  Adafruit_GC9A01A::begin();
-  setRotation(rotation);
-  fillScreen(GC9A01A_BLACK);
-  setTextColor(GC9A01A_WHITE);
-  setTextSize(3);
-  setCursor(80,25);
-  println("init");
-  fillRect(30,50,180,140,GC9A01A_DARKGREY);
-  setCursor(35,60);
+  Adafruit_ST7796S::begin();
+  init(320, 480, 0, 0, ST7796S_BGR);
+  setRotation(TFT_ROT);
+  setFont(&FreeSans12pt7b);
+  font_big = false;
+  clear();
+  setTextColor(COLOR_WHITE);
   setTextSize(1);
+  setCursor(180,40);
+  println("init");
+  fillRect(BOOTWINDOW_X,BOOTWINDOW_Y,BOOTWINDOW_WIDTH,BOOTWINDOW_HEIGHT,BOOTWINDOW_COLOR);
 }
 
 void AudioDisplay::html_info(String& _html_info) {
-  _html_info += String("\"tab_head_display\":\"Display: GC9A01A\"") +
+  _html_info += String("\"tab_head_display\":\"Display: ST7796\"") +
                 String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
                 String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
                 String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
                 String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"") +
-                String(",\"tab_line5_display\":\"RST:#GPIO: ") + String(TFT_RST)+ String("\"");
+                String(",\"tab_line5_display\":\"BL:#GPIO: ") + String(TFT_BL)+ String("\"") +
+                String(",\"tab_line6_display\":\"RST:#GPIO: ") + String(TFT_RST)+ String("\"");
 }
 
 void AudioDisplay::update_display() {
+  uint8_t thisline;
   audiomodul_ptr->display_update_set = false;
   Serial.print("Update Display: App_NO:");
   Serial.println(audiomodul_ptr->app_no);
   if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_off) {
+    if (!font_big) {
+      setFont(&FreeSansBold24pt7b);
+      font_big = true;
+    }
     clear();
     clock_big();
   }
   else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio) {
+    if (font_big) {
+      setFont(&FreeSans12pt7b);
+      font_big = false;
+    }
     clear();
     clock_small();
     show_vol(audiomodul_ptr->vol);
@@ -61,55 +75,46 @@ void AudioDisplay::update_display() {
     // end set bps
     // set station
     num_lines = split4display(audiomodul_ptr->radio_stationname);
-    setTextColor(GC9A01A_ORANGE);
-    if (num_lines == 1) {
-      setTextSize(3);
-      setCursor(25, 75);
-      print(displaystr[0]);
-    } else {
-      setTextSize(2);
-      uint8_t thisline = 0;
-      while (thisline < num_lines && thisline < 2) {
-        if (thisline <= 1) setCursor(25, 75 + (thisline * 20));
-        print(displaystr[thisline]);
-        thisline++;
-      }
+    setTextColor(RADIO_STATION_COLOR);
+    setTextSize(RADIO_STATION_FONTSIZE);
+    thisline = 0;
+    while (thisline < num_lines && thisline < 3) {
+      setCursor(RADIO_STATION_X, RADIO_STATION_Y + (thisline * 30));
+      print(displaystr[thisline]);
+      thisline++;
     }
     // end set station
     // set streamtitle
     num_lines = split4display(audiomodul_ptr->radio_streamtitle);
-    setTextColor(GC9A01A_GREEN);
-    if (num_lines == 1) {
-      setTextSize(3);
-      setCursor(25, 130);
-      print(displaystr[0]);
-    } else {
-      setTextSize(2);
-      uint8_t thisline = 0;
-      while (thisline < num_lines && thisline < 3) {
-        setCursor(25, 130 + (thisline * 20));
-        print(displaystr[thisline]);
-        thisline++;
-      }
+    setTextColor(RADIO_TITLE_COLOR);
+    setTextSize(RADIO_TITLE_FONTSIZE);
+    thisline = 0;
+    while (thisline < num_lines && thisline < 3) {
+      setCursor(RADIO_TITLE_X, RADIO_TITLE_Y + (thisline * 30));
+      print(displaystr[thisline]);
+      thisline++;
     }
   } //audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio
   else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio_select) {
     clear();
     setTextSize(2);
-    setTextColor(GC9A01A_WHITE);
+    setTextColor(ST77XX_WHITE);
     setCursor(60,20);
     print("Senderwahl");
-    setTextColor(GC9A01A_ORANGE);
+    setTextColor(ST77XX_ORANGE);
 /*      setCursor(40,70);
       setTextSize(1);
       if (audiomodul_ptr->rot_last_val > 0) {
         print(audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val-1].name);
       }*/
     setCursor(25,120);
-    String stationname = audiomodul_ptr->radio_station[audiomodul_ptr->radio_station_selected].name;
+    String stationname;
+#ifdef USE_ROTARY    
+    stationname = audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val].name;
+#endif
     num_lines = split4display(stationname);
     if (num_lines == 1) {
-      setTextSize(3);
+      setTextSize(RADIO_STATION_FONTSIZE);
       print(displaystr[0]);
     } else {
       setTextSize(2);
@@ -192,39 +197,39 @@ uint8_t AudioDisplay::split4display(String& in_str) {
 }
 
 // - txtcolor: 0 = weiss, 1 = grün, 2 = rot
-void AudioDisplay::bootMessage(uint8_t txtcolor, const char* msg, bool newline, bool align_right) {
+void AudioDisplay::bootMessage(uint8_t txtcolor, const char* msg, bool newline,  bool align_right) {
   switch (txtcolor) {
   case 0:
-    setTextColor(GC9A01A_WHITE);
+    setTextColor(COLOR_WHITE);
     break;
   case 1:
-    setTextColor(GC9A01A_GREEN);
+    setTextColor(COLOR_GREEN);
     break;
   case 2:
-    setTextColor(GC9A01A_RED);
+    setTextColor(COLOR_RED);
     break;
   }
   if (newline) {
     boot_line++;
   }
   if (align_right) {
-    setCursor(190 - (strlen(msg) * 6), boot_line * 10 + 60);
+    setCursor(BOOTWINDOW_WIDTH + BOOTWINDOW_X - (strlen(msg) * 10), BOOTWINDOW_Y + 20 + (boot_line * 20));
   } else {
-    setCursor(35, boot_line * 10 + 60);
+    setCursor(BOOTWINDOW_X + 20, BOOTWINDOW_Y + 20 + (boot_line * 20));
   }
   print(msg);
 }
 
 void AudioDisplay::clear() {
-  fillScreen(GC9A01A_BLACK);
+  fillScreen(BG_COLOR);
 }
   
 void AudioDisplay::wipe_vol() {
-  fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
+   fillRect(460, 0, 20, 320, BG_COLOR);
 }
 
 void AudioDisplay::show_vol(uint8_t cur_vol) {
-  fillArc(119,119,-90,cur_vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
+   fillRect(460, 320-cur_vol*3, 20, cur_vol*3, COLOR_YELLOW); 
 }
 
 /*
@@ -279,17 +284,17 @@ void AudioDisplay::screen_media() {
 
 void AudioDisplay::clock_big() {
   clear();
-  setTextColor(GC9A01A_WHITE); 
-  setTextSize(7);
-  setCursor(20,100);
+  setTextColor(CLOCK_BIG_COLOR); 
+  setTextSize(CLOCK_BIG_FONTSIZE);
+  setCursor(CLOCK_BIG_CURSOR_X,CLOCK_BIG_CURSOR_Y);
   clock_print();
 }
 
 void AudioDisplay::clock_small() {
-  fillRect(80, 30, 90, 23, GC9A01A_BLACK);
-  setTextColor(GC9A01A_WHITE); 
-  setTextSize(3);
-  setCursor(80,30);
+  fillRect(80, 30, 90, 23, BG_COLOR);
+  setTextColor(CLOCK_SMALL_COLOR);
+  setTextSize(CLOCK_SMALL_FONTSIZE);
+  setCursor(CLOCK_SMALL_CURSOR_X,CLOCK_SMALL_CURSOR_Y);
   clock_print();
 }
 
@@ -547,7 +552,7 @@ void AudioDisplay::show_media_bps() {
 */
 
 void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour) {
-
+/*
   byte seg = ARC_SIGMENT_DEGREES; // Segments are 3 degrees wide = 120 segments for 360 degrees
   byte inc = ARC_SIGMENT_DEGREES; // Draw segments every 3 degrees, increase to 6 for segmented ring
 
@@ -579,6 +584,7 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
     x1 = x3;
     y1 = y3;
   }
+*/
 }
 
 /// @brief Teilt einen String in Teilstrings auf

@@ -13,12 +13,12 @@
 // Hier wird der zu erzeugende Node aktiviert
 // Achtung: Es darf nur ein Node ausgewählt werden!
 //#define NODEMINIMAL         // Test eines Updatenodes
-//#define NODESIMPLE 
+//#define NODESIMPLE
 //#define NODE18B20
 //#define NODEBOSCH
 //#define WITTYNODE
 //#define ESP32S3_NODE
-#define NODE_AUDIO
+//#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
@@ -27,7 +27,7 @@
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
-//#define NODE_KUECHENRADIO
+#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
@@ -483,12 +483,5 @@ typedef struct {
 #ifndef LOG_DAYBREAK
 #define  LOG_DAYBREAK  6
 #endif //LOG_DAYBREAK
-
-#ifdef USE_DISPLAY_GC9A01A
-#ifndef USE_DISPLAY
-#define USE_DISPLAY "GC9A01A"
-#endif //USE_DISPLAY
-
-#endif //USE_DISPLAY_GC9A01A
 
 #endif // _CONFIG_H_
