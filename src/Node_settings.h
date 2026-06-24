@@ -466,16 +466,13 @@ RF24 Gateway:
 //#define USE_AUDIODISPLAY_ST7796
 #define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
-#define USE_AUDIO_MEDIA
+//#define USE_AUDIO_MEDIA
 //#define USE_FTP
 //#define USE_WIFIMULTI
-//#define USE_ROTARY
-//#define ROTARY_ENCODER_VCC_PIN     -1
-//#define ROTARY_ENCODER_STEPS       4
-//#define ROTARY_ENCODER_R_PULLDOWN  false
-//#define ROT_SW                  33
-//#define ROT_S1                  35
-//#define ROT_S2                  34
+#define USE_ROTARY
+#define ROTARY_ENCODER_VCC_PIN     -1
+#define ROTARY_ENCODER_STEPS       4
+#define ROTARY_ENCODER_R_PULLDOWN  false
 
 #include "audiomodul.h"
 #define MAGICNO                 0

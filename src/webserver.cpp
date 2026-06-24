@@ -203,11 +203,11 @@ void prozess_sysinfo() {
                String("}");
       sendWsMessage(myjson);
 // Teil 3
-      myjson = String("{") +
+      myjson = String("{\"x\":\"x\"") +
 #if defined(MQTT)  
-                String(",\"mqttserver\":\"") + mqtt_server +
-                String("\",\"mqttclient\":\"") + mqtt_client +
-                String("\",\"mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"") +
+                String(",\"mqttserver\":\"") + mqtt_server + String("\"") +
+                String(",\"mqttclient\":\"") + mqtt_client + String("\"") +
+                String(",\"mqtttopicp2\":\"") + mqtt_topic_part2 + String("\"") +
 #endif
 #if defined(RF24GW)  
                 String(",\"tab_head_rf24gw\":\"RF24 Gateway\"") +
@@ -223,6 +223,15 @@ void prozess_sysinfo() {
                 String(",\"tab_line5_nrf24l01\":\"CSN:#GPIO: ") + String(RF24_RADIO_CSN_PIN) + String("\"") +
                 String(",\"tab_line6_nrf24l01\":\"Channel:# ") + String(RF24_CHANNEL) + String("\"") +
                 String(",\"tab_line7_nrf24l01\":\"Speed:# ") + String(RF24_SPEED_STR) + String("\"") +
+#endif
+#ifdef USE_DISPLAY
+                String(",\"tab_head_display\":\"Display: GC9A01A\"") +
+                String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
+                String(",\"tab_line2_display\":\"MOSI:#GPIO: ") + String(TFT_MOSI)+ String("\"") +
+                String(",\"tab_line3_display\":\"CS:#GPIO: ") + String(TFT_CS)+ String("\"") +
+                String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"") +
+                String(",\"tab_line5_display\":\"RST:#GPIO: ") + String(TFT_RST)+ String("\"") +
+
 #endif
                 String("}");
       sendWsMessage(myjson);

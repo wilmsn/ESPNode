@@ -14,15 +14,12 @@
 #include "switch_onoff.h"
 //#include "SD.h"
 #include "Audio.h"
+#ifdef USE_ROTARY
+#include "AiEsp32RotaryExtention.h"
+#endif
 #ifdef USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIODISPLAY
 #include "audiodisplay_GC9A01A.h"
-#endif
-#ifdef USE_AUDIODISPLAY_ST7796
-#include "audiodisplay_ST7796.h"
-#endif
-#ifdef USE_ROTARY
-#include "AiEsp32RotaryExtention.h"
 #endif
 
 /// @brief Festlegung des minimalen Lautstärkepegels, bei dem das Audio-Modul als "an" gilt.
@@ -42,24 +39,6 @@
 #define SD_FILE_LENGTH            50
 
 #if defined(CONFIG_IDF_TARGET_ESP32) 
-#ifdef USE_DISPLAY_GC9A01A
-//#warning "Compiling Display GC9A01A with Settings for ESP32"
-#ifndef TFT_SCK
-#define TFT_SCK                 18
-#endif
-#ifndef TFT_MOSI
-#define TFT_MOSI                23
-#endif
-#ifndef TFT_CS
-#define TFT_CS                  17
-#endif
-#ifndef TFT_DC
-#define TFT_DC                  16
-#endif
-#ifndef TFT_RES
-#define TFT_RES                 13
-#endif
-#endif //USE_Display_GC9A01A
 
 #ifdef USE_AUDIO_MEDIA
 #ifndef SD_CS
@@ -94,29 +73,6 @@
 #endif  //CONFIG_IDF_TARGET_ESP32
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
-#ifdef USE_DISPLAY_GC9A01A
-//#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
-#ifndef TFT_SCK
-// SCL
-#define TFT_SCK                 12
-#endif
-#ifndef TFT_MOSI
-// SDA
-#define TFT_MOSI                11
-#endif
-#ifndef TFT_CS
-#define TFT_CS                  8
-#endif
-#ifndef TFT_DC
-#define TFT_DC                  9
-#endif
-#ifndef TFT_ROT
-#define TFT_ROT                 3
-#endif
-#ifndef TFT_RES
-#define TFT_RES                 -1
-#endif
-#endif //USE_Display_GC9A01A
 
 #ifdef USE_AUDIO_MEDIA
 #ifndef SD_CS
@@ -272,11 +228,11 @@ public:
 
 #ifdef USE_AUDIODISPLAY_GC9A01A
     /// @brief Ein Zeiger auf das Displayobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
-    AudioDisplay_GC9A01A*  display;
+    AudioDisplay_GC9A01A*  audiodisplay;
 #endif
 #ifdef USE_AUDIODISPLAY_ST7796
     /// @brief Ein Zeiger auf das Displayobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
-    AudioDisplay*  display;
+    AudioDisplay_ST7796*  audiodisplay;
 #endif
 
 #ifdef USE_ROTARY
@@ -318,7 +274,7 @@ public:
     uint8_t vol;
 
     /// @brief Index der aktuell ausgewählten Station, entspricht der Position im Array audio_radio_station[]
-    uint8_t radio_station_selected; 
+    uint8_t radio_sel_station; 
 #ifdef USE_AUDIO_RADIO
     /// @brief Ein Array mit den Sendern
     station_t radio_station[MAXSTATIONS];
@@ -330,8 +286,7 @@ private:
     uint16_t   bas;
     uint16_t   tre;
 */
-    bool firstloop = true;
-    /// @brief Startet den Timeout für die Rückkehr zur zuletzt aktiven App/Modus.
+     /// @brief Startet den Timeout für die Rückkehr zur zuletzt aktiven App/Modus.
     void start_timeout(time_t now);
     /// @brief Flag, das anzeigt, ob ein Timeout aktiv ist.
     bool timeout_set;
@@ -340,10 +295,6 @@ private:
  
     /// @brief Ein Zeiger auf das Audioobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
     Audio*            audio;
-
-#ifdef USE_AUDIODISPLAY_GC9A01A
-AudioDisplay_GC9A01A* audiodisplay = NULL;
-#endif
 
 
 #ifdef USE_AUDIO_RADIO

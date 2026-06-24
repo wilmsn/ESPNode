@@ -160,13 +160,13 @@ void bootMessage(uint8_t txtcolor, const char* msg, bool newline, bool align_rig
     display->setTextSize(BOOTMESSAGE_TEXTSIZE);
     switch (txtcolor) {
     case 0:
-      display->setTextColor(TFT_COLOR_WHITE);
+      display->setTextColor(BOOTWINDOW_COLOR1);
     break;
     case 1:
-      display->setTextColor(TFT_COLOR_GREEN);
+      display->setTextColor(BOOTWINDOW_COLOR2);
       break;
     case 2:
-      display->setTextColor(TFT_COLOR_RED);
+      display->setTextColor(BOOTWINDOW_COLOR3);
       break;
     }
     if (newline) {
@@ -476,9 +476,9 @@ void setup() {
   if (display) {
     display->begin();
     display->setRotation(TFT_ROTATION);
-    display->fillScreen(TFT_COLOR_BLACK);
+    display->fillScreen(EMPTY_COLOR);
     display->setTextSize(2);
-    display->setTextColor(TFT_COLOR_GREEN);
+    display->setTextColor(BOOTWINDOW_COLOR0);
     display->setCursor(80, 10);
     display->print("ESPNode");
     display->setCursor(80, 30);

@@ -485,8 +485,14 @@ typedef struct {
 #define  LOG_DAYBREAK  6
 #endif //LOG_DAYBREAK
 
-// Definitionen für das Display
+// Definitionen für das SPI-Display (GC9A01A)
 #ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifndef TFT_MOSI
+#define TFT_MOSI                11
+#endif
+#ifndef TFT_SCK
+#define TFT_SCK                 12
+#endif
 #ifndef TFT_CS
 #define TFT_CS                  8
 #endif
@@ -517,30 +523,8 @@ typedef struct {
 #endif //CONFIG_IDF_TARGET_ESP32
 
 #ifdef USE_DISPLAY_GC9A01A
+#include "Adafruit_GC9A01A.h"
 #define USE_DISPLAY
-#define TFT_COLOR_BLACK        GC9A01A_BLACK
-#define TFT_COLOR_WHITE        GC9A01A_WHITE
-#define TFT_COLOR_RED          GC9A01A_RED
-#define TFT_COLOR_GREEN        GC9A01A_GREEN
-#define TFT_COLOR_BLUE         GC9A01A_BLUE
-#define TFT_COLOR_YELLOW       GC9A01A_YELLOW
-#define TFT_COLOR_CYAN         GC9A01A_CYAN
-#define TFT_COLOR_MAGENTA      GC9A01A_MAGENTA
-#define TFT_COLOR_GRAY         GC9A01A_GRAY
-#define TFT_COLOR_ORANGE       GC9A01A_ORANGE
-#define TFT_COLOR_PURPLE       GC9A01A_PURPLE
-#define TFT_COLOR_PINK         GC9A01A_PINK
-#define TFT_COLOR_BROWN        GC9A01A_BROWN
-#define TFT_COLOR_LIGHTBLUE    GC9A01A_LIGHTBLUE
-#define TFT_COLOR_LIGHTGREEN   GC9A01A_LIGHTGREEN
-#define TFT_COLOR_LIGHTCYAN    GC9A01A_LIGHTCYAN
-#define TFT_COLOR_LIGHTMAGENTA GC9A01A_LIGHTMAGENTA
-#define TFT_COLOR_LIGHTYELLOW  GC9A01A_LIGHTYELLOW
-#define TFT_COLOR_LIGHTGRAY    GC9A01A_LIGHTGREY
-#define TFT_COLOR_DARKRED      GC9A01A_DARKRED
-#define TFT_COLOR_DARKGREEN    GC9A01A_DARKGREEN
-#define TFT_COLOR_DARKBLUE     GC9A01A_DARKBLUE
-#define TFT_COLOR_DARKGRAY     GC9A01A_DARKGREY
 #ifndef BOOTWINDOW_X
 #define BOOTWINDOW_X            20
 #endif
@@ -554,7 +538,19 @@ typedef struct {
 #define BOOTWINDOW_HEIGHT       120
 #endif
 #ifndef BOOTWINDOW_COLOR
-#define BOOTWINDOW_COLOR        TFT_COLOR_DARKGRAY
+#define BOOTWINDOW_COLOR        GC9A01A_DARKGREY
+#endif
+#ifndef BOOTWINDOW_COLOR0
+#define BOOTWINDOW_COLOR0       GC9A01A_GREEN
+#endif
+#ifndef BOOTWINDOW_COLOR1
+#define BOOTWINDOW_COLOR1       GC9A01A_WHITE
+#endif
+#ifndef BOOTWINDOW_COLOR2
+#define BOOTWINDOW_COLOR2       GC9A01A_GREEN
+#endif
+#ifndef BOOTWINDOW_COLOR3
+#define BOOTWINDOW_COLOR3       GC9A01A_RED
 #endif
 #ifndef BOOTLINE_Y
 #define BOOTLINE_Y              10
@@ -564,6 +560,18 @@ typedef struct {
 #endif
 #ifndef BOOTMESSAGE_TEXTSIZE
 #define BOOTMESSAGE_TEXTSIZE    1
+#endif
+#ifndef EMPTY_COLOR
+#define EMPTY_COLOR             GC9A01A_BLACK
+#endif
+#ifndef FONT1_MAX_CHAR_PER_LINE
+#define FONT1_MAX_CHAR_PER_LINE    10
+#endif
+#ifndef FONT2_MIN_CHAR_PER_LINE
+#define FONT2_MIN_CHAR_PER_LINE    7
+#endif
+#ifndef FONT2_MAX_CHAR_PER_LINE
+#define FONT2_MAX_CHAR_PER_LINE    17
 #endif
 
 #endif // USE_DISPLAY_GC9A01A

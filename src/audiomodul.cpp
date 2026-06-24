@@ -17,8 +17,6 @@ FtpServer        ftp;
 
 #include "AiEsp32RotaryExtention.h"
 
-//AiEsp32RotaryExtention  rotary = AiEsp32RotaryExtention(ROT_S1, ROT_S2, ROT_SW, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS, ROTARY_ENCODER_R_PULLDOWN);
-
 void IRAM_ATTR intrSRV() {
     audiomodul_ptr->rotary->readEncoder_ISR();
 }
@@ -124,7 +122,9 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
   this->html_info_set = true;
   audiomodul_ptr = this;
   audio = new Audio();
+#ifdef USE_AUDIODISPLAY_GC9A01A
   audiodisplay = new AudioDisplay_GC9A01A();
+#endif
 #ifdef USE_ROTARY
   rotary = new AiEsp32RotaryExtention(ROT_S1, ROT_S2, ROT_SW, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS, ROTARY_ENCODER_R_PULLDOWN);
 #endif
@@ -360,9 +360,10 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
       this->radio_send_stn2web();
       retval = true;
     }
-    // Radio: Sender einstellen
+    // Radio: Sender auswählen
     if ( _cmnd == String("audio_radio_sel_stn") ) {
-      radio_station_selected = myvalue.toInt();
+      radio_sel_station = myvalue.toInt();
+      this->app_no = app_no_radio_select;
       this->display_update_now = true;
       retval = true;
     }
@@ -375,6 +376,8 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
           this->html_update_set = true;
         }
       }
+      this->html_update_set = true;
+      this->display_update_now = true;
       this->radio_on();
     }
     // Radio: Sender Name speichern ueber Webinterface
@@ -560,14 +563,9 @@ void AudioModul::loop(time_t now) {
 // loop Funktion des Elternobjektes aufrufen
   Switch_OnOff::loop(now);
 // loop Funktionen aller eingebundenen Objekte aufruen
+
 #ifdef USE_AUDIODISPLAY
-  if (firstloop) {
-    audiodisplay->update_display();
-    firstloop = false;
-  }
   audiodisplay->loop(now);
-#else
-#warning "USE_AUDIODISPLAY not defined" 
 #endif
 #ifdef USE_FTP
   ftp.handleFTP();
@@ -724,23 +722,20 @@ void AudioModul::loop(time_t now) {
           rotary->min_set(0);
           rotary->max_set(MAXSTATIONS-1);
           rotary->val_set(radio_cur_station);
-          this->app_no = app_no_radio_select;
-          this->display_update_now = true;
+          set(String("audio_radio_sel_stn"),String(radio_cur_station));
         break;
         // Radio Ebene 2: Neuen Sender übernehmen und Level zurück auf 0 => Play
         case 2:
 #ifdef DEBUG_SERIAL
           Serial.print("Radio neuer Sender: ");
-          Serial.println(radio_station[rot_last_val].name);
+          Serial.println(radio_station[radio_sel_station].name);
           Serial.print("Radio alter Sender: ");
           Serial.println(radio_station[radio_cur_station].name);
 #endif
-          if (radio_cur_station != rot_last_val) {
-            set(String("audio_radio_set_stn"),String(radio_station[rot_last_val].url));
-            this->html_update_set = true;
-            this->display_update_now = true;
+          if (this->radio_cur_station != this->radio_sel_station) {
+            set(String("audio_radio_set_stn"),String(radio_station[this->radio_sel_station].url));
           }
-          this->app_no = app_no_radio;
+          this->app_no = this->app_no_radio;
           rotary->app_set(rotary->app(),0,0,100,this->vol);
           this->timeout_set = false;
         break;
