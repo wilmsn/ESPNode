@@ -3,34 +3,6 @@
 #ifndef _AUDIODISPLAY_GC9A01A_H_
 #define _AUDIODISPLAY_GC9A01A_H_
 
-#include "Adafruit_GFX.h"
-#include "Adafruit_GC9A01A.h"
-
-#ifndef TFT_CS
-#define TFT_CS               8
-#endif
-#ifndef TFT_RST
-#define TFT_RST              10 //17
-#endif
-#ifndef TFT_DC
-#define TFT_DC               9
-#endif
-#ifndef TFT_BL
-#define TFT_BL               14
-#endif
-#ifndef TFT_SCK
-#define TFT_SCK              12
-#endif
-#ifndef TFT_MOSI
-#define TFT_MOSI             11
-#endif
-#ifndef TFT_MISO
-#define TFT_MISO             13
-#endif
-#ifndef TFT_ROT
-#define TFT_ROT              1
-#endif
-
 #define ARC_SIGMENT_DEGREES 3
 #define ARC_WIDTH 5
 
@@ -62,32 +34,27 @@ extern uint16_t* bmpBuffer;
 /**
  * @brief Anzeige für das Audiomodul spezialisiert auf das Display GC9A01A
  */
-class AudioDisplay : public Adafruit_GC9A01A {
+class AudioDisplay_GC9A01A {
 public:
 
-//  AudioModul* myaudiomodul;
-
-  /// @brief Constructor für das Anzeigeobjekt
-  /// @param _cs Der CS Pin
-  /// @param _dc der DC Pin
-  /// @param _rot Die Rotation
-  AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot);
   /// @brief Initialisiert die Anzeige
-  void begin();
+//  void begin();
   /// @brief Die Loop Funktion wird regelmäßig aufgerufen
   /// @param now Der Unix Zeitstempel
   void loop(time_t now);
 
-    /**
-     * @brief Initialisierung einer Webseite
-     * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
-     * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
-     * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
-     */
-    void html_info(String& _html_info);
+  /**
+   * @brief Initialisierung einer Webseite
+   * Wenn sich ein Browser verbindet und die Webseite des Nodes aufruft, wird diese Funtion durch das 
+   * Hauptprogramm aufgerufen. Die Funktion stellt ein Teil-JSON mit allen Initialisierungsdaten in "html_json" 
+   * bereit. Dieses sendet das Hauptprogramm mittels Message als Websocket an den Browser.
+   */
+  void html_info(String& _html_info);
 
   /// @brief clear() löscht alle Inhalte auf der Anzeige
   void clear();
+
+  void update_display();
 
   void wipe_vol();  
   void show_vol(uint8_t cur_vol);  
@@ -98,12 +65,8 @@ public:
 /// - txtcolor: 0 = grau, 1 = grün, 2 = rot
 /// @param txtcolor Die Textfarbe für die Bootmeldung
 /// @param myMsg Die anzuzeigende Nachricht
-/// @note Diese Funktion ist für die Anzeige auf dem Display zuständig und wird in der Regel
-///       beim Start des Geräts aufgerufen, um den Benutzer über den Bootvorgang zu informieren.
-  void bootMessage(uint8_t txtcolor, const char* msg, bool newline, bool align_right);
 
 private:
-  void update_display();
   void clock_small();
   void clock_big();
   void clock_print();
@@ -120,9 +83,7 @@ private:
   int getPartStringEnd(String data, int startAt, int minLen, int maxLen);
   String replaceNonAscii(String inputString);
 
-uint8_t boot_line = 0;
-uint8_t rotation = 0;
-uint8_t num_lines = 0;
+  uint8_t num_lines = 0;
 
 };
 

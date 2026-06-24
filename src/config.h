@@ -18,7 +18,8 @@
 //#define NODEBOSCH
 //#define WITTYNODE
 //#define ESP32S3_NODE
-//#define NODE_AUDIO
+//#define NODE_DISPLAYTEST
+#define NODE_AUDIO
 //#define NODE_TTGO_T_DISPLAY
 
 // meine produktiven Nodes
@@ -27,7 +28,7 @@
 //#define NODE_TERASSE
 //#define NODE_TEICH
 //#define NODE_FLUR
-#define NODE_KUECHENRADIO
+//#define NODE_KUECHENRADIO
 //#define NODE_WOHNZIMMERRADIO
 //---------------------------
 // Ab hier werden Abhängigkeiten gesetzt. 
@@ -483,5 +484,106 @@ typedef struct {
 #ifndef LOG_DAYBREAK
 #define  LOG_DAYBREAK  6
 #endif //LOG_DAYBREAK
+
+// Definitionen für das Display
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#ifndef TFT_CS
+#define TFT_CS                  8
+#endif
+#ifndef TFT_DC
+#define TFT_DC                  9
+#endif
+#ifndef TFT_RST
+#define TFT_RST                 -1
+#endif
+#ifndef TFT_ROTATION
+#define TFT_ROTATION            3
+#endif
+#endif //CONFIG_IDF_TARGET_ESP32S3
+
+#ifdef CONFIG_IDF_TARGET_ESP32
+#ifndef TFT_CS
+#define TFT_CS                  8
+#endif
+#ifndef TFT_DC
+#define TFT_DC                  9
+#endif
+#ifndef TFT_RST
+#define TFT_RST                 10
+#endif
+#ifndef TFT_ROTATION
+#define TFT_ROTATION            1
+#endif
+#endif //CONFIG_IDF_TARGET_ESP32
+
+#ifdef USE_DISPLAY_GC9A01A
+#define USE_DISPLAY
+#define TFT_COLOR_BLACK        GC9A01A_BLACK
+#define TFT_COLOR_WHITE        GC9A01A_WHITE
+#define TFT_COLOR_RED          GC9A01A_RED
+#define TFT_COLOR_GREEN        GC9A01A_GREEN
+#define TFT_COLOR_BLUE         GC9A01A_BLUE
+#define TFT_COLOR_YELLOW       GC9A01A_YELLOW
+#define TFT_COLOR_CYAN         GC9A01A_CYAN
+#define TFT_COLOR_MAGENTA      GC9A01A_MAGENTA
+#define TFT_COLOR_GRAY         GC9A01A_GRAY
+#define TFT_COLOR_ORANGE       GC9A01A_ORANGE
+#define TFT_COLOR_PURPLE       GC9A01A_PURPLE
+#define TFT_COLOR_PINK         GC9A01A_PINK
+#define TFT_COLOR_BROWN        GC9A01A_BROWN
+#define TFT_COLOR_LIGHTBLUE    GC9A01A_LIGHTBLUE
+#define TFT_COLOR_LIGHTGREEN   GC9A01A_LIGHTGREEN
+#define TFT_COLOR_LIGHTCYAN    GC9A01A_LIGHTCYAN
+#define TFT_COLOR_LIGHTMAGENTA GC9A01A_LIGHTMAGENTA
+#define TFT_COLOR_LIGHTYELLOW  GC9A01A_LIGHTYELLOW
+#define TFT_COLOR_LIGHTGRAY    GC9A01A_LIGHTGREY
+#define TFT_COLOR_DARKRED      GC9A01A_DARKRED
+#define TFT_COLOR_DARKGREEN    GC9A01A_DARKGREEN
+#define TFT_COLOR_DARKBLUE     GC9A01A_DARKBLUE
+#define TFT_COLOR_DARKGRAY     GC9A01A_DARKGREY
+#ifndef BOOTWINDOW_X
+#define BOOTWINDOW_X            20
+#endif
+#ifndef BOOTWINDOW_Y
+#define BOOTWINDOW_Y            60
+#endif
+#ifndef BOOTWINDOW_WIDTH
+#define BOOTWINDOW_WIDTH        200
+#endif
+#ifndef BOOTWINDOW_HEIGHT
+#define BOOTWINDOW_HEIGHT       120
+#endif
+#ifndef BOOTWINDOW_COLOR
+#define BOOTWINDOW_COLOR        TFT_COLOR_DARKGRAY
+#endif
+#ifndef BOOTLINE_Y
+#define BOOTLINE_Y              10
+#endif
+#ifndef BOOTLINE_X
+#define BOOTLINE_X              6
+#endif
+#ifndef BOOTMESSAGE_TEXTSIZE
+#define BOOTMESSAGE_TEXTSIZE    1
+#endif
+
+#endif // USE_DISPLAY_GC9A01A
+
+#ifdef USE_DISPLAY_ST7796
+#ifndef BOOTWINDOW_X
+#define BOOTWINDOW_X            20
+#endif
+#ifndef BOOTWINDOW_Y
+#define BOOTWINDOW_Y            20
+#endif
+#ifndef BOOTWINDOW_WIDTH
+#define BOOTWINDOW_WIDTH        200
+#endif
+#ifndef BOOTWINDOW_HEIGHT
+#define BOOTWINDOW_HEIGHT       100
+#endif
+#ifndef BOOTWINDOW_COLOR
+#define BOOTWINDOW_COLOR        TFT_COLOR_DARKGRAY
+#endif
+#endif // USE_DISPLAY_ST7796
 
 #endif // _CONFIG_H_

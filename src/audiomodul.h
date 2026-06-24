@@ -15,6 +15,7 @@
 //#include "SD.h"
 #include "Audio.h"
 #ifdef USE_AUDIODISPLAY_GC9A01A
+#define USE_AUDIODISPLAY
 #include "audiodisplay_GC9A01A.h"
 #endif
 #ifdef USE_AUDIODISPLAY_ST7796
@@ -271,7 +272,7 @@ public:
 
 #ifdef USE_AUDIODISPLAY_GC9A01A
     /// @brief Ein Zeiger auf das Displayobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
-    AudioDisplay*  display;
+    AudioDisplay_GC9A01A*  display;
 #endif
 #ifdef USE_AUDIODISPLAY_ST7796
     /// @brief Ein Zeiger auf das Displayobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
@@ -329,6 +330,7 @@ private:
     uint16_t   bas;
     uint16_t   tre;
 */
+    bool firstloop = true;
     /// @brief Startet den Timeout für die Rückkehr zur zuletzt aktiven App/Modus.
     void start_timeout(time_t now);
     /// @brief Flag, das anzeigt, ob ein Timeout aktiv ist.
@@ -338,6 +340,11 @@ private:
  
     /// @brief Ein Zeiger auf das Audioobjekt, damit dieses von anderen Funktionen aus erreichbar ist.
     Audio*            audio;
+
+#ifdef USE_AUDIODISPLAY_GC9A01A
+AudioDisplay_GC9A01A* audiodisplay = NULL;
+#endif
+
 
 #ifdef USE_AUDIO_RADIO
 

@@ -1,15 +1,20 @@
 #Audiomodul
+
 ##Bedienung
+
 ###Allgemein:
+
 Das Modul startet im Zustand ausgeschaltet- Das Einschalten erfolgt durch Drehung des Lautstärkereglers in Richtung "lauter", Ausschalten erfolgt durch den Lautstärkeregler durch drehen in Richtung "leiser", bei Lautstärke 0 wird ausgeschaltet..
 Durch Druck auf den Lautstärkeregler sind weitere Funktionen verfügbar. Dabei wird zwischen kurzem Druck (kleiner 1 Sekunde) und langer Druck (größer 1 Sekunde) unterschieden. Wird der Grundzustand verlassen und ca. 1 Minute nichts gemacht wird automatisch in den Grundzustand zurückgeschaltet.
 
 ###Modus
+
 Durch einen langen Druck wird der Modus umgeschaltet zwischen Radio, Mediaplayer, Bluetoothlautsprecher und Einstellungen.
 
 1* kurz drücken: Aktiviert den Modus.
 
 ###Modus: Einstellungen
+
 Grundzustand: Höhen einstellen
 
 1* kurz drücken: Bässe einstellen
@@ -17,6 +22,7 @@ Grundzustand: Höhen einstellen
 2* kurz drücken: Beenden 
 
 ###Modus: Radio
+
 Grundzustand: Der aktuelle Sender wird gespielt und angezeigt.
 
 1* kurz drücken: Senderwahl. Durch kurzen Druck auf den Lautstärkeregler wird auf Senderwahl umgeschaltet. Durch drehen wird der Sender gewechselt.
@@ -25,6 +31,7 @@ Grundzustand: Der aktuelle Sender wird gespielt und angezeigt.
 
  
 ###Modus: Mediaplayer
+
 Gndzustand: Wiedergabe, das aktuelle Stück wird gespielt und angezeigt.
 
 1* kurz drücken: Albenauswahl. Durch drehen wird das gewünschte Album ausgewählt.
@@ -34,9 +41,26 @@ Gndzustand: Wiedergabe, das aktuelle Stück wird gespielt und angezeigt.
 3* kurz drücken: Auswahl bestätigt => Grundzustand.
 
 ##Einschränkungen
+
 Das Webradio und/oder der Medienplayer wurden von mir auf einem ESP32-S3 konzipiert und getestet. Alle anderen ESPs sind ungetestet und werden auch teilweise wegen der verwendeten Bibliotheken nicht funktionieren.
 
 ##Technik
+
+###Designentscheidungen
+
+Das Audiomodul ist in Summe ein sehr mächtiges Modul. Zusätzlich besteht die Möglichkeit ein beliebiges Display anzuschliessen, dabei wird für jeden Displaytyp eine eigene Audiodisplay-Klasse benötigt. Damit das gesamte Gebilde möglichst einfach aber trotzdem variabel bleibt sind die Funktionen und Zuständigkeiten den Submodulen fest zugeordnet.
+
+Die Klasse Audiomodul ist für folgende Funktionen zuständig:
+
+- Steuerung der externen Audio Klasse
+- Speicherung aller Stringinhalte (z.B. Sendername, Songtitel, usw.)
+- Initierung von Refresh auf Display und Webseite
+
+Die Klasse Audiodisplay ist für folgende Funktionen zuständig:
+
+- Darstellung der Inhalte abhängig vom jeweiligen Betriebszustand (z.B. Radiosenderwahl)
+- Refresh der Inhalte nach Aufforderung
+
 ###Bauteile und deren Verbindung beim ESP32S3:
 
 | ESP32-S3|MAX08357|SD Adapter|Rotary Encoder|Display|Kabelfarbe|

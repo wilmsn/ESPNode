@@ -13,28 +13,6 @@ AudioModul* audiomodul_ptr = NULL;
 FtpServer        ftp;
 #endif
 
-#ifdef USE_AUDIODISPLAY_GC9A01A
-#define USE_DISPLAY
-#define USE_DISPLAY_BOOTMESSAGE
-#ifdef CONFIG_IDF_TARGET_ESP32
-#warning "Compiling Display GC9A01A with Settings for ESP32"
-#endif
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#warning "Compiling Display GC9A01A with Settings for ESP32-S3"
-#endif
-#endif
-
-#ifdef USE_AUDIODISPLAY_ST7796
-#define USE_DISPLAY
-#define USE_DISPLAY_BOOTMESSAGE
-#ifdef CONFIG_IDF_TARGET_ESP32
-#warning "Compiling Display ST7796 with Settings for ESP32"
-#endif
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#warning "Compiling Display ST7796 with Settings for ESP32-S3"
-#endif
-#endif
-
 #ifdef USE_ROTARY
 
 #include "AiEsp32RotaryExtention.h"
@@ -45,13 +23,6 @@ void IRAM_ATTR intrSRV() {
     audiomodul_ptr->rotary->readEncoder_ISR();
 }
 #endif // USE_ROTARY
-
-#ifdef USE_DISPLAY_BOOTMESSAGE
-
-void bootMessage(uint8_t txtcolor, const char* myMsg, bool newline, bool align_right) {
-  audiomodul_ptr->display->bootMessage(txtcolor, myMsg, newline, align_right);
-}
-#endif // USE_DISPLAY_BOOTMESSAGE
 
 /************************************************************************************
 // Die folgende Callbackfunktion ergänzen die Lib: ESP32-audioI2S
@@ -141,7 +112,10 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) 
 */
 
 void AudioModul::begin(const char* html_place, const char* label, const char* keyword, bool _show_diagramm)  {
-// Startet als Schalter ohne HW-Pin ohne Diagramm => Fall 1  
+#ifdef USE_DISPLAY
+  bootMessage(0, "Audio Modul", true, false);
+#endif
+  // Startet als Schalter ohne HW-Pin ohne Diagramm => Fall 1  
   Switch_OnOff::begin(html_place, label, keyword, false, true, true, _show_diagramm);
 #ifdef DEBUG_SERIAL
   Serial.println("Audiomodul begin");
@@ -149,12 +123,8 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
   this->html_init_set = true;
   this->html_info_set = true;
   audiomodul_ptr = this;
-#if defined(USE_AUDIODISPLAY_GC9A01A) or defined(USE_AUDIODISPLAY_ST7796)
-  display = new AudioDisplay(TFT_CS, TFT_DC, TFT_RST, TFT_ROT);
-  display->begin();
-  display->bootMessage(0, "Audio", false, false);
-#endif
   audio = new Audio();
+  audiodisplay = new AudioDisplay_GC9A01A();
 #ifdef USE_ROTARY
   rotary = new AiEsp32RotaryExtention(ROT_S1, ROT_S2, ROT_SW, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS, ROTARY_ENCODER_R_PULLDOWN);
 #endif
@@ -207,38 +177,16 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
   app_no_radio = app_no_max;
   radio_load_stations();
   write2log(LOG_MODULE,1,"Radio Stations loaded");
-#ifdef USE_DISPLAY
-  display->bootMessage(1, "OK", false, true);
-#endif
 #endif
 #ifdef USE_AUDIO_MEDIA
   app_no_max++;
   app_no_media = app_no_max;
   if (this->app_no_last == 0) this->app_no_last = app_no_media;
-#ifdef USE_DISPLAY
-  display->bootMessage(0, "SD Card", false, false);
-#endif
   if (SD.begin(SD_CS)) {
-    sd_cardsize = SD.cardSize();
-    sd_cardType = SD.cardType();
-    sd_usedbytes = SD.usedBytes();
-#if defined(DEBUG_SERIAL)
-    Serial.print("SD Size: ");
-    Serial.print(sd_cardsize/1073741824);
-    Serial.println(" GB");
-    Serial.print("SD Used: ");
-    Serial.print(sd_usedbytes/1073741824);
-    Serial.println(" GB");
-#endif        
-#ifdef USE_DISPLAY
-    char sdinfo[20];
-    snprintf(sdinfo,19,"SD: %llu/%llu GB",sd_cardsize/1073741824, sd_usedbytes/1073741824);
-    display->bootMessage(1, sdinfo, true, false);
-#endif
+//    sd_cardsize = SD.cardSize();
+//    sd_cardType = SD.cardType();
+//    sd_usedbytes = SD.usedBytes();
   } else {
-#ifdef USE_DISPLAY
-    display->bootMessage(2, "Error", false, false);
-#endif
 #if defined(DEBUG_SERIAL)
     Serial.println("Error mounting SD Card");
 #endif        
@@ -257,16 +205,10 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 #ifdef USE_AUDIO_MEDIA
 #ifdef USE_FTP
   ftp.begin("ftp","ftp");    //username, password for ftp.   (default 21, 50009 for PASV)
-#ifdef USE_DISPLAY
-    display->bootMessage(1,"FTP Server started", true, false);
-#endif
 #endif
 #endif // USE_AUDIO_MEDIA
 
 //  audio.setAudioTaskCore(1);
-#ifdef USE_DISPLAY                   
-//  display.cp437(true);
-#endif
 #ifdef USE_AUDIO_SPEAKER
   app_no_last = app_no_speaker;
 #endif
@@ -291,6 +233,9 @@ void AudioModul::begin(const char* html_place, const char* label, const char* ke
 //  Serial.printf("audio.begin ENDE => Rotary app: %u Lev: %u Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->val(), rotary->min(), rotary->max(), this->rot_last_val);
 #ifdef DEBUG_SERIAL
   Serial.println("Audiomodul begin ende");
+#endif
+#ifdef USE_DISPLAY
+  bootMessage(1, "OK", false, true);
 #endif
 }
 
@@ -469,9 +414,10 @@ bool AudioModul::set(const String& _cmnd, const String& _val) {
       retval = true;
     }
     if ( _cmnd == String("audio_media_sel_album") ) {
-//      display->screen_media();
+#ifdef USE_ROTARY
       rotary->app_set(2,1);
       rotary->max_set(100); //Durch die maximale Anzahl der Alben ersetzen
+#endif
       retval = true;
     }
     if ( _cmnd == "audio_media_play_album" ) {
@@ -531,7 +477,7 @@ void AudioModul::html_init(String& _html_init) {
                  String(",\"audiomsg1\":\"Artist: ") + this->media_artist_name + String("\"") +
                  String(",\"audiomsg2\":\"Song: ") + this->media_song_name + String("\"") +
                  String(",\"audiomsg3\":\"Album: ") + this->media_album_name + String("\"") +
-                 String(",\"audiomsg4\":\"") + this->kbs + String("\"");
+                 String(",\"audiomsg4\":\"") + this->bps + String("\"");
   } else {
     _html_init += String(",\"audio_media_sw\":0");
   }
@@ -562,18 +508,13 @@ void AudioModul::html_info(String& _html_info) {
                 String(",\"tab_line3_rotary\":\"SW-Pin:#GPIO: ") + String(ROT_SW)+ String("\"") +
                 String(",\"tab_line4_rotary\":\"Resistor:#") + String(ROTARY_ENCODER_R_PULLDOWN? "pulldown" : "pullup")+ String("\"");
 #endif
-#ifdef USE_DISPLAY
-  this->append_comma(_html_info);
-  this->display->html_info(_html_info);
-#endif
 #ifdef USE_AUDIO_MEDIA
   this->append_comma(_html_info);
   _html_info += String("\"tab_head_sdcard\":\"SD Card\"") +
                 String(",\"tab_line1_sdcard\":\"MOSI:#GPIO: ") + String(SD_MOSI)+ String("\"") +
                 String(",\"tab_line2_sdcard\":\"MISO:#GPIO: ") + String(SD_MISO)+ String("\"") +
                 String(",\"tab_line3_sdcard\":\"SCK:#GPIO: ") + String(SD_SCK)+ String("\"") +
-                String(",\"tab_line4_sdcard\":\"CS:#GPIO: ") + String(SD_CS)+ String("\"") +
-                String(",\"tab_line5_sdcard\":\"Size/Used:# ") + String(sd_cardsize/1073741824)+ String(" GB / ") + String(sd_usedbytes/1073741824) + String(" GB \"");
+                String(",\"tab_line4_sdcard\":\"CS:#GPIO: ") + String(SD_CS)+ String("\"");
 #endif
 }
 
@@ -595,7 +536,7 @@ void AudioModul::html_update(String& _html_update) {
                    String(",\"audiomsg1\":\"Artist: ") + this->media_artist_name + String("\"") +
                    String(",\"audiomsg2\":\"Song: ") + this->media_song_name + String("\"") +
                    String(",\"audiomsg3\":\"Album: ") + this->media_album_name + String("\"") +
-                   String(",\"audiomsg4\":\"") + this->kbs + String("\"");
+                   String(",\"audiomsg4\":\"") + this->bps + String("\"");
   }
 #endif //USE_AUDIO_MEDIA
 #if defined(USE_AUDIO_RADIO) || defined(USE_AUDIO_MEDIA)
@@ -619,8 +560,14 @@ void AudioModul::loop(time_t now) {
 // loop Funktion des Elternobjektes aufrufen
   Switch_OnOff::loop(now);
 // loop Funktionen aller eingebundenen Objekte aufruen
-#ifdef USE_DISPLAY  
-  display->loop(now);
+#ifdef USE_AUDIODISPLAY
+  if (firstloop) {
+    audiodisplay->update_display();
+    firstloop = false;
+  }
+  audiodisplay->loop(now);
+#else
+#warning "USE_AUDIODISPLAY not defined" 
 #endif
 #ifdef USE_FTP
   ftp.handleFTP();
@@ -714,8 +661,8 @@ void AudioModul::loop(time_t now) {
             media_sel_album = rotary->val();
             media_sel_song = 0;
             getSongByNumber(SD, media_sel_album, 0);
-#ifdef USE_DISPLAY
-            display->media_select_album(media_album_name, cd_bmp);
+#ifdef USE_AUDIODISPLAY
+            audiodisplay->media_select_album(media_album_name, cd_bmp);
 #endif
           }
           break;
@@ -724,8 +671,8 @@ void AudioModul::loop(time_t now) {
             start_timeout(now);
             media_sel_song = rotary->val();
             getSongByNumber(SD, media_sel_album, media_sel_song);
-#ifdef USE_DISPLAY
-            display->media_select_song(media_album_name, media_song_name, cd_bmp);
+#ifdef USE_AUDIODISPLAY
+            audiodisplay->media_select_song(media_album_name, media_song_name, cd_bmp);
 
 #endif
           }
@@ -814,7 +761,7 @@ void AudioModul::loop(time_t now) {
 #endif
 #ifdef USE_DISPLAY
             getSongByNumber(SD, media_sel_album, 0);
-            display->media_select_album(media_album_name, cd_bmp);
+            audiodisplay->media_select_album(media_album_name, cd_bmp);
 #endif
           }
           break;
@@ -826,8 +773,8 @@ void AudioModul::loop(time_t now) {
 #ifdef DEBUG_SERIAL
             Serial.printf("Media change Song App: %u Lev: %u (Max: %u) Val: %u (Min: %u Max: %u) Last_val: %u\n", rotary->app(), rotary->lev(), rotary->get_max_lev(rotary->app()), rotary->val(), rotary->min(), rotary->max(), rot_last_val);
 #endif
-#ifdef USE_DISPLAY
-//            display->media_select_song(media_album_name, media_song_name, cd_bmp);
+#ifdef USE_AUDIODISPLAY
+//            audiodisplay->media_select_song(media_album_name, media_song_name, cd_bmp);
 #endif
           }
           break;
@@ -975,29 +922,23 @@ void AudioModul::radio_save_stations() {
 **********************************************************************************************************/
 #ifdef USE_AUDIO_MEDIA
 
-void AudioModul::audio_media_on() {
-  getSongByNumber(SD, audio_media_cur_album, audio_media_cur_song);
-  audio_media_play(audio_media_cur_album,audio_media_cur_song);
-#ifdef USE_DISPLAY
-  display->screen_media();
-  display->setCursor(20,120);
-  display->print(audio_media_album_name);
-  display->setCursor(30,150);
-  display->print(audio_media_song_name);
-#endif
+void AudioModul::media_on() {
+  getSongByNumber(SD, media_cur_album, media_cur_song);
+  media_play(media_cur_album,media_cur_song);
   String myjson = String("{\"audio_media_sw\":1}");
   sendWsMessage(myjson);
+  
 }
 
 void AudioModul::media_off() {
   audio->stopSong();
-  this->audio_media_album_name = String("");
-  this->audio_media_artist_name = String("");
-  this->audio_media_song_name = String("");
-  this->audio_kbs = String("");
+  this->media_album_name = String("");
+  this->media_artist_name = String("");
+  this->media_song_name = String("");
+  this->bps = String("");
 }
 
-void AudioModul::audio_media_get_album_for_web() {
+void AudioModul::media_get_album_for_web() {
   String myjson = String("{");
   uint16_t dirNo = 0;
   bool setKomma = false;
@@ -1030,7 +971,7 @@ void AudioModul::audio_media_get_album_for_web() {
   root.close();
 }
 
-void AudioModul::audio_media_get_songs_for_web(uint16_t reqDirNo) {
+void AudioModul::media_get_songs_for_web(uint16_t reqDirNo) {
   String myjson = String("{");
   uint16_t dirNo = 0;
   uint16_t fileNo = 0;
@@ -1067,13 +1008,13 @@ void AudioModul::audio_media_get_songs_for_web(uint16_t reqDirNo) {
   sendWsMessage(myjson);
 }
 
-void AudioModul::audio_media_play(uint16_t _albumNo, uint16_t _songNo) {
+void AudioModul::media_play(uint16_t _albumNo, uint16_t _songNo) {
   if (getSongByNumber(SD, _albumNo, _songNo)) {
     write2log(LOG_MODULE,2,"Play song: ",media_song_name.c_str());
     String songPath = String("/") + media_album_name + String("/") + media_song_name;
     write2log(LOG_MODULE,2,"Song path: ",songPath.c_str());
-#ifdef USE_DISPLAY
-    display->screen_media();
+#ifdef USE_AUDIODISPLAY
+//    audiodisplay->screen_media();
 #endif
     if (audio->connecttoFS(SD,songPath.c_str())) {
       write2log(LOG_MODULE,2,"audio_media_play: Playing ", songPath.c_str());
@@ -1101,7 +1042,7 @@ bool AudioModul::getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo) 
   while (dir) {
     if (dir.isDirectory()) {
       if ( dirNo == albumNo ) {
-        audio_media_album_name = String(dir.name());
+        media_album_name = String(dir.name());
         // Jetzt die Dateien in dem Verzeichnis durchgehen
         dir.rewindDirectory();
         songFileNo = 0;
@@ -1111,8 +1052,8 @@ bool AudioModul::getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo) 
           tmpstr = String(file.name());
           if ( tmpstr.endsWith(".mp3") ) {
             if ( songFileNo == songNo ) {
-              audio_media_song_name = String(file.name());
-              write2log(LOG_MODULE,4,"Found song:", String(songNo).c_str(), ":",audio_media_song_name.c_str());
+              media_song_name = String(file.name());
+              write2log(LOG_MODULE,4,"Found song:", String(songNo).c_str(), ":",media_song_name.c_str());
               file_found = true;
             }
             songFileNo++;
@@ -1120,7 +1061,7 @@ bool AudioModul::getSongByNumber(fs::FS &fs, uint16_t albumNo, uint16_t songNo) 
           file = dir.openNextFile();
         }
         dir_found = true;
-        audio_media_album_name = String(dir.name());
+        media_album_name = String(dir.name());
         break;
       }
       dirNo++;

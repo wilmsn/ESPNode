@@ -6,26 +6,7 @@
 #include "common.h"
 
 extern AudioModul* audiomodul_ptr;
-
-
-AudioDisplay::AudioDisplay(int8_t _cs, int8_t _dc, int8_t _rst, uint8_t _rot ) :
-              Adafruit_GC9A01A(_cs, _dc, _rst) {
-  rotation = _rot;
-}
-
-void AudioDisplay::begin() {
-  Adafruit_GC9A01A::begin();
-  setRotation(rotation);
-  fillScreen(GC9A01A_BLACK);
-  setTextColor(GC9A01A_WHITE);
-  setTextSize(3);
-  setCursor(80,25);
-  println("init");
-  fillRect(30,50,180,140,GC9A01A_DARKGREY);
-  setCursor(35,60);
-  setTextSize(1);
-}
-
+/*
 void AudioDisplay::html_info(String& _html_info) {
   _html_info += String("\"tab_head_display\":\"Display: GC9A01A\"") +
                 String(",\"tab_line1_display\":\"SCK:#GPIO: ") + String(TFT_SCK)+ String("\"") +
@@ -34,110 +15,150 @@ void AudioDisplay::html_info(String& _html_info) {
                 String(",\"tab_line4_display\":\"DC:#GPIO: ") + String(TFT_DC)+ String("\"") +
                 String(",\"tab_line5_display\":\"RST:#GPIO: ") + String(TFT_RST)+ String("\"");
 }
-
-void AudioDisplay::update_display() {
-  audiomodul_ptr->display_update_set = false;
-  Serial.print("Update Display: App_NO:");
-  Serial.println(audiomodul_ptr->app_no);
-  if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_off) {
-    clear();
-    clock_big();
-  }
-  else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio) {
-    clear();
-    clock_small();
-    show_vol(audiomodul_ptr->vol);
-    // set ip address
-    setTextColor(IP_COLOR);  
-    setTextSize(IP_FONTSIZE);
-    setCursor(IP_POS_X,IP_POS_Y);
-    print(WiFi.localIP().toString());
-    // end set ip address
-    // set bps
-    setTextColor(BPS_COLOR);  
-    setTextSize(BPS_FONTSIZE);
-    setCursor(BPS_POS_X, BPS_POS_Y);
-    println(audiomodul_ptr->bps);
-    // end set bps
-    // set station
-    num_lines = split4display(audiomodul_ptr->radio_stationname);
-    setTextColor(GC9A01A_ORANGE);
-    if (num_lines == 1) {
-      setTextSize(3);
-      setCursor(25, 75);
-      print(displaystr[0]);
-    } else {
-      setTextSize(2);
-      uint8_t thisline = 0;
-      while (thisline < num_lines && thisline < 2) {
-        if (thisline <= 1) setCursor(25, 75 + (thisline * 20));
-        print(displaystr[thisline]);
-        thisline++;
+*/
+void AudioDisplay_GC9A01A::update_display() {
+  if (display) {
+    audiomodul_ptr->display_update_set = false;
+    Serial.print("Update Display: App_NO:");
+    Serial.println(audiomodul_ptr->app_no);
+    if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_off) {
+      display->fillScreen(TFT_COLOR_BLACK);
+      clock_big();
+    } // audiomodul_ptr->app_no == audiomodul_ptr->app_no_off
+    else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio) {
+      display->fillScreen(TFT_COLOR_BLACK);
+      clock_small();
+      show_vol(audiomodul_ptr->vol);
+      // set ip address
+      display->setTextColor(IP_COLOR);  
+      display->setTextSize(IP_FONTSIZE);
+      display->setCursor(IP_POS_X,IP_POS_Y);
+      display->print(WiFi.localIP().toString());
+      // end set ip address
+      // set bps
+      display->setTextColor(BPS_COLOR);  
+      display->setTextSize(BPS_FONTSIZE);
+      display->setCursor(BPS_POS_X, BPS_POS_Y);
+      display->println(audiomodul_ptr->bps);
+      // end set bps
+      // set station
+      num_lines = split4display(audiomodul_ptr->radio_stationname);
+      display->setTextColor(TFT_COLOR_ORANGE);
+      if (num_lines == 1) {
+        display->setTextSize(3);
+        display->setCursor(25, 75);
+        display->print(displaystr[0]);
+      } else {
+        display->setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 2) {
+          if (thisline <= 1) display->setCursor(25, 75 + (thisline * 20));
+          display->print(displaystr[thisline]);
+          thisline++;
+        }
       }
-    }
-    // end set station
-    // set streamtitle
-    num_lines = split4display(audiomodul_ptr->radio_streamtitle);
-    setTextColor(GC9A01A_GREEN);
-    if (num_lines == 1) {
-      setTextSize(3);
-      setCursor(25, 130);
-      print(displaystr[0]);
-    } else {
-      setTextSize(2);
-      uint8_t thisline = 0;
-      while (thisline < num_lines && thisline < 3) {
-        setCursor(25, 130 + (thisline * 20));
-        print(displaystr[thisline]);
-        thisline++;
+      // end set station
+      // set streamtitle
+      num_lines = split4display(audiomodul_ptr->radio_streamtitle);
+      display->setTextColor(TFT_COLOR_GREEN);
+      if (num_lines == 1) {
+        display->setTextSize(3);
+        display->setCursor(25, 130);
+        display->print(displaystr[0]);
+      } else {
+        display->setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 3) {
+          display->setCursor(25, 130 + (thisline * 20));
+          display->print(displaystr[thisline]);
+          thisline++;
+        }
       }
-    }
-  } //audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio
-  else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio_select) {
-    clear();
-    setTextSize(2);
-    setTextColor(GC9A01A_WHITE);
-    setCursor(60,20);
-    print("Senderwahl");
-    setTextColor(GC9A01A_ORANGE);
-/*      setCursor(40,70);
-      setTextSize(1);
+    } //audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio
+    else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio_select) {
+      display->fillScreen(TFT_COLOR_BLACK);
+      display->setTextSize(2);
+      display->setTextColor(TFT_COLOR_WHITE);
+      display->setCursor(60,20);
+      display->print("Senderwahl");
+      display->setTextColor(TFT_COLOR_ORANGE);
+/*      display->setCursor(40,70);
+      display->setTextSize(1);
       if (audiomodul_ptr->rot_last_val > 0) {
         print(audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val-1].name);
       }*/
-    setCursor(25,120);
-    String stationname = audiomodul_ptr->radio_station[audiomodul_ptr->radio_station_selected].name;
-    num_lines = split4display(stationname);
-    if (num_lines == 1) {
-      setTextSize(3);
-      print(displaystr[0]);
-    } else {
-      setTextSize(2);
-      uint8_t thisline = 0;
-      while (thisline < num_lines && thisline < 2) {
-        if (thisline <= 1) setCursor(25, 120 + (thisline * 20));
-        print(displaystr[thisline]);
-        thisline++;
+      display->setCursor(25,120);
+      String stationname = audiomodul_ptr->radio_station[audiomodul_ptr->radio_station_selected].name;
+      num_lines = split4display(stationname);
+      if (num_lines == 1) {
+        display->setTextSize(3);
+        display->print(displaystr[0]);
+      } else {
+        display->setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 2) {
+          if (thisline <= 1) display->setCursor(25, 120 + (thisline * 20));
+          display->print(displaystr[thisline]);
+          thisline++;
+        }
       }
-    }
-/*      setCursor(40,180);
+/*      display->setCursor(40,180);
       setTextSize(1);
       if (audiomodul_ptr->rot_last_val < MAXSTATIONS-1) {
         print(audiomodul_ptr->radio_station[audiomodul_ptr->rot_last_val+1].name);
       }*/
-  } //audiomodul_ptr->app_no == audiomodul_ptr->app_no_media
-  else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_max+1) {
-    clear();
-    if (audiomodul_ptr->app_no_new == audiomodul_ptr->app_no_off) {
-      drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
+    } // audiomodul_ptr->app_no == audiomodul_ptr->app_no_radio_select
+    else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_media) {
+      display->fillScreen(TFT_COLOR_BLACK);;
+      clock_small();
+      num_lines = split4display(audiomodul_ptr->media_artist_name);
+      display->setTextColor(TFT_COLOR_ORANGE);
+      if (num_lines == 1) {
+        display->setTextSize(3);
+        display->setCursor(25, 75);
+        display->print(displaystr[0]);
+      } else {
+        display->setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 2) {
+          if (thisline <= 1) display->setCursor(25, 75 + (thisline * 20));
+          display->print(displaystr[thisline]);
+          thisline++;
+        }
+      }
+    // end set station
+    // set streamtitle
+      num_lines = split4display(audiomodul_ptr->media_song_name);
+      display->setTextColor(TFT_COLOR_GREEN);
+      if (num_lines == 1) {
+        display->setTextSize(3);
+        display->setCursor(25, 130);
+        display->print(displaystr[0]);
+      } else {
+        display->setTextSize(2);
+        uint8_t thisline = 0;
+        while (thisline < num_lines && thisline < 3) {
+          display->setCursor(25, 130 + (thisline * 20));
+          display->print(displaystr[thisline]);
+          thisline++;
+        }
+      }
+    } // audiomodul_ptr->app_no == audiomodul_ptr->app_no_media
+    else if (audiomodul_ptr->app_no == audiomodul_ptr->app_no_max+1) {
+      display->fillScreen(TFT_COLOR_BLACK);
+      if (audiomodul_ptr->app_no_new == audiomodul_ptr->app_no_off) {
+        display->drawRGBBitmap(80,80,off_bmp,OFF_BMP_HEIGHT,OFF_BMP_WIDTH);
+      }
+      if (audiomodul_ptr->app_no_new == audiomodul_ptr->app_no_radio) {
+        display->drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
+      }
     }
-    if (audiomodul_ptr->app_no_new == audiomodul_ptr->app_no_radio) {
-      drawRGBBitmap(80,80,radio_bmp,RADIO_BMP_HEIGHT,RADIO_BMP_WIDTH);
-    }
+  } else {
+    Serial.println("Display not initialized");
   }
 }
 
-void AudioDisplay::loop(time_t now) {
+void AudioDisplay_GC9A01A::loop(time_t now) {
   localtime_r(&now, &timeinfo);
   if (audiomodul_ptr->display_update_vol) {
     wipe_vol();
@@ -162,7 +183,7 @@ void AudioDisplay::loop(time_t now) {
   }
 }
 
-uint8_t AudioDisplay::split4display(String& in_str) {
+uint8_t AudioDisplay_GC9A01A::split4display(String& in_str) {
   uint8_t startAt = 0;
   uint8_t splitAt = 0;
   uint8_t lineNo = 0;
@@ -191,52 +212,25 @@ uint8_t AudioDisplay::split4display(String& in_str) {
   return retval;
 }
 
-// - txtcolor: 0 = weiss, 1 = grün, 2 = rot
-void AudioDisplay::bootMessage(uint8_t txtcolor, const char* msg, bool newline, bool align_right) {
-  switch (txtcolor) {
-  case 0:
-    setTextColor(GC9A01A_WHITE);
-    break;
-  case 1:
-    setTextColor(GC9A01A_GREEN);
-    break;
-  case 2:
-    setTextColor(GC9A01A_RED);
-    break;
-  }
-  if (newline) {
-    boot_line++;
-  }
-  if (align_right) {
-    setCursor(190 - (strlen(msg) * 6), boot_line * 10 + 60);
-  } else {
-    setCursor(35, boot_line * 10 + 60);
-  }
-  print(msg);
-}
 
-void AudioDisplay::clear() {
-  fillScreen(GC9A01A_BLACK);
-}
-  
-void AudioDisplay::wipe_vol() {
+void AudioDisplay_GC9A01A::wipe_vol() {
   fillArc(119,119,-90,180,120,120,ARC_WIDTH,GC9A01A_BLACK);
 }
 
-void AudioDisplay::show_vol(uint8_t cur_vol) {
+void AudioDisplay_GC9A01A::show_vol(uint8_t cur_vol) {
   fillArc(119,119,-90,cur_vol*2,120,120,ARC_WIDTH,GC9A01A_YELLOW);
 }
 
 /*
-void AudioDisplay::screen_off() {
-  cur_screen = AudioDisplay::screenmode_t::Screen_Off;
+void AudioDisplay_GC9A01A::screen_off() {
+  cur_screen = AudioDisplay_GC9A01A::screenmode_t::Screen_Off;
   clear();
   clock_big();
 }
 */
 /*
-void AudioDisplay::screen_radio() {
-  cur_screen = AudioDisplay::screenmode_t::Screen_Radio;
+void AudioDisplay_GC9A01A::screen_radio() {
+  cur_screen = AudioDisplay_GC9A01A::screenmode_t::Screen_Radio;
   clear();
   clock_small();
   ip();
@@ -277,27 +271,31 @@ void AudioDisplay::screen_media() {
 }
 */
 
-void AudioDisplay::clock_big() {
-  clear();
-  setTextColor(GC9A01A_WHITE); 
-  setTextSize(7);
-  setCursor(20,100);
+void AudioDisplay_GC9A01A::clock_big() {
+  display->fillScreen(TFT_COLOR_BLACK);
+  display->setTextColor(GC9A01A_WHITE); 
+  display->setTextSize(7);
+  display->setCursor(20,100);
+  clock_print();
+  display->setTextColor(IP_COLOR);  
+  display->setTextSize(IP_FONTSIZE);
+  display->setCursor(IP_POS_X,IP_POS_Y);
+  display->print(WiFi.localIP().toString());
+}
+
+void AudioDisplay_GC9A01A::clock_small() {
+  display->fillRect(80, 30, 90, 23, GC9A01A_BLACK);
+  display->setTextColor(GC9A01A_WHITE); 
+  display->setTextSize(3);
+  display->setCursor(80,30);
   clock_print();
 }
 
-void AudioDisplay::clock_small() {
-  fillRect(80, 30, 90, 23, GC9A01A_BLACK);
-  setTextColor(GC9A01A_WHITE); 
-  setTextSize(3);
-  setCursor(80,30);
-  clock_print();
-}
-
-void AudioDisplay::clock_print() {
-  if ( timeinfo.tm_hour < 10) printf(" ");
-  printf("%d:",timeinfo.tm_hour);
-  if ( timeinfo.tm_min < 10) printf("0");
-  printf("%d",timeinfo.tm_min);
+void AudioDisplay_GC9A01A::clock_print() {
+  if ( timeinfo.tm_hour < 10) display->printf(" ");
+  display->printf("%d:",timeinfo.tm_hour);
+  if ( timeinfo.tm_min < 10) display->printf("0");
+  display->printf("%d",timeinfo.tm_min);
 }
 
 /*
@@ -546,7 +544,7 @@ void AudioDisplay::show_media_bps() {
 }
 */
 
-void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour) {
+void AudioDisplay_GC9A01A::fillArc(int x, int y, int start_angle, int degree, int rx, int ry, int w, unsigned int colour) {
 
   byte seg = ARC_SIGMENT_DEGREES; // Segments are 3 degrees wide = 120 segments for 360 degrees
   byte inc = ARC_SIGMENT_DEGREES; // Draw segments every 3 degrees, increase to 6 for segmented ring
@@ -570,8 +568,8 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
     int x3 = sx2 * rx + x;
     int y3 = sy2 * ry + y;
 
-    fillTriangle(x0, y0, x1, y1, x2, y2, colour);
-    fillTriangle(x1, y1, x2, y2, x3, y3, colour);
+    display->fillTriangle(x0, y0, x1, y1, x2, y2, colour);
+    display->fillTriangle(x1, y1, x2, y2, x3, y3, colour);
 
     // Copy segment end to sgement start for next segment
     x0 = x2;
@@ -592,7 +590,7 @@ void AudioDisplay::fillArc(int x, int y, int start_angle, int degree, int rx, in
 /// @param minLen Minimale Länge des Ergebnisstrings
 /// @param maxLen Maximale Länge des Ergebnisstrings
 /// @return Die Position des letzten benutzten Zeichens im Quellstring
-int AudioDisplay::getPartStringEnd(String data, int startAt, int minLen, int maxLen) {
+int AudioDisplay_GC9A01A::getPartStringEnd(String data, int startAt, int minLen, int maxLen) {
   int retval = -1;
   int maxLenData = data.length()-1;
   for ( int i = startAt + minLen; i <= startAt + maxLen && i < maxLenData; i++ ) {
@@ -604,7 +602,7 @@ int AudioDisplay::getPartStringEnd(String data, int startAt, int minLen, int max
   return retval;
 }
 
-String AudioDisplay::replaceNonAscii(String inputString) {
+String AudioDisplay_GC9A01A::replaceNonAscii(String inputString) {
   String result = "";
   for (size_t i = 0; i < inputString.length(); i++) {
     char c = inputString.charAt(i);

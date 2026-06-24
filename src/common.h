@@ -18,7 +18,6 @@
 #include <time.h>
 #include <Uptime.h>
 #include <ElegantOTA.h>
-//#include "audiodisplay_GC9A01A.h"
 
 #ifdef ESP32
 #include <Preferences.h>
@@ -35,6 +34,15 @@ typedef unsigned char uint8_t;
 #include "ESPAsyncTCP.h"
 #endif
 
+#ifdef USE_DISPLAY_GC9A01A
+#include "Adafruit_GFX.h"
+#include "Adafruit_GC9A01A.h" 
+#endif
+
+#ifdef USE_DISPLAY_ST7796
+#include "Adafruit_GFX.h"
+#include "Adafruit_ST7796S.h"
+#endif
 
 
 // externe Referenzen
@@ -50,6 +58,11 @@ extern unsigned long minutes;
 extern bool cmd_result;
 extern void sendWsMessage(String& _myMsg);
 extern void sendWsMessage(String& _myMsg, uint8_t kat);
+
+#ifdef USE_DISPLAY_GC9A01A
+extern Adafruit_GC9A01A* display;
+#endif
+
 #ifdef USE_DISPLAY
 /// @brief Zeigt eine Bootmeldung auf dem Display an
 /// @details Diese Funktion wird beim Booten des Gerätes aufgerufen, um eine Nachricht auf

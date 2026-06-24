@@ -272,6 +272,7 @@ RF24 Gateway:
 #else
 #define MODULE1_DEFINITION      Switch_OnOff module1;
 #ifdef CONFIG_IDF_TARGET_ESP32
+#define LED_BUILTIN             2
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, true, false, LED_BUILTIN, false);
 #else
 #define MODULE1_BEGIN_STATEMENT module1.begin("sw1", "interne LED", "int_led", false, false, false, LED_BUILTIN, false);
@@ -432,14 +433,40 @@ RF24 Gateway:
 #endif //CONFIG_IDF_TARGET_ESP32S3
 #endif
 //-----------------------------------------------------
+#if defined(NODE_DISPLAYTEST)
+#include "switch_onoff.h"
+
+#define DEBUG_SERIAL_MODULE
+#define DEBUG_SERIAL_WEB
+#define DEBUG_SERIAL_SYSTEM
+#define USE_DISPLAY_GC9A01A
+#define USE_DISPLAY
+#define TFT_ROTATION             4
+#define TFT_SCK                  18
+#define TFT_MOSI                 23
+#define TFT_CS                   17
+#define TFT_DC                   16
+#define TFT_RST                  13
+#define TFT_BL                   4
+#define HOSTNAME                 "DisplayTest"
+#define HOST_DISCRIPTION         "Ein Node zum Testen des Displays"
+#define MAGICNO                  0
+
+#define MODULE1_DEFINITION       Switch_OnOff module1;
+#define MODULE1_BEGIN_STATEMENT  module1.begin("sw1", "int. LED", "led", false, false, false, 2, false);
+
+#endif
+//-----------------------------------------------------
 #if defined(NODE_AUDIO)
 
 #ifdef ESP32
+#define USE_DISPLAY_GC9A01A
+#define TFT_ROTATION             4
 //#define USE_AUDIOMODUL
 //#define USE_AUDIODISPLAY_ST7796
 #define USE_AUDIODISPLAY_GC9A01A
 #define USE_AUDIO_RADIO
-//#define USE_AUDIO_MEDIA
+#define USE_AUDIO_MEDIA
 //#define USE_FTP
 //#define USE_WIFIMULTI
 //#define USE_ROTARY

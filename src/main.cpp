@@ -9,6 +9,20 @@ ADC_MODE(ADC_VCC);
 #endif
 #endif
 
+// Display
+#ifdef USE_DISPLAY_GC9A01A
+Adafruit_GC9A01A* display = NULL;
+#endif
+
+#ifdef USE_DISPLAY_ST7796
+//Adafruit_ST7796S* display = NULL;
+#endif
+
+#ifdef USE_DISPLAY
+uint8_t bootline = 0;
+#endif
+// Ende Display
+
 // Zeitmanagement
 /// @brief Der NTP Server
 const char* ntp_server = NTP_SERVER;
@@ -136,6 +150,36 @@ MODULE5_DEFINITION
 #endif
 #if defined(MODULE6)
 MODULE6_DEFINITION
+#endif
+
+#ifdef USE_DISPLAY
+uint8_t boot_line = 0;
+// - txtcolor: 0 = weiss, 1 = grün, 2 = rot
+void bootMessage(uint8_t txtcolor, const char* msg, bool newline, bool align_right) {
+  if (display) {
+    display->setTextSize(BOOTMESSAGE_TEXTSIZE);
+    switch (txtcolor) {
+    case 0:
+      display->setTextColor(TFT_COLOR_WHITE);
+    break;
+    case 1:
+      display->setTextColor(TFT_COLOR_GREEN);
+      break;
+    case 2:
+      display->setTextColor(TFT_COLOR_RED);
+      break;
+    }
+    if (newline) {
+      boot_line++;
+    }
+    if (align_right) {
+      display->setCursor(BOOTWINDOW_X + BOOTWINDOW_WIDTH - (10 + (strlen(msg) * BOOTLINE_X)), BOOTWINDOW_Y + ( boot_line * BOOTLINE_Y) );
+    } else {
+      display->setCursor(BOOTWINDOW_X + 10, BOOTWINDOW_Y + ( boot_line * BOOTLINE_Y) );
+    }
+    display->print(msg);
+  }
+}
 #endif
 
 void setupTime() {                              
@@ -420,28 +464,49 @@ void start_AP() {
  * Setup
  *****************************************************/
 void setup() {
+#ifdef DEBUG_SERIAL
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("Begin Setup");
+#endif
+#ifdef USE_DISPLAY_GC9A01A
+//  pinMode(TFT_BL, OUTPUT);
+//  digitalWrite(TFT_BL, HIGH);
+  display = new Adafruit_GC9A01A(TFT_CS, TFT_DC, TFT_RST);
+  if (display) {
+    display->begin();
+    display->setRotation(TFT_ROTATION);
+    display->fillScreen(TFT_COLOR_BLACK);
+    display->setTextSize(2);
+    display->setTextColor(TFT_COLOR_GREEN);
+    display->setCursor(80, 10);
+    display->print("ESPNode");
+    display->setCursor(80, 30);
+    display->print("Booting...");
+    display->fillRect(BOOTWINDOW_X, BOOTWINDOW_Y, BOOTWINDOW_WIDTH, BOOTWINDOW_HEIGHT, BOOTWINDOW_COLOR);
+  }
+#else
+#warning "NOT Compiling Display GC9A01A with Settings for ESP32" 
+#endif
+#ifdef USE_DISPLAY_ST7796
+  display = new Adafruit_ST7796S(TFT_CS, TFT_DC, TFT_RST);
+  display->begin();
+  display->setRotation(TFT_ROTATION);
+#endif
+#ifdef USE_DISPLAY
+  if (display) {
+  } else {
+    Serial.println("Display not found");
+//    Serial.println("TFT_CS = " + String(TFT_CS) + " TFT_DC = " + String(TFT_DC) + 
+//                   " TFT_RST = " + String(TFT_RST) + " TFT_BL = " + String(TFT_BL));
+  }
+#else
+#warning "USE_DISPLAY not set" 
+#endif
   // Achtung: Wenn die Prefs zu schnell nach Systemstart aufgerufen werden gibt es einen Feler bei den Preferences!
   //          Die Werte werden nicht ausgelesen, das Programm steht!!!!!!!
-#if defined(MODULE1)
-  MODULE1_BEGIN_STATEMENT
-#endif
-#if defined(MODULE2)
-  MODULE2_BEGIN_STATEMENT
-#endif
-#if defined(MODULE3)
-  MODULE3_BEGIN_STATEMENT
-#endif
-#if defined(MODULE4)
-  MODULE4_BEGIN_STATEMENT
-#endif
-#if defined(MODULE5)
-  MODULE5_BEGIN_STATEMENT
-#endif
-#if defined(MODULE6)
-  MODULE6_BEGIN_STATEMENT
-#endif
   // !!!!!!!! Diesen DELAY nicht entfernen !!!!!!!!!
-//  delay(1000);
+  delay(1000);
   // Serial port for debugging purposes
 #ifdef DEBUG_SERIAL
   Serial.begin(115200);
@@ -456,8 +521,8 @@ void setup() {
   }
 #endif // DEBUG_SERIAL
 
-#ifdef USE_DISPLAY_BOOTMESSAGE
-  bootMessage(0,"Prefs",true,false);
+#ifdef USE_DISPLAY
+  bootMessage(0,"Loading Prefs",true,false);
 #endif
 
   // Zunächst werden die Preferences im Schreibmodus geöffnet.
@@ -465,14 +530,14 @@ void setup() {
   // werden die Einstellungen aus der Umgebung in die Preferences geschrieben
   if (preferences.begin("settings",true)) {
     magicno = preferences.getUShort("magicno", 0);
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(1,"OK",false,true);
     bootMessage(1,"MagicNo:",true,false);
     bootMessage(1,String(magicno).c_str(),false,true);
 #endif
     preferences.end();
   } else {
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(2,"Error",false, true);
     bootMessage(2,"Reboot !!!",true, true);
 #endif
@@ -500,7 +565,7 @@ void setup() {
 #endif // DEBUG_SERIAL
 // MagicNo ist unterschiedlich oder 0: Defaultwerte werden neu gesetzt!
   if ( (magicno != MAGICNO) || (MAGICNO == 0) ) {
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(1,"Using default Environment",true, true);
 #endif
     wifi_ssid = WIFI_SSID;
@@ -569,7 +634,7 @@ void setup() {
     preferences.putBool("do_log_critical", do_log_critical);
     preferences.end();
   } else {
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(1,"Using Env. from Prefs",true, true);
 #endif
     preferences.begin("settings",true);
@@ -633,12 +698,12 @@ void setup() {
   Serial.print("Critical: ");
   Serial.println(do_log_critical?"ja":"nein");
 #endif // DEBUG_SERIAL
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
   bootMessage(0,"mount FS",true, false);
 #endif
 
   if (!LittleFS.begin()) {
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(2,"Error",false, true);
     bootMessage(2,"REBOOT",true, true);
 #endif
@@ -646,38 +711,38 @@ void setup() {
     return;
   } else {
     write2log(LOG_SYSTEM,1, "++ Begin Startup: LittleFS mounted ++");
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(1,"OK",false, true);
 #endif
   }
 
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
   bootMessage(0,"Con WiFi",true, false);
 #endif
   // Connect to Wi-Fi
   if ( ! do_wifi_con() ) {
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(2,"Error",false, true);
     bootMessage(2,"Start AP",true, true);
 #endif
     start_AP();
   } else {
     
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
     bootMessage(1,WiFi.localIP().toString().c_str(),false, true);
 #endif
     write2log(LOG_SYSTEM,2, "Node Address is ", WiFi.localIP().toString().c_str());
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
   bootMessage(0,"get Time",true, false);
 #endif
     setupTime();
     if ( ! getNTPtime(30) ) {
       write2log(LOG_SYSTEM,1, "Error getting NTP Time");
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
       bootMessage(2,"Error",false, true);
 #endif
     } else {
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
       char timestr[20];
       sprintf(timestr,"%d.%d.%d %02d:%02d",timeinfo.tm_mday, 1 + timeinfo.tm_mon, 1900 + timeinfo.tm_year,  timeinfo.tm_hour, timeinfo.tm_min);
       bootMessage(1,timestr,false, true);
@@ -714,7 +779,31 @@ void setup() {
   Serial.println(ESP.getCycleCount());
 #endif
 #endif
-#ifdef USE_DISPLAY_BOOTMESSAGE
+#ifdef USE_DISPLAY
+  bootMessage(0,"Loading Modules",true, false);
+#endif
+#if defined(MODULE1)
+  MODULE1_BEGIN_STATEMENT
+#endif
+#if defined(MODULE2)
+  MODULE2_BEGIN_STATEMENT
+#endif
+#if defined(MODULE3)
+  MODULE3_BEGIN_STATEMENT
+#endif
+#if defined(MODULE4)
+  MODULE4_BEGIN_STATEMENT
+#endif
+#if defined(MODULE5)
+  MODULE5_BEGIN_STATEMENT
+#endif
+#if defined(MODULE6)
+  MODULE6_BEGIN_STATEMENT
+#endif
+#ifdef USE_DISPLAY
+    bootMessage(1,"OK",false, true);
+#endif
+#ifdef USE_DISPLAY
   bootMessage(0,"Ende Setup",true, false);
   delay(3000);
 #endif
