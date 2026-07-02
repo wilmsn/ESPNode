@@ -128,10 +128,11 @@ void Actor_LEDMatrix::print_line(const char* rohtext ) {
       }
     break; */
     case 0:      // just wipe
-    default:
       {
         matrix.clear(0,(line-1)*8,31,line*8-1);            
       }
+    default:
+      {}  // do nothing
   }
   matrix.setFont(font);
   switch (line) {
